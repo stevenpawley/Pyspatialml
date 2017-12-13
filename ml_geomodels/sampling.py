@@ -5,10 +5,11 @@ import os
 import numpy as np
 import scipy
 import numpy.ma as ma
-from copy import deepcopy
 import rasterio
 from rasterio import features
 import tempfile
+from shapely.geometry import Point
+import random
 
 
 def extractPoints(gdf, rasters, field=None):
@@ -242,150 +243,7 @@ def sample_random(target_nsamples, rasters, random_state=None):
         else:
             n = target_nsamples - len(valid_samples)
 
-    # convert pixel coordinates to projection
-#    valid_coordinates = np.array(rasterio.transform.xy(
-#        transform=dataset[0].transform, rows=valid_coordinates[:, 0],
-#        cols=valid_coordinates[:, 1], offset='center')).T
-
     return (valid_samples, valid_coordinates)
-
-
-class random_oversampling():
-
-    def __init__(self, random_state=None):
-        """
-        Balances X, y observations using simple oversampling
-
-        Args
-        ----
-        random_state: Seed to pass onto random number generator
-        """
-
-        self.random_state = random_state
-
-    def fit_sample(self, X, y, groups=None):
-        """
-        Performs equal balancing of response and explanatory variances
-
-        Args
-        ----
-        X: numpy array of training data
-        y: 1D numpy array of response data
-        groups: Optional, 1D numpy array of group labels
-
-        Returns
-        -------
-        X_resampled: Numpy array of resampled training data
-        y_resampled: Numpy array of resampled response data
-        groups_resampled: Numpy array of resampled group labels
-        """
-
-        if self.random_state is not None:
-            np.random.seed(seed=self.random_state)
-
-        # count the number of observations per class
-        y_classes = np.unique(y)
-        class_counts = np.histogram(y, bins=len(y_classes))[0]
-        maj_counts = class_counts.max()
-
-        y_resampled = deepcopy(y)
-        X_resampled = deepcopy(X)
-        groups_resampled = deepcopy(groups)
-
-        for cla, counts in zip(y_classes, class_counts):
-            # get the number of samples needed to balance minority class
-            num_samples = maj_counts - counts
-
-            # get the indices of the ith class
-            indx = np.nonzero(y == cla)
-
-            # create some new indices
-            oversamp_indx = np.random.choice(indx[0], size=num_samples)
-
-            # concatenate to the original X and y
-            y_resampled = np.concatenate((y[oversamp_indx], y_resampled))
-            X_resampled = np.concatenate((X[oversamp_indx], X_resampled))
-            if groups is not None:
-                groups_resampled = np.concatenate((
-                    groups[oversamp_indx], groups_resampled))
-
-        return (X_resampled, y_resampled, groups_resampled)
-
-
-class random_undersampling():
-
-    def __init__(self, random_state=None):
-        """
-        Balances X, y observations using simple undersampling
-
-        Args
-        ----
-        random_state: Seed to pass onto random number generator
-        """
-
-        self.random_state = random_state
-
-    def fit_sample(self, X, y, groups=None):
-        """
-        Performs equal balancing of response and explanatory variances
-
-        Args
-        ----
-        X: numpy array of training data
-        y: 1D numpy array of response data
-        groups: optional, 1D numpy array of group labels
-
-        Returns
-        -------
-        X_resampled: Numpy array of resampled training data
-        y_resampled: Numpy array of resampled response data
-        groups_resampled: Numpy array of resampled group labels
-        """
-
-        if self.random_state is not None:
-            np.random.seed(seed=self.random_state)
-
-        # count the number of observations per class
-        y_classes = np.unique(y)
-        class_counts = np.histogram(y, bins=len(y_classes))[0]
-        min_counts = class_counts.min()
-
-        y_resampled = np.zeros((0,), dtype=y.dtype)
-        X_resampled = np.zeros((0, X.shape[1]), dtype=X.dtype)
-        groups_resampled = np.zeros((0,), dtype=groups.dtype)
-
-        for cla in y_classes:
-            # get the indices of the ith class
-            indx = np.nonzero(y == cla)
-
-            # create some new indices
-            undersamp_indx = np.random.choice(indx[0], size=min_counts)
-
-            # concatenate to the original X and y
-            y_resampled = np.concatenate((y[undersamp_indx], y_resampled))
-            X_resampled = np.concatenate((X[undersamp_indx], X_resampled))
-
-            if groups is not None:
-                groups_resampled = np.concatenate((
-                    groups[undersamp_indx], groups_resampled))
-
-        return (X_resampled, y_resampled, groups_resampled)
-
-#
-#class down_sampling():
-#
-#    def __init__(self, random_state):
-#        self.random_state = random_state
-#
-#    def fit_sample(self, *args, n_samples):
-#        from sklearn.utils import resample
-#
-#        np.random.seed(seed=self.random_state)
-#
-#        args = resample(*args, replace=True, n_samples=n_samples,
-#                        random_state=self.random_state)
-#
-#        return (args)
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
@@ -418,3 +276,22 @@ def filter_points(gdf, min_dist=0, remove='first'):
     return(gdf.iloc[np.greater_equal(d, min_dist)])
 
 
+def get_random_point_in_polygon(poly):
+    """
+    Generates random shapely Point geometry objects within a single
+    shapely Polygon object
+    from https://gis.stackexchange.com/questions/6412/generate-points-that-lie-inside-polygon
+    Args
+    ----
+    poly: Shapely Polygon object
+    
+    Returns
+    -------
+    p: Shapely Point object
+    """
+    
+    (minx, miny, maxx, maxy) = poly.bounds
+    while True:
+         p = Point(random.uniform(minx, maxx), random.uniform(miny, maxy))
+         if poly.contains(p):
+             return p
