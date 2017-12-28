@@ -200,6 +200,8 @@ def __parallel_fit(estimator, X, y, groups, train_indices, test_indices, sample_
         fitting
 
     """
+    
+    clf = deepcopy(estimator)
 
     # create training and test folds
     X_train, y_train = X[train_indices], y[train_indices]
@@ -214,20 +216,20 @@ def __parallel_fit(estimator, X, y, groups, train_indices, test_indices, sample_
         weights = sample_weight[train_indices]
 
     # specify fit_params for sample_weights if required
-    if isinstance(estimator, Pipeline) and sample_weight is not None:
+    if isinstance(clf, Pipeline) and sample_weight is not None:
         fit_params = {'classifier__sample_weight': weights}
-    elif not isinstance(estimator, Pipeline) and sample_weight is not None:
+    elif not isinstance(clf, Pipeline) and sample_weight is not None:
         fit_params = {'sample_weight': weights}
     else:
         fit_params = {}
 
     # fit estimator with/without groups
-    if groups is not None and type(estimator).__name__ in ['RandomizedSearchCV', 'GridSearchCV']:
-        estimator.fit(X_train, y_train, groups=groups_train, **fit_params)
+    if groups is not None and type(clf).__name__ in ['RandomizedSearchCV', 'GridSearchCV']:
+        clf.fit(X_train, y_train, groups=groups_train, **fit_params)
     else:
-        estimator.fit(X_train, y_train, **fit_params)
+        clf.fit(X_train, y_train, **fit_params)
 
-    return estimator
+    return clf
 
 
 def cross_val_scores(estimator, X, y, groups=None, sample_weight=None, cv=3,
