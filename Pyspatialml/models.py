@@ -10,7 +10,7 @@ from numpy.random import RandomState
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold
-
+from builtins import str
 
 def specificity_score(y_true, y_pred):
     """
@@ -277,12 +277,9 @@ def cross_val_scores(estimator, X, y, groups=None, sample_weight=None, cv=3,
     # -------------------------------------------------------------------------
     # create dictionary of lists to store metrics
     # -------------------------------------------------------------------------
-    try:  # py2
-        if isinstance(scoring, basestring):
-            scoring = [scoring]
-    except:  # py3
-        if isinstance(scoring, str):
-            scoring = [scoring]
+
+    if isinstance(scoring, str):
+        scoring = [scoring]
 
     scores = dict.fromkeys(scoring)
     scores = {key: [] for key, value in scores.iteritems()}
@@ -324,9 +321,10 @@ def cross_val_scores(estimator, X, y, groups=None, sample_weight=None, cv=3,
         try:
             list(scoring_methods.keys()).index(i)
         except:
-            gs.fatal(('Scoring ', i, ' is not a valid scoring method',
-                            os.linesep(),
-                            'Valid methods are: ', scoring_methods.keys()))
+            raise 
+            return(ValueError('Scoring ', i, ' is not a valid scoring method',
+                              os.linesep(), 'Valid methods are: ',
+                              scoring_methods.keys()))
 
     # set averaging type for global binary or multiclass scores
     if len(np.unique(y)) == 2 and all([0, 1] == np.unique(y)):
