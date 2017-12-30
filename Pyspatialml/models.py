@@ -277,9 +277,13 @@ def cross_val_scores(estimator, X, y, groups=None, sample_weight=None, cv=3,
     # -------------------------------------------------------------------------
     # create dictionary of lists to store metrics
     # -------------------------------------------------------------------------
+    try:  # py2
+        if isinstance(scoring, basestring):
+            scoring = [scoring]
+    except:  # py3
+        if isinstance(scoring, str):
+            scoring = [scoring]
 
-    if isinstance(scoring, basestring):
-        scoring = [scoring]
     scores = dict.fromkeys(scoring)
     scores = {key: [] for key, value in scores.iteritems()}
     scoring_methods = {'accuracy': metrics.accuracy_score,
