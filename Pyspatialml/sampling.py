@@ -12,7 +12,7 @@ from shapely.geometry import Point
 import random
 
 
-def extractPoints(gdf, rasters, field=None):
+def extract_points(gdf, rasters, field=None):
     """
     Samples a list of GDAL rasters using a point data set
 
@@ -47,7 +47,7 @@ def extractPoints(gdf, rasters, field=None):
     return (gdf)
 
 
-def extractPolygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
+def extract_polygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
 
     """
     Samples a list of GDAL rasters using a point data set
@@ -84,13 +84,13 @@ def extractPolygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
 
     response_np = ma.masked_where(response_np == -99999, response_np)
 
-    X, y, y_indexes = extractPixels(
+    X, y, y_indexes = extract_pixels(
             response_np, rasters, field=None, na_rm=True, lowmem=False)
 
     return(X, y, y_indexes)
 
 
-def extractPixels(response_np, rasters, field=None, na_rm=True, lowmem=False):
+def extract_pixels(response_np, rasters, field=None, na_rm=True, lowmem=False):
 
     """
     Samples a list of GDAL rasters using a labelled numpy array
@@ -167,7 +167,7 @@ def extractPixels(response_np, rasters, field=None, na_rm=True, lowmem=False):
     return (X, y, coordinates)
 
 
-def sample_random(target_nsamples, rasters, random_state=None):
+def raster_sample(target_nsamples, rasters, random_state=None):
 
     """
     Randomly samples a list of rasters
