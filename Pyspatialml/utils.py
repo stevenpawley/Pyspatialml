@@ -107,38 +107,24 @@ def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
     if method not in methods:
         raise ValueError('Invalid resampling method: ' + method + os.linesep +
                          'Valid methods are: ' + str(methods))
-    
-    # open raster to be used as the template and create numpy array
-    target = rasterio.open(template)
-    new_arr = target.read(1)
-    
-    for raster in rasters:
-        # open raster to be resampled
-        src = rasterio.open(raster)
-        arr = src.read(1)
-        
-        # resample the source raster to the new_arr
-        reproject(source=arr,
-                  destination=new_arr,
-                  src_transform=src.transform,
-                  dst_transform=target.transform,
-                  src_nodata=src_nodata,
-                  dst_nodata=dst_nodata,
-                  src_crs=src.crs,
-                  dst_crs=target.crs,
-                  resample = method)
-        
-        # write array to disk
-        output = os.path.join(outputdir, os.path.basename(raster))
-        with rasterio.open(path=output, mode='w', driver='GTiff',
-                           width=target.width, height=target.height, count=1,
-                           transform=target.transform, crs=target.crs,
-                           dtype=str(new_arr.dtype), nodata=dst_nodata) as dst:
-            dst.write(new_arr, 1)
-        
-        src.close()
 
-    target.close()
+    # open raster to be used as the template and create numpy array
+    template = rasterio.open(template)
+    kwargs = template.meta.copy()
+
+    for raster in rasters:
+        
+        output = os.path.join(outputdir, os.path.basename(raster))
+        
+        with rasterio.open(raster) as src:
+            with rasterio.open(output, 'w', **kwargs) as dst:
+                reproject(source=rasterio.band(src, 1),
+                          destination=rasterio.band(dst, 1),
+                          dst_transform=template.transform,
+                          dst_nodata=template.nodata,
+                          dst_crs=template.nodata)
+        
+    template.close()
 
     return()
     
