@@ -1,4 +1,4 @@
-from .models import specificity_score, spatial_loocv, cross_val_scores, predict
+from .__main import specificity_score, spatial_loocv, raster_prediction
 from .plotting import raster_plot, shiftedColorMap
 from .sampling import (extract_points, extract_polygons, extract_pixels,
                        raster_sample, filter_points,
