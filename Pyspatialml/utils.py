@@ -7,24 +7,23 @@ from rasterio.warp import reproject
 
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999, intern=False):
-    """
-    Reclassify raster nodatavals
+    """Reclassify raster no data values and save to a new raster
     
-    Args
-    ----
-    input: String
+    Parameters
+    ----------
+    input : str
         File path to raster that is to be reclassified
-    output: String
+    output : str
         File path to output raster
-    src_nodata: int or float, optional
+    src_nodata : int or float, optional
         The source nodata value. Pixels with this value will be reclassified
         to the new dst_nodata value.
         If not set, it will default to the nodata value stored in the source
         image.
-    dst_nodata: int or float, default -99999
+    dst_nodata : int or float, optional (default -99999)
         The nodata value that the outout raster will receive after
         reclassifying pixels with the src_nodata value.
-    itern: boolean, default False
+    itern : bool, optional (default=False)
         Optionally return the reclassified raster as a numpy array
     
     Returns
@@ -55,25 +54,24 @@ def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999, intern=Fal
 def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
                   src_nodata = None, dst_nodata = None):
 
-    """
-    Aligns a list of rasters (paths to files) to a template raster.
+    """Aligns a list of rasters (paths to files) to a template raster.
     The rasters to that are to be realigned are assumed to represent
     single band raster files.
     
     Nodata values are also reclassified to the template raster's nodata values
     
-    Args
-    ----
-    rasters: List of str
+    Parameters
+    ----------
+    rasters : List of str
         List containing file paths to multiple rasters that are to be realigned.
-    template: str
+    template : str
         File path to raster that is to be used as a template to transform the
         other rasters to.
-    outputdir: str
+    outputdir : str
         Directory to output the realigned rasters. This should not be the
         existing directory unless it is desired that the existing rasters to be
         realigned should be overwritten.
-    method: str
+    method : str
         Resampling method to use. One of the following:
             Resampling.average,
             Resampling.bilinear,
@@ -88,12 +86,12 @@ def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
             Resampling.nearest,
             Resampling.q1,
             Resampling.q3
-    src_nodata: int or float, optional
+    src_nodata : int or float, optional
         The source raster nodata value. Pixels with this value will be
         transformed to the new dst_nodata value.
         If not set, it will default to the nodata value stored in the source
         image.
-    dst_nodata: int or float
+    dst_nodata : int or float
         The nodata value that the outout raster will receive after realignment
         If not set, the source rasters nodata value will be used, or the
         GDAL default of 0

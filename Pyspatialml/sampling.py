@@ -13,21 +13,21 @@ import random
 
 
 def extract_points(gdf, rasters, field=None):
-    """
-    Samples a list of GDAL rasters using a point data set
+    """Samples a list of GDAL rasters using a point data set
 
     Parameters
     ----------
-    gdf: Geopandas DataFrame
-    field: Field name of attribute to be used the label the extracted data
-    rasters: List of paths to GDAL supported rasters
+    gdf : Geopandas GeoDataFrame
+        GeoSeries is assumed to entirely consist of point-type feature classes
+    field : str
+        Field name of attribute to be used the label the extracted data
+    rasters : list, str
+        List of paths to GDAL supported rasters
 
     Returns
     -------
-
-    X: Numpy array of extracted raster values
-    y: Numpy array of labels
-    coordinates: Numpy array of xy coordinates of samples
+    gdf : Geopandas GeoDataFrame
+        GeoDataFrame containing extract raster values at the point locations
     """
 
     from rasterio.sample import sample_gen
@@ -48,22 +48,28 @@ def extract_points(gdf, rasters, field=None):
 
 
 def extract_polygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
+    """Samples a list of GDAL rasters, collecting all pixel values that fall
+    within the areas of each polygon feature in a Geopandas GeoDataFrame
 
-    """
-    Samples a list of GDAL rasters using a point data set
-
-    Args
-    ----
-    gdf: Geopandas DataFrame
-    rasters: List of paths to GDAL supported rasters
-    field: Field name of attribute to be used the label the extracted data
+    Parameters
+    ----------
+    gdf : Geopandas DataFrame
+        GeoDataFrame where the GeoSeries is assumed to consist entirely of
+        Polygon feature class types
+    rasters : list, str
+        Paths to GDAL supported rasters
+    field : str
+        Field name of attribute to be used the label the extracted data
 
     Returns
     -------
-
-    X: Numpy array of extracted raster values
-    y: Numpy array of labels
-    coordinates: Numpy array of xy coordinates of samples
+    X: array-like
+        Numpy array of extracted raster values, typically 2d array-like
+    y: 1d array-like
+        Numpy array of labels
+    coordinates: 2d array-like
+        Numpy array of spatial coordinates (x,y) that correspond to each pixel
+        that was sampled in the rasters list
     """
 
     template = rasterio.open(rasters[0], mode='r')
@@ -90,23 +96,29 @@ def extract_polygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
     return(X, y, y_indexes)
 
 
-def extract_pixels(response_np, rasters, field=None, na_rm=True, lowmem=False):
+def extract_pixels(response_np, rasters, na_rm=True, lowmem=False):
+    """Samples a list of GDAL rasters using a labelled numpy array
 
-    """
-    Samples a list of GDAL rasters using a labelled numpy array
-
-    Args
-    ----
-    response_np: Masked 2D numpy array representing labelled pixels
-    rasters: List of paths to GDAL supported rasters
-    lowmem: Use low memory version using numpy memmap
+    Parameters
+    ----------
+    response_np : masked 2d numpy array
+        Masked 2D numpy array containing the pixels of a raster that are
+        labelled
+    rasters : list, str
+        List of paths to GDAL supported rasters
+    na_rm : bool, optional (default=True)
+        Optionally remove any samples that contain nodata values
+    lowmem : bool, optional (default=False)
+        Use low memory version using numpy memmap
 
     Returns
     -------
-
-    X: Numpy array of extracted raster values
-    y: Numpy array of labels
-    y_indexes: Numpy array of row and column indexes of training pixels
+    X : array-like
+        Numpy array of extracted raster values, typically 2d
+    y: 1d array like
+        Numpy array of labelled sampled
+    y_indexes: 2d array-like
+        Numpy array of row and column indexes of training pixels
     """
 
     # determine number of predictors
@@ -167,20 +179,25 @@ def extract_pixels(response_np, rasters, field=None, na_rm=True, lowmem=False):
     return (X, y, coordinates)
 
 
-def raster_sample(target_nsamples, rasters, random_state=None):
+def raster_sample(size, rasters, random_state=None):
+    """Generates a random sample of according to size, and samples the pixel
+    values within the list of rasters
 
-    """
-    Randomly samples a list of rasters
-
-    Args
-    ----
-    target_nsamples: Number of random samples to obtain
-    rasters: List of paths to GDAL supported rasters
+    Parameters
+    ----------
+    size : int
+        Number of random samples to obtain
+    rasters : list, str
+        List of paths to GDAL supported rasters
+    random_state : int
+        integer to use within random.seed
 
     Returns
     -------
-    valid_samples: Numpy array of extracted raster values
-    valid_coordinates: 2D numpy array of xy coordinates of extracted values
+    valid_samples: array-like
+        Numpy array of extracted raster values, typically 2d
+    valid_coordinates: 2d array-like
+        2D numpy array of xy coordinates of extracted values
     """
 
     # set the seed
@@ -203,7 +220,7 @@ def raster_sample(target_nsamples, rasters, random_state=None):
     # loop until target number of samples is satified
     satisfied = False
 
-    n = target_nsamples
+    n = size
     while satisfied is False:
 
         # generate random row and column indices
@@ -238,28 +255,30 @@ def raster_sample(target_nsamples, rasters, random_state=None):
                                       axis=0)
 
         # check to see if target_nsamples has been reached
-        if len(valid_samples) >= target_nsamples:
+        if len(valid_samples) >= size:
             satisfied = True
         else:
-            n = target_nsamples - len(valid_samples)
+            n = size - len(valid_samples)
 
     return (valid_samples, valid_coordinates)
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
-    """
-    Filter points in geodataframe using a minimum distance
+    """Filter points in geodataframe using a minimum distance buffer
 
-    Args
-    ----
-    gdf: Geodataframe
-    min_dist: Points with coordinates closer than minimum distance
-              are removed
-    remove: Remove 'first' occurrences or 'last' occurrences
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        GeoDataFrame containing Point feature types within the GeoSeries
+    min_dist : int or float, optional (default=0)
+        Minimum distance by which to filter out closely spaced points
+    remove : str, optional (default='first')
+        Optionally choose to remove 'first' occurrences or 'last' occurrences
 
     Returns
     -------
-    gdf: Geodataframe with filtered points
+    gdf : GeoDataFrame
+        GeoDataFrame containing with filtered point features
     """
 
     crds = gdf['geometry'].bounds.iloc[:, 2:4].as_matrix()
@@ -277,17 +296,20 @@ def filter_points(gdf, min_dist=0, remove='first'):
 
 
 def get_random_point_in_polygon(poly):
-    """
-    Generates random shapely Point geometry objects within a single
+    """Generates random shapely Point geometry objects within a single
     shapely Polygon object
-    from https://gis.stackexchange.com/questions/6412/generate-points-that-lie-inside-polygon
-    Args
-    ----
-    poly: Shapely Polygon object
+
+    Parameters
+    ----------
+    poly : Shapely Polygon object
     
     Returns
     -------
-    p: Shapely Point object
+    p : Shapely Point object
+    
+    Notes
+    -----
+    from https://gis.stackexchange.com/questions/6412/generate-points-that-lie-inside-polygon
     """
     
     (minx, miny, maxx, maxy) = poly.bounds
