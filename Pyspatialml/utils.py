@@ -2,8 +2,38 @@
 # -*- coding: utf-8 -*-
 
 import os
+import numpy as np
 import rasterio
 from rasterio.warp import reproject
+from tempfile import NamedTemporaryFile as tmpfile
+
+def read_memmap(src, n_bands=None):
+    """Read rasterio raster data as a numpy.memmap array
+    
+    Parameters
+    ----------
+    src : rasterio._io.RasterReader
+        rasterio._io.RasterReader to load data from
+    n_bands: int or list, optional (default=None)
+        Optionally specify to load individual bands. Can be an integer for
+        a single band, or a list of integers for multiple bands
+    
+    Returns
+    -------
+    arr: array-like
+        2D or 3D numpy array containing loaded raster data
+    """
+
+    if n_bands is None:
+        n_bands = src.count
+        
+    arr = np.memmap(filename=tmpfile(),
+                    shape=(n_bands, src.shape[0], src.shape[1]),
+                    dtype='float32')
+    arr[:] = src.read(range(1, n_bands+1))
+    arr[arr==src.nodata] = np.nan
+    
+    return arr
 
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999, intern=False):

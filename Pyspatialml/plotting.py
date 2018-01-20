@@ -5,6 +5,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
+def rasterio_normalize(arr):
+    v_max=arr.max(axis=(0,1,2))
+    v_min=arr.min(axis=(0,1,2))
+    norm = (arr-v_min)/(v_max-v_min)
+    return norm
+
+
 def discrete_cmap(N, base_cmap=None):
     # https://gist.github.com/jakevdp/91077b0cae40f8f8244a
     """Create an N-bin discrete colormap from the specified input map"""
