@@ -7,30 +7,42 @@ import rasterio
 from rasterio.warp import reproject
 from tempfile import NamedTemporaryFile as tmpfile
 
-def read_memmap(src, n_bands=None):
-    """Read rasterio raster data as a numpy.memmap array
+def read_memmap(src, bands=None):
+    """Read a rasterio._io.RasterReader object into a numpy.memmap file
     
     Parameters
     ----------
     src : rasterio._io.RasterReader
-        rasterio._io.RasterReader to load data from
-    n_bands: int or list, optional (default=None)
-        Optionally specify to load individual bands. Can be an integer for
-        a single band, or a list of integers for multiple bands
+        Rasterio raster that is open.
+    bands : int or list, optional (default = None)
+        Optionally specify to load a single band, a list of bands, or None for
+        all bands within the raster.
     
     Returns
     -------
-    arr: array-like
-        2D or 3D numpy array containing loaded raster data
+    arr : array-like
+        2D or 3D numpy.memmap containing raster data. Nodata values are 
+        represented by np.nan. By default a 3D numpy.memmap object is returned
+        unless a single band is specified, in which case a 2D numpy.memmap
+        object is returned.
     """
+    
+    # default loads all bands as 3D numpy array
+    if bands is None:
+        bands = range(1, src.count+1, 1)
+        arr_shape = (src.count, src.shape[0], src.shape[1])
 
-    if n_bands is None:
-        n_bands = src.count
+    # if a single band is specified use 2D numpy array 
+    elif len(bands) == 1:
+        arr_shape = (src.shape[0], src.shape[1])
+
+    # use 3D numpy array for a subset of bans
+    else:
+        arr_shape = (len(bands), src.shape[0], src.shape[1])
         
-    arr = np.memmap(filename=tmpfile(),
-                    shape=(n_bands, src.shape[0], src.shape[1]),
-                    dtype='float32')
-    arr[:] = src.read(range(1, n_bands+1))
+    # numpy.memmap using float32
+    arr = np.memmap(filename=tmpfile(), shape=arr_shape, dtype='float32')
+    arr[:] = src.read(bands)
     arr[arr==src.nodata] = np.nan
     
     return arr
