@@ -5,9 +5,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-def rasterio_normalize(arr):
-    v_max=arr.max(axis=(0,1,2))
-    v_min=arr.min(axis=(0,1,2))
+def rasterio_normalize(arr, axis=None):
+    v_max=np.nanmax(arr, axis)
+    v_min=np.nanmin(arr, axis)
     norm = (arr-v_min)/(v_max-v_min)
     return norm
 
