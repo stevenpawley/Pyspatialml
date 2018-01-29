@@ -12,6 +12,7 @@ import math
 import rasterio
 from rasterio.warp import reproject
 from tempfile import NamedTemporaryFile as tmpfile
+import geopandas as gpd
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
@@ -68,6 +69,20 @@ def get_random_point_in_polygon(poly):
         p = Point(random.uniform(minx, maxx), random.uniform(miny, maxy))
         if poly.contains(p):
             return p
+
+
+def RandomPoints(gdf, n_points):
+    """Fit n_points random points per polygon"""
+    random_points = []
+    
+    for i, poly in gdf.iterrows():
+        random_points.append(
+            get_random_point_in_polygon(poly.geometry) for k in range(n_points))
+        
+    points = gpd.GeoDataFrame(
+        geometry=gpd.GeoSeries(random_points), crs=gdf.crs)
+    
+    return points
 
 
 def specificity_score(y_true, y_pred):
