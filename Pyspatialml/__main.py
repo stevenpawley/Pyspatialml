@@ -3,11 +3,9 @@ import rasterio
 import os
 from warnings import warn
 import shapely
-import geopandas
-from rasterio import features
-import tempfile
 
-def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1,
+
+def print_progressbar(iteration, total, prefix = '', suffix = '', decimals = 1,
                      length = 100, fill = '█'):
     """Call in a loop to create terminal progress bar
     https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113
@@ -36,6 +34,46 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1,
     # Print New Line on Complete
     if iteration == total:
         print()
+
+
+def applier(RasterStack, func, output_path=None, rowchunk=25):
+    """Applies a function to a RasterStack object in image
+    strips"""
+
+    # processing region dimensions
+    rows, cols = RasterStack.height, RasterStack.width
+
+    # generator for row increments, tuple(startrow, endrow)
+    windows=((row, row+rowchunk) if row+rowchunk <= rows else 
+             (row, rows) for row in range(0, rows, rowchunk))
+    result = []
+
+    # Loop through rasters block-by-block
+    for start, end, in windows:
+        print_progressbar(start, rows, length=50)
+        img = RasterStack.read(window=((start, end), (0, cols)))
+        
+        if output_path:
+            result = func(img)
+            if start == 0:
+                func_output = rasterio.open(
+                    output_path, mode='w', driver='GTiff', height=rows,
+                    width=cols, count=result.shape[0], dtype='float32',
+                    crs=RasterStack.meta['crs'],
+                    transform=RasterStack.meta['transform'],
+                    nodata=-99999)
+            func_output.write(
+                result.astype('float32'),
+                window=((start, end), (0, cols)))
+        else:
+            result.append(func(img))
+    
+    # summarize results
+    if output_path:
+        func_output.close()
+        return func_output
+    else:
+        return result
 
 
 class RasterStack(object):
@@ -76,6 +114,7 @@ class RasterStack(object):
             and transform.
         """
         self.__check_alignment(rasters)
+
         # open bands
         self.names = []
         self.count = 0
@@ -95,6 +134,7 @@ class RasterStack(object):
         self.meta['count'] = self.count
         self.affine = self.meta['affine']
         self.bounds = src.bounds
+        self.files = rasters
 
     def __check_alignment(self, rasters):
         """Check that a list of rasters are aligned with the same pixel
@@ -192,7 +232,7 @@ class RasterStack(object):
 
         # Loop through rasters block-by-block
         for start, end, in windows:
-            printProgressBar(start, rows, length=50)
+            print_progressbar(start, rows, length=50)
 
             # get raster data for window (bands, blocksize, columns)
             img_np = self.read(window=((start, end), (0, cols)))
@@ -279,17 +319,121 @@ class RasterStack(object):
             clf_output.close()
         if predict_type == 'prob' or predict_type == 'all':
             proba_output.close()
-
-
-def extract(x, y):
-    if isinstance(y, geopandas.geodataframe.GeoDataFrame):
+    
+    @staticmethod
+    def __value_extractor(img):
+        # split numpy array bands(axis=0) into labelled pixels and
+        # raster data
+        response_arr = img[-1, :, :]
+        raster_arr = img[0:-1, :, :]
+    
+        # returns indices of labelled values
+        is_train = np.nonzero(~response_arr.mask)
+    
+        # get the labelled values
+        labels = response_arr.data[is_train]
+    
+        # extract data at labelled pixel locations
+        data = raster_arr[:, is_train[0], is_train[1]]
+    
+        # Remove nan rows from training data
+        data = data.filled(np.nan)
+        
+        # combine training data, locations and labels
+        data = np.vstack((data, labels))
+    
+        return data
+    
+    def extract_pixels(self, response_path, na_rm=True):
+    
+        # create new RasterStack object with labelled pixels as
+        # last band in the stack
+        temp_stack = RasterStack(self.files + response_path)
+    
+        # extract training data
+        data = applier(temp_stack, __value_extractor)
+        data = np.concatenate(data, axis=1)
+        raster_vals = data[0:-1, :]
+        labelled_vals = data[-1, :]
+    
+        if na_rm is True:
+            X = raster_vals[~np.isnan(raster_vals).any(axis=1)]
+            y = labelled_vals[np.where(~np.isnan(raster_vals).any(axis=1))]
+        else:
+            X = raster_vals
+            y = labelled_vals
+    
+        return (X, y)
+    
+    def extract_features(self, y):
+        """Samples a list of GDAL rasters using a point data set
+    
+        Parameters
+        ----------
+        y : Geopandas GeoDataFrame
+            GeoSeries is assumed to entirely consist of point-type feature classes
+    
+        Returns
+        -------
+        gdf : Geopandas GeoDataFrame
+            GeoDataFrame containing extract raster values at the point locations
+        """
+    
+        from rasterio.sample import sample_gen
+        
+        # point feature data
         if isinstance(y.geometry.all(), shapely.geometry.point.Point):
-            data = __extract_points(x, y)
+            # get coordinates and label for each point in points_gdf
+            coordinates = np.array(y.bounds.iloc[:, :2])
+        
+            # loop through each raster
+            for r in self.names:
+                raster = getattr(self, r)
+                nodata = raster.nodata
+                data = np.array([i for i in sample_gen(raster, coordinates)],
+                                dtype='float32')
+                data[data == nodata] = np.nan
+                if data.shape[1] == 1:
+                    y[r] = data
+                else:
+                    for i in range(1, data.shape[1]+1):
+                        y[r+'_'+str(i)] = data[:, i-1]
+            
+        # polygon features
+        if isinstance(y.geometry.all(), shapely.geometry.Polygon):
+            print ('Not implemented yet')
+    #        template = rasterio.open(rasters[0], mode='r')
+    #        response_np = np.zeros((template.height, template.width))
+    #        response_np[:] = -99999
+    #    
+    #        # this is where we create a generator of geom to use in rasterizing
+    #        if field is None:
+    #            shapes = (geom for geom in gdf.geometry)
+    #    
+    #        if field is not None:
+    #            shapes = ((geom, value) for geom, value in zip(
+    #                      gdf.geometry, gdf[field]))
+    #    
+    #        features.rasterize(
+    #            shapes=shapes, fill=-99999, out=response_np,
+    #            transform=template.transform, default_value=1)
+    #    
+    #        response_np = np.ma.masked_where(response_np == -99999, response_np)
+    #    
+    #        X, y, y_indexes = __extract_pixels(
+    #                response_np, rasters, field=None, na_rm=True, lowmem=False)
+    
+        return (y)
 
-    return data
+#def extract(x, y):
+#    if isinstance(y, geopandas.geodataframe.GeoDataFrame):
+#        if isinstance(y.geometry.all(), shapely.geometry.point.Point):
+#            data = __extract_points(x, y)
+#
+#    return data
 
 
-def __extract_points(x, y):
+def extract_features(x, y):
     """Samples a list of GDAL rasters using a point data set
 
     Parameters
@@ -306,159 +450,99 @@ def __extract_points(x, y):
     """
 
     from rasterio.sample import sample_gen
-
-    # get coordinates and label for each point in points_gdf
-    coordinates = np.array(y.bounds.iloc[:, :2])
-
-    # loop through each raster
-    for r in x.names:
-        raster = getattr(x, r)
-        nodata = raster.nodata
-        data = np.array([i for i in sample_gen(raster, coordinates)],
-                        dtype='float32')
-        data[data == nodata] = np.nan
-        if data.shape[1] == 1:
-            y[r] = data
-        else:
-            for i in range(1, data.shape[1]+1):
-                y[r+'_'+str(i)] = data[:, i-1]
+    
+    # point feature data
+    if isinstance(y.geometry.all(), shapely.geometry.point.Point):
+        # get coordinates and label for each point in points_gdf
+        coordinates = np.array(y.bounds.iloc[:, :2])
+    
+        # loop through each raster
+        for r in x.names:
+            raster = getattr(x, r)
+            nodata = raster.nodata
+            data = np.array([i for i in sample_gen(raster, coordinates)],
+                            dtype='float32')
+            data[data == nodata] = np.nan
+            if data.shape[1] == 1:
+                y[r] = data
+            else:
+                for i in range(1, data.shape[1]+1):
+                    y[r+'_'+str(i)] = data[:, i-1]
+        
+    # polygon features
+    if isinstance(y.geometry.all(), shapely.geometry.Polygon):
+        print ('Not implemented yet')
+#        template = rasterio.open(rasters[0], mode='r')
+#        response_np = np.zeros((template.height, template.width))
+#        response_np[:] = -99999
+#    
+#        # this is where we create a generator of geom to use in rasterizing
+#        if field is None:
+#            shapes = (geom for geom in gdf.geometry)
+#    
+#        if field is not None:
+#            shapes = ((geom, value) for geom, value in zip(
+#                      gdf.geometry, gdf[field]))
+#    
+#        features.rasterize(
+#            shapes=shapes, fill=-99999, out=response_np,
+#            transform=template.transform, default_value=1)
+#    
+#        response_np = np.ma.masked_where(response_np == -99999, response_np)
+#    
+#        X, y, y_indexes = __extract_pixels(
+#                response_np, rasters, field=None, na_rm=True, lowmem=False)
 
     return (y)
 
 
-def __extract_polygons(gdf, rasters, field=None, na_rm=True, lowmem=False):
-    """Samples a list of GDAL rasters, collecting all pixel values that fall
-    within the areas of each polygon feature in a Geopandas GeoDataFrame
-
-    Parameters
-    ----------
-    gdf : Geopandas DataFrame
-        GeoDataFrame where the GeoSeries is assumed to consist entirely of
-        Polygon feature class types
-    rasters : list, str
-        Paths to GDAL supported rasters
-    field : str
-        Field name of attribute to be used the label the extracted data
-
-    Returns
-    -------
-    X: array-like
-        Numpy array of extracted raster values, typically 2d array-like
-    y: 1d array-like
-        Numpy array of labels
-    coordinates: 2d array-like
-        Numpy array of spatial coordinates (x,y) that correspond to each pixel
-        that was sampled in the rasters list
-    """
-
-    template = rasterio.open(rasters[0], mode='r')
-    response_np = np.zeros((template.height, template.width))
-    response_np[:] = -99999
-
-    # this is where we create a generator of geom to use in rasterizing
-    if field is None:
-        shapes = (geom for geom in gdf.geometry)
-
-    if field is not None:
-        shapes = ((geom, value) for geom, value in zip(
-                  gdf.geometry, gdf[field]))
-
-    features.rasterize(
-        shapes=shapes, fill=-99999, out=response_np,
-        transform=template.transform, default_value=1)
-
-    response_np = np.ma.masked_where(response_np == -99999, response_np)
-
-    X, y, y_indexes = __extract_pixels(
-            response_np, rasters, field=None, na_rm=True, lowmem=False)
-
-    return(X, y, y_indexes)
-
-
-def __extract_pixels(response_np, rasters, na_rm=True, lowmem=False):
-    """Samples a list of GDAL rasters using a labelled numpy array
-
-    Parameters
-    ----------
-    response_np : masked 2d numpy array
-        Masked 2D numpy array containing the pixels of a raster that are
-        labelled
-    rasters : list, str
-        List of paths to GDAL supported rasters
-    na_rm : bool, optional (default=True)
-        Optionally remove any samples that contain nodata values
-    lowmem : bool, optional (default=False)
-        Use low memory version using numpy memmap
-
-    Returns
-    -------
-    X : array-like
-        Numpy array of extracted raster values, typically 2d
-    y: 1d array like
-        Numpy array of labelled sampled
-    y_indexes: 2d array-like
-        Numpy array of row and column indexes of training pixels
-    """
-
-    # determine number of predictors
-    n_features = len(rasters)
+def __value_extractor(img):
+    # split numpy array bands(axis=0) into labelled pixels and
+    # raster data
+    response_arr = img[-1, :, :]
+    raster_arr = img[0:-1, :, :]
 
     # returns indices of labelled values
-    is_train = np.nonzero(~response_np.mask)
+    is_train = np.nonzero(~response_arr.mask)
 
     # get the labelled values
-    training_labels = response_np.data[is_train]
-    n_labels = np.array(is_train).shape[1]
+    labels = response_arr.data[is_train]
 
-    # Create a masked array with the dimensions of the number of columns
-    training_data = np.ma.zeros((n_labels, n_features))
-    training_data[:] = np.nan
-
-    # Loop through each raster and extract values at training locations
-    if lowmem is True:
-        template = rasterio.open(rasters[0])
-        feature = np.memmap(tempfile.NamedTemporaryFile(),
-                            dtype='float32', mode='w+',
-                            shape=(template.height, template.width))
-
-    for band, rasterfile in enumerate(rasters):
-
-        # open rasterio
-        rio_rast = rasterio.open(rasterfile)
-
-        if lowmem is False:
-            feature = rio_rast.read(1, masked=True)
-            training_data[0:n_labels, band] = feature[is_train]
-        else:
-            feature[:] = rio_rast.read(1, masked=True)[:]
-            training_data[0:n_labels, band] = \
-                np.ma.masked_where(
-                    feature[is_train] == rio_rast.nodata,
-                    feature[is_train])
-
-    # convert indexes of training pixels from tuple to n*2 np array
-    is_train = np.array(is_train).T
+    # extract data at labelled pixel locations
+    data = raster_arr[:, is_train[0], is_train[1]]
 
     # Remove nan rows from training data
-    training_data = training_data.filled(np.nan)
+    data = data.filled(np.nan)
+    
+    # combine training data, locations and labels
+    data = np.vstack((data, labels))
+
+    return data
+
+
+def extract_pixels(response_path, RasterStack, na_rm=True):
+
+    # create new RasterStack object with labelled pixels as
+    # last band in the stack
+    stack = RasterStack(RasterStack.files + response_path)
+
+    # extract training data
+    data = applier(stack, __value_extractor)
+    data = np.concatenate(data, axis=1)
+    raster_vals = data[0:-1, :]
+    labelled_vals = data[-1, :]
 
     if na_rm is True:
-        X = training_data[~np.isnan(training_data).any(axis=1)]
-        y = training_labels[~np.isnan(training_data).any(axis=1)]
-        y_indexes = is_train[~np.isnan(training_data).any(axis=1)]
+        X = raster_vals[~np.isnan(raster_vals).any(axis=1)]
+        y = labelled_vals[np.where(~np.isnan(raster_vals).any(axis=1))]
     else:
-        X = training_data
-        y = training_labels
-        y_indexes = is_train
+        X = raster_vals
+        y = labelled_vals
 
-    coordinates = np.array(rasterio.transform.xy(
-        transform=rio_rast.transform, rows=y_indexes[:, 0],
-        cols=y_indexes[:, 1], offset='center')).T
-
-    return (X, y, coordinates)
+    return (X, y)
 
 
-def SampleStack(size, rasters, random_state=None):
+def sample_stack(size, rasters, random_state=None):
     """Generates a random sample of according to size, and samples the pixel
     values within the list of rasters
 
