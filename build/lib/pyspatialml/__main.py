@@ -412,14 +412,3 @@ class RasterStack(object):
     #                response_np, rasters, field=None, na_rm=True, lowmem=False)
 
         return y
-    
-    def clip(self, west, south, east, north):
-        west=188420
-        east=190000
-        south=6204027
-        north=6300000
-        stack_transform = stack.L8_1314_Backfilled_Lv1.transform
-        xs = [west, east]
-        ys = [south, north]
-        
-        rasterio.transform.rowcol(stack_transform, xs, ys)
