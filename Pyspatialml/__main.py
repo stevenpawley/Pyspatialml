@@ -314,8 +314,12 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
     meta = src.meta
     meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
 
+    # determine number of processing blocks
+    n_blocks = len([i for i in src.block_windows()])
+
     with rasterio.open(file_path, 'w', **meta) as dst:
-        for i, window in src.block_windows():
+        for i, (index, window) in enumerate(src.block_windows()):
+            print_progressbar(iteration=i, total=n_blocks)
 
             # read image data
             img = src.read(masked=True, window=window)
