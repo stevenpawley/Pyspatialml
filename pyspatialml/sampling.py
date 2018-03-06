@@ -107,7 +107,7 @@ import os
 #        src.close()
 #
 #    # summarize data and mask nodatavals in X, y, and xy
-#    y = np.ma.masked_where(X.mask, y)
+#    y = np.ma.masked_where(X.mask.any(axis=1), y)
 #    xy = np.ma.masked_where(X.mask, xy)
 #
 #    return(X, y, xy)
@@ -231,7 +231,7 @@ def __extract_points(xy, raster):
     with rasterio.open(raster) as src:
         training_data = np.vstack([i for i in sample_gen(src, xy)])
         training_data = np.ma.masked_where(
-            training_data == np.any(src.nodatavals), training_data)
+            training_data == src.nodatavals, training_data)
 
     raster.close()
     return (training_data)
