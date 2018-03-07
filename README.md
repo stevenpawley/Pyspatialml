@@ -26,12 +26,12 @@ Import the extract and predict functions:
 ```
 from pyspatialml.sampling import extract
 from pyspatialml import predict
-from osgeo import gdal
-import rasterio
 ```
 
 Stack a series of separate rasters as a virtual tile format raster:
 ```
+from osgeo import gdal
+
 predictor_files = [
   'raster1.tif',
   'raster2.tif',
@@ -47,6 +47,46 @@ outds = gdal.BuildVRT(
     allowProjectionDifference=True,
     outputSRS='+proj=tmerc +lat_0=0 +lon_0=-115 +k=0.9992 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 outds.FlushCache()
+```
+
+Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
+
+```
+import geopandas as gpd
+
+training = gpd.read_file('training.shp')
+
+X, y, xy = extract(
+    raster=predictors, response_gdf=training, field='id')
+```
+
+Note the extract function returns three numpy-arrays as a tuple, consisting of the extracted pixel values (X), the response variable value (y) and the sampled locations (2d numpy array of x,y values). These represent masked arrays with nodata values in the predictors being masked, and the equivalent entries in y and xy being masked on axis=0.
+
+Next we can train a logistic regression classifier:
+
+```
+from sklearn.linear_model import LogisticRegressionCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_validate
+
+# define the classifier with standardization of the input features in a pipeline
+lr = Pipeline(
+    [('scaling', StandardScaler()),
+     ('classifier', LogisticRegressionCV(n_jobs=-1))])
+
+# cross validate
+cross_validate(
+  lr, X, y, groups=groups,
+  scoring=['accuracy', 'roc_auc',
+  cv=5,  n_jobs=1)
+```
+
+Perform the prediction on the raster data:
+
+```
+outfile = 'prediction.tif'
+predict(estimator=lr, raster=predictors, file_path=outfile, predict_type='prob', indexes=1)
 ```
 
 ## Notes
