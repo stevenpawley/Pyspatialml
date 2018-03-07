@@ -22,6 +22,8 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 
 ## Usage
 
+### Basic workflow
+
 Import the extract and predict functions:
 ```
 from pyspatialml.sampling import extract
@@ -96,6 +98,14 @@ Perform the prediction on the raster data. The estimator, raster and file_path f
 ```
 outfile = 'prediction.tif'
 predict(estimator=lr, raster=predictors, file_path=outfile, predict_type='prob', indexes=1)
+```
+
+### Sampling Tools
+
+For many spatial models, it is common to take a random or stratified random sample of the predictors to represent a single class (i.e. an environmental background or pseudo-absences in a binary classification model). Functions are supplied in the sampling module for this purpose:
+
+```
+
 ```
 
 ## Notes
