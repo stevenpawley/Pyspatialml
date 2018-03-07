@@ -4,10 +4,6 @@ Machine learning classification and regresssion modelling for spatial raster dat
 ## Description
 Pyspatialml provides a suite of simple functions to enable machine learning classification and regression models to be applied to raster data. The package relies on the rasterio and GDAL packages for accessing raster data, and geopandas/shapely for vector data.
 
-## Notes
-
-Currently only Python 3 is supported.
-
 ## Background
 
 A supervised machine-learning workflow as applied to spatial raster data involves several steps:
@@ -28,5 +24,6 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 from pyspatialml.sampling import extract
 from pyspatialml import predict
 
+## Notes
 
-
+Currently only Python 3 is supported.
