@@ -60,6 +60,15 @@ X, y, xy = extract(
     raster=predictors, response_gdf=training, field='id')
 ```
 
+The response_gdf argument of the extract function requires a Geopandas GeoDataFrame object, which contain either points or polygons. Alternatively if this response feature is represented by raster data (GDAL-supported, single-band raster), then the response_raster argument can be used:
+
+```
+training = gpd.read_file('training.tif')
+
+X, y, xy = extract(
+    raster=predictors, response_raster=training, field='id')
+```
+
 Note the extract function returns three numpy-arrays as a tuple, consisting of the extracted pixel values (X), the response variable value (y) and the sampled locations (2d numpy array of x,y values). These represent masked arrays with nodata values in the predictors being masked, and the equivalent entries in y and xy being masked on axis=0.
 
 Next we can train a logistic regression classifier:
@@ -82,7 +91,7 @@ cross_validate(
   cv=5,  n_jobs=1)
 ```
 
-Perform the prediction on the raster data:
+Perform the prediction on the raster data. The estimator, raster and file_path fields are required. Predict_type can be either 'raw' to output a classification or regression result, or 'prob' to output class probabilities as a multi-band raster (a band for each class probability). In the latter case, indexes can also be supplied if you only want to output the probabilities for a particular class, or list of classes, by supplying the indices of those classes:
 
 ```
 outfile = 'prediction.tif'
