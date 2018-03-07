@@ -22,6 +22,7 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 ## Usage
 
 from pyspatialml.sampling import extract
+
 from pyspatialml import predict
 
 ## Notes
