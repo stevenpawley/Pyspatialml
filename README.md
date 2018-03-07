@@ -16,8 +16,9 @@ Training data consists of two components - a response feature and a set of predi
 ![example](https://github.com/stevenpawley/Pyspatialml/blob/master/img/Pyspatialml_training.svg)
 
 ## Installation
-
+```
 pip install git+https://github.com/stevenpawley/Pyspatialml
+```
 
 ## Usage
 ```
