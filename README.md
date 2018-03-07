@@ -20,10 +20,10 @@ Training data consists of two components - a response feature and a set of predi
 pip install git+https://github.com/stevenpawley/Pyspatialml
 
 ## Usage
-
+```
 from pyspatialml.sampling import extract
-
 from pyspatialml import predict
+```
 
 ## Notes
 
