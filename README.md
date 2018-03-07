@@ -26,6 +26,8 @@ Import the extract and predict functions:
 ```
 from pyspatialml.sampling import extract
 from pyspatialml import predict
+from osgeo import gdal
+import rasterio
 ```
 
 Stack a series of separate rasters as a virtual tile format raster:
