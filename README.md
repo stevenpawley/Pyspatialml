@@ -109,7 +109,7 @@ clusters.fit(xy)
 # cross validate
 cross_validate(
   lr, X, y, groups=clusters.labels_,
-  scoring=['accuracy', 'roc_auc',
+  scoring=['accuracy', 'roc_auc'],
   cv=5,  n_jobs=1)
 ```
 
