@@ -85,15 +85,35 @@ from sklearn.model_selection import cross_validate
 lr = Pipeline(
     [('scaling', StandardScaler()),
      ('classifier', LogisticRegressionCV(n_jobs=-1))])
+````
+
+After defining a classifier, a typical step consists of performing a cross-validation to evaluate the performance of the model. Scikit-learn provides the cross_validate function for this purpose. In comparison to non-spatial data, spatial data can be spatially correlated, which potentially can mean that geographically proximal samples may not represent truely independent samples if they are within the autocorrelation range of some of the predictors. This will lead to overly optimistic performance measures if samples in the training dataset / cross-validation partition are strongly spatially correlated with samples in the test dataset / cross-validation partition.
+
+In this case, performing cross-validation using groups is useful, because these groups can represent spatial clusters of training samples, and samples from the same group will never occur in both the training and test partitions of a cross-validation. An example of creating random spatial clusters from point coordinates is provided here:
+
+```
+from sklearn.cluster import KMeans
+
+# import training features
+import geopandas as gpd
+training_points = gpd.read_file('training_points.shp')
+
+# extract training data from the predictors
+X, y, xy = extract(
+  raster=predictors, response_gdf=training_points, field='id')
+
+# create 100 spatial clusters based on clustering of the training data point x,y coordinates
+clusters = KMeans(n_clusters=100, n_jobs=-1)
+clusters.fit(xy)
 
 # cross validate
 cross_validate(
-  lr, X, y, groups=groups,
+  lr, X, y, groups=clusters.labels_,
   scoring=['accuracy', 'roc_auc',
   cv=5,  n_jobs=1)
 ```
 
-Perform the prediction on the raster data. The estimator, raster and file_path fields are required. Predict_type can be either 'raw' to output a classification or regression result, or 'prob' to output class probabilities as a multi-band raster (a band for each class probability). In the latter case, indexes can also be supplied if you only want to output the probabilities for a particular class, or list of classes, by supplying the indices of those classes:
+Finally we might want to perform the prediction on the raster data. The estimator, raster and file_path fields are required. Predict_type can be either 'raw' to output a classification or regression result, or 'prob' to output class probabilities as a multi-band raster (a band for each class probability). In the latter case, indexes can also be supplied if you only want to output the probabilities for a particular class, or list of classes, by supplying the indices of those classes:
 
 ```
 outfile = 'prediction.tif'
