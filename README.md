@@ -45,9 +45,7 @@ predictors = 'stack.vrt'
 outds = gdal.BuildVRT(
     destName=predictors, srcDSOrSrcDSTab=predictor_files, separate=True,
     resolution='highest', resampleAlg='bilinear',
-    outputBounds=(xmin, ymin, xmax, ymax),
-    allowProjectionDifference=True,
-    outputSRS='+proj=tmerc +lat_0=0 +lon_0=-115 +k=0.9992 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
+    outputBounds=(xmin, ymin, xmax, ymax))
 outds.FlushCache()
 ```
 
