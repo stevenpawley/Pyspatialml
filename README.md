@@ -105,7 +105,43 @@ predict(estimator=lr, raster=predictors, file_path=outfile, predict_type='prob',
 For many spatial models, it is common to take a random or stratified random sample of the predictors to represent a single class (i.e. an environmental background or pseudo-absences in a binary classification model). Functions are supplied in the sampling module for this purpose:
 
 ```
+from pyspatialml.sampling import random_sample, stratified_sample, sample
 
+# extract training data using a random sample
+xy = random_sample(size=1000, raster=predictors, random_state=1)
+X = sample(xy, predictors)
+
+# extract training data using a stratified random sample from a map containing categorical data
+# here we are taking 50 samples per category
+xy = stratified_sample(stratified='category_raster.tif', n=50)
+X = sample(xy, predictors)
+```
+
+In some cases, we don't need all of the training data, but rather would spatially thin a point dataset. The filter_points function performs point-thinning based on a minimum distance buffer:
+
+```
+from pyspatialml.sampling import filter_points
+import geopandas as gpd
+
+training = gpd.read_file('training_points.shp')
+training_xy = training.bounds.iloc[:, 2:].as_matrix()
+
+thinned_points = filter_points(xy=training_xy, min_dist=500, remove='first')
+```
+
+We can also generate random points within polygons using the get_random_point_in_polygon function. This requires a shapely POLYGON geometry as an input, and returns a shapely POINT object:
+
+```
+from pyspatialml.sampling import get_random_point_in_polygon
+
+polygons = gpd.read_file('training_polygons.shp')
+
+# generate 5 random points in a single polygon
+random_points = [get_random_point_in_polygon(polygons.geometry[0]) for i in range(5)]
+
+# convert to a GeoDataFrame
+random_points = gpd.GeoDataFrame(
+  geometry=gpd.GeoSeries(random_points), crs=crs)
 ```
 
 ## Notes
