@@ -1,26 +1,43 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 27 09:55:52 2018
-
-@author: Steven Pawley
-"""
-
+from osgeo import gdal
+from pyspatialml.sampling import extract
+from pyspatialml import predict
 import geopandas as gpd
+import rasterio
+import os
 
-training_stack = 'C:/GIS/Tests/ir_bushehr_28feb04_ps.tif'
-training_vrt = 'C:/GIS/Tests/ir_bushehr_28feb04_ps.vrt'
-training_polygons = 'C:/GIS/Tests/Training_polygons.shp'
-training_points = 'C:/GIS/Tests/Training_points.shp'
-training_pixels = 'C:/GIS/Tests/Training_pixels.sdat'
+# project base directory
+projectdir = '/Users/steven/Github/pyspatialml/tests'
+
+# raster data
+band1 = os.path.join(projectdir, 'lsat7_2000_10.tif')
+band2 = os.path.join(projectdir, 'lsat7_2000_20.tif')
+band3 = os.path.join(projectdir, 'lsat7_2000_30.tif')
+band4 = os.path.join(projectdir, 'lsat7_2000_40.tif')
+band5 = os.path.join(projectdir, 'lsat7_2000_50.tif')
+band7 = os.path.join(projectdir, 'lsat7_2000_70.tif')
+
+# vector data
+training_points = os.path.join(projectdir, 'landclass96_roi.shp')
+
+# prepare virtual raster
+predictors = [band1, band2, band3, band4, band5, band7]
+vrt_file = os.path.join(projectdir, 'landsat.vrt')
+outds = gdal.BuildVRT(
+    destName=vrt_file, srcDSOrSrcDSTab=predictors, separate=True,
+    resolution='highest', resampleAlg='bilinear')
+outds.FlushCache()
 
 # read vector data
-training_polygons = gpd.read_file(training_polygons)
-training_points = gpd.read_file(training_points)
+training_gpd = gpd.read_file(training_points)
+
+# extract training data
+X, y, xy = extract(raster=vrt_file, response_gdf=training_gpd, field='id')
+
+
+
 
 # extract training data from points
-X, y, xy = extract(raster=training_stack, response_gdf=training_points)
-X, y, xy = extract(raster=training_stack, response_gdf=training_points, field='ID')
-X, y, xy = extract(raster=training_vrt, response_gdf=training_points)
+X, y, xy = extract(raster=vrt_file, response_gdf=training_points, field='id')
 
 # extract training data from polygons
 X, y, xy = extract(raster=training_stack, response_gdf=training_polygons, field='ID')

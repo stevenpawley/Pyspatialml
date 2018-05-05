@@ -250,6 +250,11 @@ def __extract_points(xy, raster):
         training_data == srcnodatavals, training_data)
     src.FlushCache()
 
+    if isinstance(training_data.mask, np.bool_):
+        mask_arr = np.empty(training_data.shape, dtype='bool')
+        mask_arr[:] = False
+        training_data.mask = mask_arr
+
     return (training_data)
 
 
