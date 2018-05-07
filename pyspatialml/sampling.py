@@ -227,15 +227,6 @@ def __extract_points(xy, raster):
     data : 2d array-like
         Masked array containing sampled raster values (sample, bands)
         at x,y locations"""
-    # using rasterio
-#    from rasterio.sample import sample_gen
-#    start=time.time()
-#    with rasterio.open(raster) as src:
-#        training_data = np.vstack([i for i in sample_gen(src, xy)])
-#        training_data = np.ma.masked_where(
-#            training_data == src.nodatavals, training_data)
-#    end=time.time()
-#    end-start
 
     # open raster
     src = gdal.Open(raster)

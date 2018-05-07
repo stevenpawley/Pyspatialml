@@ -1,9 +1,11 @@
 from osgeo import gdal
 from pyspatialml.sampling import extract
+from pyspatialml.spectral import indices
 from pyspatialml import predict
 import geopandas as gpd
 import rasterio
 import os
+import matplotlib.pyplot as plt
 
 # project base directory
 projectdir = '/Users/steven/Github/pyspatialml/tests'
@@ -30,21 +32,24 @@ outds.FlushCache()
 # read vector data
 training_gpd = gpd.read_file(training_points)
 
+# calculate spectral indices
+spec_ind = indices(src=vrt_file, blue=0, green=1, red=2, nir=3, swir2=4, swir3=5)
+ndvi = spec_ind.ndvi()
+
+# plotting
+bounds = rasterio.open(vrt_file).bounds
+plt.imshow(ndvi, extent=(bounds.left, bounds.right, bounds.bottom, bounds.top))
+plt.scatter(x=training_gpd.bounds.iloc[:, 0], y=training_gpd.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+
 # extract training data
 X, y, xy = extract(raster=vrt_file, response_gdf=training_gpd, field='id')
 
-
-
-
-# extract training data from points
-X, y, xy = extract(raster=vrt_file, response_gdf=training_points, field='id')
-
-# extract training data from polygons
-X, y, xy = extract(raster=training_stack, response_gdf=training_polygons, field='ID')
-X, y, xy = extract(raster=training_stack, response_gdf=training_polygons)
-
-# extract training data from labelled pixels
-X, y, xy = extract(raster=training_stack, response_raster=training_pixels)
-
-spec_ind = indices(raster=training_stack, blue=1, green=2, red=3, nir=4)
-spec_ind.dvi(s=0.5, file_path='C:/GIS/Tests/test_spectral2.tif')
+# classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_validate
+lr = LogisticRegression()
+lr.fit(X, y)
+scores = cross_validate(lr, X, y, cv=10, scoring=['accuracy'])
+scores['test_accuracy'].mean()

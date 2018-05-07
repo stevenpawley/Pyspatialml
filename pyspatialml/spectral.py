@@ -40,7 +40,7 @@ class indices(object):
         """
 
         # read image data
-        if isinstance(src, rasterio._io.RasterReader):
+        if isinstance(src, rasterio.io.DatasetReader):
             # bands contained within a single file opened as RasterReader
             src_arr = read_memmap(src)
             self.meta = src.meta.copy()
