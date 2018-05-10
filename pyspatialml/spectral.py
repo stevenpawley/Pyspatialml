@@ -7,79 +7,50 @@ Created on Tue Feb 27 09:36:06 2018
 
 import rasterio
 import numpy as np
-from tempfile import NamedTemporaryFile as tmpfile
+from tempfile import TemporaryFile
 
 
 class indices(object):
-    """Calculate remote sensing spectral indices using Raterio and Numpy
-    """
+    """Calculate remote sensing spectral indices using Rasterio and Numpy"""
+
     def __init__(self, src, blue=None, green=None, red=None, nir=None,
-                 swir1=None, swir2=None, swir3=None):
+                 swir2=None, swir3=None, memmap=False):
         """Define new spectral indices class
 
         Parameters
         ----------
-        src : rasterio._io.RasterReader, list of rasterio._io.RasterReader,
-        path to GDAL file with stacked imagery bands, or list of paths to GDAL
-        imagery bands
-
+        src : str
+            Path to GDAL-supported raster containing stacked imagery bands
         blue : int
-            Index of blue band.
+            Index of blue band
         green : int
-            Index of green band.
+            Index of green band
         red : int
-            Index of red band.
+            Index of red band
         nir : int
-            Index of near-infrared band (700-1100nm).
-        swir1 : int
-            Index of short-wave-infrared band (other, not currently used).
+            Index of near-infrared band (700-1100nm)
         swir2 : int
-            Index of short-wave-infrared band (1400-1800nm).
+            Index of short-wave-infrared band (1400-1800nm)
         swir3 : int
-            Index of short-wave-infrared band (2000-2500nm).
-        """
+            Index of short-wave-infrared band (2000-2500nm)
+        memmap : bool option (default is False
+            Optionally use a numpy memmap to read the raster data"""
 
-        # read image data
-        if isinstance(src, rasterio.io.DatasetReader):
-            # bands contained within a single file opened as RasterReader
-            src_arr = read_memmap(src)
-            self.meta = src.meta.copy()
+        # read data
+        src = rasterio.open(src)
+        self.meta = src.meta.copy()
 
-        elif isinstance(src, str):
-            # path to stacked bands in single file
-            src = rasterio.open(src)
-            self.meta = src.meta.copy()
-            src_arr = read_memmap(src)
-            src.close()
+        if memmap is True:
+            src_arr_shape = (src.count, src.height, src.width)
+            src_arr = np.memmap(filename=TemporaryFile(), shape=src_arr_shape, dtype='float32')
+            src_arr[:] = src.read()
 
-        elif isinstance(src, list) and isinstance(src[1:], src[:-1]) \
-                and isinstance(src[0], rasterio._io.RasterReader):
-            # bands as separate files opened as RasterReader objects
-            src_arr = np.memmap(
-                filename=tmpfile(),
-                shape=(len(src), src[0].shape[0], src[0].shape[1]),
-                dtype='float32')
+            for i in range(src_arr_shape[0]):
+                src_arr[np.nonzero(src_arr[i, :, :] == src.nodatavals[i])] = np.nan
+        else:
+            src_arr = src.read(masked=True)
 
-            self.meta = src[0].meta.copy()
-            for i, band in enumerate(src):
-                src_arr[i, :, :] = band.read(i)
-
-        elif isinstance(src, list) and isinstance(src[1:], src[:-1]) \
-                and isinstance(src[0], str):
-            # paths to separate bands
-            srcs = []
-            for path in src:
-                srcs.append(rasterio.open(path))
-
-            src_arr = np.memmap(
-                filename=tmpfile(),
-                shape=(len(src), srcs[0].shape[0], srcs[0].shape[1]),
-                dtype='float32')
-
-            for i, src in enumerate(srcs):
-                src_arr[i, :, :] = src.read(i)
-            self.meta = srcs[0].meta.copy()
-            [i.close() for i in srcs]
+        src.close()
 
         # assign bands
         if blue:
@@ -90,8 +61,6 @@ class indices(object):
             self.red = src_arr[red, :, :]
         if nir:
             self.nir = src_arr[nir, :, :]
-        if swir1:
-            self.swir1 = src_arr[swir1, :, :]
         if swir2:
             self.swir2 = src_arr[swir2, :, :]
         if swir3:
@@ -330,4 +299,3 @@ class indices(object):
 
     def wdvi(self):
         return self.nir - self.s * self.red
-

@@ -5,51 +5,6 @@ import os
 import numpy as np
 import rasterio
 from rasterio.warp import reproject
-from tempfile import NamedTemporaryFile as tmpfile
-
-
-def read_memmap(src, bands=None):
-    """Read data from a rasterio._io.RasterReader object into a
-    numpy.memmap file
-
-    Parameters
-    ----------
-    src : rasterio._io.RasterReader
-        Rasterio raster that is open.
-    bands : int or list, optional (default = None)
-        Optionally specify to load a single band, a list of bands, or None for
-        all bands within the raster.
-
-    Returns
-    -------
-    arr : array-like
-        2D or 3D numpy.memmap containing raster data. Nodata values are
-        represented by np.nan. By default a 3D numpy.memmap object is returned
-        unless a single band is specified, in which case a 2D numpy.memmap
-        object is returned."""
-
-    if isinstance(bands, int):
-        bands = [bands]
-
-    # default loads all bands as 3D numpy array
-    if bands is None:
-        bands = range(1, src.count+1, 1)
-        arr_shape = (src.count, src.shape[0], src.shape[1])
-
-    # if a single band is specified use 2D numpy array
-    elif len(bands) == 1:
-        arr_shape = (src.shape[0], src.shape[1])
-
-    # use 3D numpy array for a subset of bans
-    else:
-        arr_shape = (len(bands), src.shape[0], src.shape[1])
-
-    # numpy.memmap using float32
-    arr = np.memmap(filename=tmpfile(), shape=arr_shape, dtype='float32')
-    arr[:] = src.read(bands)
-    arr[arr == src.nodata] = np.nan
-
-    return arr
 
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,

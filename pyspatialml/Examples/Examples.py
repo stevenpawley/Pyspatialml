@@ -47,9 +47,11 @@ plt.show()
 X, y, xy = extract(raster=vrt_file, response_gdf=training_gpd, field='id')
 
 # classification
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.model_selection import cross_validate
-lr = LogisticRegression()
-lr.fit(X, y)
-scores = cross_validate(lr, X, y, cv=10, scoring=['accuracy'])
+clf = ExtraTreesClassifier(n_estimators=1000)
+clf.fit(X, y)
+scores = cross_validate(clf, X, y, cv=3, scoring=['accuracy'])
 scores['test_accuracy'].mean()
+
+predict(estimator=clf, raster=vrt_file, file_path='/Users/steven/Github/pyspatialml/tests/classification.tif')
