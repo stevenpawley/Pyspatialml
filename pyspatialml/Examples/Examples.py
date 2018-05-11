@@ -4,9 +4,9 @@ from pyspatialml.spectral import indices
 from pyspatialml import predict
 import geopandas as gpd
 import rasterio
+from rasterio import plot
 import os
 import matplotlib.pyplot as plt
-
 
 # raster and vector input data
 band1 = os.path.join('pyspatialml', 'Examples', 'lsat7_2000_10.tif')
@@ -30,11 +30,8 @@ outds.FlushCache()
 spec_ind = indices(src=vrt_file, blue=0, green=1, red=2, nir=3, swir2=4, swir3=5)
 ndvi = spec_ind.ndvi()
 
-
-
 # read vector data
 training_gpd = gpd.read_file(training_points)
-
 
 # plotting
 bounds = rasterio.open(vrt_file).bounds
@@ -47,13 +44,15 @@ plt.show()
 X, y, xy = extract(raster=vrt_file, response_gdf=training_gpd, field='id')
 
 # classification
-from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_validate
-clf = ExtraTreesClassifier(n_estimators=1000)
+clf = LogisticRegression()
 clf.fit(X, y)
 scores = cross_validate(clf, X, y, cv=3, scoring=['accuracy'])
 scores['test_accuracy'].mean()
 
-predict(estimator=clf, raster=vrt_file, file_path='/Users/steven/Github/pyspatialml/pyspatialml/Examples/classification.tif')
-result = rasterio.open('/Users/steven/Github/pyspatialml/pyspatialml/Examples/classification.tif')
+result = predict(estimator=clf, raster=vrt_file, file_path=os.path.join('pyspatialml', 'Examples', 'classification.tif'))
+result = rasterio.open(os.path.join('pyspatialml', 'Examples', 'classification.tif'))
 rasterio.plot.show(result)
+result.close()
+
