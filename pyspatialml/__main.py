@@ -1,5 +1,6 @@
 import numpy as np
 import rasterio
+import concurrent.futures
 
 
 def __predfun(img, estimator):
@@ -103,6 +104,10 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         predfun = __predfun
     elif predict_type == 'prob':
         predfun = __probfun
+
+    # set number of workers
+    if n_jobs = -1:
+        n_jobs = None
 
     # determine output count
     if predict_type == 'prob' and isinstance(indexes, int):
