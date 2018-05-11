@@ -106,7 +106,7 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         predfun = __probfun
 
     # set number of workers
-    if n_jobs = -1:
+    if n_jobs == -1:
         n_jobs = None
 
     # determine output count
