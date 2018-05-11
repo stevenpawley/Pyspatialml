@@ -14,7 +14,7 @@ class indices(object):
     """Calculate remote sensing spectral indices using Rasterio and Numpy"""
 
     def __init__(self, src, blue=None, green=None, red=None, nir=None,
-                 swir2=None, swir3=None, memmap=False):
+                 swir2=None, swir3=None, memmap=False, output=None):
         """Define new spectral indices class
 
         Parameters
