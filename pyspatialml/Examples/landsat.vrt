@@ -1,76 +1,65 @@
 <VRTDataset rasterXSize="489" rasterYSize="443">
-  <SRS>PROJCS["Lambert Conformal Conic",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.2572221010042,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4269"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["standard_parallel_1",36.16666666666666],PARAMETER["standard_parallel_2",34.33333333333334],PARAMETER["latitude_of_origin",33.75],PARAMETER["central_meridian",-79],PARAMETER["false_easting",609601.22],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]</SRS>
+  <SRS>PROJCS["unnamed",GEOGCS["GRS 1980(IUGG, 1980)",DATUM["unknown",SPHEROID["GRS80",6378137,298.257222101],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["standard_parallel_1",36.16666666666666],PARAMETER["standard_parallel_2",34.33333333333334],PARAMETER["latitude_of_origin",33.75],PARAMETER["central_meridian",-79],PARAMETER["false_easting",609601.22],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]</SRS>
   <GeoTransform>  6.3053400000000000e+05,  2.8500000000000000e+01,  0.0000000000000000e+00,  2.2811400000000000e+05,  0.0000000000000000e+00, -2.8500000000000000e+01</GeoTransform>
-  <VRTRasterBand dataType="Byte" band="1">
+  <VRTRasterBand dataType="Float32" band="1">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_10.tif</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
-  <VRTRasterBand dataType="Byte" band="2">
+  <VRTRasterBand dataType="Float32" band="2">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_20.tif</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
-  <VRTRasterBand dataType="Byte" band="3">
+  <VRTRasterBand dataType="Float32" band="3">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_30.tif</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
-  <VRTRasterBand dataType="Byte" band="4">
+  <VRTRasterBand dataType="Float32" band="4">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_40.tif</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
-  <VRTRasterBand dataType="Byte" band="5">
+  <VRTRasterBand dataType="Float32" band="5">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_50.tif</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
-  <VRTRasterBand dataType="Byte" band="6">
+  <VRTRasterBand dataType="Float32" band="6">
     <NoDataValue>0</NoDataValue>
     <ComplexSource resampling="bilinear">
       <SourceFilename relativeToVRT="1">lsat7_2000_70.tif</SourceFilename>
-      <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Byte" BlockXSize="489" BlockYSize="16" />
-      <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
-      <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
-      <NODATA>0</NODATA>
-    </ComplexSource>
-  </VRTRasterBand>
-  <VRTRasterBand dataType="Float32" band="7">
-    <NoDataValue>0</NoDataValue>
-    <ComplexSource resampling="bilinear">
-      <SourceFilename relativeToVRT="1">NDVI.tif</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
