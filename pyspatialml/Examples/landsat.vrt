@@ -67,4 +67,15 @@
       <NODATA>0</NODATA>
     </ComplexSource>
   </VRTRasterBand>
+  <VRTRasterBand dataType="Float32" band="7">
+    <NoDataValue>0</NoDataValue>
+    <ComplexSource resampling="bilinear">
+      <SourceFilename relativeToVRT="1">NDVI.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Float32" BlockXSize="489" BlockYSize="4" />
+      <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
+      <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
+      <NODATA>0</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
 </VRTDataset>
