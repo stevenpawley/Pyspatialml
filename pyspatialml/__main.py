@@ -139,10 +139,9 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         data_gen = (src.read(window=window, masked=True) for window in windows)
         estimators = (estimator for clf in windows)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
             # map the prediction function to the generator
             for window, result in zip(windows, executor.map(predfun, data_gen, estimators)):
                 dst.write(result.astype(dtype), window=window)
 
     src.close()
-    return dst
