@@ -1,7 +1,8 @@
 import numpy as np
 import rasterio
 import concurrent.futures
-
+import multiprocessing
+#from sklearn.externals.joblib import Parallel, delayed
 
 def __predfun(img, estimator):
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
@@ -79,11 +80,9 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
     ----------
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
-    predictor_rasters : list, comprising str
-        List of paths to GDAL rasters that are to be used in the prediction.
-        Note the order of the rasters in the list needs to be of the same
-        order and length of the data that was used to train the estimator
-    output : str
+    raster : str
+        Paths to a GDAL rasters that is to be used in the prediction.
+    file_path : str
         Path to a GeoTiff raster for the classification results
     predict_type : str, optional (default='raw')
         'raw' for classification/regression
@@ -95,7 +94,11 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
     dtype : str, optional. Default is 'float32'
         Numpy data type for file export
     nodata : any number, optional. Default is -99999
-        Nodata value for file export"""
+        Nodata value for file export
+    n_jobs : int
+        Number of processing cores to use for parallel tasks
+        Default of -1 uses all available cores; -2 uses all cores - 1
+    """
 
     src = rasterio.open(raster)
 
@@ -107,11 +110,13 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
 
     # set number of workers
     if n_jobs == -1:
-        n_jobs = None
+        n_jobs = multiprocessing.cpu_count()
+    elif n_jobs == -2:
+        n_jobs = multiprocessing.cpu_count() - 1
 
-    # determine output count
+    # determine numnber of output bands (for probabilities)
     if predict_type == 'prob' and isinstance(indexes, int):
-        indexes = range(indexes-1, indexes)
+        indexes = range(indexes, indexes+1)
 
     elif predict_type == 'prob' and indexes is None:
         img = src.read(masked=True, window=(0, 0, 1, src.width))
@@ -123,13 +128,12 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         indexes = range(result.shape[0])
 
     elif predict_type == 'raw':
-        indexes = range(1)
+        indexes = 0
 
     # open output file with updated metadata
     meta = src.meta
     meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
 
-    dst = rasterio.open(file_path, 'w', **meta)
     with rasterio.open(file_path, 'w', **meta) as dst:
 
         # define windows
@@ -137,11 +141,21 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
 
         # generator gets raster arrays for each window
         data_gen = (src.read(window=window, masked=True) for window in windows)
-        estimators = (estimator for clf in windows)
+        estimators = (estimator for i in windows)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
             # map the prediction function to the generator
-            for window, result in zip(windows, executor.map(predfun, data_gen, estimators)):
-                dst.write(result.astype(dtype), window=window)
+            for window, result in zip(
+                windows, executor.map(predfun, data_gen, estimators)):
+                dst.write(result[indexes, :, :].astype(dtype), window=window)
+
+#        def pred(predfun, estimator, arr, window):
+#            result = predfun(arr, estimator)
+#            dst.write(result[indexes, :, :].astype(dtype), window=window)
+#            
+#        Parallel(n_jobs=n_jobs, max_nbytes=None)(
+#            delayed(pred)(predfun, estimator, arr, win)
+#                for arr, win in zip(data_gen, windows))
+#        dst.close()
 
     src.close()
