@@ -14,13 +14,8 @@ setup(
     url="https://github.com/stevenpawley/pyspatialml",
     packages=["pyspatialml"],
     install_requires=[
-        'scikit-learn',
         'tqdm',
         'rasterio',
-        'numpy',
-        'geopandas',
-        'scipy',
-        'shapely',
-        'gdal'],
+        'numpy'],
     python_requires='>3.3'
 )
