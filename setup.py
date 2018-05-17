@@ -21,6 +21,6 @@ setup(
         'geopandas',
         'scipy',
         'shapely',
-        'osgeo'],
+        'gdal'],
     python_requires='>3.3'
 )
