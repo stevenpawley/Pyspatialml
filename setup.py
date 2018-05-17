@@ -12,5 +12,15 @@ setup(
     license="GNU",
     keywords="GIS",
     url="https://github.com/stevenpawley/pyspatialml",
-    packages=["pyspatialml"]
+    packages=["pyspatialml"],
+    install_requires=[
+        'scikit-learn',
+        'tqdm',
+        'rasterio',
+        'numpy',
+        'geopandas',
+        'scipy',
+        'shapely',
+        'osgeo'],
+    python_requires='>3.3'
 )

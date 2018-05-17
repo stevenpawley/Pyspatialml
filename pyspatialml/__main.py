@@ -1,7 +1,8 @@
 import numpy as np
 import rasterio
-import concurrent.futures
-import multiprocessing
+#import concurrent.futures
+#import multiprocessing
+from tqdm import tqdm
 #from sklearn.externals.joblib import Parallel, delayed
 
 def __predfun(img, estimator):
@@ -73,15 +74,16 @@ def __probfun(img, estimator):
 
 
 def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
-            driver='GTiff', dtype='float32', nodata=-99999, n_jobs=-1):
+            driver='GTiff', dtype='float32', nodata=-99999):
     """Prediction on list of GDAL rasters using a fitted scikit learn model
-
     Parameters
     ----------
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
-    raster : str
-        Paths to a GDAL rasters that is to be used in the prediction.
+    raster : list, comprising str
+        List of paths to GDAL rasters that are to be used in the prediction.
+        Note the order of the rasters in the list needs to be of the same
+        order and length of the data that was used to train the estimator
     file_path : str
         Path to a GeoTiff raster for the classification results
     predict_type : str, optional (default='raw')
@@ -94,11 +96,7 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
     dtype : str, optional. Default is 'float32'
         Numpy data type for file export
     nodata : any number, optional. Default is -99999
-        Nodata value for file export
-    n_jobs : int
-        Number of processing cores to use for parallel tasks
-        Default of -1 uses all available cores; -2 uses all cores - 1
-    """
+        Nodata value for file export"""
 
     src = rasterio.open(raster)
 
@@ -109,12 +107,12 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         predfun = __probfun
 
     # set number of workers
-    if n_jobs == -1:
-        n_jobs = multiprocessing.cpu_count()
-    elif n_jobs == -2:
-        n_jobs = multiprocessing.cpu_count() - 1
+#    if n_jobs == -1:
+#        n_jobs = multiprocessing.cpu_count()
+#    elif n_jobs == -2:
+#        n_jobs = multiprocessing.cpu_count() - 1
 
-    # determine numnber of output bands (for probabilities)
+    # determine output count
     if predict_type == 'prob' and isinstance(indexes, int):
         indexes = range(indexes, indexes+1)
 
@@ -128,7 +126,7 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         indexes = range(result.shape[0])
 
     elif predict_type == 'raw':
-        indexes = 0
+        indexes = range(1)
 
     # open output file with updated metadata
     meta = src.meta
@@ -138,24 +136,20 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
 
         # define windows
         windows = [window for ij, window in dst.block_windows()]
+#        estimators = (estimator for i in windows)
 
         # generator gets raster arrays for each window
         data_gen = (src.read(window=window, masked=True) for window in windows)
-        estimators = (estimator for i in windows)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
-            # map the prediction function to the generator
-            for window, result in zip(
-                windows, executor.map(predfun, data_gen, estimators)):
+        with tqdm(total=len(windows)) as pbar:
+            for window, arr in zip(windows, data_gen):
+                result = predfun(arr, estimator)
                 dst.write(result[indexes, :, :].astype(dtype), window=window)
+                pbar.update(1)
 
-#        def pred(predfun, estimator, arr, window):
-#            result = predfun(arr, estimator)
-#            dst.write(result[indexes, :, :].astype(dtype), window=window)
-#            
-#        Parallel(n_jobs=n_jobs, max_nbytes=None)(
-#            delayed(pred)(predfun, estimator, arr, win)
-#                for arr, win in zip(data_gen, windows))
-#        dst.close()
+#        with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
+#            for window, result in zip(
+#                windows, executor.map(predfun, data_gen, estimators)):
+#                dst.write(result[indexes, :, :].astype(dtype), window=window)
 
     src.close()

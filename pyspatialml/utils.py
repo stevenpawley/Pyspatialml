@@ -2,9 +2,63 @@
 # -*- coding: utf-8 -*-
 
 import os
-import numpy as np
 import rasterio
 from rasterio.warp import reproject
+from osgeo import gdal
+
+
+def buildvrt(files, output, resolution='highest', outputBounds=None, xRes=None,
+             yRes=None, targetAlignedPixels=None, separate=True, bandList=None,
+             addAlpha=False, resampleAlg='nearest', outputSRS=None,
+             allowProjectionDifference=False, srcNodata=None, VRTNodata=None):
+    """Simple function to stack a set of raster bands as a GDAL VRT file
+    in order to perform spatial operations
+
+    Parameters
+    ----------
+    files : list, str
+        List of file paths of individual rasters to be stacked
+    output : str
+        File path of output VRT
+    resolution : str, optional (default='highest')
+        Resolution of output
+        Options include 'highest', 'lowest', 'average', 'user'
+    outputBounds : tuple, optional
+        Bounding box of output in (xmin, ymin, xmax, ymax)
+    xRes : float, optional
+        x-resolution of output if 'resolution=user'
+    yRes : float, optional
+        y-resolution of output if 'resolution=user'
+    targetAlignedPixels : bool, optional (default=False)
+        whether to force output bounds to be multiple of output resolution
+    separate : bool, optional (default=True)
+        whether each source file goes into a separate stacked band in the VRT band
+    bandList : list
+        array of band numbers (index start at 1)
+    addAlpha : bool, optional (default=False)
+        whether to add an alpha mask band to the VRT when the source raster have none
+    resampleAlg : str, optional (default = 'nearest')
+        resampling mode
+    outputSRS : str, optional
+        assigned output SRS
+    allowProjectionDifference : bool, optional (default=False)
+        whether to accept input datasets have not the same projection.
+        Note: they will *not* be reprojected
+    srcNodata : list
+        source nodata value(s)
+    VRTNodata : list
+        nodata values at the VRT band level"""
+
+    outds = gdal.BuildVRT(
+        destName=output, srcDSOrSrcDSTab=files, separate=separate,
+        resolution=resolution, resampleAlg=resampleAlg,
+        outputBounds=outputBounds, xRes=xRes, yRes=yRes,
+        targetAlignedPixels=targetAlignedPixels, bandList=bandList,
+        addAlpha=addAlpha, srcNodata=srcNodata, VRTNodata=VRTNodata,
+        allowProjectionDifference=allowProjectionDifference,
+        outputSRS=outputSRS)
+
+    outds.FlushCache()
 
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
@@ -126,13 +180,13 @@ def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
     return()
 
 
-def check_alignment(predictors):
+def check_alignment(rasters):
     """Check that a list of rasters are aligned with the same pixel dimensions
     and geotransforms
 
     Parameters
     ----------
-    predictors: list (str)
+    rasters: list (str)
         List of file paths to the rasters
 
     Returns
@@ -141,7 +195,7 @@ def check_alignment(predictors):
         Dict containing raster metadata"""
 
     src_meta = []
-    for raster in predictors:
+    for raster in rasters:
         src = rasterio.open(raster)
         src_meta.append(src.meta.copy())
         src.close()
