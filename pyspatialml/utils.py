@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import os
+import tempfile
+
 import rasterio
-from rasterio.warp import reproject
 from osgeo import gdal
+from rasterio.warp import reproject
 
 
-def buildvrt(files, output, resolution='highest', outputBounds=None, xRes=None,
-             yRes=None, targetAlignedPixels=None, separate=True, bandList=None,
-             addAlpha=False, resampleAlg='nearest', outputSRS=None,
-             allowProjectionDifference=False, srcNodata=None, VRTNodata=None):
+def stack(files, output=None, resolution='highest', outputBounds=None, xRes=None,
+          yRes=None, targetAlignedPixels=None, separate=True, bandList=None,
+          addAlpha=False, resampleAlg='nearest', outputSRS=None,
+          allowProjectionDifference=False, srcNodata=None, VRTNodata=None):
     """Simple function to stack a set of raster bands as a GDAL VRT file
     in order to perform spatial operations
 
@@ -19,7 +21,7 @@ def buildvrt(files, output, resolution='highest', outputBounds=None, xRes=None,
     files : list, str
         List of file paths of individual rasters to be stacked
     output : str
-        File path of output VRT
+        File path of output VRT. If not supplied then the output uses tempdir
     resolution : str, optional (default='highest')
         Resolution of output
         Options include 'highest', 'lowest', 'average', 'user'
@@ -49,6 +51,9 @@ def buildvrt(files, output, resolution='highest', outputBounds=None, xRes=None,
     VRTNodata : list
         nodata values at the VRT band level"""
 
+    if output is None:
+        output = tempfile.NamedTemporaryFile(suffix='.vrt').name
+
     outds = gdal.BuildVRT(
         destName=output, srcDSOrSrcDSTab=files, separate=separate,
         resolution=resolution, resampleAlg=resampleAlg,
@@ -59,6 +64,8 @@ def buildvrt(files, output, resolution='highest', outputBounds=None, xRes=None,
         outputSRS=outputSRS)
 
     outds.FlushCache()
+
+    return rasterio.open(output)
 
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
