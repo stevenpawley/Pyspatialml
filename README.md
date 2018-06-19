@@ -28,11 +28,11 @@ Import the extract and predict functions:
 ```
 from pyspatialml.sampling import extract
 from pyspatialml import predict
+from pyspatialml.utils import stack
 ```
 
-Stack a series of separate rasters as a virtual tile format raster:
+Stack a series of separate rasters as a virtual tile format raster and return as a rasterio.io.DatasetReader object:
 ```
-from osgeo import gdal
 
 predictor_files = [
   'raster1.tif',
@@ -40,13 +40,7 @@ predictor_files = [
   'raster3'.tif'
   ]
 
-predictors = 'stack.vrt'
-
-outds = gdal.BuildVRT(
-    destName=predictors, srcDSOrSrcDSTab=predictor_files, separate=True,
-    resolution='highest', resampleAlg='bilinear',
-    outputBounds=(xmin, ymin, xmax, ymax))
-outds.FlushCache()
+predictors = stack(predictor_files)
 ```
 
 Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
