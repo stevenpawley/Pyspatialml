@@ -1,7 +1,4 @@
-import os
-import sys
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 
 setup(
     name="pyspatialml",
@@ -15,7 +12,6 @@ setup(
     packages=["pyspatialml"],
     install_requires=[
         'tqdm',
-        'rasterio',
-        'numpy'],
+        'rasterio'],
     python_requires='>3.3'
 )

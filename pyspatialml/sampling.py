@@ -3,7 +3,6 @@
 
 import os
 import random
-
 import numpy as np
 import rasterio
 import scipy

@@ -11,7 +11,7 @@ A supervised machine-learning workflow as applied to spatial raster data involve
 2. Developing a machine learning classifier or regressor model. Pyspatialml uses scikit-learn for this purpose.
 3. Performing the prediction on the raster data.
 
-Training data consists of two components - a response feature and a set of predictors. In spatial data, the response feature is often represented by a locations when some property/state/concentration is already established. This data can be represented by point locations (e.g. arsenic concentrations soil samples), pixel locations where the pixel value represents the target of interest, or polygon features (e.g. labelled with landcover type). The predictors are represented by raster data, which contain variables that that in part may explaining the spatial distribution of the response variable (e.g., raster data representing soil types, soil properties, climatic data etc.).
+Training data consists of two components - a response feature and a set of predictors. With spatial data, the response feature is often represented by a locations when some property/state/concentration is already established. This data can be represented by point locations (e.g. arsenic concentrations soil samples), pixel locations where the pixel value represents the target of interest, or polygon features (e.g. labelled with landcover type). The predictors are represented by raster data, which contain variables that that in part may explaining the spatial distribution of the response variable (e.g., raster data representing soil types, soil properties, climatic data etc.).
 
 ![example](https://github.com/stevenpawley/Pyspatialml/blob/master/img/Pyspatialml_training.svg)
 
@@ -28,19 +28,22 @@ Import the extract and predict functions:
 ```
 from pyspatialml.sampling import extract
 from pyspatialml import predict
-from pyspatialml.utils import stack
+from osgeo import gdal
 ```
 
-Stack a series of separate rasters as a virtual tile format raster and return as a rasterio.io.DatasetReader object:
+The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster files:
 ```
-
 predictor_files = [
   'raster1.tif',
   'raster2.tif',
   'raster3'.tif'
   ]
 
-predictors = stack(predictor_files)
+predictors = 'predictors.vrt'
+outds = gdal.BuildVRT(
+    destName=predictors, srcDSOrSrcDSTab=predictor_files, separate=True,
+    resolution='highest', resampleAlg='bilinear')
+outds.FlushCache()
 ```
 
 Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:

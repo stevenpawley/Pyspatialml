@@ -2,71 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-import tempfile
-
 import rasterio
-from osgeo import gdal
 from rasterio.warp import reproject
-
-
-def stack(files, output=None, resolution='highest', outputBounds=None, xRes=None,
-          yRes=None, targetAlignedPixels=None, separate=True, bandList=None,
-          addAlpha=False, resampleAlg='nearest', outputSRS=None,
-          allowProjectionDifference=False, srcNodata=None, VRTNodata=None):
-    """Simple function to stack a set of raster bands as a GDAL VRT file
-    in order to perform spatial operations
-
-    Parameters
-    ----------
-    files : list, str
-        List of file paths of individual rasters to be stacked
-    output : str
-        File path of output VRT. If not supplied then the output uses tempdir
-    resolution : str, optional (default='highest')
-        Resolution of output
-        Options include 'highest', 'lowest', 'average', 'user'
-    outputBounds : tuple, optional
-        Bounding box of output in (xmin, ymin, xmax, ymax)
-    xRes : float, optional
-        x-resolution of output if 'resolution=user'
-    yRes : float, optional
-        y-resolution of output if 'resolution=user'
-    targetAlignedPixels : bool, optional (default=False)
-        whether to force output bounds to be multiple of output resolution
-    separate : bool, optional (default=True)
-        whether each source file goes into a separate stacked band in the VRT band
-    bandList : list
-        array of band numbers (index start at 1)
-    addAlpha : bool, optional (default=False)
-        whether to add an alpha mask band to the VRT when the source raster have none
-    resampleAlg : str, optional (default = 'nearest')
-        resampling mode
-    outputSRS : str, optional
-        assigned output SRS
-    allowProjectionDifference : bool, optional (default=False)
-        whether to accept input datasets have not the same projection.
-        Note: they will *not* be reprojected
-    srcNodata : list
-        source nodata value(s)
-    VRTNodata : list
-        nodata values at the VRT band level"""
-
-    if output is None:
-        output = tempfile.NamedTemporaryFile(suffix='.vrt').name
-
-    outds = gdal.BuildVRT(
-        destName=output, srcDSOrSrcDSTab=files, separate=separate,
-        resolution=resolution, resampleAlg=resampleAlg,
-        outputBounds=outputBounds, xRes=xRes, yRes=yRes,
-        targetAlignedPixels=targetAlignedPixels, bandList=bandList,
-        addAlpha=addAlpha, srcNodata=srcNodata, VRTNodata=VRTNodata,
-        allowProjectionDifference=allowProjectionDifference,
-        outputSRS=outputSRS)
-
-    outds.FlushCache()
-
-    return rasterio.open(output)
-
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
                    intern=False):

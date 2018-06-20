@@ -1,9 +1,6 @@
 import numpy as np
 import rasterio
-#import concurrent.futures
-#import multiprocessing
 from tqdm import tqdm
-#from sklearn.externals.joblib import Parallel, delayed
 
 def __predfun(img, estimator):
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
@@ -106,12 +103,6 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
     elif predict_type == 'prob':
         predfun = __probfun
 
-    # set number of workers
-#    if n_jobs == -1:
-#        n_jobs = multiprocessing.cpu_count()
-#    elif n_jobs == -2:
-#        n_jobs = multiprocessing.cpu_count() - 1
-
     # determine output count
     if predict_type == 'prob' and isinstance(indexes, int):
         indexes = range(indexes, indexes+1)
@@ -136,7 +127,6 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
 
         # define windows
         windows = [window for ij, window in dst.block_windows()]
-#        estimators = (estimator for i in windows)
 
         # generator gets raster arrays for each window
         data_gen = (src.read(window=window, masked=True) for window in windows)
@@ -146,10 +136,5 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
                 result = predfun(arr, estimator)
                 dst.write(result[indexes, :, :].astype(dtype), window=window)
                 pbar.update(1)
-
-#        with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
-#            for window, result in zip(
-#                windows, executor.map(predfun, data_gen, estimators)):
-#                dst.write(result[indexes, :, :].astype(dtype), window=window)
 
     src.close()
