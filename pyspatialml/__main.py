@@ -1,6 +1,7 @@
 import numpy as np
 import rasterio
 from tqdm import tqdm
+from osgeo import gdal
 
 def __predfun(img, estimator):
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
