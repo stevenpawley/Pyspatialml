@@ -1,4 +1,5 @@
 import numpy as np
+import inspect
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier
 from sklearn.metrics import confusion_matrix
@@ -10,66 +11,92 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
     This implementation is restricted to binary classification problems
 
-    Notes:
-    1. The training data are partitioned in k-1, and k sets
-    2. The metaclassifier trains the BaseEstimator on the k-1 partitions
-    3. The Kth paritions are used to determine the optimal cutoff, taking
-       the mean of the thresholds that maximize the scoring metric
-    4. The optimal cutoff is applied to all classifier predictions
+    Notes
+    -----
 
-    Usage:
-    If a BaseEstimator is to be used with hyperparameter tuning, the order
-    of the operations is recommended to be:
-        BaseEstimator -> ThresholdClassifierCV -> Tuning(GridSearchCV)
-    a. A set of hyperparameters are passed to ThresholdClassifierCV along with
-       a training partition
-    b. ThresholdClassifierCV splits that training partition into a train and
-       calibration set, and trains the base estimator using those hyperparameters
-    c. ThresholdClassifierCV then finds the optimal threshold for those
-       hyperparameters on the calibration set.
-    d. GridSearchCV then tests how well the hyperparameters and threshold
-       perform against the test partition"""
+    - The training data are partitioned in k-1, and k sets
+    - The metaclassifier trains the BaseEstimator on the k-1 partitions
+    - The Kth paritions are used to determine the optimal cutoff taking
+      the mean of the thresholds that maximize the scoring metric
+    - The optimal cutoff is applied to all classifier predictions"""
 
     def __init__(self, estimator, thresholds=np.arange(0.1, 0.9, 0.01),
-                 scoring='accuracy', refit=False, cv=3, random_state=None, **params):
-        # classifier settings
-        self.estimator = estimator
-        self.thresholds = thresholds
-        self.cv = cv
-        self.refit = refit
-        self.random_state = random_state
-        self.scorers = None
-        self.set_params(**params)
+                 scoring=None, refit=False, cv=3, random_state=None):
 
-        # scoring results
-        self.best_threshold = None
-        self.threshold_scores = None
+        """Initialize a ThresholdClassifierCV instance
 
-        # check scoring and convert to dict of key: scorer pairs
-        if scoring is None:
-            raise ValueError('No score function is defined')
+        Parameters
+        ----------
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
 
-        elif callable(scoring):
-            self.scorers = {'score': scoring}
-            self.refit = 'score'
+        thresholds : threshold values to search for optimal cutoff, for
+            example a list or array of cutoff thresholds to use for scoring
 
-        elif isinstance(scoring, dict):
-            self.scorers = scoring
+        scoring : callable, dict
+            A callable or dict of key : callable pairs of scoring metrics to
+            evaluate at the cutoff thresholds
 
-            if self.refit is False:
-                raise ValueError("For multi-metric scoring, the parameter "
-                                 "refit must be set to a scorer key "
-                                 "to determine which scoring method "
-                                 "is used to optimize the classifiers "
-                                 "cutoff threshold")
+        refit : string, or None
+            String specifying the key name of the metric to use to determine
+            the optimal cutoff threshold. Only required when multiple scoring
+            metrics are used
 
-    def find_threshold(self, X, y):
+        cv : int, cross-validation generator or an iterable, optional
+            Determines the cross-validation splitting strategy.
+
+            Possible inputs for cv are:
+            - None, to use the default 3-fold cross validation,
+            - integer, to specify the number of folds in a `(Stratified)KFold`,
+            - An object to be used as a cross-validation generator.
+            - An iterable yielding train, test splits.
+
+            For integer/None inputs, if the estimator is a classifier and ``y`` is
+            either binary or multiclass, :class:`StratifiedKFold` is used. In all
+            other cases, :class:`KFold` is used.
+            Refer :ref:`User Guide <cross_validation>` for the various
+            cross-validation strategies that can be used here.
+
+        random_state : int, RandomState instance or None, optional (default=0)
+            If int, random_state is the seed used by the random number generator;
+            If RandomState instance, random_state is the random number generator;
+            If None, the random number generator is the RandomState instance used
+            by `np.random`.
+
+        Notes
+        -----
+        Rules for creating a custom scikit-learn estimator
+        - All arguments of __init__must have default value, so it's possible to initialize
+           the classifier just by typing MyClassifier()
+        - No confirmation of input parameters should be in __init__ method
+           That belongs to fit method.
+        - All arguments of __init__ method should have the same name as they will have as the
+           attributes of created object
+        - Do not take data as argument here! It should be in fit method
+
+        TODO
+        ----
+        Parallelize the cross validation loop used to find the optimal threshold
+        in the fit method
+
+        Change the behaviour of the scoring parameters so that it accepts arguments
+        in the same manner as scikit learn functions such as GridSearchCV, i.e. it
+        accepts string, callable, list/tuple, or dict"""
+
+        # get dict of arguments from function call
+        args, _, _, values = inspect.getargvalues(inspect.currentframe())
+        values.pop("self")
+
+        for arg, val in values.items():
+            setattr(self, arg, val)
+
+    def find_threshold(self, X, y=None):
         """Finds the optimal cutoff threshold based on maximizing/minimizing the
         scoring method"""
 
         estimator = self.estimator
         thresholds = self.thresholds
-        scorers = self.scorers
+        scorers = self.scorers_
         refit = self.refit
 
         y_pred = estimator.predict_proba(X)
@@ -77,20 +104,23 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
         for i, cutoff in enumerate(thresholds):
             for name, scorer in scorers.items():
-                scores[name][i] = self.__scorer_cutoff(y, y_pred, scorer, cutoff)
+                scores[name][i] = self.scorer_cutoff(y, y_pred, scorer, cutoff)
 
         top_score = scores[refit][scores[refit].argmax()]
         top_threshold = thresholds[scores[refit].argmax()]
         return top_threshold, top_score, scores
 
-    def score(self, X, y, sample_weight=None):
-        """Overloading of classifier score method"""
+    def score(self, X, y):
+        """Overloading of classifier score method
+        score method is required for compatibility with GridSearch
+        The scoring metric should be one that can be maximized (bigger=better)"""
 
         _threshold, score, _threshold_scores = self.find_threshold(X, y)
-        return score[self.refit]
+
+        return score
 
     @staticmethod
-    def __scorer_cutoff(y, y_pred, scorer, cutoff):
+    def scorer_cutoff(y, y_pred, scorer, cutoff):
         """Helper method to binarize the probability scores based on a cutoff"""
 
         y_pred = (y_pred[:, 1] > cutoff).astype(int)
@@ -103,26 +133,61 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
         ----------
         X : array-like, shape = [n_samples, n_features]
             Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
+            n_features is the number of features
+
         y : array-like, shape = [n_samples] or [n_samples, n_output], optional
             Target relative to X for classification or regression;
-            None for unsupervised learning.
+            None for unsupervised learning
+
         groups : array-like, shape = [n_samples], optional
             Training vector groups for cross-validation
+
         **fit_params : dict of string -> object
             Parameters passed to the ``fit`` method of the estimator
-        """
-        # some checks
+
+        Notes
+        -----
+
+        Rules
+
+        - Parameters are checked during the fit method
+        - New attributes created during fitting should end in _, i.e. fitted_
+        - Fit method needs to return self for compatibility reasons with sklearn
+        - The response vector, i.e. y, should be initiated with None"""
+
+        # check estimator and cv methods are valid
         estimator = self.estimator
         cv = check_cv(self.cv, y, classifier=is_classifier(estimator))
 
-        self.best_threshold = 0
-        self.threshold_scores = dict(
-            [(k, np.zeros((len(self.thresholds)))) for k in self.scorers])
+        # check for binary response
+        if len(np.unique(y)) > 2:
+            raise ValueError('Only a binary response vector is currently supported')
+
+        # check that scoring metric has been specified
+        if self.scoring is None:
+            raise ValueError('No score function is defined')
+
+        # convert scoring callables to dict of key: scorer pairs
+        if callable(self.scoring):
+            self.scorers_ = {'score': self.scoring}
+            self.refit = 'score'
+
+        elif isinstance(self.scoring, dict):
+            self.scorers_ = self.scoring
+
+            if self.refit is False:
+                raise ValueError("For multi-metric scoring, the parameter "
+                                 "refit must be set to a scorer key "
+                                 "to determine which scoring method "
+                                 "is used to optimize the classifiers "
+                                 "cutoff threshold")
+
+        # cross-validate the probability threshold
+        self.best_threshold_ = 0
+        self.threshold_scores_ = dict([(k, np.zeros((len(self.thresholds)))) for k in self.scorers_])
 
         for train, cal in cv.split(X, y, groups):
-            X_train, y_train = X[train], y[train]
-            X_cal, y_cal = X[cal], y[cal]
+            X_train, y_train, X_cal, y_cal = X[train], y[train], X[cal], y[cal]
 
             if groups is not None:
                 groups_train, groups_cal = groups[train], groups[cal]
@@ -134,39 +199,21 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
             best_threshold, _score, threshold_scores = self.find_threshold(X_cal, y_cal)
 
             # sum the scores
-            self.best_threshold += best_threshold
-            self.threshold_scores = {
-                key: (self.threshold_scores[key] + threshold_scores[key]) for key in self.threshold_scores}
+            self.best_threshold_ += best_threshold
+            self.threshold_scores_ = {
+                key: (self.threshold_scores_[key] + threshold_scores[key]) for key in self.threshold_scores_}
 
-        self.best_threshold /= cv.get_n_splits()
-        self.threshold_scores = dict([(k,v / cv.get_n_splits()) for (k,v) in self.threshold_scores.items()])
+        # average the scores per cross validation fold
+        self.best_threshold_ /= cv.get_n_splits()
+        self.threshold_scores_ = dict([(k, v / cv.get_n_splits()) for (k, v) in self.threshold_scores_.items()])
         self.classes_ = self.estimator.classes_
 
     def predict(self, X):
         y_score = self.estimator.predict_proba(X)
-        return np.array(y_score[:,1] >= self.best_threshold)
+        return np.array(y_score[:,1] >= self.best_threshold_)
 
     def predict_proba(self, X):
         return self.estimator.predict_proba(X)
-
-    def set_params(self, **params):
-        for param_name in ["estimator", "thresholds", "best_threshold", "threshold_scores", "scorers", "refit"]:
-            if param_name in params:
-                setattr(self, param_name, params[param_name])
-                del params[param_name]
-
-        self.estimator.set_params(**params)
-        return self
-
-    def get_params(self, deep=True):
-        params={"estimator" :self.estimator,
-                "best_threshold": self.best_threshold,
-                "threshold_scores": self.threshold_scores,
-                "thresholds": self.thresholds,
-                "scorers": self.scorers,
-                "refit": self.refit}
-        params.update(self.estimator.get_params(deep))
-        return params
 
 
 def specificity_score(y_true, y_pred):
@@ -174,18 +221,20 @@ def specificity_score(y_true, y_pred):
 
     Parameters
     ----------
+
     y_true : 1d array-like
         Ground truth (correct) labels
-    y_pred: 1d array-like
+
+    y_pred : 1d array-like
         Predicted labels, as returned by the classifier
 
     Returns
     -------
+
     specificity : float
         Returns the specificity score, or true negative rate, i.e. the
         proportion of the negative label (label=0) samples that are correctly
-        classified as the negative label
-    """
+        classified as the negative label"""
 
     cm = confusion_matrix(y_true, y_pred)
     tn = float(cm[0][0])
@@ -203,20 +252,25 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
     Parameters
     ----------
     estimator : estimator object implementing 'fit'
-        The object to use to fit the data.
+        The object to use to fit the data
+
     X : array-like
         The data to fit. Can be for example a list, or an array.
 
     y : array-like, optional, default: None
         The target variable to try to predict in the case of
-        supervised learning.
+        supervised learning
+
     coordinates : 2d-array like
         Spatial coordinates, usually as xy, that correspond to each sample in
-        X.
+        X
+
     size : int
         Sample size to process (number of leave-one-out runs)
+
     radius : int or float
         Radius for the spatial buffer around test point
+
     random_state : int
         random_state is the seed used by the random number generator
 
@@ -224,16 +278,17 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
     -------
     y_test : 1d array-like
         Response variable values in the test partitions
+
     y_pred : 1d array-like
         Predicted response values by the estimator
+
     y_prob : array-like
         Predicted probabilities by the estimator
 
     Notes
     -----
     This python function was adapted from R code
-    https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/
-    """
+    https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/"""
 
     # determine number of classes and features
     n_classes = len(np.unique(y))
@@ -274,4 +329,4 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
         y_prob = np.vstack((
             y_prob, estimator.predict_proba(X_test[i].reshape(1, -1))))
 
-    return (y_test, y_pred, y_prob)
+    return y_test, y_pred, y_prob
