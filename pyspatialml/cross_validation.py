@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.model_selection import check_cv, cross_val_predict
 from sklearn.preprocessing import binarize
+from collections import OrderedDict
 
 
 class CrossValidateThreshold():
