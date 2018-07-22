@@ -2,8 +2,140 @@ import numpy as np
 import inspect
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import check_cv
+from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.model_selection import check_cv, cross_val_predict
+from sklearn.preprocessing import binarize
+
+
+class CrossValidateThreshold():
+    """Perform cross-validation and calculate scores using a cutoff threshold that
+       attains a minimum true positive rate"""
+
+    def __init__(self, estimator, scoring, cv=3, positive=1, n_jobs=1):
+        """Initiate a class instance
+
+        Parameters
+        ----------
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
+
+        scoring : dict
+            Dict containing name and scoring callable
+
+        cv : int, cross-validation generator or an iterable, optional
+            Determines the cross-validation splitting strategy.
+
+            Possible inputs for cv are:
+            - None, to use the default 3-fold cross validation,
+            - integer, to specify the number of folds in a `(Stratified)KFold`,
+            - An object to be used as a cross-validation generator.
+            - An iterable yielding train, test splits.
+
+            For integer/None inputs, if the estimator is a classifier and ``y`` is
+            either binary or multiclass, :class:`StratifiedKFold` is used. In all
+            other cases, :class:`KFold` is used.
+
+        positive : int, default=1
+            Index of the positive class
+
+        n_jobs : int, default=1
+            Number of processing cores for multiprocessing
+        """
+        self.scoring = scoring
+        self.cv = cv
+        self.estimator = estimator
+        self.n_jobs = n_jobs
+        self.positive = positive
+
+    def fit(self, X, y=None, groups=None, **fit_params):
+        """Run fit method with all sets of parameters
+
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Training vector, where n_samples is the number of samples and
+            n_features is the number of features
+
+        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
+            Target relative to X for classification or regression;
+            None for unsupervised learning
+
+        groups : array-like, shape = [n_samples], optional
+            Training vector groups for cross-validation
+
+        **fit_params : dict of string -> object
+            Parameters passed to the ``fit`` method of the estimator"""
+        # check estimator and cv methods are valid
+        self.cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
+
+        # check for binary response
+        if len(np.unique(y)) > 2:
+            raise ValueError('Only a binary response vector is currently supported')
+
+        # check that scoring metric has been specified
+        if self.scoring is None:
+            raise ValueError('No score function is defined')
+
+        # perform cross validation prediction
+        self.y_pred_ = cross_val_predict(
+            estimator=self.estimator, X=X, y=y, groups=groups, cv=self.cv,
+            method='predict_proba', n_jobs=self.n_jobs, **fit_params)
+        self.y_true = y
+
+        # add fold id to the predictions
+        self.test_idx_ = [indexes[1] for indexes in cv.split(X, y, groups)]
+
+    def score(self, tpr_threshold=None, cutoff_threshold=None):
+        """Calculates the scoring metrics using a cutoff threshold that attains a true positive rate
+        that is equal or greater than the desired tpr_threshold
+
+        Parameters
+        ----------
+        tpr_threshold : float
+            Minimum true positive rate to achieve
+        cutoff_threshold : float
+            As an alternative to using a minimum true positive, a probability cutoff threshold
+            can be specified to calculate the scoring
+        """
+
+        if tpr_threshold is None and cutoff_threshold is None:
+            raise ValueError('Either tpr_threshold or cutoff_threshold must be specified')
+
+        scores = OrderedDict((k, []) for (k, v) in self.scoring.items())
+        self.thresholds_ = []
+        self.tpr_ = []
+        self.fpr_ = []
+        self.roc_thresholds_ = []
+
+        for idx in self.test_idx_:
+            # split fold
+            y_true = self.y_true[idx]
+            y_pred_ = self.y_pred_[idx, :]
+
+            # get roc curve data
+            fpr, tpr, thresholds = roc_curve(
+                y_true, y_pred_[:, self.positive])
+
+            self.fpr_.append(fpr)
+            self.tpr_.append(tpr)
+            self.roc_thresholds_.append(thresholds)
+
+            # calculate cutoff that produces tpr >= threshold
+            if cutoff_threshold is None:
+                opt_threshold = thresholds[np.where(tpr >= tpr_threshold)[0].min()]
+                self.thresholds_ = np.append(self.thresholds_, opt_threshold)
+            else:
+                opt_threshold = cutoff_threshold
+
+            # calculate performance metrics
+            y_pred_opt = binarize(y_pred_, opt_threshold)
+
+            # calculate scores
+            for name, score_func in self.scoring.items():
+                score_func = self.scoring[name]
+                scores[name] = np.append(scores[name], score_func(y_true, y_pred_opt[:, self.positive]))
+
+        return scores
 
 
 class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
@@ -196,16 +328,23 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
                 estimator.fit(X_train, y_train, **fit_params)
 
             # find cutoff threshold on calibration set
-            best_threshold, _score, threshold_scores = self.find_threshold(X_cal, y_cal)
+            # unless a single cutoff threshold is specified, which sets the classifier to this
+            # threshold
+            if isinstance(self.thresholds, (list, np.array)):
+                best_threshold, _score, threshold_scores = self.find_threshold(X_cal, y_cal)
 
-            # sum the scores
-            self.best_threshold_ += best_threshold
-            self.threshold_scores_ = {
-                key: (self.threshold_scores_[key] + threshold_scores[key]) for key in self.threshold_scores_}
+                # sum the scores
+                self.best_threshold_ += best_threshold
+                self.threshold_scores_ = {
+                    key: (self.threshold_scores_[key] + threshold_scores[key]) for key in self.threshold_scores_}
 
-        # average the scores per cross validation fold
-        self.best_threshold_ /= cv.get_n_splits()
-        self.threshold_scores_ = dict([(k, v / cv.get_n_splits()) for (k, v) in self.threshold_scores_.items()])
+                # average the scores per cross validation fold
+                self.best_threshold_ /= cv.get_n_splits()
+                self.threshold_scores_ = dict([(k, v / cv.get_n_splits()) for (k, v) in self.threshold_scores_.items()])
+
+            else:
+                self.best_threshold_ = self.threshold
+
         self.classes_ = self.estimator.classes_
 
     def predict(self, X):
