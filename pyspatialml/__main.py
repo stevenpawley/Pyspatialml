@@ -131,7 +131,11 @@ def predict(estimator, raster, file_path, predict_type='raw', indexes=None,
         Numpy data type for file export
 
     nodata : any number, optional. Default is -99999
-        Nodata value for file export"""
+        Nodata value for file export
+
+    Returns
+    -------
+    rasterio.io.DatasetReader with predicted raster"""
 
     src = rasterio.open(raster)
 
