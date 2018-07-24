@@ -24,43 +24,68 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 
 ### Basic workflow
 
-Import the extract and predict functions:
+Example using the data provided in the package. First, import the extract and predict functions:
 ```
-from pyspatialml import predict, extract
 from osgeo import gdal
+from pyspatialml import predict, extract
+import os
 import geopandas
+import rasterio.plot
+import matplotlib.pyplot as plt
 ```
 
-The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster files:
+The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster datasets:
 ```
-predictor_files = [
-  'raster1.tif',
-  'raster2.tif',
-  'raster3'.tif'
-  ]
+os.chdir(os.path.join(os.getcwd(), 'Pyspatialml', 'Examples'))
 
-predictors = 'predictors.vrt'
+band1 = 'lsat7_2000_10.tif'
+band2 = 'lsat7_2000_20.tif'
+band3 = 'lsat7_2000_30.tif'
+band4 = 'lsat7_2000_40.tif'
+band5 = 'lsat7_2000_50.tif'
+band7 = 'lsat7_2000_70.tif'
+predictors = [band1, band2, band3, band4, band5, band7]
+
+# stack the bands into a single virtual tile format dataset:
+vrt_file = 'landsat.vrt'
 outds = gdal.BuildVRT(
-    destName=predictors, srcDSOrSrcDSTab=predictor_files, separate=True,
+    destName=vrt_file, srcDSOrSrcDSTab=predictors, separate=True,
     resolution='highest', resampleAlg='bilinear')
 outds.FlushCache()
 ```
 
-Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
-
+Load some training data in the form of a shapefile of point feature locations:
 ```
-training = geopandas.read_file('training.shp')
-src = rasterio.open(predictors)
+training = geopandas.read_file('landclass96_roi.shp')
+```
 
-X, y, xy = extract(
-    dataset=src, response=training, field='id')
+Show training data and a single raster band using the rasterio.plot.show method:
+```
+src = rasterio.open(vrt_file)
+rasterio.plot.show((src, 4))
+plt.scatter(x=training.bounds.iloc[:, 0],
+            y=training.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+```
+Alternatively display the data using numpy and matplotlib:
+```
+srr_arr = src.read(4, masked=True)
+plt.imshow(srr_arr, extent=(src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top))
+plt.scatter(x=training_gpd.bounds.iloc[:, 0],
+            y=training_gpd.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+```
+
+Create a training dataset by extracting the raster values at the training point locations:
+```
+X, y, xy = extract(dataset=src, response=training, field='id')
 ```
 
 The response argument of the extract function can also take a raster data (GDAL-supported, single-band raster) where the training data are represented by labelled pixels:
-
 ```
 training = rasterio.open('training.tif')
-
 X, y, xy = extract(dataset=src, response=training)
 ```
 
