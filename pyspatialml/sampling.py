@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os
 import random
 import numpy as np
 import rasterio
 import scipy
-from osgeo import gdal
 from rasterio.sample import sample_gen
 from shapely.geometry import Point
 
@@ -19,12 +15,15 @@ def extract(raster, response_raster=None, response_gdf=None, field=None):
     raster : str
         Path to GDAL supported raster containing data to be sampled.
         Raster can be a multi-band image or a virtual tile format raster
+
     response_raster : str, optional
         Path to GDAL supported raster containing labelled pixels.
         The raster should contain only a single band
+
     response_gdf : Geopandas DataFrame, optional
         GeoDataFrame where the GeoSeries is assumed to consist entirely of
         Polygon feature class types
+
     field : str, optional
         Field name of attribute to be used the label the extracted data
 
@@ -32,8 +31,10 @@ def extract(raster, response_raster=None, response_gdf=None, field=None):
     -------
     X : array-like
         Numpy masked array of extracted raster values, typically 2d
+
     y: 1d array like
         Numpy masked array of labelled sampled
+
     xy: 2d array-like
         Numpy masked array of row and column indexes of training pixels"""
 
@@ -42,6 +43,7 @@ def extract(raster, response_raster=None, response_gdf=None, field=None):
         raise ValueError(
             'Either the response_raster or response_gdf ' +
             'parameters need arguments')
+
     if response_raster and response_gdf:
         raise ValueError(
             'response_raster and response_gdf are mutually exclusive. ' +
@@ -77,18 +79,16 @@ def extract(raster, response_raster=None, response_gdf=None, field=None):
             # convert to coordinates and extract raster pixel values
             y = arr[rows, cols]
             xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
-            X = __extract_points(xy, raster)
-
-            src.close()
 
         # point features
         elif all(response_gdf.geom_type == 'Point'):
-            xy = response_gdf.bounds.iloc[:, 2:].as_matrix()
+
+            xy = response_gdf.bounds.iloc[:, 2:].values
+
             if field:
-                y = response_gdf[field].as_matrix()
+                y = response_gdf[field].values
             else:
                 y = None
-            X = __extract_points(xy, raster)
 
     # extraction for labelled pixels
     elif response_raster is not None:
@@ -103,26 +103,42 @@ def extract(raster, response_raster=None, response_gdf=None, field=None):
 
         # extract values at labelled indices
         xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
-        X = __extract_points(xy, raster)
         y = arr.data[rows, cols]
 
-        src.close()
+
+    # clip points to extent of raster
+    src = rasterio.open(raster)
+    extent = src.bounds
+
+    valid_idx = np.where((xy[:, 0] > extent.left) &
+                         (xy[:, 0] < extent.right) &
+                         (xy[:, 1] > extent.bottom) &
+                         (xy[:, 1] < extent.top))[0]
+
+    xy = xy[valid_idx, :]
+    y = y[valid_idx]
+
+    # extract values at labelled indices
+    X = __extract_points(xy, raster)
 
     # summarize data and mask nodatavals in X, y, and xy
     y = np.ma.masked_where(X.mask.any(axis=1), y)
     Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
     xy = np.ma.masked_where(Xmask_xy, xy)
 
-    return (X, y, xy)
+    src.close()
+
+    return X, y, xy
 
 
 def __extract_points(xy, raster):
-    """Samples a list of GDAL rasters using a xy locations
+    """Samples pixel values from a raster using an array of xy locations
 
     Parameters
     ----------
     xy : 2d array-like
-        x and y coordinates from which to sample the raster, (n_samples, xy)
+        x and y coordinates from which to sample the raster (n_samples, xy)
+
     raster : str
         Path to GDAL supported raster
 
@@ -133,7 +149,20 @@ def __extract_points(xy, raster):
         at x,y locations"""
 
     with rasterio.open(raster) as src:
-        training_data = np.vstack([i for i in sample_gen(src, xy)])
+
+        # read all bands if single dtype
+        if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
+            training_data = np.vstack([i for i in sample_gen(src, xy)])
+
+        # read single bands if multiple dtypes
+        else:
+            dtype = maximum_dtype(src)
+            training_data = np.zeros((xy.shape[0], src.count), dtype=dtype)
+
+            for band in range(src.count):
+                training_data[:, band] = np.vstack(
+                    [i for i in sample_gen(src, xy, indexes=band+1)]).squeeze()
+
     training_data = np.ma.masked_equal(training_data, src.nodatavals)
 
     if isinstance(training_data.mask, np.bool_):
@@ -144,118 +173,6 @@ def __extract_points(xy, raster):
     return training_data
 
 
-def sample(dataset, xy):
-    """Generator for sampled pixels"""
-
-    # get geotransform
-    # GeoTransform[0] /* top left x */
-    # GeoTransform[1] /* w-e pixel resolution */
-    # GeoTransform[2] /* rotation, 0 if image is "north up" */
-    # GeoTransform[3] /* top left y */
-    # GeoTransform[4] /* rotation, 0 if image is "north up" */
-    # GeoTransform[5] /* n-s pixel resolution */
-    geomatrix = dataset.GetGeoTransform()
-
-    # convert transform into geo-to-pixel
-    inv_geometrix = gdal.InvGeoTransform(geomatrix)
-
-    for x, y in xy:
-        col = int(inv_geometrix[0] + inv_geometrix[1] * x + inv_geometrix[2] * y)
-        row = int(inv_geometrix[3] + inv_geometrix[4] * x + inv_geometrix[5] * y)
-        data = dataset.ReadAsArray(xoff=col, yoff=row, xsize=1, ysize=1)
-
-        if data is not None:
-            yield data[:, 0, 0]
-        else:
-            data = np.zeros((dataset.RasterCount, 1, 1))
-            data[:] = dataset.GetRasterBand(1).GetNoDataValue()
-            yield data[:, 0, 0]
-
-
-def __extract_points_raster(xy, y, raster):
-    """Samples a list of GDAL rasters using a xy locations
-
-    Parameters
-    ----------
-    xy : 2d array-like, optional
-        x and y coordinates from which to sample the raster, (n_samples, xy)
-    y : 1d array-like
-        1d numpy array containing training data labels
-    raster : str
-        Path to GDAL supported raster
-
-    Returns
-    -------
-    X : 2d array-like
-        Masked array containing sampled raster values (sample, bands)
-        at x,y locations
-    y : 1d array-like
-        Masked 1d array containined label values. These contain masked entries
-        for missing X values
-    xy : 2d array-like
-        x,y coordinates of sampled values"""
-
-    src = rasterio.open(raster)
-
-    # convert spatial coordinates to row,col indices of raster
-    rowcol = np.transpose(rasterio.transform.rowcol(
-            src.transform, xy[:, 0], xy[:, 1]))
-
-    # remove duplicates, i.e. points that fall into same pixel twice
-    unique_ind = np.unique(rowcol, return_index=True, axis=0)[1]
-    rowcol = rowcol[unique_ind, :]
-    y = y[unique_ind]
-
-    # remove rows,cols outside of src dimensions
-    invalid_ind = np.nonzero(rowcol[:, 0] >= src.height)
-    invalid_ind = np.append(invalid_ind, np.nonzero(rowcol[:, 1] >= src.width))
-    not_in_indice = [i for i in range(rowcol.shape[0]) if i not in invalid_ind]
-    rowcol = rowcol[not_in_indice]
-    y = y[not_in_indice]
-    row, col = rowcol[:, 0], rowcol[:, 1]
-
-    # create a 2d array matching the predictors width, height
-    # fill labelled pixels with labelled values
-    rsp_arr = np.zeros((src.height, src.width))
-    rsp_arr[:] = np.nan
-    rsp_arr[row, col] = y
-    X = np.zeros((0, src.count))
-    X[:] = np.nan
-
-    for i, window in src.block_windows():
-        src_arr = src.read(window=window)
-
-        # subset the response 2d array into the window size
-        row_min, row_max = window.row_off, window.row_off+window.height
-        col_min, col_max = window.col_off, window.col_off+window.width
-        rsp_arr_window = rsp_arr[row_min:row_max, col_min:col_max]
-
-        # extract src values at labelled pixel locations
-        X = np.vstack((X, np.transpose(
-                src_arr[:, ~np.isnan(rsp_arr_window)])))
-
-    # mask nodata values
-    mx, my = np.nonzero(X != src.nodatavals)
-    valid = np.ma.masked_all((X.shape))
-    valid[mx, my] = 1
-    X = np.ma.masked_where(valid.mask, X)
-
-    # get y values from rasterized row,col locations
-    y = rsp_arr[~np.isnan(rsp_arr)]
-
-    # mask y values for missing values in X
-    y = np.ma.masked_where(X.mask.any(axis=1), y)
-
-    # convert rowcols into xy and mask for missing values in X
-    xy = np.transpose(rasterio.transform.xy(src.transform, row, col))
-    xy = np.ma.masked_where(
-        np.tile(X.mask.any(axis=1), (2, 1)).transpose(), xy)
-
-    src.close()
-
-    return (X, y, xy)
-
-
 def random_sample(size, raster, random_state=None):
     """Generates a random sample of according to size, and samples the pixel
     values within the list of rasters
@@ -264,8 +181,10 @@ def random_sample(size, raster, random_state=None):
     ----------
     size : int
         Number of random samples to obtain
-    rasters : list, str
-        List of paths to GDAL supported rasters
+
+    raster : str
+        Paths to GDAL supported raster
+
     random_state : int
         integer to use within random.seed
 
@@ -273,6 +192,7 @@ def random_sample(size, raster, random_state=None):
     -------
     valid_samples: array-like
         Numpy array of extracted raster values, typically 2d
+
     valid_coordinates: 2d array-like
         2D numpy array of xy coordinates of extracted values"""
 
@@ -324,7 +244,7 @@ def random_sample(size, raster, random_state=None):
         else:
             n = size - len(valid_samples)
 
-    return (valid_samples, valid_coordinates)
+    return valid_samples, valid_coordinates
 
 
 def stratified_sample(stratified, n, window=None, crds=False):
@@ -335,11 +255,14 @@ def stratified_sample(stratified, n, window=None, crds=False):
     stratified : str
         Path to a GDAL-supported raster that contains the strata (categories)
         to generate n random points from
+
     n : int
         number of random points to generate within each strata
+
     window : tuple, optional
         Optionally restrict sampling to this area of the stratified raster
         as a tuple ((xmin, xmax), (ymin, ymax)) of row,col positions
+
     crds : boolean, optional
         Optionally return the randomly sampled locations as coordinates based
         on the transform of the stratified raster, otherwise return row,col
@@ -349,8 +272,7 @@ def stratified_sample(stratified, n, window=None, crds=False):
     -------
     selected : 2d array-like
         row and column positions representing stratified random sample
-        locations
-"""
+        locations"""
 
     src = rasterio.open(stratified)
 
@@ -400,8 +322,10 @@ def filter_points(xy, min_dist=0, remove='first'):
     ----------
     xy : 2d array-like
         Numpy array containing point locations (n_samples, xy)
+
     min_dist : int or float, optional (default=0)
         Minimum distance by which to filter out closely spaced points
+
     remove : str, optional (default='first')
         Optionally choose to remove 'first' occurrences or 'last' occurrences
 
@@ -420,7 +344,7 @@ def filter_points(xy, min_dist=0, remove='first'):
 
     d = np.nanmin(dm, axis=1)
 
-    return(xy[np.greater_equal(d, min_dist)])
+    return xy[np.greater_equal(d, min_dist)]
 
 
 def get_random_point_in_polygon(poly):
