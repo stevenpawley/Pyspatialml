@@ -28,6 +28,7 @@ Import the extract and predict functions:
 ```
 from pyspatialml import predict, extract
 from osgeo import gdal
+import geopandas
 ```
 
 The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster files:
@@ -48,8 +49,6 @@ outds.FlushCache()
 Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
 
 ```
-import geopandas
-
 training = geopandas.read_file('training.shp')
 src = rasterio.open(predictors)
 
@@ -62,7 +61,7 @@ The response argument of the extract function can also take a raster data (GDAL-
 ```
 training = rasterio.open('training.tif')
 
-X, y, xy = extract(dataset=predictors, response=training)
+X, y, xy = extract(dataset=src, response=training)
 ```
 
 Note the extract function returns three numpy-arrays as a tuple, consisting of the extracted pixel values (X), the response variable value (y) and the sampled locations (2d numpy array of x,y values). These represent masked arrays with nodata values in the predictors being masked, and the equivalent entries in y and xy being masked on axis=0.
@@ -89,7 +88,6 @@ In this case, performing cross-validation using groups is useful, because these 
 from sklearn.cluster import KMeans
 
 # import training features
-import geopandas
 training_points = geopandas.read_file('training_points.shp')
 
 # extract training data from the predictors
@@ -135,7 +133,6 @@ In some cases, we don't need all of the training data, but rather would spatiall
 
 ```
 from pyspatialml.sampling import filter_points
-import geopandas
 
 training = geopandas.read_file('training_points.shp')
 training_xy = training.bounds.iloc[:, 2:].as_matrix()
