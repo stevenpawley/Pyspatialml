@@ -26,8 +26,7 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 
 Import the extract and predict functions:
 ```
-from pyspatialml.sampling import extract
-from pyspatialml import predict
+from pyspatialml import predict, extract
 from osgeo import gdal
 ```
 
@@ -49,21 +48,21 @@ outds.FlushCache()
 Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
 
 ```
-import geopandas as gpd
+import geopandas
 
-training = gpd.read_file('training.shp')
-
-X, y, xy = extract(
-    raster=predictors, response_gdf=training, field='id')
-```
-
-The response_gdf argument of the extract function requires a Geopandas GeoDataFrame object, which contain either points or polygons. Alternatively if this response feature is represented by raster data (GDAL-supported, single-band raster), then the response_raster argument can be used:
-
-```
-training = gpd.read_file('training.tif')
+training = geopandas.read_file('training.shp')
+src = rasterio.open(predictors)
 
 X, y, xy = extract(
-    raster=predictors, response_raster=training, field='id')
+    dataset=src, response=training, field='id')
+```
+
+The response argument of the extract function can also take a raster data (GDAL-supported, single-band raster) where the training data are represented by labelled pixels:
+
+```
+training = rasterio.open('training.tif')
+
+X, y, xy = extract(dataset=predictors, response=training)
 ```
 
 Note the extract function returns three numpy-arrays as a tuple, consisting of the extracted pixel values (X), the response variable value (y) and the sampled locations (2d numpy array of x,y values). These represent masked arrays with nodata values in the predictors being masked, and the equivalent entries in y and xy being masked on axis=0.
@@ -90,12 +89,12 @@ In this case, performing cross-validation using groups is useful, because these 
 from sklearn.cluster import KMeans
 
 # import training features
-import geopandas as gpd
-training_points = gpd.read_file('training_points.shp')
+import geopandas
+training_points = geopandas.read_file('training_points.shp')
 
 # extract training data from the predictors
 X, y, xy = extract(
-  raster=predictors, response_gdf=training_points, field='id')
+  dataset=predictors, response=training_points, field='id')
 
 # create 100 spatial clusters based on clustering of the training data point x,y coordinates
 clusters = KMeans(n_clusters=100, n_jobs=-1)
@@ -112,7 +111,7 @@ Finally we might want to perform the prediction on the raster data. The estimato
 
 ```
 outfile = 'prediction.tif'
-predict(estimator=lr, raster=predictors, file_path=outfile, predict_type='prob', indexes=1)
+result = predict(estimator=lr, raster=src, file_path=outfile, predict_type='prob', indexes=1)
 ```
 
 ### Sampling Tools
@@ -123,12 +122,12 @@ For many spatial models, it is common to take a random or stratified random samp
 from pyspatialml.sampling import random_sample, stratified_sample, sample
 
 # extract training data using a random sample
-xy = random_sample(size=1000, raster=predictors, random_state=1)
+xy = random_sample(size=1000, dataset=predictors, random_state=1)
 X = sample(xy, predictors)
 
 # extract training data using a stratified random sample from a map containing categorical data
 # here we are taking 50 samples per category
-xy = stratified_sample(stratified='category_raster.tif', n=50)
+xy = stratified_sample(dataset=rasterio.open('category_raster.tif'), n=50)
 X = sample(xy, predictors)
 ```
 
@@ -136,9 +135,9 @@ In some cases, we don't need all of the training data, but rather would spatiall
 
 ```
 from pyspatialml.sampling import filter_points
-import geopandas as gpd
+import geopandas
 
-training = gpd.read_file('training_points.shp')
+training = geopandas.read_file('training_points.shp')
 training_xy = training.bounds.iloc[:, 2:].as_matrix()
 
 thinned_points = filter_points(xy=training_xy, min_dist=500, remove='first')
@@ -149,7 +148,7 @@ We can also generate random points within polygons using the get_random_point_in
 ```
 from pyspatialml.sampling import get_random_point_in_polygon
 
-polygons = gpd.read_file('training_polygons.shp')
+polygons = geopandas.read_file('training_polygons.shp')
 
 # generate 5 random points in a single polygon
 random_points = [get_random_point_in_polygon(polygons.geometry[0]) for i in range(5)]
