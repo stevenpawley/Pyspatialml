@@ -24,46 +24,69 @@ pip install git+https://github.com/stevenpawley/Pyspatialml
 
 ### Basic workflow
 
-Import the extract and predict functions:
+Example using the data provided in the package. First, import the extract and predict functions:
 ```
-from pyspatialml.sampling import extract
-from pyspatialml import predict
 from osgeo import gdal
+from pyspatialml import predict, extract
+import os
+import geopandas
+import rasterio.plot
+import matplotlib.pyplot as plt
 ```
 
-The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster files:
+The GDAL virtual tile format provides a simple method of stacking and aligning a list of separate raster datasets:
 ```
-predictor_files = [
-  'raster1.tif',
-  'raster2.tif',
-  'raster3'.tif'
-  ]
+os.chdir(os.path.join(os.getcwd(), 'Pyspatialml', 'Examples'))
 
-predictors = 'predictors.vrt'
+band1 = 'lsat7_2000_10.tif'
+band2 = 'lsat7_2000_20.tif'
+band3 = 'lsat7_2000_30.tif'
+band4 = 'lsat7_2000_40.tif'
+band5 = 'lsat7_2000_50.tif'
+band7 = 'lsat7_2000_70.tif'
+predictors = [band1, band2, band3, band4, band5, band7]
+
+# stack the bands into a single virtual tile format dataset:
+vrt_file = 'landsat.vrt'
 outds = gdal.BuildVRT(
-    destName=predictors, srcDSOrSrcDSTab=predictor_files, separate=True,
+    destName=vrt_file, srcDSOrSrcDSTab=predictors, separate=True,
     resolution='highest', resampleAlg='bilinear')
 outds.FlushCache()
 ```
 
-Load some training data in the form of a shapefile of point feature locations and extract the pixel values of the predictors:
-
+Load some training data in the form of a shapefile of point feature locations:
 ```
-import geopandas as gpd
-
-training = gpd.read_file('training.shp')
-
-X, y, xy = extract(
-    raster=predictors, response_gdf=training, field='id')
+training = geopandas.read_file('landclass96_roi.shp')
 ```
 
-The response_gdf argument of the extract function requires a Geopandas GeoDataFrame object, which contain either points or polygons. Alternatively if this response feature is represented by raster data (GDAL-supported, single-band raster), then the response_raster argument can be used:
-
+Show training data and a single raster band using the rasterio.plot.show method:
 ```
-training = gpd.read_file('training.tif')
+src = rasterio.open(vrt_file)
+rasterio.plot.show((src, 4))
+plt.scatter(x=training.bounds.iloc[:, 0],
+            y=training.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+```
+Alternatively display the data using numpy and matplotlib:
+```
+srr_arr = src.read(4, masked=True)
+plt.imshow(srr_arr, extent=(src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top))
+plt.scatter(x=training_gpd.bounds.iloc[:, 0],
+            y=training_gpd.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+```
 
-X, y, xy = extract(
-    raster=predictors, response_raster=training, field='id')
+Create a training dataset by extracting the raster values at the training point locations:
+```
+X, y, xy = extract(dataset=src, response=training, field='id')
+```
+
+The response argument of the extract function can also take a raster data (GDAL-supported, single-band raster) where the training data are represented by labelled pixels:
+```
+training = rasterio.open('training.tif')
+X, y, xy = extract(dataset=src, response=training)
 ```
 
 Note the extract function returns three numpy-arrays as a tuple, consisting of the extracted pixel values (X), the response variable value (y) and the sampled locations (2d numpy array of x,y values). These represent masked arrays with nodata values in the predictors being masked, and the equivalent entries in y and xy being masked on axis=0.
@@ -90,12 +113,11 @@ In this case, performing cross-validation using groups is useful, because these 
 from sklearn.cluster import KMeans
 
 # import training features
-import geopandas as gpd
-training_points = gpd.read_file('training_points.shp')
+training_points = geopandas.read_file('training_points.shp')
 
 # extract training data from the predictors
 X, y, xy = extract(
-  raster=predictors, response_gdf=training_points, field='id')
+  dataset=predictors, response=training_points, field='id')
 
 # create 100 spatial clusters based on clustering of the training data point x,y coordinates
 clusters = KMeans(n_clusters=100, n_jobs=-1)
@@ -112,7 +134,7 @@ Finally we might want to perform the prediction on the raster data. The estimato
 
 ```
 outfile = 'prediction.tif'
-predict(estimator=lr, raster=predictors, file_path=outfile, predict_type='prob', indexes=1)
+result = predict(estimator=lr, raster=src, file_path=outfile, predict_type='prob', indexes=1)
 ```
 
 ### Sampling Tools
@@ -123,12 +145,12 @@ For many spatial models, it is common to take a random or stratified random samp
 from pyspatialml.sampling import random_sample, stratified_sample, sample
 
 # extract training data using a random sample
-xy = random_sample(size=1000, raster=predictors, random_state=1)
+xy = random_sample(size=1000, dataset=predictors, random_state=1)
 X = sample(xy, predictors)
 
 # extract training data using a stratified random sample from a map containing categorical data
 # here we are taking 50 samples per category
-xy = stratified_sample(stratified='category_raster.tif', n=50)
+xy = stratified_sample(dataset=rasterio.open('category_raster.tif'), n=50)
 X = sample(xy, predictors)
 ```
 
@@ -136,9 +158,8 @@ In some cases, we don't need all of the training data, but rather would spatiall
 
 ```
 from pyspatialml.sampling import filter_points
-import geopandas as gpd
 
-training = gpd.read_file('training_points.shp')
+training = geopandas.read_file('training_points.shp')
 training_xy = training.bounds.iloc[:, 2:].as_matrix()
 
 thinned_points = filter_points(xy=training_xy, min_dist=500, remove='first')
@@ -149,7 +170,7 @@ We can also generate random points within polygons using the get_random_point_in
 ```
 from pyspatialml.sampling import get_random_point_in_polygon
 
-polygons = gpd.read_file('training_polygons.shp')
+polygons = geopandas.read_file('training_polygons.shp')
 
 # generate 5 random points in a single polygon
 random_points = [get_random_point_in_polygon(polygons.geometry[0]) for i in range(5)]
