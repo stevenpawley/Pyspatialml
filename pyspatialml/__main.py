@@ -1,8 +1,6 @@
 import numpy as np
 import rasterio
 from tqdm import tqdm
-import geopandas
-from rasterio.sample import sample_gen
 
 
 def _predfun(img, estimator):
@@ -36,10 +34,9 @@ def _predfun(img, estimator):
     # prediction
     result_cla = estimator.predict(flat_pixels)
 
-    # replace mask and fill masked values with nodata value
+    # replace mask
     result_cla = np.ma.masked_array(
-        result_cla, mask=flat_pixels_mask.any(axis=1))
-    result_cla = np.ma.filled(result_cla, fill_value=-99999)
+        data=result_cla, mask=flat_pixels_mask.any(axis=1))
 
     # reshape the prediction from a 1D into 3D array [band, row, col]
     result_cla = result_cla.reshape((1, rows, cols))
@@ -95,8 +92,6 @@ def _probfun(img, estimator):
         result_proba,
         mask=mask2d,
         fill_value=np.nan)
-    result_proba = np.ma.filled(
-        result_proba, fill_value=-99999)
 
     # reshape band into rasterio format [band, row, col]
     result_proba = result_proba.transpose(2, 0, 1)
@@ -104,7 +99,7 @@ def _probfun(img, estimator):
     return result_proba
 
 
-def maximum_dtype(src):
+def _maximum_dtype(src):
     """Returns a single dtype that is large enough to store data
     within all raster bands
 
@@ -222,11 +217,12 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
         # else read each band separately
         else:
             def read(src, window):
-                dtype = maximum_dtype(src)
+                dtype = _maximum_dtype(src)
                 arr = np.ma.zeros((src.count, window.height, window.width), dtype=dtype)
 
                 for band in range(src.count):
                     arr[band, :, :] = src.read(band+1, window=window, masked=True)
+
                 return arr
 
             data_gen = (read(src=src, window=window) for window in windows)
@@ -234,159 +230,8 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
         with tqdm(total=len(windows)) as pbar:
             for window, arr in zip(windows, data_gen):
                 result = predfun(arr, estimator)
+                result = np.ma.filled(result, fill_value=nodata)
                 dst.write(result[indexes, :, :].astype(dtype), window=window)
                 pbar.update(1)
 
     return rasterio.open(file_path)
-
-
-def extract(dataset, response, field=None):
-    """Sample a GDAL-supported raster dataset point of polygon
-    features in a Geopandas Geodataframe or a labelled singleband
-    raster dataset
-
-    Parameters
-    ----------
-    dataset : rasterio.io.DatasetReader
-        Opened Rasterio DatasetReader containing data to be sampled
-        Raster can be a multi-band raster or a virtual tile format raster
-
-    response: rasterio.io.DatasetReader or Geopandas DataFrame
-        Single band raster containing labelled pixels, or
-        a Geopandas GeoDataframe containing either point or polygon features
-
-    field : str, optional
-        Field name of attribute to be used the label the extracted data
-        Used only if the response feature represents a GeoDataframe
-
-    Returns
-    -------
-    X : array-like
-        Numpy masked array of extracted raster values, typically 2d
-
-    y: 1d array like
-        Numpy masked array of labelled sampled
-
-    xy: 2d array-like
-        Numpy masked array of row and column indexes of training pixels"""
-
-    src = dataset
-
-    # extraction for geodataframes
-    if isinstance(response, geopandas.geodataframe.GeoDataFrame):
-        if len(np.unique(response.geom_type)) > 1:
-            raise ValueError(
-                'response_gdf cannot contain a mixture of geometry types')
-
-        # polygon features
-        if all(response.geom_type == 'Polygon'):
-
-            # generator for shape geometry for rasterizing
-            if field is None:
-                shapes = (geom for geom in response.geometry)
-
-            if field is not None:
-                shapes = ((geom, value) for geom, value in zip(
-                          response.geometry, response[field]))
-
-            arr = np.zeros((src.height, src.width))
-            arr[:] = -99999
-            arr = rasterio.features.rasterize(
-                shapes=shapes, fill=-99999, out=arr,
-                transform=src.transform, default_value=1)
-
-            # get indexes of labelled data
-            rows, cols = np.nonzero(arr != -99999)
-
-            # convert to coordinates and extract raster pixel values
-            y = arr[rows, cols]
-            xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
-
-        # point features
-        elif all(response.geom_type == 'Point'):
-
-            xy = response.bounds.iloc[:, 2:].values
-
-            if field:
-                y = response[field].values
-            else:
-                y = None
-
-    # extraction for labelled pixels
-    elif isinstance(response, rasterio.io.DatasetReader):
-
-        # some checking
-        if field is not None:
-            Warning('field attribute is not used for response_raster')
-
-        # open response raster and get labelled pixel indices and values
-        arr = response.read(1, masked=True)
-        rows, cols = np.nonzero(~arr.mask)
-
-        # extract values at labelled indices
-        xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
-        y = arr.data[rows, cols]
-
-    # clip points to extent of raster
-    extent = src.bounds
-
-    valid_idx = np.where((xy[:, 0] > extent.left) &
-                         (xy[:, 0] < extent.right) &
-                         (xy[:, 1] > extent.bottom) &
-                         (xy[:, 1] < extent.top))[0]
-
-    xy = xy[valid_idx, :]
-    y = y[valid_idx]
-
-    # extract values at labelled indices
-    X = _extract_points(xy, src)
-
-    # summarize data and mask nodatavals in X, y, and xy
-    y = np.ma.masked_where(X.mask.any(axis=1), y)
-    Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-    xy = np.ma.masked_where(Xmask_xy, xy)
-
-    return X, y, xy
-
-
-def _extract_points(xy, dataset):
-    """Samples pixel values from a GDAL-supported raster dataset
-    using an array of xy locations
-
-    Parameters
-    ----------
-    xy : 2d array-like
-        x and y coordinates from which to sample the raster (n_samples, xy)
-
-    raster : str
-        Path to GDAL supported raster
-
-    Returns
-    -------
-    data : 2d array-like
-        Masked array containing sampled raster values (sample, bands)
-        at x,y locations"""
-
-    src = dataset
-
-    # read all bands if single dtype
-    if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
-        training_data = np.vstack([i for i in sample_gen(src, xy)])
-
-    # read single bands if multiple dtypes
-    else:
-        dtype = maximum_dtype(src)
-        training_data = np.zeros((xy.shape[0], src.count), dtype=dtype)
-
-        for band in range(src.count):
-            training_data[:, band] = np.vstack(
-                [i for i in sample_gen(src, xy, indexes=band+1)]).squeeze()
-
-    training_data = np.ma.masked_equal(training_data, src.nodatavals)
-
-    if isinstance(training_data.mask, np.bool_):
-        mask_arr = np.empty(training_data.shape, dtype='bool')
-        mask_arr[:] = False
-        training_data.mask = mask_arr
-
-    return training_data

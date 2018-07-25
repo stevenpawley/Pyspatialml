@@ -3,7 +3,162 @@ import random
 import numpy as np
 import rasterio
 import scipy
+import geopandas
 from shapely.geometry import Point
+from rasterio.sample import sample_gen
+from pyspatialml import _maximum_dtype
+
+
+def extract(dataset, response, field=None):
+    """Sample a GDAL-supported raster dataset point of polygon
+    features in a Geopandas Geodataframe or a labelled singleband
+    raster dataset
+
+    Parameters
+    ----------
+    dataset : rasterio.io.DatasetReader
+        Opened Rasterio DatasetReader containing data to be sampled
+        Raster can be a multi-band raster or a virtual tile format raster
+
+    response: rasterio.io.DatasetReader or Geopandas DataFrame
+        Single band raster containing labelled pixels, or
+        a Geopandas GeoDataframe containing either point or polygon features
+
+    field : str, optional
+        Field name of attribute to be used the label the extracted data
+        Used only if the response feature represents a GeoDataframe
+
+    Returns
+    -------
+    X : array-like
+        Numpy masked array of extracted raster values, typically 2d
+
+    y: 1d array like
+        Numpy masked array of labelled sampled
+
+    xy: 2d array-like
+        Numpy masked array of row and column indexes of training pixels"""
+
+    src = dataset
+
+    # extraction for geodataframes
+    if isinstance(response, geopandas.geodataframe.GeoDataFrame):
+        if len(np.unique(response.geom_type)) > 1:
+            raise ValueError(
+                'response_gdf cannot contain a mixture of geometry types')
+
+        # polygon features
+        if all(response.geom_type == 'Polygon'):
+
+            # generator for shape geometry for rasterizing
+            if field is None:
+                shapes = (geom for geom in response.geometry)
+
+            if field is not None:
+                shapes = ((geom, value) for geom, value in zip(
+                          response.geometry, response[field]))
+
+            arr = np.zeros((src.height, src.width))
+            arr[:] = -99999
+            arr = rasterio.features.rasterize(
+                shapes=shapes, fill=-99999, out=arr,
+                transform=src.transform, default_value=1)
+
+            # get indexes of labelled data
+            rows, cols = np.nonzero(arr != -99999)
+
+            # convert to coordinates and extract raster pixel values
+            y = arr[rows, cols]
+            xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
+
+        # point features
+        elif all(response.geom_type == 'Point'):
+
+            xy = response.bounds.iloc[:, 2:].values
+
+            if field:
+                y = response[field].values
+            else:
+                y = None
+
+    # extraction for labelled pixels
+    elif isinstance(response, rasterio.io.DatasetReader):
+
+        # some checking
+        if field is not None:
+            Warning('field attribute is not used for response_raster')
+
+        # open response raster and get labelled pixel indices and values
+        arr = response.read(1, masked=True)
+        rows, cols = np.nonzero(~arr.mask)
+
+        # extract values at labelled indices
+        xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
+        y = arr.data[rows, cols]
+
+    # clip points to extent of raster
+    extent = src.bounds
+
+    valid_idx = np.where((xy[:, 0] > extent.left) &
+                         (xy[:, 0] < extent.right) &
+                         (xy[:, 1] > extent.bottom) &
+                         (xy[:, 1] < extent.top))[0]
+
+    xy = xy[valid_idx, :]
+    y = y[valid_idx]
+
+    # extract values at labelled indices
+    X = _extract_points(xy, src)
+
+    # summarize data and mask nodatavals in X, y, and xy
+    y = np.ma.masked_where(X.mask.any(axis=1), y)
+    Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
+    xy = np.ma.masked_where(Xmask_xy, xy)
+
+    return X, y, xy
+
+
+def _extract_points(xy, dataset):
+    """Samples pixel values from a GDAL-supported raster dataset
+    using an array of xy locations
+
+    Parameters
+    ----------
+    xy : 2d array-like
+        x and y coordinates from which to sample the raster (n_samples, xy)
+
+    raster : str
+        Path to GDAL supported raster
+
+    Returns
+    -------
+    data : 2d array-like
+        Masked array containing sampled raster values (sample, bands)
+        at x,y locations"""
+
+    src = dataset
+
+    # read all bands if single dtype
+    if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
+        training_data = np.vstack([i for i in sample_gen(src, xy)])
+
+    # read single bands if multiple dtypes
+    else:
+        dtype = _maximum_dtype(src)
+        training_data = np.zeros((xy.shape[0], src.count), dtype=dtype)
+
+        for band in range(src.count):
+            training_data[:, band] = np.vstack(
+                [i for i in sample_gen(src, xy, indexes=band+1)]).squeeze()
+
+    training_data = np.ma.masked_equal(training_data, src.nodatavals)
+
+    if isinstance(training_data.mask, np.bool_):
+        mask_arr = np.empty(training_data.shape, dtype='bool')
+        mask_arr[:] = False
+        training_data.mask = mask_arr
+
+    return training_data
 
 
 def random_sample(size, dataset, random_state=None):
@@ -56,13 +211,16 @@ def random_sample(size, dataset, random_state=None):
         sample_raster[Ysample, Xsample] = 1
 
         # get indices of sample locations
-        is_train = np.nonzero(np.isnan(sample_raster) == False)
+        rows, cols = np.nonzero(np.isnan(sample_raster) == False)
+
+        # convert row, col indices to coordinates
+        xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
 
         # sample at random point locations
-        samples = src.read(masked=True)[:, is_train[0], is_train[1]]
+        samples = _extract_points(xy, src)
 
         # append only non-masked data to each row of X_random
-        samples = samples.filled(np.nan)
+        samples = samples.astype('float32').filled(np.nan)
         invalid_ind = np.isnan(samples).any(axis=0)
         samples = samples[:, ~invalid_ind]
         valid_samples = np.append(valid_samples, np.transpose(samples), axis=0)
