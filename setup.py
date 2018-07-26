@@ -12,6 +12,10 @@ setup(
     packages=["pyspatialml"],
     install_requires=[
         'tqdm',
-        'rasterio'],
+        'rasterio',
+        'geopandas',
+        'numpy',
+        'scipy',
+        'shapely'],
     python_requires='>3.3'
 )

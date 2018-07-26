@@ -2,11 +2,12 @@ import os
 import random
 import numpy as np
 import rasterio
+import rasterio.features
 import scipy
 import geopandas
 from shapely.geometry import Point
 from rasterio.sample import sample_gen
-from pyspatialml import _maximum_dtype
+from .__main import _maximum_dtype
 
 
 def extract(dataset, response, field=None):
@@ -96,6 +97,10 @@ def extract(dataset, response, field=None):
         xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
         y = arr.data[rows, cols]
 
+    elif isinstance(response, np.ndarray):
+        y = None
+        xy = response
+
     # clip points to extent of raster
     extent = src.bounds
 
@@ -105,20 +110,24 @@ def extract(dataset, response, field=None):
                          (xy[:, 1] < extent.top))[0]
 
     xy = xy[valid_idx, :]
-    y = y[valid_idx]
+
+    if y is not None:
+        y = y[valid_idx]
 
     # extract values at labelled indices
-    X = _extract_points(xy, src)
+    X = extract_xy(xy, src)
 
     # summarize data and mask nodatavals in X, y, and xy
-    y = np.ma.masked_where(X.mask.any(axis=1), y)
+    if y is not None:
+        y = np.ma.masked_where(X.mask.any(axis=1), y)
+
     Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
     xy = np.ma.masked_where(Xmask_xy, xy)
 
     return X, y, xy
 
 
-def _extract_points(xy, dataset):
+def extract_xy(xy, dataset):
     """Samples pixel values from a GDAL-supported raster dataset
     using an array of xy locations
 
@@ -161,24 +170,29 @@ def _extract_points(xy, dataset):
     return training_data
 
 
-def random_sample(size, dataset, random_state=None):
+def sample(size, dataset, strata=None, random_state=None):
     """Generates a random sample of according to size, and samples the pixel
     values from a GDAL-supported raster
 
     Parameters
     ----------
     size : int
-        Number of random samples to obtain
+        Number of random samples or number of samples per strata
+        if strategy='stratified'
 
     dataset : rasterio.io.DatasetReader
         Opened Rasterio DatasetReader
+
+    strata : rasterio.io.DatasetReader, optional (default=None
+        To use stratified instead of random sampling, strata can be supplied
+        using an open rasterio DatasetReader object
 
     random_state : int
         integer to use within random.seed
 
     Returns
     -------
-    valid_samples: array-like
+    samples: array-like
         Numpy array of extracted raster values, typically 2d
 
     valid_coordinates: 2d array-like
@@ -189,121 +203,91 @@ def random_sample(size, dataset, random_state=None):
     # set the seed
     np.random.seed(seed=random_state)
 
-    # create np array to store randomly sampled data
-    # we are starting with zero initial rows because data will be appended,
-    # and number of columns are equal to n_features
-    valid_samples = np.zeros((0, src.count))
-    valid_coordinates = np.zeros((0, 2))
+    if strata is None:
 
-    # loop until target number of samples is satified
-    satisfied = False
+        # create np array to store randomly sampled data
+        # we are starting with zero initial rows because data will be appended,
+        # and number of columns are equal to n_features
+        valid_samples = np.zeros((0, src.count))
+        valid_coordinates = np.zeros((0, 2))
 
-    n = size
-    while satisfied is False:
+        # loop until target number of samples is satified
+        satisfied = False
 
-        # generate random row and column indices
-        Xsample = np.random.choice(range(0, src.shape[1]), n)
-        Ysample = np.random.choice(range(0, src.shape[0]), n)
+        n = size
+        while satisfied is False:
 
-        # create 2d numpy array with sample locations set to 1
-        sample_raster = np.empty((src.shape[0], src.shape[1]))
-        sample_raster[:] = np.nan
-        sample_raster[Ysample, Xsample] = 1
+            # generate random row and column indices
+            Xsample = np.random.choice(range(0, src.shape[1]), n)
+            Ysample = np.random.choice(range(0, src.shape[0]), n)
 
-        # get indices of sample locations
-        rows, cols = np.nonzero(np.isnan(sample_raster) == False)
+            # create 2d numpy array with sample locations set to 1
+            sample_raster = np.empty((src.shape[0], src.shape[1]))
+            sample_raster[:] = np.nan
+            sample_raster[Ysample, Xsample] = 1
+
+            # get indices of sample locations
+            rows, cols = np.nonzero(np.isnan(sample_raster) == False)
+
+            # convert row, col indices to coordinates
+            xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
+
+            # sample at random point locations
+            samples = extract_xy(xy, src)
+
+            # append only non-masked data to each row of X_random
+            samples = samples.astype('float32').filled(np.nan)
+            invalid_ind = np.isnan(samples).any(axis=1)
+            samples = samples[~invalid_ind, :]
+            valid_samples = np.append(valid_samples, samples, axis=0)
+
+            xy = xy[~invalid_ind, :]
+            valid_coordinates = np.append(
+                valid_coordinates, xy, axis=0)
+
+            # check to see if target_nsamples has been reached
+            if len(valid_samples) >= size:
+                satisfied = True
+            else:
+                n = size - len(valid_samples)
+
+    else:
+
+        # get number of unique categories
+        strata = strata.read(1)
+        categories = np.unique(strata)
+        categories = categories[np.nonzero(categories != src.nodata)]
+        categories = categories[~np.isnan(categories)]
+
+        # store selected coordinates
+        selected = np.zeros((0, 2))
+
+        for cat in categories:
+
+            # get row,col positions for cat strata
+            ind = np.transpose(np.nonzero(strata == cat))
+
+            if size > ind.shape[0]:
+                msg = 'Sample size is greater than number of pixels in strata {0}'.format(str(ind))
+                msg = os.linesep.join([msg, 'Sampling using replacement'])
+                Warning(msg)
+
+            # random sample
+            sample = np.random.uniform(
+                low=0, high=ind.shape[0], size=size).astype('int')
+            xy = ind[sample, :]
+
+            selected = np.append(selected, xy, axis=0)
 
         # convert row, col indices to coordinates
-        xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
+        x, y = rasterio.transform.xy(
+            src.transform, selected[:, 0], selected[:, 1])
+        valid_coordinates = np.stack((x, y)).transpose()
 
-        # sample at random point locations
-        samples = _extract_points(xy, src)
-
-        # append only non-masked data to each row of X_random
-        samples = samples.astype('float32').filled(np.nan)
-        invalid_ind = np.isnan(samples).any(axis=0)
-        samples = samples[:, ~invalid_ind]
-        valid_samples = np.append(valid_samples, np.transpose(samples), axis=0)
-
-        is_train = np.array(is_train)
-        is_train = is_train[:, ~invalid_ind]
-        valid_coordinates = np.append(
-            valid_coordinates, is_train.T, axis=0)
-
-        # check to see if target_nsamples has been reached
-        if len(valid_samples) >= size:
-            satisfied = True
-        else:
-            n = size - len(valid_samples)
+        # extract data
+        valid_samples = extract_xy(valid_coordinates, src)
 
     return valid_samples, valid_coordinates
-
-
-def stratified_sample(dataset, n, window=None, crds=False):
-    """Creates random points of [size] within each category of a
-    GDAL-supported raster
-
-    Parameters
-    ----------
-    dataset : rasterio.io.DatasetReader
-        Opened Rasterio DatasetReader raster that contains the strata (categories)
-        to generate n random points from
-
-    n : int
-        number of random points to generate within each strata
-
-    window : tuple, optional
-        Optionally restrict sampling to this area of the stratified raster
-        as a tuple ((xmin, xmax), (ymin, ymax)) of row,col positions
-
-    crds : boolean, optional
-        Optionally return the randomly sampled locations as coordinates based
-        on the transform of the stratified raster, otherwise return row,col
-        positions
-
-    Returns
-    -------
-    selected : 2d array-like
-        row and column positions representing stratified random sample
-        locations"""
-
-    src = dataset
-
-    # get number of unique categories
-    strata = src.read(1, window=window)
-    categories = np.unique(strata)
-    categories = categories[np.nonzero(categories != src.nodata)]
-    categories = categories[~np.isnan(categories)]
-
-    # store selected coordinates
-    selected = np.zeros((0, 2))
-
-    for cat in categories:
-
-        # get row,col positions for cat strata
-        ind = np.transpose(np.nonzero(strata == cat))
-
-        if n > ind.shape[0]:
-            msg = ('Sample size is greater than number of pixels in ',
-                   'strata {0}'.format(str(ind)))
-            msg = os.linesep.join([msg, 'Sampling using replacement'])
-            Warning(msg)
-
-        # random sample
-        sample = np.random.uniform(
-            low=0, high=ind.shape[0], size=n).astype('int')
-        # sample = np.random.choice(range(0, ind.shape[0]), n)
-        xy = ind[sample, :]
-
-        # convert to coordinates
-        # xs, ys = rasterio.transform.xy(src.transform, xs, ys)
-        selected = np.append(selected, xy, axis=0)
-
-    if crds is True:
-        selected = rasterio.transform.xy(
-            src.transform, selected[:, 0], selected[:, 1])
-
-    return selected
 
 
 def filter_points(xy, min_dist=0, remove='first'):

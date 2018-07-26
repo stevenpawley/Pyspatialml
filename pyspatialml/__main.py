@@ -235,3 +235,4 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
                 pbar.update(1)
 
     return rasterio.open(file_path)
+

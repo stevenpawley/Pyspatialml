@@ -56,4 +56,15 @@
       <NODATA>-99999</NODATA>
     </ComplexSource>
   </VRTRasterBand>
+  <VRTRasterBand dataType="Int16" band="6">
+    <NoDataValue>-32768</NoDataValue>
+    <ComplexSource resampling="bilinear">
+      <SourceFilename relativeToVRT="1">lsat7_2000_70.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="489" RasterYSize="443" DataType="Int16" BlockXSize="489" BlockYSize="8" />
+      <SrcRect xOff="0" yOff="0" xSize="489" ySize="443" />
+      <DstRect xOff="0" yOff="0" xSize="489" ySize="443" />
+      <NODATA>-32768</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
 </VRTDataset>
