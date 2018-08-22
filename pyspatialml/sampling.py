@@ -44,7 +44,7 @@ def extract(dataset, response, field=None):
 
     # extraction for geodataframes
     if isinstance(response, geopandas.geodataframe.GeoDataFrame):
-        if len(np.unique(response.geom_type)) > 1:
+        if len(response.geom_type.unique()) > 1:
             raise ValueError(
                 'response_gdf cannot contain a mixture of geometry types')
 
