@@ -118,13 +118,3 @@ row, col = rasterio.transform.rowcol(src.transform, xs=xy[:, 0], ys=xy[:, 1])
 plt.imshow(strata.read(1, masked=True))
 plt.scatter(x=col, y=row, color='white')
 plt.show()
-
-
-
-
-
-# pyraster approach
-ras = PyRaster(predictors)
-
-pred = ras.predict(estimator=clf, file_path='classification.tif')
-plt.imshow(pred.read(masked=True))

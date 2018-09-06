@@ -1,5 +1,6 @@
 import numpy as np
 import rasterio
+import tempfile
 from tqdm import tqdm
 
 
@@ -140,7 +141,7 @@ def _maximum_dtype(src):
     return dtype
 
 
-def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
+def predict(estimator, dataset, file_path=None, predict_type='raw', indexes=None,
             driver='GTiff', dtype='float32', nodata=-99999):
     """Apply prediction of a scikit learn model to a GDAL-supported
     raster dataset
@@ -153,8 +154,9 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
     dataset : rasterio.io.DatasetReader
         An opened Rasterio DatasetReader
 
-    file_path : str
+    file_path : str, optional
         Path to a GeoTiff raster for the classification results
+        If not supplied then output is written to a temporary file
 
     predict_type : str, optional (default='raw')
         'raw' for classification/regression
@@ -204,6 +206,10 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
     meta = src.meta
     meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
 
+    # optionally output to a temporary file
+    if file_path is None:
+        file_path = tempfile.NamedTemporaryFile().name
+
     with rasterio.open(file_path, 'w', **meta) as dst:
 
         # define windows
@@ -236,3 +242,82 @@ def predict(estimator, dataset, file_path, predict_type='raw', indexes=None,
 
     return rasterio.open(file_path)
 
+
+def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32', nodata=-99999):
+    """Apply prediction of a scikit learn model to a GDAL-supported
+    raster dataset
+
+    Parameters
+    ----------
+    dataset : rasterio.io.DatasetReader
+        An opened Rasterio DatasetReader
+
+    function : function that takes an numpy array as a single argument
+
+    file_path : str, optional
+        Path to a GeoTiff raster for the classification results
+        If not supplied then output is written to a temporary file
+
+    driver : str, optional. Default is 'GTiff'
+        Named of GDAL-supported driver for file export
+
+    dtype : str, optional. Default is 'float32'
+        Numpy data type for file export
+
+    nodata : any number, optional. Default is -99999
+        Nodata value for file export
+
+    Returns
+    -------
+    rasterio.io.DatasetReader containing result of function output"""
+
+    src = dataset
+
+    # determine output dimensions
+    img = src.read(masked=True, window=(0, 0, 1, src.width))
+    arr = function(img)
+    if len(arr.shape) > 2:
+        indexes = range(arr.shape[0])
+    else:
+        indexes = 1
+
+    # optionally output to a temporary file
+    if file_path is None:
+        file_path = tempfile.NamedTemporaryFile().name
+
+    # open output file with updated metadata
+    meta = src.meta
+    meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
+
+    with rasterio.open(file_path, 'w', **meta) as dst:
+
+        # define windows
+        windows = [window for ij, window in dst.block_windows()]
+
+        # generator gets raster arrays for each window
+        # read all bands if single dtype
+        if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
+            data_gen = (src.read(window=window, masked=True) for window in windows)
+
+        # else read each band separately
+        else:
+            def read(src, window):
+                dtype = _maximum_dtype(src)
+                arr = np.ma.zeros((src.count, window.height, window.width), dtype=dtype)
+
+                for band in range(src.count):
+                    arr[band, :, :] = src.read(band+1, window=window, masked=True)
+
+                return arr
+
+            data_gen = (read(src=src, window=window) for window in windows)
+
+        with tqdm(total=len(windows)) as pbar:
+
+            for window, arr in zip(windows, data_gen):
+                result = function(arr)
+                result = np.ma.filled(result, fill_value=nodata)
+                dst.write(result.astype(dtype), window=window)
+                pbar.update(1)
+
+    return rasterio.open(file_path)

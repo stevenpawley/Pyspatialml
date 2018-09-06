@@ -8,6 +8,7 @@ import geopandas
 from shapely.geometry import Point
 from rasterio.sample import sample_gen
 from .__main import _maximum_dtype
+from itertools import chain
 
 
 def extract(dataset, response, field=None):
@@ -74,6 +75,27 @@ def extract(dataset, response, field=None):
 
         # point features
         elif all(response.geom_type == 'Point'):
+
+            xy = response.bounds.iloc[:, 2:].values
+
+            if field:
+                y = response[field].values
+            else:
+                y = None
+
+        # line features
+        elif all(response.geom_type == 'LineString'):
+
+            # interpolate points along lines
+            pixel_points = []
+
+            for i, p in response.iterrows():
+                points_along_line = [p.geometry.interpolate(distance=i) for i in
+                                     np.arange(0, p.geometry.length, min(src.res))]
+                pixel_points.append(points_along_line)
+
+            response = geopandas.GeoDataFrame(geometry=list(chain.from_iterable(pixel_points)),
+                                              crs=src.crs)
 
             xy = response.bounds.iloc[:, 2:].values
 
