@@ -118,3 +118,12 @@ row, col = rasterio.transform.rowcol(src.transform, xs=xy[:, 0], ys=xy[:, 1])
 plt.imshow(strata.read(1, masked=True))
 plt.scatter(x=col, y=row, color='white')
 plt.show()
+
+
+
+
+# pyraster
+src = PyRaster(files=predictors)
+dir(src)
+src.lsat7_2000_10
+

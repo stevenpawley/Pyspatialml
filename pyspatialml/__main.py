@@ -2,6 +2,8 @@ import numpy as np
 import rasterio
 import tempfile
 from tqdm import tqdm
+from rasterio.transform import Affine
+from rasterio.windows import Window
 
 
 def _predfun(img, estimator):
@@ -141,8 +143,8 @@ def _maximum_dtype(src):
     return dtype
 
 
-def predict(estimator, dataset, file_path=None, predict_type='raw', indexes=None,
-            driver='GTiff', dtype='float32', nodata=-99999):
+def predict(estimator, dataset, file_path=None, predict_type='raw',
+            indexes=None, driver='GTiff', dtype='float32', nodata=-99999):
     """Apply prediction of a scikit learn model to a GDAL-supported
     raster dataset
 
@@ -218,16 +220,19 @@ def predict(estimator, dataset, file_path=None, predict_type='raw', indexes=None
         # generator gets raster arrays for each window
         # read all bands if single dtype
         if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
-            data_gen = (src.read(window=window, masked=True) for window in windows)
+            data_gen = (src.read(window=window, masked=True)
+                        for window in windows)
 
         # else read each band separately
         else:
             def read(src, window):
                 dtype = _maximum_dtype(src)
-                arr = np.ma.zeros((src.count, window.height, window.width), dtype=dtype)
+                arr = np.ma.zeros((src.count, window.height, window.width),
+                                  dtype=dtype)
 
                 for band in range(src.count):
-                    arr[band, :, :] = src.read(band+1, window=window, masked=True)
+                    arr[band, :, :] = src.read(
+                        band+1, window=window, masked=True)
 
                 return arr
 
@@ -243,7 +248,8 @@ def predict(estimator, dataset, file_path=None, predict_type='raw', indexes=None
     return rasterio.open(file_path)
 
 
-def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32', nodata=-99999):
+def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32',
+         nodata=-99999):
     """Apply prediction of a scikit learn model to a GDAL-supported
     raster dataset
 
@@ -297,16 +303,19 @@ def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32', nod
         # generator gets raster arrays for each window
         # read all bands if single dtype
         if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
-            data_gen = (src.read(window=window, masked=True) for window in windows)
+            data_gen = (src.read(window=window, masked=True)
+                        for window in windows)
 
         # else read each band separately
         else:
             def read(src, window):
                 dtype = _maximum_dtype(src)
-                arr = np.ma.zeros((src.count, window.height, window.width), dtype=dtype)
+                arr = np.ma.zeros((src.count, window.height, window.width),
+                                  dtype=dtype)
 
                 for band in range(src.count):
-                    arr[band, :, :] = src.read(band+1, window=window, masked=True)
+                    arr[band, :, :] = src.read(
+                        band+1, window=window, masked=True)
 
                 return arr
 
@@ -320,4 +329,54 @@ def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32', nod
                 dst.write(result.astype(dtype), window=window)
                 pbar.update(1)
 
+    return rasterio.open(file_path)
+
+
+def crop(dataset, bounds, file_path=None, driver='GTiff'):
+    """Crops a rasterio dataset by the supplied bounds
+
+    dataset : rasterio.io.DatasetReader
+        An opened Rasterio DatasetReader
+    
+    bounds : tuple
+        A tuple containing the bounding box to clip by in the
+        form of (xmin, xmax, ymin, ymax)
+    
+    file_path : str, optional. Default=None
+        File path to save to cropped raster.
+        If not supplied then the cropped raster is saved to a
+        temporary file
+    
+    driver : str, optional. Default is 'GTiff'
+        Named of GDAL-supported driver for file export
+    
+    Returns
+    -------
+    rasterio.io.DatasetReader with the cropped raster"""
+
+    src = dataset
+    
+    xmin, xmax, ymin, ymax = bounds
+
+    rows, cols = rasterio.transform.rowcol(
+    rasterio.open(strata).transform, xs=(xmin, xmax), ys=(ymin, ymax))
+
+    cropped_arr = src.read(1, window=Window(col_off=min(cols),
+                                            row_off=min(rows),
+                                            width=max(cols)-min(cols),
+                                            height=max(rows)-min(rows)))
+
+    meta = src.meta
+    aff = src.transform
+    meta['width'] = max(cols)-min(cols)
+    meta['height'] = max(rows)-min(rows)
+    meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
+    meta['driver'] = driver
+
+    if file_path is None:
+        file_path = tempfile.NamedTemporaryFile().name
+
+    with rasterio.open(file_path, 'w', **meta) as dst:
+        dst.write(cropped_arr)
+    
     return rasterio.open(file_path)

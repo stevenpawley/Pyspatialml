@@ -66,6 +66,7 @@ class CrossValidateThreshold():
 
         **fit_params : dict of string -> object
             Parameters passed to the ``fit`` method of the estimator"""
+
         # check estimator and cv methods are valid
         self.cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
 
@@ -84,7 +85,7 @@ class CrossValidateThreshold():
         self.y_true = y
 
         # add fold id to the predictions
-        self.test_idx_ = [indexes[1] for indexes in cv.split(X, y, groups)]
+        self.test_idx_ = [indexes[1] for indexes in self.cv.split(X, y, groups)]
 
     def score(self, tpr_threshold=None, cutoff_threshold=None):
         """Calculates the scoring metrics using a cutoff threshold that attains a true positive rate

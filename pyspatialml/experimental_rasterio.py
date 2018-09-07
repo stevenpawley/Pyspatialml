@@ -1,63 +1,23 @@
 import numpy as np
 import os
+import rasterio
 from tqdm import tqdm
 from osgeo import gdal
 import tempfile
 import inspect
 
 
-class RasterLayer(object):
+class RasterLayer():
     """Base class for opening and reading raster data"""
 
-    def __init__(self, Band):
+    def __init__(self, layer):
         """Initiates a RasterLayer object
 
         Parameters
         ----------
-        Band : osgeo.gdal.Band object"""
+        layer : rasterio.io.DatasetReader object"""
 
-        self.Band = Band
-        self.nodata = Band.GetNoDataValue()
-
-    def read(self, xoff=0, yoff=0, win_xsize=None, win_ysize=None, masked=False, **kwargs):
-        """Reads the raster or a window of the raster into a numpy array
-
-        Parameters
-        ----------
-        xoff : int
-            Raster column index to start reading data from
-
-        yoff : int
-            Raster row index to start reading data from
-
-        win_xsize : int
-            Size of rectangular subset of raster to read in columns
-
-        win_ysize : int
-            Size of rectangular subset of raster to read in rows
-
-        masked : bool, default=False
-            Optionally mask the raster's nodata values and return as a
-            numpy masked array
-
-        Returns
-        -------
-        arr : array-like
-            2D or 3D array if reading a osgeo.gdal.Band object, or reading a osgeo.gdal.Dataset"""
-
-        # read GDAL Dataset
-        if isinstance(self, PyRaster):
-            arr = self.Dataset.ReadAsArray(xoff, yoff, win_xsize, win_ysize, **kwargs)
-
-        # read GDAL GetRasterBand
-        else:
-            arr = self.Band.ReadAsArray(xoff, yoff, win_xsize, win_ysize, **kwargs)
-
-        # optionally mask nodata values
-        if masked is True:
-            arr = np.ma.masked_array(arr, np.isin(arr, self.nodata))
-
-        return arr
+        self.layer = layer
 
     def extract(self, response, field=None):
         """Sample a GDAL-supported raster dataset point of polygon
@@ -89,12 +49,6 @@ class RasterLayer(object):
             src = self.Dataset
         else:
             src = self.Band
-
-    def distance(self):
-        pass
-
-    def density(self):
-        pass
 
 
 class PyRaster(RasterLayer):
@@ -158,13 +112,10 @@ class PyRaster(RasterLayer):
         # get dict of arguments from function call
         args, _, _, values = inspect.getargvalues(inspect.currentframe())
         values.pop("self")
-        self.meta = values
 
         # buildvrt
         if output is None:
-            temp_filename = next(tempfile._get_candidate_names())
-            temp_dirname = tempfile._get_default_tempdir()
-            output = os.path.join(temp_dirname, temp_filename)
+            output = tempfile.NamedTemporaryFile().name
 
         outds = gdal.BuildVRT(
             destName=output, srcDSOrSrcDSTab=files, separate=separate,
@@ -178,29 +129,13 @@ class PyRaster(RasterLayer):
 
         # open and assign gdal RasterBands to file names
         self.file = output
-        self.Dataset = gdal.Open(self.file)
-        self.nodata = np.array([])
+        self.dataset = rasterio.open(self.file)
 
         for i, name in enumerate(files):
             # attach bands
             validname = self._make_names(name)
-            band = self.Dataset.GetRasterBand(i+1)
-            setattr(self, validname, RasterLayer(band))
-
-            # set nodata values
-            self.nodata = np.append(self.nodata, band.GetNoDataValue())
-
-        # dataset resolution
-        self.xres = self.Dataset.GetGeoTransform()[1]
-        self.yres = -self.Dataset.GetGeoTransform()[5]
-
-        # dataset extent
-        x_min, xres, xskew, y_max, yskew, yres = self.Dataset.GetGeoTransform()
-        x_max = x_min + (self.Dataset.RasterXSize * self.xres)
-        y_min = y_max + (self.Dataset.RasterYSize * self.yres)
-        self.extent = (x_min, y_min, x_max, y_max)
-        self.RasterXSize = int((x_max - x_min) / self.xres)
-        self.RasterYSize = abs(int((y_max - y_min) / self.yres))
+            band = rasterio.open(name)
+            setattr(self, validname, band)
 
     @staticmethod
     def _make_names(name):
