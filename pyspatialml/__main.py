@@ -337,39 +337,39 @@ def crop(dataset, bounds, file_path=None, driver='GTiff'):
 
     dataset : rasterio.io.DatasetReader
         An opened Rasterio DatasetReader
-    
+
     bounds : tuple
         A tuple containing the bounding box to clip by in the
         form of (xmin, xmax, ymin, ymax)
-    
+
     file_path : str, optional. Default=None
         File path to save to cropped raster.
         If not supplied then the cropped raster is saved to a
         temporary file
-    
+
     driver : str, optional. Default is 'GTiff'
         Named of GDAL-supported driver for file export
-    
+
     Returns
     -------
     rasterio.io.DatasetReader with the cropped raster"""
 
     src = dataset
-    
+
     xmin, xmax, ymin, ymax = bounds
 
     rows, cols = rasterio.transform.rowcol(
-    rasterio.open(strata).transform, xs=(xmin, xmax), ys=(ymin, ymax))
+        src.transform, xs=(xmin, xmax), ys=(ymin, ymax))
 
-    cropped_arr = src.read(1, window=Window(col_off=min(cols),
-                                            row_off=min(rows),
-                                            width=max(cols)-min(cols),
-                                            height=max(rows)-min(rows)))
+    cropped_arr = src.read(window=Window(col_off=min(cols),
+                                         row_off=min(rows),
+                                         width=max(cols) - min(cols),
+                                         height=max(rows) - min(rows)))
 
     meta = src.meta
     aff = src.transform
-    meta['width'] = max(cols)-min(cols)
-    meta['height'] = max(rows)-min(rows)
+    meta['width'] = max(cols) - min(cols)
+    meta['height'] = max(rows) - min(rows)
     meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
     meta['driver'] = driver
 
@@ -378,5 +378,5 @@ def crop(dataset, bounds, file_path=None, driver='GTiff'):
 
     with rasterio.open(file_path, 'w', **meta) as dst:
         dst.write(cropped_arr)
-    
+
     return rasterio.open(file_path)
