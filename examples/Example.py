@@ -140,18 +140,26 @@ src.lsat7_2000_10
 
 # time different read methods
 import timeit
-
-start = timeit.timeit()
-arr = src.read(masked=True)
-end = timeit.timeit()
-print (end - start)
-
-
 import numpy as np
-arr = np.ma.zeros((src.count, src.height, src.width), dtype=np.float32)
 
-start = timeit.timeit()
-for i in range(src.count):
-    arr[i, :, :] = src.read(i+1, masked=True)
-end = timeit.timeit()
-print (end - start)
+def read_rasterio():
+    with rasterio.open('landsat.vrt') as src:
+        arr = src.read(masked=True)
+
+def python_read():
+    band1 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_10.tif')
+    band2 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_20.tif')
+    band3 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_30.tif')
+    band4 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_40.tif')
+    band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
+    predictors = [band1, band2, band3, band4, band5]
+
+    with rasterio.open(predictors[0]) as src:
+        arr = np.ma.zeros((len(predictors), src.height, src.width), dtype=np.float32)
+
+    for i, fp in enumerate(predictors):
+        with rasterio.open(fp) as src:
+            arr[i, :, :] = src.read(1, masked=True)
+
+timeit.timeit(read_rasterio, number=1000)
+timeit.timeit(python_read, number=1000)
