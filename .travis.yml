@@ -6,6 +6,16 @@ python:
   - "3.6"
   - "3.7"
 
+before_install:
+  - sudo apt-get update     
+
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+    packages:
+    - libgdal-dev
+
 # command to install dependencies
 install:
   - pip install -r requirements.txt
