@@ -4,14 +4,14 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7"
 
 before_install:
   - sudo apt-get update
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-     sudo apt install python-gdal
-     else
-        sudo apt install python3-gdal
+      sudo apt install python-gdal
+    else
+      sudo apt install python3-gdal
+    fi
 
 addons:
   apt:
