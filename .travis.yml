@@ -7,7 +7,11 @@ python:
   - "3.7"
 
 before_install:
-  - sudo apt-get update     
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+     sudo apt install python-gdal
+     else
+        sudo apt install python3-gdal
 
 addons:
   apt:
