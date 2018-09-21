@@ -1,7 +1,5 @@
 language: python
 sudo: false
-virtualenv:
-  system_site_packages: true
 python:
   - "3.4"
   - "3.5"
@@ -9,16 +7,9 @@ python:
 before_install:
   - python -m pip install -U pip
   - python -m pip install wheel
-
-addons:
-  apt:
-    sources:
-    - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
-    packages:
-    - gdal-bin
-    - libproj-dev
-    - libgdal-dev
-    - python-gdal
+  - sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+  - sudo apt-get update
+  - sudo apt-get install python-gdal gdal-bin libproj-dev libgdal-dev
 
 # command to install dependencies
 install:
