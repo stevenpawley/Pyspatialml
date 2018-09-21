@@ -15,7 +15,7 @@ setup(
         'scipy',
         'tqdm',
         'rasterio',
-        'pandas,
+        'pandas',
         'shapely',
         'geopandas'],
     python_requires='>3.3',
