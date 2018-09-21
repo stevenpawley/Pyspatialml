@@ -5,148 +5,10 @@ import rasterio
 import rasterio.features
 import scipy
 import geopandas
+import pandas as pd
 from shapely.geometry import Point
 from rasterio.sample import sample_gen
 from .__main import _maximum_dtype
-from itertools import chain
-
-
-def extract(dataset, response, field=None):
-    """Sample a GDAL-supported raster dataset point of polygon
-    features in a Geopandas Geodataframe or a labelled singleband
-    raster dataset
-
-    Parameters
-    ----------
-    dataset : rasterio.io.DatasetReader
-        Opened Rasterio DatasetReader containing data to be sampled
-        Raster can be a multi-band raster or a virtual tile format raster
-
-    response: rasterio.io.DatasetReader or Geopandas DataFrame
-        Single band raster containing labelled pixels, or
-        a Geopandas GeoDataframe containing either point or polygon features
-
-    field : str, optional
-        Field name of attribute to be used the label the extracted data
-        Used only if the response feature represents a GeoDataframe
-
-    Returns
-    -------
-    X : array-like
-        Numpy masked array of extracted raster values, typically 2d
-
-    y: 1d array like
-        Numpy masked array of labelled sampled
-
-    xy: 2d array-like
-        Numpy masked array of row and column indexes of training pixels"""
-
-    src = dataset
-
-    # extraction for geodataframes
-    if isinstance(response, geopandas.geodataframe.GeoDataFrame):
-        if len(response.geom_type.unique()) > 1:
-            raise ValueError(
-                'response_gdf cannot contain a mixture of geometry types')
-
-        # polygon features
-        if all(response.geom_type == 'Polygon'):
-
-            # generator for shape geometry for rasterizing
-            if field is None:
-                shapes = (geom for geom in response.geometry)
-
-            if field is not None:
-                shapes = ((geom, value) for geom, value in zip(
-                          response.geometry, response[field]))
-
-            arr = np.zeros((src.height, src.width))
-            arr[:] = -99999
-            arr = rasterio.features.rasterize(
-                shapes=shapes, fill=-99999, out=arr,
-                transform=src.transform, default_value=1)
-
-            # get indexes of labelled data
-            rows, cols = np.nonzero(arr != -99999)
-
-            # convert to coordinates and extract raster pixel values
-            y = arr[rows, cols]
-            xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
-
-        # point features
-        elif all(response.geom_type == 'Point'):
-
-            xy = response.bounds.iloc[:, 2:].values
-
-            if field:
-                y = response[field].values
-            else:
-                y = None
-
-        # line features
-        elif all(response.geom_type == 'LineString'):
-
-            # interpolate points along lines
-            pixel_points = []
-
-            for i, p in response.iterrows():
-                points_along_line = [p.geometry.interpolate(distance=i) for i in
-                                     np.arange(0, p.geometry.length, min(src.res))]
-                pixel_points.append(points_along_line)
-
-            response = geopandas.GeoDataFrame(geometry=list(chain.from_iterable(pixel_points)),
-                                              crs=src.crs)
-
-            xy = response.bounds.iloc[:, 2:].values
-
-            if field:
-                y = response[field].values
-            else:
-                y = None
-
-    # extraction for labelled pixels
-    elif isinstance(response, rasterio.io.DatasetReader):
-
-        # some checking
-        if field is not None:
-            Warning('field attribute is not used for response_raster')
-
-        # open response raster and get labelled pixel indices and values
-        arr = response.read(1, masked=True)
-        rows, cols = np.nonzero(~arr.mask)
-
-        # extract values at labelled indices
-        xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
-        y = arr.data[rows, cols]
-
-    elif isinstance(response, np.ndarray):
-        y = None
-        xy = response
-
-    # clip points to extent of raster
-    extent = src.bounds
-
-    valid_idx = np.where((xy[:, 0] > extent.left) &
-                         (xy[:, 0] < extent.right) &
-                         (xy[:, 1] > extent.bottom) &
-                         (xy[:, 1] < extent.top))[0]
-
-    xy = xy[valid_idx, :]
-
-    if y is not None:
-        y = y[valid_idx]
-
-    # extract values at labelled indices
-    X = extract_xy(xy, src)
-
-    # summarize data and mask nodatavals in X, y, and xy
-    if y is not None:
-        y = np.ma.masked_where(X.mask.any(axis=1), y)
-
-    Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-    xy = np.ma.masked_where(Xmask_xy, xy)
-
-    return X, y, xy
 
 
 def extract_xy(xy, dataset):
@@ -342,6 +204,157 @@ def filter_points(xy, min_dist=0, remove='first'):
     d = np.nanmin(dm, axis=1)
 
     return xy[np.greater_equal(d, min_dist)]
+
+
+def extract(dataset, response, field=None):
+    """Sample a GDAL-supported raster dataset point of polygon
+    features in a Geopandas Geodataframe or a labelled singleband
+    raster dataset
+
+    Parameters
+    ----------
+    dataset : rasterio.io.DatasetReader
+        Opened Rasterio DatasetReader containing data to be sampled
+        Raster can be a multi-band raster or a virtual tile format raster
+
+    response: rasterio.io.DatasetReader or Geopandas DataFrame
+        Single band raster containing labelled pixels, or
+        a Geopandas GeoDataframe containing either point or polygon features
+
+    field : str, optional
+        Field name of attribute to be used the label the extracted data
+        Used only if the response feature represents a GeoDataframe
+
+    Returns
+    -------
+    X : array-like
+        Numpy masked array of extracted raster values, typically 2d
+
+    y: 1d array like
+        Numpy masked array of labelled sampled
+
+    xy: 2d array-like
+        Numpy masked array of row and column indexes of training pixels"""
+
+    src = dataset
+
+    # extraction for geodataframes
+    if isinstance(response, geopandas.geodataframe.GeoDataFrame):
+        if len(response.geom_type.unique()) > 1:
+            raise ValueError(
+                'response_gdf cannot contain a mixture of geometry types')
+
+        # polygon features
+        if all(response.geom_type == 'Polygon'):
+
+            # generator for shape geometry for rasterizing
+            if field is None:
+                shapes = (geom for geom in response.geometry)
+
+            if field is not None:
+                shapes = ((geom, value) for geom, value in zip(
+                          response.geometry, response[field]))
+
+            arr = np.zeros((src.height, src.width))
+            arr[:] = -99999
+            arr = rasterio.features.rasterize(
+                shapes=shapes, fill=-99999, out=arr,
+                transform=src.transform, default_value=1)
+
+            # get indexes of labelled data
+            rows, cols = np.nonzero(arr != -99999)
+
+            # convert to coordinates and extract raster pixel values
+            y = arr[rows, cols]
+            xy = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
+
+        # point features
+        elif all(response.geom_type == 'Point'):
+
+            xy = response.bounds.iloc[:, 2:].values
+
+            if field:
+                y = response[field].values
+            else:
+                y = None
+
+        # line features
+        elif all(response.geom_type == 'LineString'):
+
+            # interpolate points along lines
+            pixel_points_df = pd.DataFrame(columns=['geometry', 'y'])
+
+            for i, p in response.iterrows():
+                points_along_line = [p.geometry.interpolate(distance=i) for i in
+                                     np.arange(0, p.geometry.length, min(src.res))]
+                points_along_line = pd.DataFrame(points_along_line, columns=['geometry'])
+
+                if field:
+                    y = p[field]
+                else:
+                    y = None
+
+                points_along_line['y'] = y
+                pixel_points_df = pixel_points_df.append(points_along_line)
+
+            # remove duplicate points
+            pixel_points_df['rows'], pixel_points_df['cols'] = rasterio.transform.rowcol(
+                transform=src.transform,
+                xs=[i.x for i in pixel_points_df.geometry],
+                ys=[i.y for i in pixel_points_df.geometry])
+
+            pixel_points_df.drop_duplicates(subset=['rows', 'cols'], inplace=True)
+            pixel_points_df = geopandas.GeoDataFrame(pixel_points_df, crs=src.crs)
+            xy = pixel_points_df.bounds.iloc[:, 2:].values
+
+            if field:
+                y = pixel_points_df['y'].values
+            else:
+                y = None
+
+    # extraction for labelled pixels
+    elif isinstance(response, rasterio.io.DatasetReader):
+
+        # some checking
+        if field is not None:
+            Warning('field attribute is not used for response_raster')
+
+        # open response raster and get labelled pixel indices and values
+        arr = response.read(1, masked=True)
+        rows, cols = np.nonzero(~arr.mask)
+
+        # extract values at labelled indices
+        xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
+        y = arr.data[rows, cols]
+
+    elif isinstance(response, np.ndarray):
+        y = None
+        xy = response
+
+    # clip points to extent of raster
+    extent = src.bounds
+
+    valid_idx = np.where((xy[:, 0] > extent.left) &
+                         (xy[:, 0] < extent.right) &
+                         (xy[:, 1] > extent.bottom) &
+                         (xy[:, 1] < extent.top))[0]
+
+    xy = xy[valid_idx, :]
+
+    if y is not None:
+        y = y[valid_idx]
+
+    # extract values at labelled indices
+    X = extract_xy(xy, src)
+
+    # summarize data and mask nodatavals in X, y, and xy
+    if y is not None:
+        y = np.ma.masked_where(X.mask.any(axis=1), y)
+
+    Xmask_xy = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
+    xy = np.ma.masked_where(Xmask_xy, xy)
+
+    return X, y, xy
 
 
 def get_random_point_in_polygon(poly):

@@ -49,11 +49,19 @@ X.shape
 X, y, xy = extract(dataset=src, response=training_py, field='id')
 X.shape
 
+# A geodataframe containing line features can also be supplied ot the extract function:
+training_lines = training_py
+training_lines['geometry'] = training_lines.geometry.boundary
+X, y, xy = extract(dataset=src, response=training_lines, field='id')
+X.shape
+
+
 # The response argument of the extract function can also take a raster data
 # (GDAL-supported, single-band raster) where the training data are represented by labelled pixels:
 X, y, xy = extract(dataset=src, response=training_px)
 X.shape
 
+X, y, xy = extract(dataset=src, response=response, field='id')
 
 # The training data is returned as a masked array, with training points that intersect nodata
 # values in the predictor rasters being masked. This can cause problems with sklearn,

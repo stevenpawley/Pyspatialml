@@ -17,5 +17,7 @@ setup(
         'numpy',
         'scipy',
         'shapely'],
-    python_requires='>3.3'
+    python_requires='>3.3',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
 )
