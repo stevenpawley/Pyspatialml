@@ -16,7 +16,7 @@ addons:
     - gdal-bin
     - libproj-dev
     - libgdal-dev
-    - python3-gdal
+    - python-gdal
 
 # command to install dependencies
 install:
