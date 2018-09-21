@@ -4,4 +4,3 @@ geopandas
 numpy
 scipy
 shapely
-gdal
