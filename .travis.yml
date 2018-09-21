@@ -4,10 +4,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-cache:
-  directories:
-    - $GDALINST
-    - ~/.cache/pip
 env:
   global:
     - GDALINST=$HOME/gdalinstall
