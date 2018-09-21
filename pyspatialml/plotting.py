@@ -13,8 +13,8 @@ def rasterio_normalize(arr, axis=None):
 
 
 def discrete_cmap(N, base_cmap=None):
-    # https://gist.github.com/jakevdp/91077b0cae40f8f8244a
-    """Create an N-bin discrete colormap from the specified input map"""
+    """Create an N-bin discrete colormap from the specified input map
+    https://gist.github.com/jakevdp/91077b0cae40f8f8244a"""
 
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, N))
@@ -142,8 +142,9 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
     import matplotlib.pyplot as plt
     from mpl_toolkits import axes_grid1
 
-    # http://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph
-    """Add a vertical color bar to an image plot."""
+    """Add a vertical color bar to an image plot
+    http://stackoverflow.com/questions/18195758/set-matplotlib-colorbar-size-to-match-graph"""
+
     divider = axes_grid1.make_axes_locatable(im.axes)
     width = axes_grid1.axes_size.AxesY(im.axes, aspect=1/aspect)
     pad = axes_grid1.axes_size.Fraction(pad_fraction, width)
@@ -154,8 +155,7 @@ def add_colorbar(im, aspect=20, pad_fraction=0.5, **kwargs):
 
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
-    '''
-    Function to offset the "center" of a colormap. Useful for
+    """Function to offset the "center" of a colormap. Useful for
     data with a negative min and positive max and you want the
     middle of the colormap's dynamic range to be at zero
 
@@ -175,8 +175,8 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
           Defaults to 1.0 (no upper ofset). Should be between
           `midpoint` and 1.0.
 
-    http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib
-    '''
+    http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib"""
+
     cdict = {
         'red': [],
         'green': [],
