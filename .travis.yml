@@ -1,5 +1,7 @@
 language: python
 sudo: false
+virtualenv:
+  system_site_packages: true
 python:
   - "3.4"
   - "3.5"
