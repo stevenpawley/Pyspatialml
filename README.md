@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stevenpawley/Pyspatialml.svg?branch=master)](https://travis-ci.org/stevenpawley/Pyspatialml)
+
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
 
