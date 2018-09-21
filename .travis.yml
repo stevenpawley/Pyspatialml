@@ -4,9 +4,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-
-virtualenv:
-  system_site_packages: true
   
 env:
   global:
@@ -22,7 +19,6 @@ addons:
     - gdal-bin
     - libproj-dev
     - libgdal-dev
-    - python-gdal
     - proj-bin
 
 before_install:
