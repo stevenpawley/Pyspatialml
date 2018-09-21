@@ -1,28 +1,12 @@
 from unittest import TestCase
 from pyspatialml.sampling import extract
-# from osgeo import gdal
 from copy import deepcopy
 import os
 import geopandas
 import rasterio
 import numpy as np
 
-# create a vrt file
-# os.chdir(os.path.join('.', 'pyspatialml', 'tests'))
-# band1 = 'lsat7_2000_10.tif'
-# band2 = 'lsat7_2000_20.tif'
-# band3 = 'lsat7_2000_30.tif'
-# band4 = 'lsat7_2000_40.tif'
-# band5 = 'lsat7_2000_50.tif'
-# band7 = 'lsat7_2000_70.tif'
-# predictors = [band1, band2, band3, band4, band5, band7]
-#
-# vrt_file = 'landsat.vrt'
-# outds = gdal.BuildVRT(
-#     destName=vrt_file, srcDSOrSrcDSTab=predictors, separate=True,
-#     resolution='highest', resampleAlg='bilinear')
-# outds.FlushCache()
-
+os.chdir(os.path.join('.', 'pyspatialml', 'tests'))
 
 class TestExtract(TestCase):
 

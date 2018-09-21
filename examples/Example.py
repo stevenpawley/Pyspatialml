@@ -7,15 +7,17 @@ import rasterio.plot
 import matplotlib.pyplot as plt
 
 # First, import the extract and predict functions:
-os.chdir(os.path.join('.', 'Examples'))
+basedir = os.getcwd()
+os.chdir(os.path.join('.', 'examples'))
 
-band1 = 'lsat7_2000_10.tif'
-band2 = 'lsat7_2000_20.tif'
-band3 = 'lsat7_2000_30.tif'
-band4 = 'lsat7_2000_40.tif'
-band5 = 'lsat7_2000_50.tif'
-band7 = 'lsat7_2000_70.tif'
+band1 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_10.tif')
+band2 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_20.tif')
+band3 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_30.tif')
+band4 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_40.tif')
+band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
+band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
+predictors = [band1, band2, band3, band4, band5]
 
 # stack the bands into a single virtual tile format dataset:
 vrt_file = 'landsat.vrt'
@@ -135,3 +137,21 @@ src = PyRaster(files=predictors)
 dir(src)
 src.lsat7_2000_10
 
+
+# time different read methods
+import timeit
+
+start = timeit.timeit()
+arr = src.read(masked=True)
+end = timeit.timeit()
+print (end - start)
+
+
+import numpy as np
+arr = np.ma.zeros((src.count, src.height, src.width), dtype=np.float32)
+
+start = timeit.timeit()
+for i in range(src.count):
+    arr[i, :, :] = src.read(i+1, masked=True)
+end = timeit.timeit()
+print (end - start)
