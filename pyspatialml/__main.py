@@ -24,8 +24,8 @@ class RasterStack:
 
         self.loc = {}          # name-based indexing
         self.iloc = []         # index-based indexing
-        self.names = []        # short-names of datasets with appended band number for multiband datasets
-        self.attr_names = []   # class attribute names, short-names of rasterio.io.DatasetReaders objects
+        self.names = []        # short-names of datasets with appended band number for multi-band datasets
+        self.attr_names = []   # class attribute names, short-names of rasterio.io.DatasetReader objects
         self.dtypes = []       # dtypes of stacked raster datasets and bands
         self.nodatavals = []   # no data values of stacked raster datasets and bands
         self.width = None      # width of aligned raster datasets in pixels
@@ -46,13 +46,17 @@ class RasterStack:
 
     def __del__(self):
         """Deconstructor for RasterLayer class to close files"""
+
         self.close()
 
     def open(self):
+        """Open raster datasets contained within the RasterStack object"""
+
         self.files = self.files
 
     def close(self):
         """Deconstructor for RasterLayer class to close files"""
+
         for src in self.iloc:
             src.close()
 
@@ -325,6 +329,21 @@ class RasterStack:
 
         return X
 
+    def _clip_xy(self, xy, y=None):
+        """Clip array of xy coordinates to extent of RasterStack"""
+
+        extent = self.bounds
+        valid_idx = np.where((xy[:, 0] > extent.left) &
+                             (xy[:, 0] < extent.right) &
+                             (xy[:, 1] > extent.bottom) &
+                             (xy[:, 1] < extent.top))[0]
+        xy = xy[valid_idx, :]
+
+        if y is not None:
+            y = y[valid_idx]
+
+        return xy, y
+
     def extract_vector(self, response, field, return_array=False, na_rm=True, low_memory=False):
         """Sample the RasterStack by a geopandas GeoDataframe containing points,
         lines or polygon features
@@ -398,16 +417,7 @@ class RasterStack:
                 y = response[field].values
 
             # clip points to extent of raster
-            extent = self.bounds
-            valid_idx = np.where((xy[:, 0] > extent.left) &
-                                 (xy[:, 0] < extent.right) &
-                                 (xy[:, 1] > extent.bottom) &
-                                 (xy[:, 1] < extent.top))[0]
-            xy = xy[valid_idx, :]
-
-            if y is not None:
-                y = y[valid_idx]
-
+            xy, y = self._clip_xy(xy, y)
             rows, cols = rasterio.transform.rowcol(
                 transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
 
@@ -434,7 +444,11 @@ class RasterStack:
             pixel_points_df = gpd.GeoDataFrame(pixel_points_df, crs=self.crs)
             xy = pixel_points_df.bounds.iloc[:, 2:].values
             y = pixel_points_df['y'].values
-            rows, cols = pixel_points_df['rows'], pixel_points_df['cols']
+
+            # clip to raster extent
+            xy, y = self._clip_xy(xy, y)
+            rows, cols = rasterio.transform.rowcol(
+                transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
 
         # spatial query of RasterStack (by-band)
         if low_memory is False:
@@ -466,7 +480,7 @@ class RasterStack:
         else:
             return X, y, xy
 
-    def extract_raster(self, response, return_array=False, na_rm=True):
+    def extract_raster(self, response, value_name='value', return_array=False, na_rm=True):
         """Sample the RasterStack by an aligned raster of labelled pixels
 
         Args
@@ -516,7 +530,7 @@ class RasterStack:
             xy = xy[~mask].data
 
         if return_array is False:
-            column_names = ['value'] + self.names
+            column_names = [value_name] + self.names
             gdf = pd.DataFrame(np.ma.column_stack((y, X)), columns=column_names)
             gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
             gdf['geometry'] = gdf['geometry'].apply(Point)
@@ -941,8 +955,8 @@ class RasterStack:
 
         else:
             # get number of unique categories
-            strata = strata.read(1)
-            categories = np.unique(strata)
+            strata_arr = strata.read(1)
+            categories = np.unique(strata_arr)
             categories = categories[np.nonzero(categories != strata.nodata)]
             categories = categories[~np.isnan(categories)]
 
@@ -952,7 +966,7 @@ class RasterStack:
             for cat in categories:
 
                 # get row,col positions for cat strata
-                ind = np.transpose(np.nonzero(strata == cat))
+                ind = np.transpose(np.nonzero(strata_arr == cat))
 
                 if size > ind.shape[0]:
                     msg = 'Sample size is greater than number of pixels in strata {0}'.format(str(ind))
