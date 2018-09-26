@@ -1,6 +1,5 @@
-from osgeo import gdal
-from pyspatialml import predict
-from pyspatialml.sampling import extract
+from pyspatialml import RasterStack
+from copy import deepcopy
 import os
 import geopandas
 import rasterio.plot
@@ -9,7 +8,6 @@ import matplotlib.pyplot as plt
 # First, import the extract and predict functions:
 basedir = os.getcwd()
 os.chdir(os.path.join('.', 'examples'))
-
 band1 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_10.tif')
 band2 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_20.tif')
 band3 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_30.tif')
@@ -17,60 +15,32 @@ band4 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_40.tif')
 band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
 band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
-predictors = [band1, band2, band3, band4, band5]
 
-# stack the bands into a single virtual tile format dataset:
-vrt_file = 'landsat.vrt'
-outds = gdal.BuildVRT(
-    destName=vrt_file, srcDSOrSrcDSTab=predictors, separate=True,
-    resolution='highest', resampleAlg='bilinear')
-outds.FlushCache()
-
-# load the vrt as a rasterio dataset:
-src = rasterio.open(vrt_file)
+# Create a RasterStack instance
+stack = RasterStack(predictors)
 
 # Load some training data in the form of a shapefile of point feature locations:
-training_py = geopandas.read_file('landsat96_polygons.shp')
-training_pt = geopandas.read_file('landsat96_points.shp')
-training_px = rasterio.open('landsat96_labelled_pixels.tif')
+training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_polygons.shp'))
+training_pt = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_points.shp'))
+training_px = rasterio.open(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_labelled_pixels.tif'))
+training_lines = deepcopy(training_py)
+training_lines['geometry'] = training_lines.geometry.boundary
 
-# Show training data and a single raster band using numpy and matplotlib:
-srr_arr = src.read(4, masked=True)
-plt.imshow(srr_arr, extent=(src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top))
+# Plot some training data
+plt.imshow(stack.lsat7_2000_70.read(1, masked=True),
+           extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
 plt.scatter(x=training_pt.bounds.iloc[:, 0],
             y=training_pt.bounds.iloc[:, 1],
             s=2, color='black')
 plt.show()
 
 # Create a training dataset by extracting the raster values at the training point locations:
-X, y, xy = extract(dataset=src, response=training_pt, field='id')
-X.shape
+df_points = stack.extract_vector(response=training_pt, field='id')
+df_polygons = stack.extract_vector(response=training_py, field='id')
+df_lines = stack.extract_vector(response=training_lines, field='id')
+df_raster = stack.extract_raster(response=training_px, value_name='id')
 
-
-# A geodataframe containing polygon features can also be supplied to the extract function:
-X, y, xy = extract(dataset=src, response=training_py, field='id')
-X.shape
-
-# A geodataframe containing line features can also be supplied ot the extract function:
-training_lines = training_py
-training_lines['geometry'] = training_lines.geometry.boundary
-X, y, xy = extract(dataset=src, response=training_lines, field='id')
-X.shape
-
-
-# The response argument of the extract function can also take a raster data
-# (GDAL-supported, single-band raster) where the training data are represented by labelled pixels:
-X, y, xy = extract(dataset=src, response=training_px)
-X.shape
-
-X, y, xy = extract(dataset=src, response=response, field='id')
-
-# The training data is returned as a masked array, with training points that intersect nodata
-# values in the predictor rasters being masked. This can cause problems with sklearn,
-# so here we use only the valid entries:
-X = X[~X.mask.any(axis=1)]
-y = y[~y.mask]
-xy = xy[~xy.mask.any(axis=1)]
+df_points.head()
 
 # Next we can train a logistic regression classifier:
 from sklearn.linear_model import LogisticRegressionCV
@@ -84,14 +54,16 @@ lr = Pipeline(
      ('classifier', LogisticRegressionCV(n_jobs=-1))])
 
 # fit the classifier
+X = df_polygons.drop(columns=['id', 'geometry'])
+y = df_polygons.id
 lr.fit(X, y)
 
 # spatial cross-validation
 from sklearn.cluster import KMeans
 
 # create 10 spatial clusters based on clustering of the training data point x,y coordinates
-clusters = KMeans(n_clusters=10, n_jobs=-1)
-clusters.fit(xy)
+clusters = KMeans(n_clusters=34, n_jobs=-1)
+clusters.fit(df_polygons.geometry.bounds.iloc[:, 0:2])
 
 # cross validate
 scores = cross_validate(
@@ -101,65 +73,22 @@ scores = cross_validate(
 scores['test_score'].mean()
 
 # prediction
-outfile = 'classification.tif'
-result = predict(estimator=lr, dataset=src, file_path='classification.tif',
-                 dtype='int16', nodata=0)
-
+result = stack.predict(estimator=lr, dtype='int16', nodata=0)
 plt.imshow(result.read(1, masked=True))
 plt.show()
 
 # sampling
-from pyspatialml.sampling import sample
-
 # extract training data using a random sample
-X, xy = sample(size=1000, dataset=src, random_state=1)
-
-row, col = rasterio.transform.rowcol(src.transform, xs=xy[:, 0], ys=xy[:, 1])
-plt.imshow(src.read(1, masked=True))
-plt.scatter(x=col, y=row)
-plt.show()
+df_rand = stack.sample(size=1000, random_state=1)
+df_rand.plot()
 
 # extract training data using a stratified random sample from a map containing categorical data
 # here we are taking 50 samples per category
-strata = rasterio.open('strata.tif')
-X, xy = sample(size=5, dataset=src, strata=strata, random_state=1)
+strata = rasterio.open(os.path.join(basedir, 'pyspatialml', 'tests', 'strata.tif'))
+df_strata = stack.sample(size=5, strata=strata, random_state=1)
+df_strata = df_strata.dropna()
 
-row, col = rasterio.transform.rowcol(src.transform, xs=xy[:, 0], ys=xy[:, 1])
-plt.imshow(strata.read(1, masked=True))
-plt.scatter(x=col, y=row, color='white')
+fig, ax = plt.subplots()
+ax.imshow(strata.read(1, masked=True), extent=rasterio.plot.plotting_extent(strata))
+df_strata.plot(ax=ax, markersize=2, color='red')
 plt.show()
-
-
-
-
-# pyraster
-src = PyRaster(files=predictors)
-dir(src)
-src.lsat7_2000_10
-
-
-# time different read methods
-import timeit
-import numpy as np
-
-def read_rasterio():
-    with rasterio.open('landsat.vrt') as src:
-        arr = src.read(masked=True)
-
-def python_read():
-    band1 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_10.tif')
-    band2 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_20.tif')
-    band3 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_30.tif')
-    band4 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_40.tif')
-    band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
-    predictors = [band1, band2, band3, band4, band5]
-
-    with rasterio.open(predictors[0]) as src:
-        arr = np.ma.zeros((len(predictors), src.height, src.width), dtype=np.float32)
-
-    for i, fp in enumerate(predictors):
-        with rasterio.open(fp) as src:
-            arr[i, :, :] = src.read(1, masked=True)
-
-timeit.timeit(read_rasterio, number=1000)
-timeit.timeit(python_read, number=1000)
