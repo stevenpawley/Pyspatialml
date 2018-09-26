@@ -1,6 +1,7 @@
 import os
 import tempfile
 from collections import namedtuple
+from itertools import chain
 
 import geopandas as gpd
 import numpy as np
@@ -132,7 +133,7 @@ class RasterStack:
         if isinstance(values, str):
             values = [values]
 
-        meta = self.check_alignment(values)
+        meta = self._check_alignment(values)
         if meta is False:
             raise ValueError(
                 'Raster datasets do not all have the same dimensions or transform')
@@ -265,7 +266,7 @@ class RasterStack:
         return dtype
 
     @staticmethod
-    def check_alignment(file_paths):
+    def _check_alignment(file_paths):
         """Check that a list of rasters are aligned with the same pixel dimensions
         and geotransforms
 
@@ -352,9 +353,7 @@ class RasterStack:
         ----
         response: Geopandas DataFrame
             Containing either point, line or polygon geometries. Overlapping
-            point geometries will cause the same pixels to be sampled. For
-            overlapping polygon geometries, extracted pixels will be assigned to
-            the first polygon geometry.
+            geometries will cause the same pixels to be sampled.
 
         field : str, optional
             Field name of attribute to be used the label the extracted data
@@ -388,27 +387,44 @@ class RasterStack:
         if not field:
             y = None
 
-        # polygon geometries
-        if all(response.geom_type == 'Polygon'):
+        # polygon and line geometries
+        if all(response.geom_type == 'Polygon') or all(response.geom_type == 'LineString'):
 
-            if not field:
-                shapes = (geom for geom in response.geometry)
+            if all(response.geom_type == 'LineString'):
+                all_touched = True
             else:
-                shapes = ((geom, value) for geom, value in zip(
-                    response.geometry, response[field]))
+                all_touched = False
 
-            arr = np.zeros((self.height, self.width))
-            arr[:] = -99999
-            arr = rasterio.features.rasterize(
-                shapes=shapes, fill=-99999, out=arr,
-                transform=self.transform, default_value=1)
+            rows_all, cols_all, y_all = [], [], []
 
-            rows, cols = np.nonzero(arr != -99999)
+            for i, shape in response.iterrows():
+
+                if not field:
+                    shapes = (shape.geometry, 1)
+                else:
+                    shapes = (shape.geometry, shape[field])
+
+                arr = np.zeros((self.height, self.width))
+                arr[:] = -99999
+                arr = rasterio.features.rasterize(
+                    shapes=(shapes for i in range(1)), fill=-99999, out=arr,
+                    transform=self.transform, default_value=1, all_touched=all_touched)
+
+                rows, cols = np.nonzero(arr != -99999)
+
+                if field:
+                    y_all.append(arr[rows, cols])
+
+                rows_all.append(rows)
+                cols_all.append(cols)
+
+            rows = list(chain.from_iterable(rows_all))
+            cols = list(chain.from_iterable(cols_all))
+            y = list(chain.from_iterable(y_all))
+
             xy = np.transpose(
                 rasterio.transform.xy(transform=self.transform,
                                       rows=rows, cols=cols))
-            if field:
-                y = arr[rows, cols]
 
         # point geometries
         elif all(response.geom_type == 'Point'):
@@ -421,35 +437,6 @@ class RasterStack:
             rows, cols = rasterio.transform.rowcol(
                 transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
 
-        # line geometries
-        elif all(response.geom_type == 'LineString'):
-            pixel_points_df = pd.DataFrame(columns=['geometry', 'y'])
-
-            for i, p in response.iterrows():
-                points_along_line = [p.geometry.interpolate(distance=i) for i in
-                                     np.arange(0, p.geometry.length, min(self.res))]
-                points_along_line = pd.DataFrame(points_along_line, columns=['geometry'])
-
-                if field: y = p[field]
-                points_along_line['y'] = y
-                pixel_points_df = pixel_points_df.append(points_along_line)
-
-            # remove duplicate points
-            pixel_points_df['rows'], pixel_points_df['cols'] = rasterio.transform.rowcol(
-                transform=self.transform,
-                xs=[i.x for i in pixel_points_df.geometry],
-                ys=[i.y for i in pixel_points_df.geometry])
-
-            pixel_points_df.drop_duplicates(subset=['rows', 'cols'], inplace=True)
-            pixel_points_df = gpd.GeoDataFrame(pixel_points_df, crs=self.crs)
-            xy = pixel_points_df.bounds.iloc[:, 2:].values
-            y = pixel_points_df['y'].values
-
-            # clip to raster extent
-            xy, y = self._clip_xy(xy, y)
-            rows, cols = rasterio.transform.rowcol(
-                transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
-
         # spatial query of RasterStack (by-band)
         if low_memory is False:
             X = self._extract_by_indices(rows, cols)
@@ -458,7 +445,7 @@ class RasterStack:
 
         # mask nodata values
         mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        if not field:
+        if field:
             y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
         xy = np.ma.masked_array(xy, mask=mask_2d)
 

@@ -16,7 +16,7 @@ band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
 band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
 
-# create a RasterStack instance
+# Create a RasterStack instance
 stack = RasterStack(predictors)
 
 # Load some training data in the form of a shapefile of point feature locations:
@@ -26,11 +26,21 @@ training_px = rasterio.open(os.path.join(basedir, 'pyspatialml', 'tests', 'lands
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 
+# Plot some training data
+plt.imshow(stack.lsat7_2000_70.read(1, masked=True),
+           extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
+plt.scatter(x=training_pt.bounds.iloc[:, 0],
+            y=training_pt.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
+
 # Create a training dataset by extracting the raster values at the training point locations:
-df = stack.extract_vector(response=training_pt, field='id')
-df = stack.extract_vector(response=training_py, field='id')
-df = stack.extract_vector(response=training_lines, field='id')
-df = stack.extract_raster(response=training_px, value_name='id')
+df_points = stack.extract_vector(response=training_pt, field='id')
+df_polygons = stack.extract_vector(response=training_py, field='id')
+df_lines = stack.extract_vector(response=training_lines, field='id')
+df_raster = stack.extract_raster(response=training_px, value_name='id')
+
+df_points.head()
 
 # Next we can train a logistic regression classifier:
 from sklearn.linear_model import LogisticRegressionCV
@@ -44,16 +54,16 @@ lr = Pipeline(
      ('classifier', LogisticRegressionCV(n_jobs=-1))])
 
 # fit the classifier
-X = df.drop(columns=['id', 'geometry'])
-y = df.id
+X = df_polygons.drop(columns=['id', 'geometry'])
+y = df_polygons.id
 lr.fit(X, y)
 
 # spatial cross-validation
 from sklearn.cluster import KMeans
 
 # create 10 spatial clusters based on clustering of the training data point x,y coordinates
-clusters = KMeans(n_clusters=10, n_jobs=-1)
-clusters.fit(df.geometry.bounds.iloc[:, 0:2])
+clusters = KMeans(n_clusters=34, n_jobs=-1)
+clusters.fit(df_polygons.geometry.bounds.iloc[:, 0:2])
 
 # cross validate
 scores = cross_validate(
