@@ -4,6 +4,7 @@ import numpy as np
 import rasterio
 import rasterio.features
 import scipy
+from scipy.spatial import distance_matrix
 import geopandas
 import pandas as pd
 from shapely.geometry import Point
@@ -174,13 +175,13 @@ def sample(size, dataset, strata=None, random_state=None):
     return valid_samples, valid_coordinates
 
 
-def filter_points(xy, min_dist=0, remove='first'):
+def filter_points(gdf, min_dist=0, remove='first'):
     """Filter points in geodataframe using a minimum distance buffer
 
     Parameters
     ----------
-    xy : 2d array-like
-        Numpy array containing point locations (n_samples, xy)
+    gdf : Geopandas GeoDataFrame
+        Containing point geometries
 
     min_dist : int or float, optional (default=0)
         Minimum distance by which to filter out closely spaced points
@@ -193,7 +194,8 @@ def filter_points(xy, min_dist=0, remove='first'):
     xy : 2d array-like
         Numpy array filtered coordinates"""
 
-    dm = scipy.spatial.distance_matrix(xy, xy)
+    xy = gdf.geometry.bounds.iloc[:, 0:2]
+    dm = distance_matrix(xy, xy)
     np.fill_diagonal(dm, np.nan)
 
     if remove == 'first':
@@ -203,7 +205,7 @@ def filter_points(xy, min_dist=0, remove='first'):
 
     d = np.nanmin(dm, axis=1)
 
-    return xy[np.greater_equal(d, min_dist)]
+    return gdf.loc[np.greater_equal(d, min_dist), :]
 
 
 def extract(dataset, response, field=None):
