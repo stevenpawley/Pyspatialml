@@ -2,6 +2,7 @@ import os
 import tempfile
 from collections import namedtuple
 from itertools import chain
+from copy import deepcopy
 
 import geopandas as gpd
 import numpy as np
@@ -61,14 +62,16 @@ class RasterStack:
         for src in self.iloc:
             src.close()
 
-    def append(self, other):
+    def append(self, other, inplace=False):
         """Setter method to add new raster datasets to the RasterStack object
 
         Args
         ----
         other : str, list-like, or RasterStack object
             File path or list of file paths to GDAL-supported raster datasets to add
-            to the RasterStack object. Also supports appending another RasterStack object"""
+            to the RasterStack object. Also supports appending another RasterStack object
+        inplace : bool, default = False
+            Modify the RasterStack in place"""
 
         if isinstance(other, str):
             other = [other]
@@ -76,36 +79,44 @@ class RasterStack:
         elif isinstance(other, RasterStack):
             other = other.files
 
-        # append new datasets
-        for fp in other:
-            if fp in self.files:
-                raise ValueError('Files must have unique names')
+        if inplace is True:
+            self.files = self.files + other
+        else:
+            new_stack = RasterStack(self.files + other)
+            return new_stack
 
-        self.files = self.files + other
-
-    def drop(self, labels):
+    def drop(self, labels, inplace=False):
         """Drop raster datasets from the RasterStack object
 
         Args
         ----
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label,
-            or a list of integers or labels"""
+            or a list of integers or labels
+        inplace : bool, default = False
+            Modify the RasterStack in place"""
 
         if isinstance(labels, (str, int)):
             labels = [labels]
 
+        existing_files = deepcopy(self.files)
+
         # index-based method
         if len([i for i in labels if isinstance(i, int)]) == len(labels):
-            self.files = [self.files[i] for i in range(len(self.files)) if i not in labels]
+            existing_files = [existing_files[i] for i in range(len(existing_files)) if i not in labels]
 
         # label-based method
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
             for fp in labels:
-                self.files = [i for i in self.files if fp != i]
-
+                existing_files = [i for i in existing_files if fp not in i]
         else:
             raise ValueError('Cannot drop layers based on mixture of indexes and labels')
+
+        if inplace is True:
+            self.files = existing_files
+        else:
+            new_stack = RasterStack(existing_files)
+            return new_stack
 
     @property
     def files(self):
@@ -445,7 +456,7 @@ class RasterStack:
 
         # mask nodata values
         mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        if field:
+        if field and na_rm is True:
             y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
         xy = np.ma.masked_array(xy, mask=mask_2d)
 
@@ -607,14 +618,14 @@ class RasterStack:
             indexes = range(indexes, indexes + 1)
 
         elif predict_type == 'prob' and indexes is None:
-            window = Window(0, 0, 1, self.width)
+            window = Window(0, 0, self.width, 1)
             img = self.read(masked=True, window=window)
             n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
             n_samples = rows * cols
             flat_pixels = img.transpose(1, 2, 0).reshape(
                 (n_samples, n_features))
             result = estimator.predict_proba(flat_pixels)
-            indexes = range(result.shape[0])
+            indexes = np.arange(0, result.shape[1])
 
         elif predict_type == 'raw':
             indexes = range(1)
@@ -802,7 +813,7 @@ class RasterStack:
         return rasterio.open(file_path)
 
     def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
-        """Crops a rasterio dataset by the supplied bounds
+        """Crops a RasterStack object by the supplied bounds
 
         Args
         ----
