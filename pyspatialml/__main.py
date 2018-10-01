@@ -455,10 +455,15 @@ class RasterStack:
             X = self.extract_xy(xy)
 
         # mask nodata values
+        ## flatten masks for X and broadcast for two bands (x & y)
         mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
+
+        ## apply mask to y values and spatial coords only if na_rm is True
+        ## otherwise we want to get the y values and coords back even if some of the
+        ## X values include nans
         if field and na_rm is True:
             y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
-        xy = np.ma.masked_array(xy, mask=mask_2d)
+            xy = np.ma.masked_array(xy, mask=mask_2d)
 
         # optionally remove rows containing nodata
         if na_rm is True:
@@ -574,7 +579,8 @@ class RasterStack:
         return values
 
     def predict(self, estimator, file_path=None, predict_type='raw',
-                indexes=None, driver='GTiff', dtype='float32', nodata=-99999):
+                indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
+                progress=True):
         """Apply prediction of a scikit learn model to a GDAL-supported
         raster dataset
 
@@ -602,6 +608,9 @@ class RasterStack:
 
         nodata : any number, optional. Default is -99999
             Nodata value for file export
+
+        progress : bool, optional. Default is True
+            Show tqdm progress bar for prediction
 
         Returns
         -------
@@ -646,12 +655,16 @@ class RasterStack:
             # generator gets raster arrays for each window
             data_gen = (self.read(window=window, masked=True) for window in windows)
 
-            with tqdm(total=len(windows)) as pbar:
-                for window, arr in zip(windows, data_gen):
+            if progress is True:
+                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
                     result = predfun(arr, estimator)
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
-                    pbar.update(1)
+            else:
+                for window, arr  in zip(windows, data_gen):
+                    result = predfun(arr, estimator)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result[indexes, :, :].astype(dtype), window=window)
 
         return rasterio.open(file_path)
 
@@ -752,7 +765,7 @@ class RasterStack:
         return result_proba
 
     def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
-             nodata=-99999):
+             nodata=-99999, progress=True):
         """Apply prediction of a scikit learn model to a GDAL-supported
         raster dataset
 
@@ -772,6 +785,9 @@ class RasterStack:
 
         nodata : any number, optional. Default is -99999
             Nodata value for file export
+
+        progress : bool, optional. Default is True
+            Show tqdm progress bar for prediction
 
         Returns
         -------
@@ -802,13 +818,16 @@ class RasterStack:
             # generator gets raster arrays for each window
             data_gen = (self.read(window=window, masked=True) for window in windows)
 
-            with tqdm(total=len(windows)) as pbar:
-
+            if progress is True:
+                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
+                    result = function(arr)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result.astype(dtype), window=window)
+            else:
                 for window, arr in zip(windows, data_gen):
                     result = function(arr)
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result.astype(dtype), window=window)
-                    pbar.update(1)
 
         return rasterio.open(file_path)
 
