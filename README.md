@@ -185,13 +185,12 @@ with rasterio.open(os.path.join(basedir, 'strata.tif')) as strata:
 
 ## Vector Data Tools
 
-In some cases, we don't need all of the training data, but rather would spatially thin a point dataset. The filter_points function performs point-thinning based on a minimum distance buffer:
+In some cases, we don't need all of the training data, but rather would spatially thin a point dataset. The filter_points function performs point-thinning based on a minimum distance buffer on a geopandas dataframe containing point geometries:
 
 ```
 from pyspatialml.sampling import filter_points
 
-training_xy = training_pt.bounds.iloc[:, 2:].values
-thinned_points = filter_points(xy=training_xy, min_dist=500, remove='first')
+thinned_points = filter_points(xy=training_pt, min_dist=500, remove='first')
 thinned_points.shape
 ```
 
