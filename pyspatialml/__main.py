@@ -138,6 +138,7 @@ class RasterStack:
 
         try:
             values, labels = values
+
         except ValueError:
             labels = None
 
@@ -145,6 +146,7 @@ class RasterStack:
             values = [values]
 
         meta = self._check_alignment(values)
+
         if meta is False:
             raise ValueError(
                 'Raster datasets do not all have the same dimensions or transform')
@@ -173,7 +175,6 @@ class RasterStack:
                 self.height, self.width, self.transform)
             BoundingBox = namedtuple('BoundingBox', ['left', 'bottom', 'right', 'top'])
             self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
-
             self._files = values
 
             # attach datasets to attributes
@@ -188,15 +189,16 @@ class RasterStack:
 
                 src = rasterio.open(fp)
                 self.count += src.count
-                self.nodatavals += src.nodatavals
 
                 if src.count > 1:
-                    self.dtypes += src.dtypes
+                    self.dtypes.append(src.dtypes)
                     self.names += ['.'.join([valid_name, str(i+1)])
                                    for i in range(src.count)]
+                    [self.nodatavals.append(nodata) for nodata in src.nodatavals]
                 else:
                     self.dtypes.append(src.meta['dtype'])
                     self.names.append(valid_name)
+                    self.nodatavals.append(src.nodata)
 
                 self.loc.update({valid_name: src})
                 self.iloc.append(src)
@@ -209,19 +211,56 @@ class RasterStack:
                              count=self.count,
                              dtype=self._maximum_dtype())
 
-    def read(self, masked=False, window=None):
+    def read(self, masked=False, window=None, out_shape=None, resampling='nearest'):
         """Reads data from the RasterStack object into a numpy array
 
         Args
         ----
-        masked : bool, default = False
+        masked : bool, optional, default = False
             Read data into a masked array
 
-        window : rasterio.window.Window object
+        window : rasterio.window.Window object, optional
             Tuple of col_off, row_off, width, height of a window of data
-            to read"""
+            to read
+
+        out_shape : tuple, optional
+            Shape of shape of array (rows, cols) to read data into using
+            decimated reads
+
+        resampling : str, default = 'nearest'
+            Resampling method to use when applying decimated reads when
+            out_shape is specified. Supported methods are: 'average',
+            'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
+            'max', 'med', 'min', 'mode', 'q1', 'q3'
+
+        Returns
+        -------
+        arr : ndarray
+            Raster values in 3d numpy array in [band, row, col] order"""
 
         dtype = self._maximum_dtype()
+
+        resampling_methods = {
+            'average': 5,
+            'bilinear': 1,
+            'cubic': 2,
+            'cubic_spline': 3,
+            'gauss': 7,
+            'lanczos': 4,
+            'max': 8,
+            'med': 10,
+            'min': 9,
+            'mode': 6,
+            'q1': 11,
+            'q3': 12,
+            'nearest': 0
+        }
+
+        if resampling not in resampling_methods.keys():
+            raise ValueError(
+                'Invalid resampling method.' +
+                'Resampling method must be one of {0}:'.format(
+                    resampling_methods.keys()))
 
         # get window to read from window or height/width of dataset
         if window is None:
@@ -230,6 +269,10 @@ class RasterStack:
         else:
             width = window.width
             height = window.height
+
+        # decimated reads using nearest neighbor resampling
+        if out_shape:
+            height, width = out_shape
 
         # read masked or non-masked data
         if masked is True:
@@ -240,10 +283,20 @@ class RasterStack:
         # read bands separately into numpy array
         for i, src in enumerate(self.iloc):
             if src.count == 1:
-                arr[i, :, :] = src.read(1, masked=masked, window=window)
+                arr[i, :, :] = src.read(
+                    indexes=1,
+                    masked=masked,
+                    window=window,
+                    out_shape=out_shape,
+                    resampling=resampling_methods[resampling])
             else:
                 for j in range(src.count):
-                    arr[i+j, :, :] = src.read(j+1, masked=masked, window=window)
+                    arr[i+j, :, :] = src.read(
+                        indexes=j+1,
+                        masked=masked,
+                        window=window,
+                        out_shape=out_shape,
+                        resampling=resampling_methods[resampling])
 
         return arr
 
@@ -1015,6 +1068,47 @@ class RasterStack:
         else:
             return valid_samples, valid_coordinates
 
+    def to_pandas(self, max_pixels=50000, resampling='nearest'):
+        """RasterStack to pandas DataFrame
+
+        Args
+        ----
+        max_pixels: int, default=50000
+            Maximum number of pixels to sample
+
+        resampling : str, default = 'nearest'
+            Resampling method to use when applying decimated reads when
+            out_shape is specified. Supported methods are: 'average',
+            'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
+            'max', 'med', 'min', 'mode', 'q1', 'q3'
+
+        Returns
+        -------
+        df : pandas DataFrame"""
+
+        n_pixels = self.shape[0] * self.shape[1]
+        scaling = max_pixels / n_pixels
+
+        # read dataset using decimated reads
+        out_shape = (round(self.shape[0] * scaling), round(self.shape[1] * scaling))
+        arr = self.read(masked=True, out_shape=out_shape, resampling=resampling)
+
+        # x and y grid coordinate arrays
+        x_range = np.linspace(start=self.bounds.left, stop=self.bounds.right, num=arr.shape[2])
+        y_range = np.linspace(start=self.bounds.top, stop=self.bounds.bottom, num=arr.shape[1])
+        xs, ys = np.meshgrid(x_range, y_range)
+
+        # convert to pandas
+        arr = arr.reshape((6, arr.shape[1] * arr.shape[2]))
+        arr = arr.transpose()
+        df = pd.DataFrame(np.column_stack((xs.flatten(), ys.flatten(), arr)),
+                          columns=['x', 'y'] + self.attr_names)
+
+        # set nodata values to nan
+        for i, col_name in enumerate(self.attr_names):
+            df.loc[df[col_name] == self.nodatavals[i], col_name] = np.nan
+
+        return df
 
 def _predfun(img, estimator):
     """Prediction function for classification or regression response

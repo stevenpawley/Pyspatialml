@@ -18,6 +18,7 @@ predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
 stack = RasterStack(predictors)
+df = stack.to_pandas(max_pixels=stack.width*stack.height)
 
 # Load some training data in the form of a shapefile of point feature locations:
 training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_polygons.shp'))
