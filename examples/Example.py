@@ -1,4 +1,4 @@
-from pyspatialml import RasterStack
+import pyspatialml as ps
 from copy import deepcopy
 import os
 import geopandas
@@ -14,11 +14,13 @@ band3 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_30.tif')
 band4 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_40.tif')
 band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
 band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
+multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
-stack = RasterStack(predictors)
-df = stack.to_pandas(max_pixels=stack.width*stack.height)
+layer = ps.from_singleband(band1)
+stack = ps.from_multiband([band1, band2, band3, band4, band5, band7])
+df = stack.to_pandas()
 
 # Load some training data in the form of a shapefile of point feature locations:
 training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_polygons.shp'))
@@ -28,8 +30,8 @@ training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 
 # Plot some training data
-plt.imshow(stack.lsat7_2000_70.read(1, masked=True),
-           extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
+plt.imshow(stack.lsat7_2000_70.read(masked=True),
+           extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70.ds))
 plt.scatter(x=training_pt.bounds.iloc[:, 0],
             y=training_pt.bounds.iloc[:, 1],
             s=2, color='black')
@@ -40,7 +42,6 @@ df_points = stack.extract_vector(response=training_pt, field='id')
 df_polygons = stack.extract_vector(response=training_py, field='id')
 df_lines = stack.extract_vector(response=training_lines, field='id')
 df_raster = stack.extract_raster(response=training_px, value_name='id')
-
 df_points.head()
 
 # Next we can train a logistic regression classifier:
@@ -75,7 +76,12 @@ scores['test_score'].mean()
 
 # prediction
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
-plt.imshow(result.read(1, masked=True))
+result_prob = stack.predict(estimator=lr, predict_type='prob')
+
+plt.imshow(result.read(masked=True))
+plt.show()
+
+plt.imshow(result_prob.tmp4m480cea_1.read(masked=True))
 plt.show()
 
 # sampling

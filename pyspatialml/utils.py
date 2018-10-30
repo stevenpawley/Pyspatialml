@@ -140,9 +140,8 @@ def check_alignment(rasters):
 
     src_meta = []
     for raster in rasters:
-        src = rasterio.open(raster)
-        src_meta.append(src.meta.copy())
-        src.close()
+        with rasterio.open(raster) as src:
+            src_meta.append(src.meta.copy())
 
     if not all(i['crs'] == src_meta[0]['crs'] for i in src_meta):
         Warning('crs of all rasters does not match, '
@@ -154,6 +153,23 @@ def check_alignment(rasters):
         print('Predictor rasters do not all have the same dimensions or',
               'transform')
         print('Use the .utils_align_rasters function')
-        return(False)
+
+        return False
     else:
-        return(src_meta[0])
+        return src_meta[0]
+
+
+def make_name(name):
+    """Converts a filename to a valid class attribute name
+
+    Args
+    ----
+    name : str
+        File name for convert to a valid class attribute name"""
+
+    valid_name = os.path.basename(name)
+    valid_name = valid_name.split(os.path.extsep)[0]
+    valid_name = valid_name.replace(' ', '_')
+    valid_name = valid_name.replace('.', '_')
+
+    return valid_name
