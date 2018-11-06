@@ -15,19 +15,7 @@ from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
 
-
-def from_singleband(fp, bidx=None):
-
-    if bidx and isinstance(bidx, int) is False:
-        raise ValueError('Single integer bidx required')
-
-    src = rasterio.open(fp)
-    band = rasterio.band(src, bidx)
-    layer = RasterLayer(band)
-    return layer
-
-
-def from_multiband(fp):
+def from_files(fp):
 
     if isinstance(fp, str):
         fp = [fp]
@@ -41,8 +29,8 @@ def from_multiband(fp):
             band = rasterio.band(src, i+1)
             bands.append(RasterLayer(band))
 
-    raster_stack = RasterStack(bands)
-    return raster_stack
+    raster = Raster(bands)
+    return raster
 
 
 class BaseRasterMixin:
@@ -52,6 +40,7 @@ class BaseRasterMixin:
         self.transform = band.ds.transform
         self.width = band.ds.width
         self.height = band.ds.height
+        self.bounds = band.ds.bounds  # BoundingBox class (namedtuple) ('left', 'bottom', 'right', 'top')
 
     def reproject(self):
         pass
@@ -67,7 +56,7 @@ class BaseRasterMixin:
 
     def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
              nodata=-99999, progress=True):
-        """Apply user-supplied function to a RasterLayer or RasterStack object
+        """Apply user-supplied function to a Raster object
 
         Args
         ----
@@ -91,7 +80,7 @@ class BaseRasterMixin:
 
         Returns
         -------
-        pyspatialml.RasterLayer object"""
+        pyspatialml.Raster object"""
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)
@@ -132,15 +121,12 @@ class BaseRasterMixin:
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result.astype(dtype), window=window)
 
-        if count == 1:
-            result = from_singleband(file_path)
-        else:
-            result = from_multiband(file_path)
+        raster = from_files(file_path)
 
-        return result
+        return raster
 
     def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
-        """Crops a RasterLayer or RasterStack object by the supplied bounds
+        """Crops a Raster object by the supplied bounds
 
         Args
         ----
@@ -161,17 +147,14 @@ class BaseRasterMixin:
 
         Returns
         -------
-        RasterLayer or RasterStack object cropped to new extent"""
+        pyspatialml.Raster object cropped to new extent"""
 
         xmin, ymin, xmax, ymax = bounds
 
         rows, cols = rasterio.transform.rowcol(
             self.transform, xs=(xmin, xmax), ys=(ymin, ymax))
 
-        window = Window(col_off=min(cols),
-                        row_off=min(rows),
-                        width=max(cols)-min(cols),
-                        height=max(rows)-min(rows))
+        window = Window(col_off=min(cols), row_off=min(rows), width=max(cols)-min(cols), height=max(rows)-min(rows))
 
         cropped_arr = self.read(masked=True, window=window)
         meta = self.meta
@@ -188,14 +171,11 @@ class BaseRasterMixin:
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr)
 
-        # create new RasterStack object
-        if isinstance(self, RasterLayer):
-            result = from_singleband(file_path)
-        else:
-            result = from_multiband(file_path)
-            result.names = self.names
+        # create new Raster object
+        raster = from_files(file_path)
+        raster.names = self.names
 
-        return result
+        return raster
 
     def plot(self):
         pass
@@ -330,32 +310,24 @@ class BaseRasterMixin:
 
     def head(self):
         """Show the head (first rows, first columns) or tail (last rows, last columns)
-         of the cells of a RasterLayer or RasterStack object"""
+         of the cells of a Raster object"""
 
-        window = Window(col_off=0,
-                        row_off=0,
-                        width=20,
-                        height=10)
-
+        window = Window(col_off=0, row_off=0, width=20, height=10)
         arr = self.read(window=window)
 
         return arr
 
     def tail(self):
         """Show the head (first rows, first columns) or tail (last rows, last columns)
-         of the cells of a RasterLayer or RasterStack object"""
+         of the cells of a Raster object"""
 
-        window = Window(col_off=self.width-20,
-                        row_off=self.height-10,
-                        width=20,
-                        height=10)
-
+        window = Window(col_off=self.width-20, row_off=self.height-10, width=20, height=10)
         arr = self.read(window=window)
 
         return arr
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
-        """RasterStack to pandas DataFrame
+        """Raster to pandas DataFrame
 
         Args
         ----
@@ -428,7 +400,7 @@ class RasterLayer(BaseRasterMixin):
         pass
 
 
-class RasterStack(BaseRasterMixin):
+class Raster(BaseRasterMixin):
     def __init__(self, layers):
 
         self.loc = {}          # name-based indexing
@@ -439,7 +411,6 @@ class RasterStack(BaseRasterMixin):
         self.nodatavals = []   # no data values of stacked raster datasets and bands
         self.count = 0         # number of bands in stacked raster datasets
         self.res = None        # (x, y) resolution of aligned raster datasets
-        self.bounds = None     # BoundingBox class (namedtuple) ('left', 'bottom', 'right', 'top')
         self.meta = None       # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
         self._layers = None     # set proxy for self._files
         self.layers = layers    # call property
@@ -447,32 +418,21 @@ class RasterStack(BaseRasterMixin):
     def __getitem__(self, x):
         return getattr(self, x)
 
-    def __del__(self):
-        """Deconstructor for RasterLayer class to close files"""
-        self.close()
-
     @property
     def layers(self):
-        """Getter method for file names within the RasterStack object"""
+        """Getter method for file names within the Raster object"""
         return self._layers
 
     @layers.setter
     def layers(self, layers):
-        """Setter method for the files attribute in the RasterStack object"""
-
-        # if tuple of (bands, labels) for custom names of band attributes
-        try:
-            layers, labels = layers
-
-        except ValueError:
-            labels = None
+        """Setter method for the files attribute in the Raster object"""
 
         # some checks
         if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
-            raise ValueError('Cannot create a RasterStack from a mixture of input types')
+            raise ValueError('Cannot create a Raster object from a mixture of input types')
 
         meta = self._check_alignment(layers)
         if meta is False:
@@ -488,7 +448,7 @@ class RasterStack(BaseRasterMixin):
         self.dtypes = []
         self.nodatavals = []
 
-        # update global RasterStack attributes with new values
+        # update global Raster object attributes with new values
         self.count = len(layers)
         self.width = meta['width']
         self.height = meta['height']
@@ -503,11 +463,7 @@ class RasterStack(BaseRasterMixin):
 
         # update attributes per dataset
         for i, layer in enumerate(layers):
-            if labels is None:
-                valid_name = self._make_name(layer.ds.files[0])
-            else:
-                valid_name = labels[i]
-
+            valid_name = self._make_name(layer.file)
             self.dtypes.append(layer.dtype)
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
@@ -595,7 +551,7 @@ class RasterStack(BaseRasterMixin):
         return dtype
 
     def read(self, masked=False, window=None, out_shape=None, resampling='nearest'):
-        """Reads data from the RasterStack object into a numpy array
+        """Reads data from the Raster object into a numpy array
 
         Overrides read BaseRasterMixin read method and replaces it with a method that
         reads from multiple RasterLayer objects
@@ -661,22 +617,10 @@ class RasterStack(BaseRasterMixin):
 
         return arr
 
-    def open(self):
-        """Open raster datasets contained within the RasterStack object"""
-        for layer in self.layers:
-            layer.open()
-            layer.ds.open()
-
-    def close(self):
-        """Deconstructor for RasterLayer class to close files"""
-        for layer in self.layers:
-            layer.ds.close()
-
     def predict(self, estimator, file_path=None, predict_type='raw',
                 indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
                 progress=True):
-        """Apply prediction of a scikit learn model to a GDAL-supported
-        raster dataset
+        """Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
         Args
         ----
@@ -708,13 +652,13 @@ class RasterStack(BaseRasterMixin):
 
         Returns
         -------
-        RasterLayer or RasterStack object"""
+        Raster object"""
 
         # chose prediction function
         if predict_type == 'raw':
-            predfun = self._predfun
+            predfun = _predfun
         elif predict_type == 'prob':
-            predfun = self._probfun
+            predfun = _probfun
 
         # determine output count
         if predict_type == 'prob' and isinstance(indexes, int):
@@ -760,169 +704,54 @@ class RasterStack(BaseRasterMixin):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
 
-        if len(indexes) == 1:
-            output = from_singleband(file_path, 1)
-        else:
-            output = from_multiband(file_path)
-            output.names = ['_'.join(['prob', str(i+1)]) for i in output.count]
+        raster = from_files(file_path)
+        if len(indexes) > 1:
+            raster.names = ['_'.join(['prob', str(i+1)]) for i in range(raster.count)]
 
-        return output
+        return raster
 
-    @staticmethod
-    def _predfun(img, estimator):
-        """Prediction function for classification or regression response
+    def append(self, other):
+        """Setter method to add new Raster objects
 
         Args
         ----
-        img : 3d numpy array of raster data
+        other : Raster object or list of Raster objects"""
 
-        estimator : estimator object implementing 'fit'
-            The object to use to fit the data
+        if isinstance(other, Raster):
+            self.layers = self.layers + other.layers
 
-        Returns
-        -------
-        result_cla : 2d numpy array
-            Single band raster as a 2d numpy array containing the
-            classification or regression result"""
+        elif isinstance(other, list):
+            for raster in other:
+                self.layers = self.layers + raster.layers
 
-        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-
-        # reshape each image block matrix into a 2D matrix
-        # first reorder into rows,cols,bands(transpose)
-        # then resample into 2D array (rows=sample_n, cols=band_values)
-        n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape(
-            (n_samples, n_features))
-
-        # create mask for NaN values and replace with number
-        flat_pixels_mask = flat_pixels.mask.copy()
-
-        # prediction
-        result_cla = estimator.predict(flat_pixels)
-
-        # replace mask
-        result_cla = np.ma.masked_array(
-            data=result_cla, mask=flat_pixels_mask.any(axis=1))
-
-        # reshape the prediction from a 1D into 3D array [band, row, col]
-        result_cla = result_cla.reshape((1, rows, cols))
-
-        return result_cla
-
-    @staticmethod
-    def _probfun(img, estimator):
-        """Class probabilities function
-
-        Args
-        ----
-        img : 3d numpy array of raster data
-
-        estimator : estimator object implementing 'fit'
-            The object to use to fit the data
-
-        Returns
-        -------
-        result_proba : 3d numpy array
-            Multi band raster as a 3d numpy array containing the
-            probabilities associated with each class.
-            Array is in (class, row, col) order"""
-
-        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-
-        # reshape each image block matrix into a 2D matrix
-        # first reorder into rows,cols,bands(transpose)
-        # then resample into 2D array (rows=sample_n, cols=band_values)
-        n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape(
-            (n_samples, n_features))
-
-        # create mask for NaN values and replace with number
-        flat_pixels_mask = flat_pixels.mask.copy()
-
-        # predict probabilities
-        result_proba = estimator.predict_proba(flat_pixels)
-
-        # reshape class probabilities back to 3D image [iclass, rows, cols]
-        result_proba = result_proba.reshape(
-            (rows, cols, result_proba.shape[1]))
-        flat_pixels_mask = flat_pixels_mask.reshape((rows, cols, n_features))
-
-        # flatten mask into 2d
-        mask2d = flat_pixels_mask.any(axis=2)
-        mask2d = np.where(mask2d != mask2d.min(), True, False)
-        mask2d = np.repeat(mask2d[:, :, np.newaxis],
-                           result_proba.shape[2], axis=2)
-
-        # convert proba to masked array using mask2d
-        result_proba = np.ma.masked_array(
-            result_proba,
-            mask=mask2d,
-            fill_value=np.nan)
-
-        # reshape band into rasterio format [band, row, col]
-        result_proba = result_proba.transpose(2, 0, 1)
-
-        return result_proba
-
-    def append(self, other, inplace=False):
-        """Setter method to add new RasterLayer objects to the RasterStack
-
-        Args
-        ----
-        other : RasterStack, RasterLayer, or list of RasterLayer objects
-
-        inplace : bool, default = False
-            Modify the RasterStack in place"""
-
-        if isinstance(other, RasterLayer):
-            other = [other]
-
-        elif isinstance(other, RasterStack):
-            other = other.layers
-
-        if inplace is True:
-            self.layers = self.layers + other
-        else:
-            new_stack = RasterStack(self.layers + other)
-            return new_stack
-
-    def drop(self, labels, inplace=False):
-        """Drop raster datasets from the RasterStack object
+    def drop(self, labels):
+        """Drop individual RasterLayers from a Raster object
 
         Args
         ----
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label,
-            or a list of integers or labels
-
-        inplace : bool, default = False
-            Modify the RasterStack in place"""
+            or a list of integers or labels"""
 
         # convert single label to list
         if isinstance(labels, (str, int)):
             labels = [labels]
 
-        existing_layers = deepcopy(self.layers)
-
-        # index-based method
         if len([i for i in labels if isinstance(i, int)]) == len(labels):
-            existing_layers = [existing_layers[i] for i in range(len(existing_layers)) if i not in labels]
+            # numerical index based subsetting
+            self.layers = [v for (i, v) in enumerate(self.layers) if i not in labels]
+            self.names = [v for (i, v) in enumerate(self.names) if i not in labels]
 
-        # label-based method
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
-            existing_layers = [existing_layers[i] for i in range(len(existing_layers)) if self.names[i] not in labels]
+            # str label based subsetting
+            self.layers = [v for (i, v) in enumerate(self.layers) if self.names[i] not in labels]
+            self.names = [v for (i, v) in enumerate(self.names) if self.names[i] not in labels]
 
         else:
             raise ValueError('Cannot drop layers based on mixture of indexes and labels')
 
-        if inplace is True:
-            self.layers = existing_layers
-        else:
-            new_stack = RasterStack(existing_layers)
-            return new_stack
-
     def extract_xy(self, xy):
-        """Samples pixel values of the RasterStack using an array of xy locations
+        """Samples pixel values of a Raster using an array of xy locations
 
         Parameters
         ----------
@@ -958,7 +787,7 @@ class RasterStack(BaseRasterMixin):
         return values
 
     def _extract_by_indices(self, rows, cols):
-        """spatial query of RasterStack (by-band)"""
+        """spatial query of Raster object (by-band)"""
 
         X = np.ma.zeros((len(rows), self.count))
 
@@ -969,7 +798,7 @@ class RasterStack(BaseRasterMixin):
         return X
 
     def _clip_xy(self, xy, y=None):
-        """Clip array of xy coordinates to extent of RasterStack"""
+        """Clip array of xy coordinates to extent of Raster object"""
 
         extent = self.bounds
         valid_idx = np.where((xy[:, 0] > extent.left) &
@@ -984,7 +813,7 @@ class RasterStack(BaseRasterMixin):
         return xy, y
 
     def extract_vector(self, response, field, return_array=False, na_rm=True, low_memory=False):
-        """Sample the RasterStack by a geopandas GeoDataframe containing points,
+        """Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
 
         Args
@@ -1075,7 +904,7 @@ class RasterStack(BaseRasterMixin):
             rows, cols = rasterio.transform.rowcol(
                 transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
 
-        # spatial query of RasterStack (by-band)
+        # spatial query of Raster object (by-band)
         if low_memory is False:
             X = self._extract_by_indices(rows, cols)
         else:
@@ -1111,7 +940,7 @@ class RasterStack(BaseRasterMixin):
             return X, y, xy
 
     def extract_raster(self, response, value_name='value', return_array=False, na_rm=True):
-        """Sample the RasterStack by an aligned raster of labelled pixels
+        """Sample a Raster object by an aligned raster of labelled pixels
 
         Args
         ----
@@ -1145,7 +974,7 @@ class RasterStack(BaseRasterMixin):
         xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
         y = arr.data[rows, cols]
 
-        # extract RasterStack values at row, col indices
+        # extract Raster object values at row, col indices
         X = self._extract_by_indices(rows, cols)
 
         # summarize data and mask nodatavals in X, y, and xy
@@ -1215,7 +1044,7 @@ def _probfun(img, estimator):
 
     Parameters
     ----------
-    img : 3d numpy array of raster data
+    img : 3d numpy array of raster data [band, row, col]
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data
@@ -1229,6 +1058,8 @@ def _probfun(img, estimator):
 
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
 
+    mask2d = img.mask.any(axis=0)
+
     # reshape each image block matrix into a 2D matrix
     # first reorder into rows,cols,bands(transpose)
     # then resample into 2D array (rows=sample_n, cols=band_values)
@@ -1236,31 +1067,24 @@ def _probfun(img, estimator):
     flat_pixels = img.transpose(1, 2, 0).reshape(
         (n_samples, n_features))
 
-    # create mask for NaN values and replace with number
-    flat_pixels_mask = flat_pixels.mask.copy()
-
     # predict probabilities
     result_proba = estimator.predict_proba(flat_pixels)
 
     # reshape class probabilities back to 3D image [iclass, rows, cols]
     result_proba = result_proba.reshape(
         (rows, cols, result_proba.shape[1]))
-    flat_pixels_mask = flat_pixels_mask.reshape((rows, cols, n_features))
-
-    # flatten mask into 2d
-    mask2d = flat_pixels_mask.any(axis=2)
-    mask2d = np.where(mask2d != mask2d.min(), True, False)
-    mask2d = np.repeat(mask2d[:, :, np.newaxis],
-                       result_proba.shape[2], axis=2)
-
-    # convert proba to masked array using mask2d
-    result_proba = np.ma.masked_array(
-        result_proba,
-        mask=mask2d,
-        fill_value=np.nan)
 
     # reshape band into rasterio format [band, row, col]
     result_proba = result_proba.transpose(2, 0, 1)
+
+    # repeat mask for n_bands
+    mask3d = np.repeat(a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0)
+
+    # convert proba to masked array
+    result_proba = np.ma.masked_array(
+        result_proba,
+        mask=mask3d,
+        fill_value=np.nan)
 
     return result_proba
 
