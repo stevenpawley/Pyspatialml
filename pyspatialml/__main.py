@@ -812,7 +812,7 @@ class Raster(BaseRasterMixin):
 
         return xy, y
 
-    def extract_vector(self, response, field, return_array=False, na_rm=True, low_memory=False):
+    def extract_vector(self, response, field=None, return_array=False, na_rm=True, low_memory=False):
         """Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
 
@@ -844,12 +844,15 @@ class Raster(BaseRasterMixin):
 
         X : array-like
             Numpy masked array of extracted raster values, typically 2d
+            Returned only if return_array is True
 
         y: 1d array like
             Numpy masked array of labelled sampled
+            Returned only if return_array is True
 
         xy: 2d array-like
-            Numpy masked array of row and column indexes of training pixels"""
+            Numpy masked array of row and column indexes of training pixels
+            Returned only if return_array is True"""
 
         if not field:
             y = None
@@ -924,14 +927,22 @@ class Raster(BaseRasterMixin):
         # optionally remove rows containing nodata
         if na_rm is True:
             mask = X.mask.any(axis=1)
-            X = X[~mask].data
-            y = y[~mask].data
-            xy = xy[~mask].data
+            X = np.ma.getdata(X)
+            if field:
+                y = np.ma.masked_array(data=y, mask=mask)
+                y = np.ma.getdata(y)
+            xy = np.ma.getdata(xy)
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
-            column_names = [field] + self.names
-            gdf = pd.DataFrame(np.ma.column_stack((y, X)), columns=column_names)
+            if field is not None:
+                data = np.ma.column_stack((y, X))
+                column_names = [field] + self.names
+            else:
+                data = X
+                column_names = self.names
+
+            gdf = pd.DataFrame(data, columns=column_names)
             gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
             gdf['geometry'] = gdf['geometry'].apply(Point)
             gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
