@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/stevenpawley/Pyspatialml.svg?branch=master)](https://travis-ci.org/stevenpawley/Pyspatialml) [![Documentation Status](https://readthedocs.org/projects/pyspatialml/badge/?version=latest)](https://pyspatialml.readthedocs.io/en/latest/?badge=latest)
 
+# NOTE
+
+Pyspatialml is undergoing development at the moment, with various api changes expected. Alpha version is expected to be ready in January 2019. Use the development branch for the latest changes.
+
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
 
