@@ -1099,7 +1099,7 @@ class RasterStack:
         xs, ys = np.meshgrid(x_range, y_range)
 
         # convert to pandas
-        arr = arr.reshape((6, arr.shape[1] * arr.shape[2]))
+        arr = arr.reshape((arr.shape[0], arr.shape[1] * arr.shape[2]))
         arr = arr.transpose()
         df = pd.DataFrame(np.column_stack((xs.flatten(), ys.flatten(), arr)),
                           columns=['x', 'y'] + self.attr_names)
