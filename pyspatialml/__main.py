@@ -1,9 +1,8 @@
 import os
 import tempfile
 from collections import namedtuple
-from copy import deepcopy
-from functools import partial
 from itertools import chain
+from functools import partial
 
 import geopandas as gpd
 import numpy as np
@@ -33,7 +32,11 @@ def from_files(fp):
     return raster
 
 
-class BaseRasterMixin:
+class BaseRaster(object):
+    """Raster base class that contains methods that apply both to RasterLayer and Raster objects.
+    Wraps a rasterio.band object, which is a named tuple consisting of the file path, the band index, the dtype and
+    shape a individual band within a raster dataset"""
+
     def __init__(self, band):
         self.shape = band.shape
         self.crs = band.ds.crs
@@ -41,18 +44,19 @@ class BaseRasterMixin:
         self.width = band.ds.width
         self.height = band.ds.height
         self.bounds = band.ds.bounds  # BoundingBox class (namedtuple) ('left', 'bottom', 'right', 'top')
+        self.read = partial(band.ds.read, indexes=band.bidx)
 
     def reproject(self):
-        pass
+        raise NotImplementedError
 
     def mask(self):
-        pass
+        raise NotImplementedError
 
     def resample(self):
-        pass
+        raise NotImplementedError
 
     def aggregate(self):
-        pass
+        raise NotImplementedError
 
     def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
              nodata=-99999, progress=True):
@@ -371,9 +375,12 @@ class BaseRasterMixin:
         return df
 
 
-class RasterLayer(BaseRasterMixin):
+class RasterLayer(BaseRaster):
+    """A single-band raster object that wraps selected attributes and methods from a rasterio.band object
+    into a simpler class. Inherits attributes and methods from RasterBase. Contains methods that are only relevant
+    to a single-band raster. A RasterLayer is initiated from an underlying rasterio.band object"""
+
     def __init__(self, band):
-        """Defines a read-only single band object with selected methods"""
 
         # access inherited methods/attributes overriden by __init__
         super().__init__(band)
@@ -383,24 +390,37 @@ class RasterLayer(BaseRasterMixin):
         self.dtype = band.dtype
         self.nodata = band.ds.nodata
         self.file = band.ds.files[0]
-        self.read = partial(band.ds.read, indexes=band.bidx)
         self.driver = band.ds.meta['driver']
         self.ds = band.ds
 
     def fill(self):
-        pass
+        raise NotImplementedError
 
     def sieve(self):
-        pass
+        raise NotImplementedError
 
     def clump(self):
-        pass
+        raise NotImplementedError
 
     def focal(self):
-        pass
+        raise NotImplementedError
 
 
-class Raster(BaseRasterMixin):
+class Raster(BaseRaster):
+    """Flexible class that represents a collection of file-based GDAL-supported raster datasets which share a common
+    coordinate reference system and geometry. Raster objects encapsulate RasterLayer objects, which represent single
+    band rasters that can physically be represented by separate single-band raster files, multi-band raster files, or
+    any combination of individual bands from multi-band rasters and single-band rasters. RasterLayer objects only exist
+    within Raster objects.
+
+    A Raster object should be created using the pyspatialml.from_files() function, where a single file, or a list of
+    files is passed as the fp argument.
+
+    Additional RasterLayer objects can be added to an existing Raster object using the append() method. Either the path
+    to file(s) or an existing RasterLayer from another Raster object can be passed to this method and those layers, if
+    they are spatially aligned, will be appended to the Raster object. Any RasterLayer can also be removed from a Raster
+    object using the drop() method."""
+
     def __init__(self, layers):
 
         self.loc = {}          # name-based indexing
@@ -412,11 +432,22 @@ class Raster(BaseRasterMixin):
         self.count = 0         # number of bands in stacked raster datasets
         self.res = None        # (x, y) resolution of aligned raster datasets
         self.meta = None       # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
-        self._layers = None     # set proxy for self._files
-        self.layers = layers    # call property
+        self._layers = None    # set proxy for self._files
+        self.layers = layers   # call property
 
-    def __getitem__(self, x):
-        return getattr(self, x)
+    def __getitem__(self, layername):
+        """Get a RasterLayer within the Raster object using label-based indexing"""
+
+        if layername in self.names is False:
+            raise AttributeError('layername not present in Raster object')
+
+        return getattr(self, layername)
+
+    def iterlayers(self):
+        """Iterate over Raster object layers"""
+
+        for k, v in self.loc.items():
+            yield k, v
 
     @property
     def layers(self):
@@ -550,10 +581,10 @@ class Raster(BaseRasterMixin):
 
         return dtype
 
-    def read(self, masked=False, window=None, out_shape=None, resampling='nearest'):
+    def read(self, masked=False, window=None, out_shape=None, resampling='nearest', **kwargs):
         """Reads data from the Raster object into a numpy array
 
-        Overrides read BaseRasterMixin read method and replaces it with a method that
+        Overrides read BaseRaster class read method and replaces it with a method that
         reads from multiple RasterLayer objects
 
         Args
@@ -575,10 +606,13 @@ class Raster(BaseRasterMixin):
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
             'max', 'med', 'min', 'mode', 'q1', 'q3'
 
+        **kwargs : dict
+            Other arguments to pass to rasterio.DatasetReader.read method
+
         Returns
         -------
         arr : ndarray
-            Raster values in 3d numpy array in [band, row, col] order"""
+            Raster values in 3d numpy array [band, row, col]"""
 
         dtype = self.meta['dtype']
 
@@ -613,7 +647,8 @@ class Raster(BaseRasterMixin):
                 masked=masked,
                 window=window,
                 out_shape=out_shape,
-                resampling=rasterio.enums.Resampling[resampling])
+                resampling=rasterio.enums.Resampling[resampling],
+                **kwargs)
 
         return arr
 

@@ -1,1 +1,1 @@
-from .__main import (from_files, RasterLayer, Raster, predict, crop, calc)
+from .__main import (from_files, Raster, predict, crop, calc)

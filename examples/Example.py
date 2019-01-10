@@ -23,6 +23,10 @@ stack = ps.from_files([band1, band2, band3, band4, band5, band7])
 stack.names
 df = stack.to_pandas()
 
+# iterate over layers
+for name, layer in stack.iterlayers():
+    print(layer)
+
 # Drop a layer
 stack.drop(labels='lsat7_2000_70')
 stack.names
@@ -30,7 +34,6 @@ stack.names
 # Add a layer
 stack.append(ps.from_files(band7))
 stack.names
-
 
 # Load some training data in the form of a shapefile of point feature locations:
 training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_polygons.shp'))
@@ -100,6 +103,7 @@ plt.show()
 # extract training data using a random sample
 df_rand = stack.sample(size=1000, random_state=1)
 df_rand.plot()
+plt.show()
 
 # extract training data using a stratified random sample from a map containing categorical data
 # here we are taking 50 samples per category
