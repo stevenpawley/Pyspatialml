@@ -9,14 +9,16 @@ from collections import OrderedDict
 
 
 class CrossValidateThreshold():
-    """Perform cross-validation and calculate scores using a cutoff threshold that
-       attains a minimum true positive rate"""
+    """
+    Perform cross-validation and calculate scores using a cutoff threshold that
+    attains a minimum true positive rate
+    """
 
     def __init__(self, estimator, scoring, cv=3, positive=1, n_jobs=1):
         """Initiate a class instance
 
-        Parameters
-        ----------
+        Args
+        ----
         estimator : estimator object implementing 'fit'
             The object to use to fit the data.
 
@@ -42,6 +44,7 @@ class CrossValidateThreshold():
         n_jobs : int, default=1
             Number of processing cores for multiprocessing
         """
+
         self.scoring = scoring
         self.cv = cv
         self.estimator = estimator
@@ -49,10 +52,11 @@ class CrossValidateThreshold():
         self.positive = positive
 
     def fit(self, X, y=None, groups=None, **fit_params):
-        """Run fit method with all sets of parameters
+        """
+        Run fit method with all sets of parameters
 
-        Parameters
-        ----------
+        Args
+        ----
         X : array-like, shape = [n_samples, n_features]
             Training vector, where n_samples is the number of samples and
             n_features is the number of features
@@ -65,7 +69,8 @@ class CrossValidateThreshold():
             Training vector groups for cross-validation
 
         **fit_params : dict of string -> object
-            Parameters passed to the ``fit`` method of the estimator"""
+            Parameters passed to the ``fit`` method of the estimator
+        """
 
         # check estimator and cv methods are valid
         self.cv = check_cv(self.cv, y, classifier=is_classifier(self.estimator))
@@ -88,11 +93,12 @@ class CrossValidateThreshold():
         self.test_idx_ = [indexes[1] for indexes in self.cv.split(X, y, groups)]
 
     def score(self, tpr_threshold=None, cutoff_threshold=None):
-        """Calculates the scoring metrics using a cutoff threshold that attains a true positive rate
+        """
+        Calculates the scoring metrics using a cutoff threshold that attains a true positive rate
         that is equal or greater than the desired tpr_threshold
 
-        Parameters
-        ----------
+        Args
+        ----
         tpr_threshold : float
             Minimum true positive rate to achieve
         cutoff_threshold : float
@@ -141,7 +147,8 @@ class CrossValidateThreshold():
 
 
 class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
-    """Metaclassifier to perform cutoff threshold optimization
+    """
+    Metaclassifier to perform cutoff threshold optimization
 
     This implementation is restricted to binary classification problems
 
@@ -152,15 +159,16 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
     - The metaclassifier trains the BaseEstimator on the k-1 partitions
     - The Kth paritions are used to determine the optimal cutoff taking
       the mean of the thresholds that maximize the scoring metric
-    - The optimal cutoff is applied to all classifier predictions"""
+    - The optimal cutoff is applied to all classifier predictions
+    """
 
     def __init__(self, estimator, thresholds=np.arange(0.1, 0.9, 0.01),
                  scoring=None, refit=False, cv=3, random_state=None):
 
         """Initialize a ThresholdClassifierCV instance
 
-        Parameters
-        ----------
+        Args
+        ----
         estimator : estimator object implementing 'fit'
             The object to use to fit the data.
 
@@ -215,7 +223,8 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
         Change the behaviour of the scoring parameters so that it accepts arguments
         in the same manner as scikit learn functions such as GridSearchCV, i.e. it
-        accepts string, callable, list/tuple, or dict"""
+        accepts string, callable, list/tuple, or dict
+        """
 
         # get dict of arguments from function call
         args, _, _, values = inspect.getargvalues(inspect.currentframe())
@@ -225,8 +234,10 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
             setattr(self, arg, val)
 
     def find_threshold(self, X, y=None):
-        """Finds the optimal cutoff threshold based on maximizing/minimizing the
-        scoring method"""
+        """
+        Finds the optimal cutoff threshold based on maximizing/minimizing the
+        scoring method
+        """
 
         estimator = self.estimator
         thresholds = self.thresholds
@@ -245,9 +256,11 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
         return top_threshold, top_score, scores
 
     def score(self, X, y):
-        """Overloading of classifier score method
+        """
+        Overloading of classifier score method
         score method is required for compatibility with GridSearch
-        The scoring metric should be one that can be maximized (bigger=better)"""
+        The scoring metric should be one that can be maximized (bigger=better)
+        """
 
         _threshold, score, _threshold_scores = self.find_threshold(X, y)
 
@@ -255,16 +268,19 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
     @staticmethod
     def scorer_cutoff(y, y_pred, scorer, cutoff):
-        """Helper method to binarize the probability scores based on a cutoff"""
+        """
+        Helper method to binarize the probability scores based on a cutoff
+        """
 
         y_pred = (y_pred[:, 1] > cutoff).astype(int)
         return scorer(y, y_pred)
 
     def fit(self, X, y=None, groups=None, **fit_params):
-        """Run fit method with all sets of parameters
+        """
+        Run fit method with all sets of parameters
 
-        Parameters
-        ----------
+        Args
+        ----
         X : array-like, shape = [n_samples, n_features]
             Training vector, where n_samples is the number of samples and
             n_features is the number of features
@@ -287,7 +303,8 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
         - Parameters are checked during the fit method
         - New attributes created during fitting should end in _, i.e. fitted_
         - Fit method needs to return self for compatibility reasons with sklearn
-        - The response vector, i.e. y, should be initiated with None"""
+        - The response vector, i.e. y, should be initiated with None
+        """
 
         # check estimator and cv methods are valid
         estimator = self.estimator
@@ -358,11 +375,11 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
 
 def specificity_score(y_true, y_pred):
-    """Calculate specificity score metric for a binary classification
+    """
+    Calculate specificity score metric for a binary classification
 
-    Parameters
-    ----------
-
+    Args
+    ----
     y_true : 1d array-like
         Ground truth (correct) labels
 
@@ -375,7 +392,8 @@ def specificity_score(y_true, y_pred):
     specificity : float
         Returns the specificity score, or true negative rate, i.e. the
         proportion of the negative label (label=0) samples that are correctly
-        classified as the negative label"""
+        classified as the negative label
+    """
 
     cm = confusion_matrix(y_true, y_pred)
     tn = float(cm[0][0])
@@ -386,12 +404,13 @@ def specificity_score(y_true, y_pred):
 
 def spatial_loocv(estimator, X, y, coordinates, size, radius,
                   random_state=None):
-    """Spatially buffered leave-One-out cross-validation
+    """
+    Spatially buffered leave-One-out cross-validation
     Uses a circular spatial buffer to separate samples that are used to train
     the estimator, from samples that are used to test the prediction accuracy
 
-    Parameters
-    ----------
+    Args
+    ----
     estimator : estimator object implementing 'fit'
         The object to use to fit the data
 
@@ -403,8 +422,7 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
         supervised learning
 
     coordinates : 2d-array like
-        Spatial coordinates, usually as xy, that correspond to each sample in
-        X
+        Spatial coordinates, usually as xy, that correspond to each sample in X
 
     size : int
         Sample size to process (number of leave-one-out runs)
@@ -429,7 +447,8 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
     Notes
     -----
     This python function was adapted from R code
-    https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/"""
+    https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/
+    """
 
     # determine number of classes and features
     n_classes = len(np.unique(y))

@@ -15,6 +15,18 @@ from shapely.geometry import Point
 from tqdm import tqdm
 
 def from_files(fp):
+    """
+    Create a Raster object from a GDAL-supported raster file, or list of files
+
+    Args
+    ----
+    fp : str, list
+        File path, or list of file paths to GDAL-supported rasters
+
+    Returns
+    -------
+    raster : pyspatialml.Raster object
+    """
 
     if isinstance(fp, str):
         fp = [fp]
@@ -33,9 +45,11 @@ def from_files(fp):
 
 
 class BaseRaster(object):
-    """Raster base class that contains methods that apply both to RasterLayer and Raster objects.
+    """
+    Raster base class that contains methods that apply both to RasterLayer and Raster objects.
     Wraps a rasterio.band object, which is a named tuple consisting of the file path, the band index, the dtype and
-    shape a individual band within a raster dataset"""
+    shape a individual band within a raster dataset
+    """
 
     def __init__(self, band):
         self.shape = band.shape
@@ -60,7 +74,8 @@ class BaseRaster(object):
 
     def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
              nodata=-99999, progress=True):
-        """Apply user-supplied function to a Raster object
+        """
+        Apply user-supplied function to a Raster object
 
         Args
         ----
@@ -84,7 +99,8 @@ class BaseRaster(object):
 
         Returns
         -------
-        pyspatialml.Raster object"""
+        pyspatialml.Raster object
+        """
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)
@@ -130,7 +146,8 @@ class BaseRaster(object):
         return raster
 
     def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
-        """Crops a Raster object by the supplied bounds
+        """
+        Crops a Raster object by the supplied bounds
 
         Args
         ----
@@ -151,7 +168,8 @@ class BaseRaster(object):
 
         Returns
         -------
-        pyspatialml.Raster object cropped to new extent"""
+        pyspatialml.Raster object cropped to new extent
+        """
 
         xmin, ymin, xmax, ymax = bounds
 
@@ -185,7 +203,8 @@ class BaseRaster(object):
         pass
 
     def sample(self, size, strata=None, return_array=False, random_state=None):
-        """Generates a random sample of according to size, and samples the pixel
+        """
+        Generates a random sample of according to size, and samples the pixel
         values from a GDAL-supported raster
 
         Args
@@ -214,7 +233,8 @@ class BaseRaster(object):
             Numpy array of extracted raster values, typically 2d
 
         valid_coordinates: 2d array-like
-            2D numpy array of xy coordinates of extracted values"""
+            2D numpy array of xy coordinates of extracted values
+        """
 
         # set the seed
         np.random.seed(seed=random_state)
@@ -313,8 +333,10 @@ class BaseRaster(object):
             return valid_samples, valid_coordinates
 
     def head(self):
-        """Show the head (first rows, first columns) or tail (last rows, last columns)
-         of the cells of a Raster object"""
+        """
+        Show the head (first rows, first columns) or tail (last rows, last columns)
+        of the cells of a Raster object
+        """
 
         window = Window(col_off=0, row_off=0, width=20, height=10)
         arr = self.read(window=window)
@@ -322,8 +344,10 @@ class BaseRaster(object):
         return arr
 
     def tail(self):
-        """Show the head (first rows, first columns) or tail (last rows, last columns)
-         of the cells of a Raster object"""
+        """
+        Show the head (first rows, first columns) or tail (last rows, last columns)
+        of the cells of a Raster object
+        """
 
         window = Window(col_off=self.width-20, row_off=self.height-10, width=20, height=10)
         arr = self.read(window=window)
@@ -331,7 +355,8 @@ class BaseRaster(object):
         return arr
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
-        """Raster to pandas DataFrame
+        """
+        Raster to pandas DataFrame
 
         Args
         ----
@@ -346,7 +371,8 @@ class BaseRaster(object):
 
         Returns
         -------
-        df : pandas DataFrame"""
+        df : pandas DataFrame
+        """
 
         n_pixels = self.shape[0] * self.shape[1]
         scaling = max_pixels / n_pixels
@@ -376,9 +402,11 @@ class BaseRaster(object):
 
 
 class RasterLayer(BaseRaster):
-    """A single-band raster object that wraps selected attributes and methods from a rasterio.band object
+    """
+    A single-band raster object that wraps selected attributes and methods from a rasterio.band object
     into a simpler class. Inherits attributes and methods from RasterBase. Contains methods that are only relevant
-    to a single-band raster. A RasterLayer is initiated from an underlying rasterio.band object"""
+    to a single-band raster. A RasterLayer is initiated from an underlying rasterio.band object
+    """
 
     def __init__(self, band):
 
@@ -407,7 +435,8 @@ class RasterLayer(BaseRaster):
 
 
 class Raster(BaseRaster):
-    """Flexible class that represents a collection of file-based GDAL-supported raster datasets which share a common
+    """
+    Flexible class that represents a collection of file-based GDAL-supported raster datasets which share a common
     coordinate reference system and geometry. Raster objects encapsulate RasterLayer objects, which represent single
     band rasters that can physically be represented by separate single-band raster files, multi-band raster files, or
     any combination of individual bands from multi-band rasters and single-band rasters. RasterLayer objects only exist
@@ -419,7 +448,8 @@ class Raster(BaseRaster):
     Additional RasterLayer objects can be added to an existing Raster object using the append() method. Either the path
     to file(s) or an existing RasterLayer from another Raster object can be passed to this method and those layers, if
     they are spatially aligned, will be appended to the Raster object. Any RasterLayer can also be removed from a Raster
-    object using the drop() method."""
+    object using the drop() method.
+    """
 
     def __init__(self, layers):
 
@@ -436,7 +466,9 @@ class Raster(BaseRaster):
         self.layers = layers   # call property
 
     def __getitem__(self, layername):
-        """Get a RasterLayer within the Raster object using label-based indexing"""
+        """
+        Get a RasterLayer within the Raster object using label-based indexing
+        """
 
         if layername in self.names is False:
             raise AttributeError('layername not present in Raster object')
@@ -444,19 +476,26 @@ class Raster(BaseRaster):
         return getattr(self, layername)
 
     def iterlayers(self):
-        """Iterate over Raster object layers"""
+        """
+        Iterate over Raster object layers
+        """
 
         for k, v in self.loc.items():
             yield k, v
 
     @property
     def layers(self):
-        """Getter method for file names within the Raster object"""
+        """
+        Getter method for file names within the Raster object
+        """
+
         return self._layers
 
     @layers.setter
     def layers(self, layers):
-        """Setter method for the files attribute in the Raster object"""
+        """
+        Setter method for the files attribute in the Raster object
+        """
 
         # some checks
         if isinstance(layers, RasterLayer):
@@ -516,8 +555,10 @@ class Raster(BaseRaster):
 
     @staticmethod
     def _check_alignment(layers):
-        """Check that a list of rasters are aligned with the same pixel dimensions
-        and geotransforms"""
+        """
+        Check that a list of rasters are aligned with the same pixel dimensions
+        and geotransforms
+        """
 
         src_meta = []
         for layer in layers:
@@ -535,12 +576,20 @@ class Raster(BaseRaster):
             return src_meta[0]
 
     def _make_name(self, name):
-        """Converts a filename to a valid class attribute name
+        """
+        Converts a filename to a valid class attribute name
 
         Args
         ----
         name : str
-            File name for convert to a valid class attribute name"""
+            File name for convert to a valid class attribute name
+
+        Returns
+        -------
+        valid_name : str
+            Syntatically-correct name of layer so that it can form a class instance
+            attribute
+        """
 
         valid_name = os.path.basename(name)
         valid_name = valid_name.split(os.path.extsep)[0]
@@ -553,8 +602,10 @@ class Raster(BaseRaster):
         return valid_name
 
     def _maximum_dtype(self):
-        """Returns a single dtype that is large enough to store data
-        within all raster bands"""
+        """
+        Returns a single dtype that is large enough to store data
+        within all raster bands
+        """
 
         if 'complex128' in self.dtypes:
             dtype = 'complex128'
@@ -582,7 +633,8 @@ class Raster(BaseRaster):
         return dtype
 
     def read(self, masked=False, window=None, out_shape=None, resampling='nearest', **kwargs):
-        """Reads data from the Raster object into a numpy array
+        """
+        Reads data from the Raster object into a numpy array
 
         Overrides read BaseRaster class read method and replaces it with a method that
         reads from multiple RasterLayer objects
@@ -612,7 +664,8 @@ class Raster(BaseRaster):
         Returns
         -------
         arr : ndarray
-            Raster values in 3d numpy array [band, row, col]"""
+            Raster values in 3d numpy array [band, row, col]
+        """
 
         dtype = self.meta['dtype']
 
@@ -655,7 +708,8 @@ class Raster(BaseRaster):
     def predict(self, estimator, file_path=None, predict_type='raw',
                 indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
                 progress=True):
-        """Apply prediction of a scikit learn model to a pyspatialml.Raster object
+        """
+        Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
         Args
         ----
@@ -687,7 +741,8 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        Raster object"""
+        Raster object
+        """
 
         # chose prediction function
         if predict_type == 'raw':
@@ -746,11 +801,13 @@ class Raster(BaseRaster):
         return raster
 
     def append(self, other):
-        """Setter method to add new Raster objects
+        """
+        Setter method to add new Raster objects
 
         Args
         ----
-        other : Raster object or list of Raster objects"""
+        other : Raster object or list of Raster objects
+        """
 
         if isinstance(other, Raster):
             self.layers = self.layers + other.layers
@@ -760,13 +817,15 @@ class Raster(BaseRaster):
                 self.layers = self.layers + raster.layers
 
     def drop(self, labels):
-        """Drop individual RasterLayers from a Raster object
+        """
+        Drop individual RasterLayers from a Raster object
 
         Args
         ----
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label,
-            or a list of integers or labels"""
+            or a list of integers or labels
+        """
 
         # convert single label to list
         if isinstance(labels, (str, int)):
@@ -786,10 +845,11 @@ class Raster(BaseRaster):
             raise ValueError('Cannot drop layers based on mixture of indexes and labels')
 
     def extract_xy(self, xy):
-        """Samples pixel values of a Raster using an array of xy locations
+        """
+        Samples pixel values of a Raster using an array of xy locations
 
-        Parameters
-        ----------
+        Args
+        ----
         xy : 2d array-like
             x and y coordinates from which to sample the raster (n_samples, xy)
 
@@ -797,7 +857,8 @@ class Raster(BaseRaster):
         -------
         values : 2d array-like
             Masked array containing sampled raster values (sample, bands)
-            at x,y locations"""
+            at x,y locations
+        """
 
         # clip coordinates to extent of raster
         extent = self.bounds
@@ -822,7 +883,9 @@ class Raster(BaseRaster):
         return values
 
     def _extract_by_indices(self, rows, cols):
-        """spatial query of Raster object (by-band)"""
+        """
+        Spatial query of Raster object (by-band)
+        """
 
         X = np.ma.zeros((len(rows), self.count))
 
@@ -833,7 +896,9 @@ class Raster(BaseRaster):
         return X
 
     def _clip_xy(self, xy, y=None):
-        """Clip array of xy coordinates to extent of Raster object"""
+        """
+        Clip array of xy coordinates to extent of Raster object
+        """
 
         extent = self.bounds
         valid_idx = np.where((xy[:, 0] > extent.left) &
@@ -848,7 +913,8 @@ class Raster(BaseRaster):
         return xy, y
 
     def extract_vector(self, response, field=None, return_array=False, na_rm=True, low_memory=False):
-        """Sample a Raster object by a geopandas GeoDataframe containing points,
+        """
+        Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
 
         Args
@@ -887,7 +953,8 @@ class Raster(BaseRaster):
 
         xy: 2d array-like
             Numpy masked array of row and column indexes of training pixels
-            Returned only if return_array is True"""
+            Returned only if return_array is True
+        """
 
         if not field:
             y = None
@@ -986,7 +1053,8 @@ class Raster(BaseRaster):
             return X, y, xy
 
     def extract_raster(self, response, value_name='value', return_array=False, na_rm=True):
-        """Sample a Raster object by an aligned raster of labelled pixels
+        """
+        Sample a Raster object by an aligned raster of labelled pixels
 
         Args
         ----
@@ -1012,7 +1080,8 @@ class Raster(BaseRaster):
             Numpy masked array of labelled sampled
 
         xy: 2d array-like
-            Numpy masked array of row and column indexes of training pixels"""
+            Numpy masked array of row and column indexes of training pixels
+        """
 
         # open response raster and get labelled pixel indices and values
         arr = response.read(1, masked=True)
@@ -1045,10 +1114,11 @@ class Raster(BaseRaster):
             return X, y, xy
 
 def _predfun(img, estimator):
-    """Prediction function for classification or regression response
+    """
+    Prediction function for classification or regression response
 
-    Parameters
-    ----------
+    Args
+    ----
     img : 3d numpy array of raster data
 
     estimator : estimator object implementing 'fit'
@@ -1058,7 +1128,8 @@ def _predfun(img, estimator):
     -------
     result_cla : 2d numpy array
         Single band raster as a 2d numpy array containing the
-        classification or regression result"""
+        classification or regression result
+    """
 
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
 
@@ -1086,10 +1157,11 @@ def _predfun(img, estimator):
 
 
 def _probfun(img, estimator):
-    """Class probabilities function
+    """
+    Class probabilities function
 
-    Parameters
-    ----------
+    Args
+    ----
     img : 3d numpy array of raster data [band, row, col]
 
     estimator : estimator object implementing 'fit'
@@ -1100,7 +1172,8 @@ def _probfun(img, estimator):
     result_proba : 3d numpy array
         Multi band raster as a 3d numpy array containing the
         probabilities associated with each class.
-        Array is in (class, row, col) order"""
+        Array is in (class, row, col) order
+    """
 
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
 
@@ -1136,11 +1209,12 @@ def _probfun(img, estimator):
 
 
 def _maximum_dtype(src):
-    """Returns a single dtype that is large enough to store data
+    """
+    Returns a single dtype that is large enough to store data
     within all raster bands
 
-    Parameters
-    ----------
+    Args
+    ----
     src : rasterio.io.DatasetReader
         Rasterio datasetreader in the opened mode
 
@@ -1148,7 +1222,8 @@ def _maximum_dtype(src):
     -------
     dtype : str
         Dtype that is sufficiently large to store all raster
-        bands in a single numpy array"""
+        bands in a single numpy array
+    """
 
     if 'complex128' in src.dtypes:
         dtype = 'complex128'
@@ -1178,11 +1253,12 @@ def _maximum_dtype(src):
 
 def predict(estimator, dataset, file_path=None, predict_type='raw',
             indexes=None, driver='GTiff', dtype='float32', nodata=-99999):
-    """Apply prediction of a scikit learn model to a GDAL-supported
+    """
+    Apply prediction of a scikit learn model to a GDAL-supported
     raster dataset
 
-    Parameters
-    ----------
+    Args
+    ----
     estimator : estimator object implementing 'fit'
         The object to use to fit the data
 
@@ -1211,7 +1287,8 @@ def predict(estimator, dataset, file_path=None, predict_type='raw',
 
     Returns
     -------
-    rasterio.io.DatasetReader with predicted raster"""
+    rasterio.io.DatasetReader with predicted raster
+    """
 
     src = dataset
 
@@ -1283,11 +1360,12 @@ def predict(estimator, dataset, file_path=None, predict_type='raw',
 
 def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32',
          nodata=-99999):
-    """Apply prediction of a scikit learn model to a GDAL-supported
+    """
+    Apply prediction of a scikit learn model to a GDAL-supported
     raster dataset
 
-    Parameters
-    ----------
+    Args
+    ----
     dataset : rasterio.io.DatasetReader
         An opened Rasterio DatasetReader
 
@@ -1308,7 +1386,8 @@ def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32',
 
     Returns
     -------
-    rasterio.io.DatasetReader containing result of function output"""
+    rasterio.io.DatasetReader containing result of function output
+    """
 
     src = dataset
 
@@ -1366,7 +1445,8 @@ def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32',
 
 
 def crop(dataset, bounds, file_path=None, driver='GTiff'):
-    """Crops a rasterio dataset by the supplied bounds
+    """
+    Crops a rasterio dataset by the supplied bounds
 
     dataset : rasterio.io.DatasetReader
         An opened Rasterio DatasetReader
@@ -1385,7 +1465,8 @@ def crop(dataset, bounds, file_path=None, driver='GTiff'):
 
     Returns
     -------
-    rasterio.io.DatasetReader with the cropped raster"""
+    rasterio.io.DatasetReader with the cropped raster
+    """
 
     src = dataset
 

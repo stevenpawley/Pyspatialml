@@ -13,11 +13,12 @@ from .__main import _maximum_dtype
 
 
 def extract_xy(xy, dataset):
-    """Samples pixel values from a GDAL-supported raster dataset
+    """
+    Samples pixel values from a GDAL-supported raster dataset
     using an array of xy locations
 
-    Parameters
-    ----------
+    Args
+    ----
     xy : 2d array-like
         x and y coordinates from which to sample the raster (n_samples, xy)
 
@@ -28,7 +29,8 @@ def extract_xy(xy, dataset):
     -------
     data : 2d array-like
         Masked array containing sampled raster values (sample, bands)
-        at x,y locations"""
+        at x,y locations
+    """
 
     src = dataset
 
@@ -56,11 +58,12 @@ def extract_xy(xy, dataset):
 
 
 def sample(size, dataset, strata=None, random_state=None):
-    """Generates a random sample of according to size, and samples the pixel
+    """
+    Generates a random sample of according to size, and samples the pixel
     values from a GDAL-supported raster
 
-    Parameters
-    ----------
+    Args
+    ----
     size : int
         Number of random samples or number of samples per strata
         if strategy='stratified'
@@ -81,7 +84,8 @@ def sample(size, dataset, strata=None, random_state=None):
         Numpy array of extracted raster values, typically 2d
 
     valid_coordinates: 2d array-like
-        2D numpy array of xy coordinates of extracted values"""
+        2D numpy array of xy coordinates of extracted values
+    """
 
     src = dataset
 
@@ -176,10 +180,11 @@ def sample(size, dataset, strata=None, random_state=None):
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
-    """Filter points in geodataframe using a minimum distance buffer
+    """
+    Filter points in geodataframe using a minimum distance buffer
 
-    Parameters
-    ----------
+    Args
+    ----
     gdf : Geopandas GeoDataFrame
         Containing point geometries
 
@@ -192,7 +197,8 @@ def filter_points(gdf, min_dist=0, remove='first'):
     Returns
     -------
     xy : 2d array-like
-        Numpy array filtered coordinates"""
+        Numpy array filtered coordinates
+    """
 
     xy = gdf.geometry.bounds.iloc[:, 0:2]
     dm = distance_matrix(xy, xy)
@@ -209,12 +215,13 @@ def filter_points(gdf, min_dist=0, remove='first'):
 
 
 def extract(dataset, response, field=None):
-    """Sample a GDAL-supported raster dataset point of polygon
+    """
+    Sample a GDAL-supported raster dataset point of polygon
     features in a Geopandas Geodataframe or a labelled singleband
     raster dataset
 
-    Parameters
-    ----------
+    Args
+    ----
     dataset : rasterio.io.DatasetReader
         Opened Rasterio DatasetReader containing data to be sampled
         Raster can be a multi-band raster or a virtual tile format raster
@@ -236,7 +243,8 @@ def extract(dataset, response, field=None):
         Numpy masked array of labelled sampled
 
     xy: 2d array-like
-        Numpy masked array of row and column indexes of training pixels"""
+        Numpy masked array of row and column indexes of training pixels
+    """
 
     src = dataset
 
@@ -360,16 +368,18 @@ def extract(dataset, response, field=None):
 
 
 def get_random_point_in_polygon(poly):
-    """Generates random shapely Point geometry objects within a single
+    """
+    Generates random shapely Point geometry objects within a single
     shapely Polygon object
 
-    Parameters
-    ----------
+    Args
+    ----
     poly : Shapely Polygon object
 
     Returns
     -------
-    p : Shapely Point object"""
+    p : Shapely Point object
+    """
 
     (minx, miny, maxx, maxy) = poly.bounds
 
