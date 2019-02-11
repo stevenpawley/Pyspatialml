@@ -1,6 +1,7 @@
-tqdm
-rasterio
-geopandas
 numpy
 scipy
+tqdm
+rasterio
+pandas
 shapely
+geopandas

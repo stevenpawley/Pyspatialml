@@ -1,8 +1,10 @@
 import os
 import tempfile
-from collections import namedtuple
+import re
+from collections import namedtuple, OrderedDict
 from itertools import chain
 from functools import partial
+from copy import deepcopy
 
 import geopandas as gpd
 import numpy as np
@@ -14,28 +16,34 @@ from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
 
-def from_files(fp):
+def from_files(file_path, mode='r'):
     """
     Create a Raster object from a GDAL-supported raster file, or list of files
 
     Args
     ----
-    fp : str, list
+    file_path : str, list
         File path, or list of file paths to GDAL-supported rasters
+
+    mode : str
+        File open mode. Mode must be one of 'r', 'r+', or 'w'
 
     Returns
     -------
     raster : pyspatialml.Raster object
     """
 
-    if isinstance(fp, str):
-        fp = [fp]
+    if isinstance(file_path, str):
+        file_path = [file_path]
+
+    if mode not in ['r', 'r+', 'w']:
+        raise ValueError("mode must be one of 'r', 'r+', or 'w'")
 
     # get band objects from datasets
     bands = []
 
-    for f in fp:
-        src = rasterio.open(f)
+    for f in file_path:
+        src = rasterio.open(f, mode=mode)
         for i in range(src.count):
             band = rasterio.band(src, i+1)
             bands.append(RasterLayer(band))
@@ -46,9 +54,10 @@ def from_files(fp):
 
 class BaseRaster(object):
     """
-    Raster base class that contains methods that apply both to RasterLayer and Raster objects.
-    Wraps a rasterio.band object, which is a named tuple consisting of the file path, the band index, the dtype and
-    shape a individual band within a raster dataset
+    Raster base class that contains methods that apply both to RasterLayer and
+    Raster objects. Wraps a rasterio.band object, which is a named tuple
+    consisting of the file path, the band index, the dtype and shape a
+    individual band within a raster dataset
     """
 
     def __init__(self, band):
@@ -59,6 +68,11 @@ class BaseRaster(object):
         self.height = band.ds.height
         self.bounds = band.ds.bounds  # BoundingBox class (namedtuple) ('left', 'bottom', 'right', 'top')
         self.read = partial(band.ds.read, indexes=band.bidx)
+
+        try:
+            self.write = partial(band.ds.write, indexes=band.bidx)
+        except AttributeError:
+            pass
 
     def reproject(self):
         raise NotImplementedError
@@ -141,9 +155,7 @@ class BaseRaster(object):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result.astype(dtype), window=window)
 
-        raster = from_files(file_path)
-
-        return raster
+        return self._newraster(file_path)
 
     def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
         """
@@ -176,7 +188,10 @@ class BaseRaster(object):
         rows, cols = rasterio.transform.rowcol(
             self.transform, xs=(xmin, xmax), ys=(ymin, ymax))
 
-        window = Window(col_off=min(cols), row_off=min(rows), width=max(cols)-min(cols), height=max(rows)-min(rows))
+        window = Window(col_off=min(cols),
+                        row_off=min(rows),
+                        width=max(cols)-min(cols),
+                        height=max(rows)-min(rows))
 
         cropped_arr = self.read(masked=True, window=window)
         meta = self.meta
@@ -193,14 +208,35 @@ class BaseRaster(object):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr)
 
-        # create new Raster object
+        return self._newraster(file_path, self.names)
+
+    def _newraster(self, file_path, names=None):
+        """
+        Return a new Raster object
+
+        Args
+        ----
+        file_path : str
+            Path to files to create the new Raster object from
+        names : list, optional
+            List to name the RasterLayer objects in the stack. If not supplied
+            then the names will be generated from the filename
+
+        Returns
+        -------
+        raster : pyspatialml.Raster object
+        """
+
         raster = from_files(file_path)
-        raster.names = self.names
+
+        if names is not None:
+            rename = {old : new for old, new in zip(raster.names, self.names)}
+            raster.rename(rename)
 
         return raster
 
     def plot(self):
-        pass
+        raise NotImplementedError
 
     def sample(self, size, strata=None, return_array=False, random_state=None):
         """
@@ -214,8 +250,8 @@ class BaseRaster(object):
             if strategy='stratified'
 
         strata : rasterio.io.DatasetReader, optional (default=None)
-            To use stratified instead of random sampling, strata can be supplied
-            using an open rasterio DatasetReader object
+            To use stratified instead of random sampling, strata can be
+            supplied using an open rasterio DatasetReader object
 
         return_array : bool, default = False
             Optionally return extracted data as separate X, y and xy
@@ -334,8 +370,8 @@ class BaseRaster(object):
 
     def head(self):
         """
-        Show the head (first rows, first columns) or tail (last rows, last columns)
-        of the cells of a Raster object
+        Show the head (first rows, first columns) or tail
+        (last rows, last columns) of the cells of a Raster object
         """
 
         window = Window(col_off=0, row_off=0, width=20, height=10)
@@ -345,11 +381,14 @@ class BaseRaster(object):
 
     def tail(self):
         """
-        Show the head (first rows, first columns) or tail (last rows, last columns)
-        of the cells of a Raster object
+        Show the head (first rows, first columns) or tail
+        (last rows, last columns) of the cells of a Raster object
         """
 
-        window = Window(col_off=self.width-20, row_off=self.height-10, width=20, height=10)
+        window = Window(col_off=self.width-20,
+                        row_off=self.height-10,
+                        width=20,
+                        height=10)
         arr = self.read(window=window)
 
         return arr
@@ -403,9 +442,11 @@ class BaseRaster(object):
 
 class RasterLayer(BaseRaster):
     """
-    A single-band raster object that wraps selected attributes and methods from a rasterio.band object
-    into a simpler class. Inherits attributes and methods from RasterBase. Contains methods that are only relevant
-    to a single-band raster. A RasterLayer is initiated from an underlying rasterio.band object
+    A single-band raster object that wraps selected attributes and methods from
+    a rasterio.band object into a simpler class. Inherits attributes and
+    methods from RasterBase. Contains methods that are only relevant to a
+    single-band raster. A RasterLayer is initiated from an underlying
+    rasterio.band object
     """
 
     def __init__(self, band):
@@ -436,34 +477,39 @@ class RasterLayer(BaseRaster):
 
 class Raster(BaseRaster):
     """
-    Flexible class that represents a collection of file-based GDAL-supported raster datasets which share a common
-    coordinate reference system and geometry. Raster objects encapsulate RasterLayer objects, which represent single
-    band rasters that can physically be represented by separate single-band raster files, multi-band raster files, or
-    any combination of individual bands from multi-band rasters and single-band rasters. RasterLayer objects only exist
-    within Raster objects.
+    Flexible class that represents a collection of file-based GDAL-supported
+    raster datasets which share a common coordinate reference system and
+    geometry. Raster objects encapsulate RasterLayer objects, which represent
+    single band rasters that can physically be represented by separate
+    single-band raster files, multi-band raster files, or any combination of
+    individual bands from multi-band rasters and single-band rasters.
+    RasterLayer objects only exist within Raster objects.
 
-    A Raster object should be created using the pyspatialml.from_files() function, where a single file, or a list of
-    files is passed as the fp argument.
+    A Raster object should be created using the pyspatialml.from_files()
+    function, where a single file, or a list of files is passed as the file_path
+    argument.
 
-    Additional RasterLayer objects can be added to an existing Raster object using the append() method. Either the path
-    to file(s) or an existing RasterLayer from another Raster object can be passed to this method and those layers, if
-    they are spatially aligned, will be appended to the Raster object. Any RasterLayer can also be removed from a Raster
-    object using the drop() method.
+    Additional RasterLayer objects can be added to an existing Raster object
+    using the append() method. Either the path to file(s) or an existing
+    RasterLayer from another Raster object can be passed to this method and
+    those layers, if they are spatially aligned, will be appended to the Raster
+    object. Any RasterLayer can also be removed from a Raster object using the
+    drop() method.
     """
 
     def __init__(self, layers):
 
-        self.loc = {}          # name-based indexing
-        self.iloc = []         # index-based indexing
-        self.names = []        # syntactically-valid names of datasets with appended band number
-        self.files = []        # files that are linked to as RasterLayer objects
-        self.dtypes = []       # dtypes of stacked raster datasets and bands
-        self.nodatavals = []   # no data values of stacked raster datasets and bands
-        self.count = 0         # number of bands in stacked raster datasets
-        self.res = None        # (x, y) resolution of aligned raster datasets
-        self.meta = None       # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
-        self._layers = None    # set proxy for self._files
-        self.layers = layers   # call property
+        self.loc = OrderedDict()  # name-based indexing
+        self.iloc = []            # index-based indexing
+        self.names = []           # syntactically-valid names of datasets with appended band number
+        self.files = []           # files that are linked to as RasterLayer objects
+        self.dtypes = []          # dtypes of stacked raster datasets and bands
+        self.nodatavals = []      # no data values of stacked raster datasets and bands
+        self.count = 0            # number of bands in stacked raster datasets
+        self.res = None           # (x, y) resolution of aligned raster datasets
+        self.meta = None          # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
+        self._layers = None       # set proxy for self._files
+        self.layers = layers      # call property
 
     def __getitem__(self, layername):
         """
@@ -485,10 +531,6 @@ class Raster(BaseRaster):
 
     @property
     def layers(self):
-        """
-        Getter method for file names within the Raster object
-        """
-
         return self._layers
 
     @layers.setter
@@ -513,6 +555,7 @@ class Raster(BaseRaster):
         for name in self.names:
             delattr(self, name)
         self.iloc = []
+        self.loc = OrderedDict()
         self.names = []
         self.files = []
         self.dtypes = []
@@ -587,13 +630,21 @@ class Raster(BaseRaster):
         Returns
         -------
         valid_name : str
-            Syntatically-correct name of layer so that it can form a class instance
-            attribute
+            Syntatically-correct name of layer so that it can form a class
+            instance attribute
         """
 
+        # replace spaces with underscore
         valid_name = os.path.basename(name)
         valid_name = valid_name.split(os.path.extsep)[0]
         valid_name = valid_name.replace(' ', '_')
+        
+        # ensure that does not start with number
+        if valid_name[0].isdigit():
+            valid_name = "x" + valid_name
+        
+        # remove parentheses and brackets
+        valid_name = re.sub(r'[\[\]\(\)\{\}\;]','', valid_name)
 
         # check to see if same name already exists
         if valid_name in self.names:
@@ -636,8 +687,8 @@ class Raster(BaseRaster):
         """
         Reads data from the Raster object into a numpy array
 
-        Overrides read BaseRaster class read method and replaces it with a method that
-        reads from multiple RasterLayer objects
+        Overrides read BaseRaster class read method and replaces it with a
+        method that reads from multiple RasterLayer objects
 
         Args
         ----
@@ -663,7 +714,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        arr : ndarray
+        arr : ndarraySubnautica Below Zero is going into Early Access on Mac & Windows PC. We want to bring Below Zero to Xbox One and PlayStation 4 as soon as possible.
             Raster values in 3d numpy array [band, row, col]
         """
 
@@ -704,6 +755,48 @@ class Raster(BaseRaster):
                 **kwargs)
 
         return arr
+
+    def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
+        """
+        Write the Raster object to a file
+
+        Overrides the write RasterBase class method, which is a partial
+        function of the rasterio.DatasetReader.write method
+
+        Args
+        ----
+        file_path : str
+            File path to save the Raster object as a multiband file-based
+            raster dataset
+
+        driver : str, default = GTiff
+            GDAL compatible driver
+
+        dtype : str, optional
+            Optionally specify a data type when saving to file. Otherwise
+            a datatype is selected based on the RasterLayers in the stack
+
+        nodata : int, float, optional
+            Optionally assign a new nodata value when saving to file. Otherwise
+            a nodata value that is appropriate for the dtype is used
+        """
+
+        if dtype is None:
+            dtype = self.meta['dtype']
+
+        if nodata is None:
+            nodata = np.iinfo(dtype).min
+
+        with rasterio.open(file_path, mode='w', driver=driver, nodata=nodata,
+                           **self.meta) as dst:
+
+            for i, layer in enumerate(self.iloc):
+                arr = layer.read()
+                arr[arr == layer.nodata] = nodata
+
+                dst.write(arr.astype(dtype), i+1)
+
+        return self._newraster(file_path)
 
     def predict(self, estimator, file_path=None, predict_type='raw',
                 indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
@@ -808,13 +901,23 @@ class Raster(BaseRaster):
         ----
         other : Raster object or list of Raster objects
         """
-
+        
         if isinstance(other, Raster):
-            self.layers = self.layers + other.layers
+            other = [other]
 
-        elif isinstance(other, list):
-            for raster in other:
-                self.layers = self.layers + raster.layers
+        for new_raster in other:
+            existing_names = deepcopy(self.names)
+            other_names = deepcopy(new_raster.names)
+        
+            # update layers
+            self.layers += new_raster.layers
+            reset_names = self.names
+            
+            # generate dict to replace newly generated names with names from
+            # the two existing Raster objects
+            renamed = {reset_names[i]: newname for i, newname in enumerate(
+                existing_names + other_names)}
+            self.rename(renamed)
 
     def drop(self, labels):
         """
@@ -843,6 +946,30 @@ class Raster(BaseRaster):
 
         else:
             raise ValueError('Cannot drop layers based on mixture of indexes and labels')
+
+    def rename(self, names):
+        """
+        Setter method to add new Raster objects
+
+        Args
+        ----
+        other : Raster object or list of Raster objects
+        """
+        
+        for old_name, new_name in names.items():
+            # get layer and index of layer
+            layer = self.loc[old_name]
+            idx = self.names.index(old_name)
+            
+            # change name to new name
+            self.names[idx] = new_name
+            self.loc[new_name] = self.loc.pop(old_name)
+            
+            setattr(self, new_name, layer)
+            
+            # delete the attribute if it has changed
+            if new_name != old_name:
+                delattr(self, old_name)
 
     def extract_xy(self, xy):
         """
@@ -912,7 +1039,8 @@ class Raster(BaseRaster):
 
         return xy, y
 
-    def extract_vector(self, response, field=None, return_array=False, na_rm=True, low_memory=False):
+    def extract_vector(self, response, field=None, return_array=False,
+                       duplicates='keep', na_rm=True, low_memory=False):
         """
         Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
@@ -930,6 +1058,10 @@ class Raster(BaseRaster):
         return_array : bool, default = False
             Optionally return extracted data as separate X, y and xy
             masked numpy arrays
+        
+        duplicates : str, default = 'keep'
+            Method to deal with duplicates points that fall inside the same
+            pixel. Available options are ['keep', 'mean', min', 'max']
 
         na_rm : bool, default = True
             Optionally remove rows that contain nodata values
@@ -958,6 +1090,10 @@ class Raster(BaseRaster):
 
         if not field:
             y = None
+        
+        duplicate_methods = ['keep', 'mean', 'min', 'max']
+        if duplicates not in duplicate_methods:
+            raise ValueError('duplicates must be one of ' + str(duplicate_methods))
 
         # polygon and line geometries
         if all(response.geom_type == 'Polygon') or all(response.geom_type == 'LineString'):
@@ -980,7 +1116,8 @@ class Raster(BaseRaster):
                 arr[:] = -99999
                 arr = rasterio.features.rasterize(
                     shapes=(shapes for i in range(1)), fill=-99999, out=arr,
-                    transform=self.transform, default_value=1, all_touched=all_touched)
+                    transform=self.transform, default_value=1,
+                    all_touched=all_touched)
 
                 rows, cols = np.nonzero(arr != -99999)
 
@@ -1008,6 +1145,23 @@ class Raster(BaseRaster):
             xy, y = self._clip_xy(xy, y)
             rows, cols = rasterio.transform.rowcol(
                 transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
+            
+            # deal with duplicate points that fall inside same pixel
+            if duplicates != "keep":
+                rowcol_df = pd.DataFrame(
+                    np.column_stack((rows, cols, y)),
+                    columns=['row', 'col'] + field)
+                rowcol_df['Duplicated'] = rowcol_df.loc[:, ['row', 'col']].duplicated()
+        
+                if duplicates == 'mean':
+                    rowcol_df = rowcol_df.groupby(by=['Duplicated', 'row', 'col'], sort=False).mean().reset_index()
+                elif duplicates == 'min':
+                    rowcol_df = rowcol_df.groupby(by=['Duplicated', 'row', 'col'], sort=False).min().reset_index()
+                elif duplicates == 'max':
+                    rowcol_df = rowcol_df.groupby(by=['Duplicated', 'row', 'col'], sort=False).max().reset_index()
+        
+                rows, cols = rowcol_df['row'].values, rowcol_df['col'].values
+                y = rowcol_df[field].values
 
         # spatial query of Raster object (by-band)
         if low_memory is False:
@@ -1052,7 +1206,8 @@ class Raster(BaseRaster):
         else:
             return X, y, xy
 
-    def extract_raster(self, response, value_name='value', return_array=False, na_rm=True):
+    def extract_raster(self, response, value_name='value', return_array=False,
+                       na_rm=True):
         """
         Sample a Raster object by an aligned raster of labelled pixels
 

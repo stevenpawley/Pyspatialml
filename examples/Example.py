@@ -35,6 +35,20 @@ stack.names
 stack.append(ps.from_files(band7))
 stack.names
 
+# Modifify a layer
+templayer = ps.from_files(band1, mode='r+')
+arr = templayer.lsat7_2000_10.read(window=Window(0, 0, 100, 100))
+arr[:] += 500
+templayer.lsat7_2000_10.write(arr, window=Window(0, 0, 100, 100))
+ras = templayer.lsat7_2000_10.read(masked=True)
+plt.imshow(ras)
+templayer = None
+
+# Save a stack
+newstack = stack.write(file_path="/home/steven/Downloads/test.tif", nodata=-99)
+newstack.test_1.read()
+newstack=None
+
 # Load some training data in the form of a shapefile of point feature locations:
 training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_polygons.shp'))
 training_pt = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'tests', 'landsat96_points.shp'))
@@ -56,8 +70,6 @@ df_polygons = stack.extract_vector(response=training_py, field='id')
 df_lines = stack.extract_vector(response=training_lines, field='id')
 df_raster = stack.extract_raster(response=training_px, value_name='id')
 df_points.head()
-
-layer.extract_vector(response=training_pt, field='id')
 
 # Next we can train a logistic regression classifier:
 from sklearn.linear_model import LogisticRegressionCV
