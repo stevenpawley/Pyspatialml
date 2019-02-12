@@ -5,14 +5,15 @@ from collections import namedtuple, OrderedDict
 from itertools import chain
 from functools import partial
 from copy import deepcopy
+from collections import Counter
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
+from rasterio import features
 from shapely.geometry import Point
 from tqdm import tqdm
 
@@ -475,6 +476,70 @@ class RasterLayer(BaseRaster):
         raise NotImplementedError
 
 
+class RasterIndex(object):
+    """
+    Provides label-based indexing and subsetting for Raster objects
+    
+    RasterIndex is initiated from within a Raster object which passes
+    self to the RasterIndex class
+    
+    The sole purpose of the RasterIndex class is so that a .loc attribute
+    in a Raster object does have had to represent a simple dict of 
+    RasterLayer name, value pairs. A dict can only be indexed using a single 
+    key argument, and would only return the individual RasterLayers.
+    
+    Instead the .loc attribute in the Raster object refers to a
+    RasterIndex class, which extends the concept of a dict to multiple keys,
+    and also returns a new Raster object containing the subset of RasterLayers
+    """
+    
+    def __init__(self, Raster):
+        self.loc = OrderedDict()
+        self.parent = Raster
+            
+    def __getitem__(self, items):
+        """
+        Subset the Raster object using label-based indexes
+        Returns a new Raster object only containing those layers
+        """
+
+        if isinstance(items, (int, str)):
+            items = [items]
+        
+        subset_layers = []
+        
+        for i in items:
+            
+            if isinstance(i, str):
+                if i in self.parent.names is False:
+                    raise KeyError('layername not present in Raster object')
+                else:
+                    subset_layers.append(getattr(self.parent, i))
+            
+            elif isinstance(i, (int)):
+                subset_layers.append(self.parent.layers[i])
+
+        subset_raster = Raster(subset_layers)
+        subset_raster.rename(
+            {old:new for old, new in zip(subset_raster.names, items)})
+                
+        return subset_raster
+
+
+class RasteriLocIndex(object):
+    
+    def __init__(self, Raster):
+        self.iloc = []
+        self.parent = Raster
+            
+    def __getitem__(self, items):
+        """
+        Subset the Raster object using int indexes or a slice
+        Returns a new Raster object only containing those layers
+        """
+        return Raster(self.iloc[items])
+
+
 class Raster(BaseRaster):
     """
     Flexible class that represents a collection of file-based GDAL-supported
@@ -499,34 +564,34 @@ class Raster(BaseRaster):
 
     def __init__(self, layers):
 
-        self.loc = OrderedDict()  # name-based indexing
-        self.iloc = []            # index-based indexing
-        self.names = []           # syntactically-valid names of datasets with appended band number
-        self.files = []           # files that are linked to as RasterLayer objects
-        self.dtypes = []          # dtypes of stacked raster datasets and bands
-        self.nodatavals = []      # no data values of stacked raster datasets and bands
-        self.count = 0            # number of bands in stacked raster datasets
-        self.res = None           # (x, y) resolution of aligned raster datasets
-        self.meta = None          # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
-        self._layers = None       # set proxy for self._files
-        self.layers = layers      # call property
+        self.loc = RasterIndex(self)  # label-based indexing
+        self.iloc = RasteriLocIndex(self)     # integer-based indexing
+        self.names = []               # syntactically-valid names of datasets with appended band number
+        self.files = []               # files that are linked to as RasterLayer objects
+        self.dtypes = []              # dtypes of stacked raster datasets and bands
+        self.nodatavals = []          # no data values of stacked raster datasets and bands
+        self.count = 0                # number of bands in stacked raster datasets
+        self.res = None               # (x, y) resolution of aligned raster datasets
+        self.meta = None              # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
+        
+        self._layers = None           # set proxy for self._files
+        self.layers = layers          # call property
 
-    def __getitem__(self, layername):
+    def __getitem__(self, items):
         """
-        Get a RasterLayer within the Raster object using label-based indexing
+        Subset the Raster object using int indexes, labels or a slice
+        
+        Returns a new Raster object only containing those layers
         """
-
-        if layername in self.names is False:
-            raise AttributeError('layername not present in Raster object')
-
-        return getattr(self, layername)
+        
+        return self.loc[items]
 
     def iterlayers(self):
         """
         Iterate over Raster object layers
         """
 
-        for k, v in self.loc.items():
+        for k, v in self.loc.loc.items():
             yield k, v
 
     @property
@@ -540,11 +605,20 @@ class Raster(BaseRaster):
         """
 
         # some checks
+        if isinstance(layers, tuple):
+            layers, names = layers
+        else:
+            names = None
+                    
         if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
             raise ValueError('Cannot create a Raster object from a mixture of input types')
+
+        if names is not None:        
+            if len(names) != len(layers):
+                raise ValueError ('Number of layer names has to match the number of layers')
 
         meta = self._check_alignment(layers)
         if meta is False:
@@ -554,8 +628,8 @@ class Raster(BaseRaster):
         # reset existing attributes
         for name in self.names:
             delattr(self, name)
-        self.iloc = []
-        self.loc = OrderedDict()
+        self.loc = RasterIndex(self)
+        self.iloc = RasteriLocIndex(self)
         self.names = []
         self.files = []
         self.dtypes = []
@@ -576,17 +650,20 @@ class Raster(BaseRaster):
 
         # update attributes per dataset
         for i, layer in enumerate(layers):
-            valid_name = self._make_name(layer.file)
             self.dtypes.append(layer.dtype)
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
 
-            if layer.ds.count > 1:
-                valid_name = '_'.join([valid_name, str(layer.bidx)])
-
+            if names is not None:
+                valid_name = names[i]
+            else:
+                valid_name = self._make_name(layer.file)
+                if layer.ds.count > 1:
+                    valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
+            
             self.names.append(valid_name)
-            self.loc.update({valid_name: layer})
-            self.iloc.append(layer)
+            self.loc.loc.update({valid_name: layer})
+            self.iloc.iloc.append(layer)
             setattr(self, valid_name, layer)
 
         self.meta = dict(crs=self.crs,
@@ -746,7 +823,7 @@ class Raster(BaseRaster):
             arr = np.zeros((self.count, height, width), dtype=dtype)
 
         # read bands separately into numpy array
-        for i, layer in enumerate(self.iloc):
+        for i, layer in enumerate(self.iloc.iloc):
             arr[i, :, :] = layer.read(
                 masked=masked,
                 window=window,
@@ -790,13 +867,13 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, mode='w', driver=driver, nodata=nodata,
                            **self.meta) as dst:
 
-            for i, layer in enumerate(self.iloc):
+            for i, layer in enumerate(self.iloc.iloc):
                 arr = layer.read()
                 arr[arr == layer.nodata] = nodata
 
                 dst.write(arr.astype(dtype), i+1)
 
-        return self._newraster(file_path)
+        return self._newraster(file_path, self.names)
 
     def predict(self, estimator, file_path=None, predict_type='raw',
                 indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
@@ -906,18 +983,25 @@ class Raster(BaseRaster):
             other = [other]
 
         for new_raster in other:
-            existing_names = deepcopy(self.names)
-            other_names = deepcopy(new_raster.names)
         
-            # update layers
-            self.layers += new_raster.layers
-            reset_names = self.names
+            # check that other raster does not result in duplicated names
+            combined_names = self.names + new_raster.names
             
-            # generate dict to replace newly generated names with names from
-            # the two existing Raster objects
-            renamed = {reset_names[i]: newname for i, newname in enumerate(
-                existing_names + other_names)}
-            self.rename(renamed)
+            counts = Counter(combined_names)
+            for s, num in counts.items():
+                if num > 1:
+                    for suffix in range(1, num + 1):
+                        if s + "_" + str(suffix) not in combined_names:
+                            combined_names[combined_names.index(s)] = s + "_" + str(suffix)
+                        else:
+                            i = 1
+                            while s + "_" + str(i) in combined_names:
+                                i += 1
+                            combined_names[combined_names.index(s)] = s + "_" + str(i)
+
+            # update layers and names
+            self.layers = (self.layers + new_raster.layers,
+                           combined_names)
 
     def drop(self, labels):
         """
@@ -934,18 +1018,23 @@ class Raster(BaseRaster):
         if isinstance(labels, (str, int)):
             labels = [labels]
 
+        # numerical index based subsetting
         if len([i for i in labels if isinstance(i, int)]) == len(labels):
-            # numerical index based subsetting
-            self.layers = [v for (i, v) in enumerate(self.layers) if i not in labels]
-            self.names = [v for (i, v) in enumerate(self.names) if i not in labels]
-
+            
+            subset_layers = [v for (i, v) in enumerate(self.layers) if i not in labels]
+            subset_names = [v for (i, v) in enumerate(self.names) if i not in labels]
+            
+            
+        # str label based subsetting
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
-            # str label based subsetting
-            self.layers = [v for (i, v) in enumerate(self.layers) if self.names[i] not in labels]
-            self.names = [v for (i, v) in enumerate(self.names) if self.names[i] not in labels]
+            
+            subset_layers = [v for (i, v) in enumerate(self.layers) if self.names[i] not in labels]
+            subset_names = [v for (i, v) in enumerate(self.names) if self.names[i] not in labels]
 
         else:
             raise ValueError('Cannot drop layers based on mixture of indexes and labels')
+        
+        self.layers = (subset_layers, subset_names)
 
     def rename(self, names):
         """
@@ -953,17 +1042,18 @@ class Raster(BaseRaster):
 
         Args
         ----
-        other : Raster object or list of Raster objects
+        names : dict
+            dict of old_name : new_name
         """
         
         for old_name, new_name in names.items():
             # get layer and index of layer
-            layer = self.loc[old_name]
+            layer = self.loc.loc[old_name]
             idx = self.names.index(old_name)
-            
+                        
             # change name to new name
             self.names[idx] = new_name
-            self.loc[new_name] = self.loc.pop(old_name)
+            self.loc.loc[new_name] = self.loc.loc.pop(old_name)
             
             setattr(self, new_name, layer)
             
@@ -1016,7 +1106,7 @@ class Raster(BaseRaster):
 
         X = np.ma.zeros((len(rows), self.count))
 
-        for i, layer in enumerate(self.iloc):
+        for i, layer in enumerate(self.iloc.iloc):
             arr = layer.read(masked=True)
             X[:, i] = arr[rows, cols]
 
@@ -1267,385 +1357,3 @@ class Raster(BaseRaster):
             return gdf
         else:
             return X, y, xy
-
-def _predfun(img, estimator):
-    """
-    Prediction function for classification or regression response
-
-    Args
-    ----
-    img : 3d numpy array of raster data
-
-    estimator : estimator object implementing 'fit'
-        The object to use to fit the data
-
-    Returns
-    -------
-    result_cla : 2d numpy array
-        Single band raster as a 2d numpy array containing the
-        classification or regression result
-    """
-
-    n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-
-    # reshape each image block matrix into a 2D matrix
-    # first reorder into rows,cols,bands(transpose)
-    # then resample into 2D array (rows=sample_n, cols=band_values)
-    n_samples = rows * cols
-    flat_pixels = img.transpose(1, 2, 0).reshape(
-        (n_samples, n_features))
-
-    # create mask for NaN values and replace with number
-    flat_pixels_mask = flat_pixels.mask.copy()
-
-    # prediction
-    result_cla = estimator.predict(flat_pixels)
-
-    # replace mask
-    result_cla = np.ma.masked_array(
-        data=result_cla, mask=flat_pixels_mask.any(axis=1))
-
-    # reshape the prediction from a 1D into 3D array [band, row, col]
-    result_cla = result_cla.reshape((1, rows, cols))
-
-    return result_cla
-
-
-def _probfun(img, estimator):
-    """
-    Class probabilities function
-
-    Args
-    ----
-    img : 3d numpy array of raster data [band, row, col]
-
-    estimator : estimator object implementing 'fit'
-        The object to use to fit the data
-
-    Returns
-    -------
-    result_proba : 3d numpy array
-        Multi band raster as a 3d numpy array containing the
-        probabilities associated with each class.
-        Array is in (class, row, col) order
-    """
-
-    n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-
-    mask2d = img.mask.any(axis=0)
-
-    # reshape each image block matrix into a 2D matrix
-    # first reorder into rows,cols,bands(transpose)
-    # then resample into 2D array (rows=sample_n, cols=band_values)
-    n_samples = rows * cols
-    flat_pixels = img.transpose(1, 2, 0).reshape(
-        (n_samples, n_features))
-
-    # predict probabilities
-    result_proba = estimator.predict_proba(flat_pixels)
-
-    # reshape class probabilities back to 3D image [iclass, rows, cols]
-    result_proba = result_proba.reshape(
-        (rows, cols, result_proba.shape[1]))
-
-    # reshape band into rasterio format [band, row, col]
-    result_proba = result_proba.transpose(2, 0, 1)
-
-    # repeat mask for n_bands
-    mask3d = np.repeat(a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0)
-
-    # convert proba to masked array
-    result_proba = np.ma.masked_array(
-        result_proba,
-        mask=mask3d,
-        fill_value=np.nan)
-
-    return result_proba
-
-
-def _maximum_dtype(src):
-    """
-    Returns a single dtype that is large enough to store data
-    within all raster bands
-
-    Args
-    ----
-    src : rasterio.io.DatasetReader
-        Rasterio datasetreader in the opened mode
-
-    Returns
-    -------
-    dtype : str
-        Dtype that is sufficiently large to store all raster
-        bands in a single numpy array
-    """
-
-    if 'complex128' in src.dtypes:
-        dtype = 'complex128'
-    elif 'complex64' in src.dtypes:
-        dtype = 'complex64'
-    elif 'complex' in src.dtypes:
-        dtype = 'complex'
-    elif 'float64' in src.dtypes:
-        dtype = 'float64'
-    elif 'float32' in src.dtypes:
-        dtype = 'float32'
-    elif 'int32' in src.dtypes:
-        dtype = 'int32'
-    elif 'uint32' in src.dtypes:
-        dtype = 'uint32'
-    elif 'int16' in src.dtypes:
-        dtype = 'int16'
-    elif 'uint16' in src.dtypes:
-        dtype = 'uint16'
-    elif 'uint16' in src.dtypes:
-        dtype = 'uint16'
-    elif 'bool' in src.dtypes:
-        dtype = 'bool'
-
-    return dtype
-
-
-def predict(estimator, dataset, file_path=None, predict_type='raw',
-            indexes=None, driver='GTiff', dtype='float32', nodata=-99999):
-    """
-    Apply prediction of a scikit learn model to a GDAL-supported
-    raster dataset
-
-    Args
-    ----
-    estimator : estimator object implementing 'fit'
-        The object to use to fit the data
-
-    dataset : rasterio.io.DatasetReader
-        An opened Rasterio DatasetReader
-
-    file_path : str, optional
-        Path to a GeoTiff raster for the classification results
-        If not supplied then output is written to a temporary file
-
-    predict_type : str, optional (default='raw')
-        'raw' for classification/regression
-        'prob' for probabilities
-
-    indexes : List, int, optional
-        List of class indices to export
-
-    driver : str, optional. Default is 'GTiff'
-        Named of GDAL-supported driver for file export
-
-    dtype : str, optional. Default is 'float32'
-        Numpy data type for file export
-
-    nodata : any number, optional. Default is -99999
-        Nodata value for file export
-
-    Returns
-    -------
-    rasterio.io.DatasetReader with predicted raster
-    """
-
-    src = dataset
-
-    # chose prediction function
-    if predict_type == 'raw':
-        predfun = _predfun
-    elif predict_type == 'prob':
-        predfun = _probfun
-
-    # determine output count
-    if predict_type == 'prob' and isinstance(indexes, int):
-        indexes = range(indexes, indexes+1)
-
-    elif predict_type == 'prob' and indexes is None:
-        img = src.read(masked=True, window=(0, 0, 1, src.width))
-        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-        n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape(
-            (n_samples, n_features))
-        result = estimator.predict_proba(flat_pixels)
-        indexes = range(result.shape[0])
-
-    elif predict_type == 'raw':
-        indexes = range(1)
-
-    # open output file with updated metadata
-    meta = src.meta
-    meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
-
-    # optionally output to a temporary file
-    if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-
-    with rasterio.open(file_path, 'w', **meta) as dst:
-
-        # define windows
-        windows = [window for ij, window in dst.block_windows()]
-
-        # generator gets raster arrays for each window
-        # read all bands if single dtype
-        if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
-            data_gen = (src.read(window=window, masked=True)
-                        for window in windows)
-
-        # else read each band separately
-        else:
-            def read(src, window):
-                dtype = _maximum_dtype(src)
-                arr = np.ma.zeros((src.count, window.height, window.width),
-                                  dtype=dtype)
-
-                for band in range(src.count):
-                    arr[band, :, :] = src.read(
-                        band+1, window=window, masked=True)
-
-                return arr
-
-            data_gen = (read(src=src, window=window) for window in windows)
-
-        with tqdm(total=len(windows)) as pbar:
-            for window, arr in zip(windows, data_gen):
-                result = predfun(arr, estimator)
-                result = np.ma.filled(result, fill_value=nodata)
-                dst.write(result[indexes, :, :].astype(dtype), window=window)
-                pbar.update(1)
-
-    return rasterio.open(file_path)
-
-
-def calc(dataset, function, file_path=None, driver='GTiff', dtype='float32',
-         nodata=-99999):
-    """
-    Apply prediction of a scikit learn model to a GDAL-supported
-    raster dataset
-
-    Args
-    ----
-    dataset : rasterio.io.DatasetReader
-        An opened Rasterio DatasetReader
-
-    function : function that takes an numpy array as a single argument
-
-    file_path : str, optional
-        Path to a GeoTiff raster for the classification results
-        If not supplied then output is written to a temporary file
-
-    driver : str, optional. Default is 'GTiff'
-        Named of GDAL-supported driver for file export
-
-    dtype : str, optional. Default is 'float32'
-        Numpy data type for file export
-
-    nodata : any number, optional. Default is -99999
-        Nodata value for file export
-
-    Returns
-    -------
-    rasterio.io.DatasetReader containing result of function output
-    """
-
-    src = dataset
-
-    # determine output dimensions
-    img = src.read(masked=True, window=(0, 0, 1, src.width))
-    arr = function(img)
-    if len(arr.shape) > 2:
-        indexes = range(arr.shape[0])
-    else:
-        indexes = 1
-
-    # optionally output to a temporary file
-    if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-
-    # open output file with updated metadata
-    meta = src.meta
-    meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
-
-    with rasterio.open(file_path, 'w', **meta) as dst:
-
-        # define windows
-        windows = [window for ij, window in dst.block_windows()]
-
-        # generator gets raster arrays for each window
-        # read all bands if single dtype
-        if src.dtypes.count(src.dtypes[0]) == len(src.dtypes):
-            data_gen = (src.read(window=window, masked=True)
-                        for window in windows)
-
-        # else read each band separately
-        else:
-            def read(src, window):
-                dtype = _maximum_dtype(src)
-                arr = np.ma.zeros((src.count, window.height, window.width),
-                                  dtype=dtype)
-
-                for band in range(src.count):
-                    arr[band, :, :] = src.read(
-                        band+1, window=window, masked=True)
-
-                return arr
-
-            data_gen = (read(src=src, window=window) for window in windows)
-
-        with tqdm(total=len(windows)) as pbar:
-
-            for window, arr in zip(windows, data_gen):
-                result = function(arr)
-                result = np.ma.filled(result, fill_value=nodata)
-                dst.write(result.astype(dtype), window=window)
-                pbar.update(1)
-
-    return rasterio.open(file_path)
-
-
-def crop(dataset, bounds, file_path=None, driver='GTiff'):
-    """
-    Crops a rasterio dataset by the supplied bounds
-
-    dataset : rasterio.io.DatasetReader
-        An opened Rasterio DatasetReader
-
-    bounds : tuple
-        A tuple containing the bounding box to clip by in the
-        form of (xmin, xmax, ymin, ymax)
-
-    file_path : str, optional. Default=None
-        File path to save to cropped raster.
-        If not supplied then the cropped raster is saved to a
-        temporary file
-
-    driver : str, optional. Default is 'GTiff'
-        Named of GDAL-supported driver for file export
-
-    Returns
-    -------
-    rasterio.io.DatasetReader with the cropped raster
-    """
-
-    src = dataset
-
-    xmin, xmax, ymin, ymax = bounds
-
-    rows, cols = rasterio.transform.rowcol(
-        src.transform, xs=(xmin, xmax), ys=(ymin, ymax))
-
-    cropped_arr = src.read(window=Window(col_off=min(cols),
-                                         row_off=min(rows),
-                                         width=max(cols) - min(cols),
-                                         height=max(rows) - min(rows)))
-
-    meta = src.meta
-    aff = src.transform
-    meta['width'] = max(cols) - min(cols)
-    meta['height'] = max(rows) - min(rows)
-    meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
-    meta['driver'] = driver
-
-    if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-
-    with rasterio.open(file_path, 'w', **meta) as dst:
-        dst.write(cropped_arr)
-
-    return rasterio.open(file_path)

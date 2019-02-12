@@ -18,21 +18,35 @@ multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif
 predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
-layer = ps.from_files(band1)
-stack = ps.from_files([band1, band2, band3, band4, band5, band7])
+stack = ps.from_files([band1, band2, band3, band4, band5, band7, multiband])
+
+# Add a layer
+stack.append(ps.from_files(band7))
+stack.append(ps.from_files(multiband))
 stack.names
+
+# subset a RasterStack
+subset_raster = stack[('lsat7_2000_10', 'landsat_multiband_band1_1')]
+subset_raster.names
+plt.imshow(subset_raster.lsat7_2000_10.read(masked=True))
+plt.imshow(subset_raster.landsat_multiband_band1_1.read(masked=True))
+
+subset_raster = stack.loc[('lsat7_2000_10', 'landsat_multiband_band1_1')]
+subset_raster.names
+subset_raster = stack.iloc[1:5]
+subset_raster.names
+
+# convert to pandas
 df = stack.to_pandas()
+df.head()
+df.columns
 
 # iterate over layers
 for name, layer in stack.iterlayers():
     print(layer)
 
 # Drop a layer
-stack.drop(labels='lsat7_2000_70')
-stack.names
-
-# Add a layer
-stack.append(ps.from_files(band7))
+stack.drop(labels='lsat7_2000_70_1')
 stack.names
 
 # Modifify a layer
@@ -46,7 +60,7 @@ templayer = None
 
 # Save a stack
 newstack = stack.write(file_path="/home/steven/Downloads/test.tif", nodata=-99)
-newstack.test_1.read()
+newstack.landsat_multiband_band1_1.read()
 newstack=None
 
 # Load some training data in the form of a shapefile of point feature locations:
