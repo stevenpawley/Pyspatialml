@@ -1,7 +1,0 @@
-numpy
-scipy
-tqdm
-rasterio
-pandas
-shapely
-geopandas

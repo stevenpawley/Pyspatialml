@@ -1,6 +1,0 @@
-[
-  "pyspatialml/tests/test_extract.py::TestExtract::test_extract_lines",
-  "pyspatialml/tests/test_extract.py::TestExtract::test_extract_points",
-  "pyspatialml/tests/test_extract.py::TestExtract::test_extract_polygons",
-  "pyspatialml/tests/test_extract.py::TestExtract::test_extract_raster"
-]
