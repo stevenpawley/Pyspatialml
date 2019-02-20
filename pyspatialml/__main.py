@@ -4,7 +4,6 @@ import re
 from collections import namedtuple, OrderedDict
 from itertools import chain
 from functools import partial
-from copy import deepcopy
 from collections import Counter
 
 import geopandas as gpd
@@ -16,6 +15,7 @@ from rasterio.windows import Window
 from rasterio import features
 from shapely.geometry import Point
 from tqdm import tqdm
+from collections.abc import Mapping
 
 def from_files(file_path, mode='r'):
     """
@@ -473,71 +473,81 @@ class RasterLayer(BaseRaster):
         raise NotImplementedError
 
     def focal(self):
-        raise NotImplementedError
+        raise NotImplementedError  
 
 
-class RasterIndex(object):
+class ExtendedDict(Mapping):
     """
-    Provides label-based indexing and subsetting for Raster objects
+    Dict that can return based on multiple keys
     
-    RasterIndex is initiated from within a Raster object which passes
-    self to the RasterIndex class
-    
-    The sole purpose of the RasterIndex class is so that a .loc attribute
-    in a Raster object does have had to represent a simple dict of 
-    RasterLayer name, value pairs. A dict can only be indexed using a single 
-    key argument, and would only return the individual RasterLayers.
-    
-    Instead the .loc attribute in the Raster object refers to a
-    RasterIndex class, which extends the concept of a dict to multiple keys,
-    and also returns a new Raster object containing the subset of RasterLayers
+    Args
+    ---
+    parent : Raster object to store RasterLayer indexing
+        Requires to parent Raster object in order to setattr when
+        changes in the dict, reflecting changes in the RasterLayers occur
     """
+
+    def __init__(self, parent, *args, **kw):
+        self.parent = parent
+        self._dict = OrderedDict(*args, **kw)
     
-    def __init__(self, Raster):
-        self.loc = OrderedDict()
-        self.parent = Raster
-            
-    def __getitem__(self, items):
-        """
-        Subset the Raster object using label-based indexes
-        Returns a new Raster object only containing those layers
-        """
-
-        if isinstance(items, (int, str)):
-            items = [items]
-        
-        subset_layers = []
-        
-        for i in items:
-            
-            if isinstance(i, str):
-                if i in self.parent.names is False:
-                    raise KeyError('layername not present in Raster object')
-                else:
-                    subset_layers.append(getattr(self.parent, i))
-            
-            elif isinstance(i, (int)):
-                subset_layers.append(self.parent.layers[i])
-
-        subset_raster = Raster(subset_layers)
-        subset_raster.rename(
-            {old:new for old, new in zip(subset_raster.names, items)})
-                
-        return subset_raster
-
-
-class RasteriLocIndex(object):
+    def __getitem__(self, keys):
+        if isinstance(keys, str):
+            return self._dict[keys]
+        return [self._dict[i] for i in keys]
     
-    def __init__(self, Raster):
-        self.iloc = []
-        self.parent = Raster
-            
-    def __getitem__(self, items):
-        """
-        Subset the Raster object using int indexes or a slice
-        Returns a new Raster object only containing those layers
-        """
-        return Raster(self.iloc[items])
+    def __str__(self):
+        return str(self._dict)
+    
+    def __setitem__(self, key, value):
+        self._dict[key] = value
+        setattr(self.parent, key, value)
+        
+    def __iter__(self):
+        return iter(self._dict)
+    
+    def __len__(self):
+        return len(self._dict)
+
+    def pop(self, key):
+        pop = self._dict.pop(key)
+        delattr(self.parent, key)
+        return pop
+
+
+class LinkedList:
+    """
+    Provides integer-based indexing of a ExtendedDict
+    
+    Args
+    ---
+    parent : Raster object to store RasterLayer indexing
+        Requires to parent Raster object in order to setattr when
+        changes in the dict, reflecting changes in the RasterLayers occur
+    """
+    def __init__(self, parent, d):
+        self._index = d
+        self.parent = parent
+    
+    def __setitem__(self, index, value):
+        
+        if isinstance(index, int):
+            key = list(self._index.keys())[index]
+            self._index[key] = value
+            setattr(self.parent, key, value)
+        
+        if isinstance(index, slice):
+            index = list(range(index.start, index.stop))
+        
+        if isinstance(index, (list, tuple)):
+            for i, idx in enumerate(index):
+                key = list(self._index.keys())[idx]
+                self._index[key] = value[i]
+                setattr(self.parent, key, value[i])
+    
+    def __getitem__(self, index):
+        key = list(self._index.keys())[index]
+        return self._index[key]
 
 
 class Raster(BaseRaster):
@@ -564,9 +574,8 @@ class Raster(BaseRaster):
 
     def __init__(self, layers):
 
-        self.loc = RasterIndex(self)  # label-based indexing
-        self.iloc = RasteriLocIndex(self)     # integer-based indexing
-        self.names = []               # syntactically-valid names of datasets with appended band number
+        self.loc = ExtendedDict(self) # label-based indexing
+        self.iloc = LinkedList(self, self.loc) # integer-based indexing
         self.files = []               # files that are linked to as RasterLayer objects
         self.dtypes = []              # dtypes of stacked raster datasets and bands
         self.nodatavals = []          # no data values of stacked raster datasets and bands
@@ -574,104 +583,67 @@ class Raster(BaseRaster):
         self.res = None               # (x, y) resolution of aligned raster datasets
         self.meta = None              # dict containing 'crs', 'transform', 'width', 'height', 'count', 'dtype'
         
-        self._layers = None           # set proxy for self._files
         self.layers = layers          # call property
-
-    def __getitem__(self, items):
+              
+    def __getitem__(self, label):
         """
-        Subset the Raster object using int indexes, labels or a slice
+        Subset the Raster object using a label or list of labels
         
-        Returns a new Raster object only containing those layers
-        """
-        
-        return self.loc[items]
-
-    def iterlayers(self):
-        """
-        Iterate over Raster object layers
-        """
-
-        for k, v in self.loc.loc.items():
-            yield k, v
-
-    @property
-    def layers(self):
-        return self._layers
-
-    @layers.setter
-    def layers(self, layers):
-        """
-        Setter method for the files attribute in the Raster object
-        """
-
-        # some checks
-        if isinstance(layers, tuple):
-            layers, names = layers
-        else:
-            names = None
-                    
-        if isinstance(layers, RasterLayer):
-            layers = [layers]
-
-        if all(isinstance(x, type(layers[0])) for x in layers) is False:
-            raise ValueError('Cannot create a Raster object from a mixture of input types')
-
-        if names is not None:        
-            if len(names) != len(layers):
-                raise ValueError ('Number of layer names has to match the number of layers')
-
-        meta = self._check_alignment(layers)
-        if meta is False:
-            raise ValueError(
-                'Raster datasets do not all have the same dimensions or transform')
-
-        # reset existing attributes
-        for name in self.names:
-            delattr(self, name)
-        self.loc = RasterIndex(self)
-        self.iloc = RasteriLocIndex(self)
-        self.names = []
-        self.files = []
-        self.dtypes = []
-        self.nodatavals = []
-
-        # update global Raster object attributes with new values
-        self.count = len(layers)
-        self.width = meta['width']
-        self.height = meta['height']
-        self.shape = (self.height, self.width)
-        self.transform = meta['transform']
-        self.res = (abs(meta['transform'].a), abs(meta['transform'].e))
-        self.crs = meta['crs']
-        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
-        BoundingBox = namedtuple('BoundingBox', ['left', 'bottom', 'right', 'top'])
-        self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
-        self._layers = layers
-
-        # update attributes per dataset
-        for i, layer in enumerate(layers):
-            self.dtypes.append(layer.dtype)
-            self.nodatavals.append(layer.nodata)
-            self.files.append(layer.file)
-
-            if names is not None:
-                valid_name = names[i]
-            else:
-                valid_name = self._make_name(layer.file)
-                if layer.ds.count > 1:
-                    valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
+        Args
+        ----
+        label : str, list
             
-            self.names.append(valid_name)
-            self.loc.loc.update({valid_name: layer})
-            self.iloc.iloc.append(layer)
-            setattr(self, valid_name, layer)
+        Returns
+        -------
+        A new Raster object only containing the subset of layers specified
+        in the label argument
+        """
+        
+        if isinstance(label, str):
+            label = [label]
+        
+        subset_layers = []
+        
+        for i in label:
+            
+            if i in self.names is False:
+                raise KeyError('layername not present in Raster object')
+            else:
+                subset_layers.append(self.loc[i])
+            
+        subset_raster = Raster(subset_layers)
+        subset_raster.rename(
+            {old : new for old, new in zip(subset_raster.names, label)})
+        
+        return subset_raster
 
-        self.meta = dict(crs=self.crs,
-                         transform=self.transform,
-                         width=self.width,
-                         height=self.height,
-                         count=self.count,
-                         dtype=self._maximum_dtype())
+    def __setitem__(self, key, value):
+        """
+        Replace a RasterLayer within the Raster object with a new RasterLayer
+        
+        Note that this modifies the Raster object in place
+        
+        Args
+        ----
+        key : str
+            key-based index of layer to be replaced
+        
+        value : RasterLayer object
+            RasterLayer to use for replacement
+        """
+        
+        if isinstance(value, RasterLayer):
+            self.loc[key] = value
+            self.iloc[self.names.index(key)] = value
+            setattr(self, key, value)
+        else:
+            raise ValueError('value is not a RasterLayer object')
+
+    def __iter__(self):
+        """
+        Iterate over RasterLayers
+        """
+        return(iter(self.loc.items()))
 
     @staticmethod
     def _check_alignment(layers):
@@ -695,7 +667,8 @@ class Raster(BaseRaster):
         else:
             return src_meta[0]
 
-    def _make_name(self, name):
+    @staticmethod
+    def _make_name(name, existing_names):
         """
         Converts a filename to a valid class attribute name
 
@@ -703,6 +676,10 @@ class Raster(BaseRaster):
         ----
         name : str
             File name for convert to a valid class attribute name
+        
+        existing_names : list
+            List of existing names to check that the new name will not
+            result in duplicated layer names
 
         Returns
         -------
@@ -724,10 +701,35 @@ class Raster(BaseRaster):
         valid_name = re.sub(r'[\[\]\(\)\{\}\;]','', valid_name)
 
         # check to see if same name already exists
-        if valid_name in self.names:
+        if valid_name in existing_names:
             valid_name = '_'.join([valid_name, '1'])
 
         return valid_name
+
+    @staticmethod
+    def _check_names(existing_names, new_names):
+        
+        # check that other raster does not result in duplicated names
+        combined_names = existing_names + new_names
+        
+        counts = Counter(combined_names)
+
+        for s, num in counts.items():
+
+            if num > 1:
+
+                for suffix in range(1, num + 1):
+
+                    if s + "_" + str(suffix) not in combined_names:
+                        combined_names[combined_names.index(s)] = s + "_" + str(suffix)
+
+                    else:
+                        i = 1
+                        while s + "_" + str(i) in combined_names:
+                            i += 1
+                        combined_names[combined_names.index(s)] = s + "_" + str(i)
+
+        return combined_names
 
     def _maximum_dtype(self):
         """
@@ -759,8 +761,92 @@ class Raster(BaseRaster):
             dtype = 'bool'
 
         return dtype
+    
+    @property
+    def names(self):
+        """
+        Return the names of the RasterLayers in the Raster object
+        """
+        return list(self.loc.keys())
+    
+    @property
+    def layers(self):
+        return self.loc
 
-    def read(self, masked=False, window=None, out_shape=None, resampling='nearest', **kwargs):
+    @layers.setter
+    def layers(self, layers):
+        """
+        Setter method for the files attribute in the Raster object
+        """
+
+        # some checks
+        if isinstance(layers, tuple):
+            layers, names = layers
+        else:
+            names = None
+                    
+        if isinstance(layers, RasterLayer):
+            layers = [layers]
+
+        if all(isinstance(x, type(layers[0])) for x in layers) is False:
+            raise ValueError('Cannot create a Raster object from a mixture of input types')
+
+        if names is not None:        
+            if len(names) != len(layers):
+                raise ValueError ('Number of layer names has to match the number of layers')
+
+        meta = self._check_alignment(layers)
+        if meta is False:
+            raise ValueError(
+                'Raster datasets do not all have the same dimensions or transform')
+
+        # reset existing attributes
+        for name in self.names:
+            delattr(self, name)
+            
+        self.loc = ExtendedDict(self)
+        self.iloc = LinkedList(self, self.loc)
+        self.files = []
+        self.dtypes = []
+        self.nodatavals = []
+
+        # update global Raster object attributes with new values
+        self.count = len(layers)
+        self.width = meta['width']
+        self.height = meta['height']
+        self.shape = (self.height, self.width)
+        self.transform = meta['transform']
+        self.res = (abs(meta['transform'].a), abs(meta['transform'].e))
+        self.crs = meta['crs']
+        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
+        BoundingBox = namedtuple('BoundingBox', ['left', 'bottom', 'right', 'top'])
+        self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
+
+        # update attributes per dataset
+        for i, layer in enumerate(layers):
+            self.dtypes.append(layer.dtype)
+            self.nodatavals.append(layer.nodata)
+            self.files.append(layer.file)
+
+            if names is not None:
+                valid_name = names[i]
+            else:
+                valid_name = self._make_name(layer.file, self.names)
+                if layer.ds.count > 1:
+                    valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
+            
+            self.loc[valid_name] = layer
+            setattr(self, valid_name, self.loc[valid_name])
+
+        self.meta = dict(crs=self.crs,
+                         transform=self.transform,
+                         width=self.width,
+                         height=self.height,
+                         count=self.count,
+                         dtype=self._maximum_dtype())
+
+    def read(self, masked=False, window=None, out_shape=None,
+             resampling='nearest', **kwargs):
         """
         Reads data from the Raster object into a numpy array
 
@@ -791,7 +877,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        arr : ndarraySubnautica Below Zero is going into Early Access on Mac & Windows PC. We want to bring Below Zero to Xbox One and PlayStation 4 as soon as possible.
+        arr : ndarray
             Raster values in 3d numpy array [band, row, col]
         """
 
@@ -823,7 +909,7 @@ class Raster(BaseRaster):
             arr = np.zeros((self.count, height, width), dtype=dtype)
 
         # read bands separately into numpy array
-        for i, layer in enumerate(self.iloc.iloc):
+        for i, layer in enumerate(self.iloc):
             arr[i, :, :] = layer.read(
                 masked=masked,
                 window=window,
@@ -867,7 +953,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, mode='w', driver=driver, nodata=nodata,
                            **self.meta) as dst:
 
-            for i, layer in enumerate(self.iloc.iloc):
+            for i, layer in enumerate(self.iloc):
                 arr = layer.read()
                 arr[arr == layer.nodata] = nodata
 
@@ -916,9 +1002,9 @@ class Raster(BaseRaster):
 
         # chose prediction function
         if predict_type == 'raw':
-            predfun = _predfun
+            predfun = self._predfun
         elif predict_type == 'prob':
-            predfun = _probfun
+            predfun = self._probfun
 
         # determine output count
         if predict_type == 'prob' and isinstance(indexes, int):
@@ -972,7 +1058,9 @@ class Raster(BaseRaster):
 
     def append(self, other):
         """
-        Setter method to add new Raster objects
+        Setter method to add new RasterLayers to a Raster object
+        
+        Note that this modifies the Raster object in-place
 
         Args
         ----
@@ -1000,12 +1088,15 @@ class Raster(BaseRaster):
                             combined_names[combined_names.index(s)] = s + "_" + str(i)
 
             # update layers and names
-            self.layers = (self.layers + new_raster.layers,
+            self.layers = (list(self.loc.values()) + 
+                           list(new_raster.loc.values()),
                            combined_names)
 
     def drop(self, labels):
         """
         Drop individual RasterLayers from a Raster object
+        
+        Note that this modifies the Raster object in-place
 
         Args
         ----
@@ -1021,14 +1112,14 @@ class Raster(BaseRaster):
         # numerical index based subsetting
         if len([i for i in labels if isinstance(i, int)]) == len(labels):
             
-            subset_layers = [v for (i, v) in enumerate(self.layers) if i not in labels]
+            subset_layers = [v for (i, v) in enumerate(list(self.loc.values())) if i not in labels]
             subset_names = [v for (i, v) in enumerate(self.names) if i not in labels]
             
             
         # str label based subsetting
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
             
-            subset_layers = [v for (i, v) in enumerate(self.layers) if self.names[i] not in labels]
+            subset_layers = [v for (i, v) in enumerate(list(self.loc.values())) if self.names[i] not in labels]
             subset_names = [v for (i, v) in enumerate(self.names) if self.names[i] not in labels]
 
         else:
@@ -1038,7 +1129,9 @@ class Raster(BaseRaster):
 
     def rename(self, names):
         """
-        Setter method to add new Raster objects
+        Rename a RasterLayer within the Raster object
+        
+        Note that this modifies the Raster object in-place
 
         Args
         ----
@@ -1047,20 +1140,8 @@ class Raster(BaseRaster):
         """
         
         for old_name, new_name in names.items():
-            # get layer and index of layer
-            layer = self.loc.loc[old_name]
-            idx = self.names.index(old_name)
-                        
-            # change name to new name
-            self.names[idx] = new_name
-            self.loc.loc[new_name] = self.loc.loc.pop(old_name)
+            self.loc[new_name] = self.loc.pop(old_name)
             
-            setattr(self, new_name, layer)
-            
-            # delete the attribute if it has changed
-            if new_name != old_name:
-                delattr(self, old_name)
-
     def extract_xy(self, xy):
         """
         Samples pixel values of a Raster using an array of xy locations
@@ -1106,7 +1187,7 @@ class Raster(BaseRaster):
 
         X = np.ma.zeros((len(rows), self.count))
 
-        for i, layer in enumerate(self.iloc.iloc):
+        for i, layer in enumerate(self.iloc):
             arr = layer.read(masked=True)
             X[:, i] = arr[rows, cols]
 
@@ -1204,7 +1285,7 @@ class Raster(BaseRaster):
 
                 arr = np.zeros((self.height, self.width))
                 arr[:] = -99999
-                arr = rasterio.features.rasterize(
+                arr = features.rasterize(
                     shapes=(shapes for i in range(1)), fill=-99999, out=arr,
                     transform=self.transform, default_value=1,
                     all_touched=all_touched)
