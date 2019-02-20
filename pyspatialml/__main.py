@@ -19,7 +19,6 @@ from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
 from shapely.geometry import Point
-from skimage import exposure
 from tqdm import tqdm
 
 from .indexing import ExtendedDict, LinkedList
@@ -1471,3 +1470,14 @@ class Raster(BaseRaster):
 
         plt.subplots_adjust()
         plt.show()
+
+        # # perform histogram stretching
+        # if stretch is True:
+        #     v_min, v_max = np.percentile(rio_np[~rio_np.mask], (smin, smax))
+        #
+        #     out_min, out_max = \
+        #         rio_np[~rio_np.mask].min(), rio_np[~rio_np.mask].max()
+        #
+        #     rio_np = exposure.rescale_intensity(
+        #         rio_np, in_range=(v_min, v_max), out_range=(out_min, out_max))
+
