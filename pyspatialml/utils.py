@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os
 import rasterio
 from rasterio.warp import reproject
+
 
 def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
                    intern=False):
@@ -14,16 +12,20 @@ def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
     ----
     input : str
         File path to raster that is to be reclassified
+
     output : str
         File path to output raster
+
     src_nodata : int or float, optional
         The source nodata value. Pixels with this value will be reclassified
         to the new dst_nodata value.
         If not set, it will default to the nodata value stored in the source
-        image.
+        image
+
     dst_nodata : int or float, optional (default -99999)
         The nodata value that the outout raster will receive after
-        reclassifying pixels with the src_nodata value.
+        reclassifying pixels with the src_nodata value
+
     itern : bool, optional (default=False)
         Optionally return the reclassified raster as a numpy array
 
@@ -52,8 +54,7 @@ def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
         return()
 
 
-def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
-                  src_nodata=None, dst_nodata=None):
+def align_rasters(rasters, template, outputdir, method="Resampling.nearest"):
 
     """
     Aligns a list of rasters (paths to files) to a template raster.
@@ -64,7 +65,7 @@ def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
 
     Args
     ----
-    rasters : List of str
+    rasters : list, str
         List containing file paths to multiple rasters that are to be realigned
 
     template : str
@@ -91,17 +92,6 @@ def align_rasters(rasters, template, outputdir, method="Resampling.nearest",
             Resampling.nearest,
             Resampling.q1,
             Resampling.q3
-
-    src_nodata : int or float, optional
-        The source raster nodata value. Pixels with this value will be
-        transformed to the new dst_nodata value.
-        If not set, it will default to the nodata value stored in the source
-        image.
-
-    dst_nodata : int or float
-        The nodata value that the outout raster will receive after realignment
-        If not set, the source rasters nodata value will be used, or the
-        GDAL default of 0
     """
 
     # check resampling methods
@@ -168,21 +158,3 @@ def check_alignment(rasters):
         return False
     else:
         return src_meta[0]
-
-
-def make_name(name):
-    """
-    Converts a filename to a valid class attribute name
-
-    Args
-    ----
-    name : str
-        File name for convert to a valid class attribute name
-    """
-
-    valid_name = os.path.basename(name)
-    valid_name = valid_name.split(os.path.extsep)[0]
-    valid_name = valid_name.replace(' ', '_')
-    valid_name = valid_name.replace('.', '_')
-
-    return valid_name

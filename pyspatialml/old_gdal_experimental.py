@@ -5,7 +5,6 @@ from osgeo import gdal
 import tempfile
 import inspect
 
-
 class RasterLayer(object):
     """Base class for opening and reading raster data"""
 

@@ -8,7 +8,7 @@ from sklearn.preprocessing import binarize
 from collections import OrderedDict
 
 
-class CrossValidateThreshold():
+class CrossValidateThreshold(object):
     """
     Perform cross-validation and calculate scores using a cutoff threshold that
     attains a minimum true positive rate

@@ -1,21 +1,29 @@
+from __future__ import print_function
+
+import math
 import os
-import tempfile
 import re
-from collections import namedtuple, OrderedDict
-from itertools import chain
-from functools import partial
+import tempfile
 from collections import Counter
+from collections import namedtuple
+from functools import partial
+from itertools import chain
 
 import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
-from rasterio import features
 from shapely.geometry import Point
+from skimage import exposure
 from tqdm import tqdm
-from collections.abc import Mapping
+
+from .indexing import ExtendedDict, LinkedList
+
 
 def stack_from_files(file_path, mode='r'):
     """
@@ -248,9 +256,6 @@ class BaseRaster(object):
 
         return raster
 
-    def plot(self):
-        raise NotImplementedError
-
     def sample(self, size, strata=None, return_array=False, random_state=None):
         """
         Generates a random sample of according to size, and samples the pixel
@@ -474,6 +479,7 @@ class RasterLayer(BaseRaster):
         self.file = band.ds.files[0]
         self.driver = band.ds.meta['driver']
         self.ds = band.ds
+        self.cmap = 'viridis'
 
     def fill(self):
         raise NotImplementedError
@@ -485,81 +491,13 @@ class RasterLayer(BaseRaster):
         raise NotImplementedError
 
     def focal(self):
-        raise NotImplementedError  
+        raise NotImplementedError
 
-
-class ExtendedDict(Mapping):
-    """
-    Dict that can return based on multiple keys
-    
-    Args
-    ---
-    parent : Raster object to store RasterLayer indexing
-        Requires to parent Raster object in order to setattr when
-        changes in the dict, reflecting changes in the RasterLayers occur
-    """
-
-    def __init__(self, parent, *args, **kw):
-        self.parent = parent
-        self._dict = OrderedDict(*args, **kw)
-    
-    def __getitem__(self, keys):
-        if isinstance(keys, str):
-            return self._dict[keys]
-        return [self._dict[i] for i in keys]
-    
-    def __str__(self):
-        return str(self._dict)
-    
-    def __setitem__(self, key, value):
-        self._dict[key] = value
-        setattr(self.parent, key, value)
-        
-    def __iter__(self):
-        return iter(self._dict)
-    
-    def __len__(self):
-        return len(self._dict)
-
-    def pop(self, key):
-        pop = self._dict.pop(key)
-        delattr(self.parent, key)
-        return pop
-
-
-class LinkedList:
-    """
-    Provides integer-based indexing of a ExtendedDict
-    
-    Args
-    ---
-    parent : Raster object to store RasterLayer indexing
-        Requires to parent Raster object in order to setattr when
-        changes in the dict, reflecting changes in the RasterLayers occur
-    """
-    def __init__(self, parent, d):
-        self._index = d
-        self.parent = parent
-    
-    def __setitem__(self, index, value):
-        
-        if isinstance(index, int):
-            key = list(self._index.keys())[index]
-            self._index[key] = value
-            setattr(self.parent, key, value)
-        
-        if isinstance(index, slice):
-            index = list(range(index.start, index.stop))
-        
-        if isinstance(index, (list, tuple)):
-            for i, idx in enumerate(index):
-                key = list(self._index.keys())[idx]
-                self._index[key] = value[i]
-                setattr(self.parent, key, value[i])
-    
-    def __getitem__(self, index):
-        key = list(self._index.keys())[index]
-        return self._index[key]
+    def plot(self):
+        fig, ax = plt.subplots()
+        arr = self.read(masked=True)
+        ax.imshow(arr, extent=rasterio.plot.plotting_extent(self.ds), cmap=self.cmap)
+        plt.show()
 
 
 class Raster(BaseRaster):
@@ -1450,3 +1388,86 @@ class Raster(BaseRaster):
             return gdf
         else:
             return X, y, xy
+
+    def plot(self, width=5, height=5, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
+             names=None):
+        """
+        Plotting of a Raster object
+
+        width : int, float, default = 5
+            Width of plot (inches)
+
+        height : int, float, default = 5
+            Height of plot (inches)
+
+         out_shape : tuple
+            Number of rows, cols to read from the raster datasets for plotting
+
+        label_fontsize : int, float, default = 8
+            Size in pts of labels
+
+        title_fontsize : int, float, default = 8
+            Size in pts of titles
+
+        names : list, optional
+            Optionally supply a list of names for each RasterLayer to override the
+            default layer names for the titles
+        """
+
+        # estimate required number of rows and columns in figure
+        rows = int(np.sqrt(self.count))
+        cols = int(math.ceil(np.sqrt(self.count)))
+
+        if rows * cols < self.count:
+            rows += 1
+
+        cmaps = [i.cmap for i in self.iloc]
+        if names is None:
+            names = self.names
+
+        fig, axs = plt.subplots(rows, cols, figsize=(width, height))
+
+        # axs.flat is an iterator over the row-order flattened axs array
+        for ax, n, cmap, name in zip(axs.flat, range(self.count), cmaps, names):
+
+            arr = self.iloc[n].read(masked=True, out_shape=out_shape)
+
+            ax.set_title(name, fontsize=title_fontsize, y=1.00)
+            im = ax.imshow(arr,
+                           extent=[self.bounds.left, self.bounds.right, self.bounds.bottom, self.bounds.top],
+                           cmap=cmap)
+
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="10%", pad=0.1)
+            cbar = plt.colorbar(im, cax=cax)
+            cbar.ax.tick_params(labelsize=label_fontsize)
+
+            # hide tick labels by default when multiple rows or cols
+            ax.axes.get_xaxis().set_ticklabels([])
+            ax.axes.get_yaxis().set_ticklabels([])
+
+            # show y-axis tick labels on first subplot
+            if n == 0 and rows > 1:
+                ax.set_yticklabels(
+                    ax.yaxis.get_majorticklocs().astype('int'),
+                    fontsize=label_fontsize)
+            if n == 0 and rows == 1:
+                ax.set_xticklabels(
+                    ax.xaxis.get_majorticklocs().astype('int'),
+                    fontsize=label_fontsize)
+                ax.set_yticklabels(
+                    ax.yaxis.get_majorticklocs().astype('int'),
+                    fontsize=label_fontsize)
+            if rows > 1 and n == (rows * cols) - cols:
+                ax.set_xticklabels(
+                    ax.xaxis.get_majorticklocs().astype('int'),
+                    fontsize=label_fontsize)
+
+        # To hide the last plot that isn't showing, do this:
+        # axs.flat[-1].set_visible(False)
+        # or more generally to hide empty plots
+        for ax in axs.flat[axs.size - 1:self.count - 1:-1]:
+            ax.set_visible(False)
+
+        plt.subplots_adjust()
+        plt.show()
