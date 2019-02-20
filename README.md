@@ -2,7 +2,7 @@
 
 # NOTE
 
-Pyspatialml is undergoing development at the moment, with various api changes expected. Alpha version is expected to be ready in March 2019.
+Pyspatialml is undergoing development at the moment. Not major api changes are anticipated now, however various methods are still to be implemented. Alpha version is expected to be ready in March 2019.
 
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
@@ -80,14 +80,12 @@ Upon 'stacking', syntactically-correct names for each RasterLayer are automatica
 
 #### Indexing
 
-Indexing of Raster objects is provided by several methods
+Indexing of Raster objects is provided by several methods:
 
 - Raster.loc[key] : provides key-based indexing based on the names of the RasterLayers, and always returns a RasterLayer object. Unlike a regular dict, a list or tuple of keys can be provided to return multiple layers.
 - Raster.iloc[int, list, tuple, slice] : provides integer-based indexing or slicing, and always returns a RasterLayer object, or list of RasterLayers.
 - Raster[key] : provides key-based indexing, but returns a new Raster object with the subsetted layers
 - Raster.name : attribute names can be used directly, and always returns a single RasterLayer object
-
-##### Examples
 
 RasterLayer indexing which returns a RasterLayer:
 ```
@@ -104,7 +102,7 @@ for name, layer in stack:
     print(layer)
 ```
 
-Subset a Raster object
+Subset a Raster object:
 ```
 subset_raster = stack[['lsat7_2000_10', 'lsat7_2000_70']]
 subset_raster.names
@@ -124,11 +122,11 @@ stack.names
 Rename RasterLayers using a dict of old_name : new_name pairs:
 ```
 stack.names
-stack.rename({'lsat7_2000_30': 'crazy'})
+stack.rename({'lsat7_2000_30': 'new_name'})
 stack.names
-stack.crazy
-stack['crazy']
-stack.loc['crazy']
+stack.new_name
+stack['new_name']
+stack.loc['new_name']
 ```
 
 Drop a RasterLayer:
@@ -145,6 +143,23 @@ Save a Raster:
 newstack = stack.write(file_path="test.tif", nodata=-9999)
 newstack.crazy.read()
 newstack=None
+```
+
+### Plotting
+
+Basic plotting has been added to as a method to RasterLayer and Raster options. More controls on plotting will be added in the future. Currently you can set a matplotlib cmap for each RasterLayer using the RasterLayer.cmap attribute. 
+
+Plot a single RasterLayer:
+
+```
+stack.lsat7_2000_10.cmap = 'plasma'
+stack.lsat7_2000_10.plot()
+```
+
+Plot all RasterLayers in a Raster object:
+
+```
+stack.plot()
 ```
 
 ### Integration with Pandas
@@ -305,7 +320,3 @@ random_points = [get_random_point_in_polygon(training_py.geometry[0]) for i in r
 random_points = geopandas.GeoDataFrame(
   geometry=geopandas.GeoSeries(random_points))
 ```
-
-## Notes
-
-Currently only Python 3 is supported.
