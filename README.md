@@ -2,7 +2,7 @@
 
 # NOTE
 
-Pyspatialml is undergoing development at the moment. Not major api changes are anticipated now, however various methods are still to be implemented. Alpha version is expected to be ready in March 2019.
+Pyspatialml is undergoing development at the moment. No major api changes are anticipated now, however various methods are still to be implemented. Alpha version is expected to be ready in March 2019.
 
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
@@ -84,8 +84,8 @@ Indexing of Raster objects is provided by several methods:
 
 - Raster.loc[key] : provides key-based indexing based on the names of the RasterLayers, and always returns a RasterLayer object. Unlike a regular dict, a list or tuple of keys can be provided to return multiple layers.
 - Raster.iloc[int, list, tuple, slice] : provides integer-based indexing or slicing, and always returns a RasterLayer object, or list of RasterLayers.
-- Raster[key] : provides key-based indexing, but returns a new Raster object with the subsetted layers
-- Raster.name : attribute names can be used directly, and always returns a single RasterLayer object
+- Raster[key] : provides key-based indexing, but returns a new Raster object with the subsetted layers.
+- Raster.name : attribute names can be used directly, and always returns a single RasterLayer object.
 
 RasterLayer indexing which returns a RasterLayer:
 ```
@@ -279,7 +279,6 @@ plt.show()
 
 For many spatial models, it is common to take a random sample of the predictors to represent a single class (i.e. an environmental background or pseudo-absences in a binary classification model). The sample function is supplied in the sampling module for this purpose:
 ```
-# sampling
 # extract training data using a random sample
 df_rand = stack.sample(size=1000, random_state=1)
 df_rand.plot()
