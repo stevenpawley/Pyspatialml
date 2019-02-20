@@ -2,13 +2,13 @@
 
 # NOTE
 
-Pyspatialml is undergoing development at the moment, with various api changes expected. Alpha version is expected to be ready in January 2019. Use the development branch for the latest changes.
+Pyspatialml is undergoing development at the moment, with various api changes expected. Alpha version is expected to be ready in March 2019.
 
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
 
 ## Description
-```Pyspatialml``` is a Python module for applying scikit-learn machine learning models to raster datasets. Pyspatialml includes functions and classes for working with multiple raster datasets and performing a typical machine learning workflow consisting of extracting training data and applying the predict or predict_proba methods of scikit-learn estimators to a stack of raster datasets.
+```Pyspatialml``` is a Python module for applying scikit-learn machine learning models to raster datasets. Pyspatialml includes functions and classes for working with multiple raster datasets and performing a typical machine learning workflow consisting of extracting training data and applying the predict or predict_proba methods of scikit-learn estimators to a stack of raster datasets. Pyspatialml is built upon the ```rasterio``` Python module for all of the heavy lifting.  Pyspatialml is also designed for working with vector data using the ```geopandas``` module.
 
 ## Background
 
@@ -23,20 +23,25 @@ Training data consists of two components - a response feature and a set of predi
 
 ## Functions and Classes 
 
-### The RasterStack Class
+### The Raster class
 
-The main class that facilitates working with multiple raster datasets is the ```RasterStack``` class, which is loosely inspired by the excellent ```raster``` package in the R statistical programming language. This class takes a list of file paths to GDAL-supported raster datasets and 'stacks' them into a RasterStack class object. Because the datasets are not physically-stacked into a multi-band raster dataset, information regarding what each raster dataset means (i.e. its name) can be retained and raster datasets can easily be added or removed from the stack. Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system. If they are not aligned, then for convenience the ```pyspatialml.utils.align_rasters``` function can be used to resample a list of raster datasets. 
+The main class that facilitates working with multiple raster datasets is the ```Raster``` class, which is inspired by the famous  ```raster``` package in the R statistical programming language. This class can be initiated using the  ```pyspatialml.stack_from_files``` function, which takes a list of file paths to GDAL-supported raster datasets and 'stacks' them into a Raster class object. Because the datasets are not physically-stacked into a multi-band raster dataset, information regarding what each raster dataset means (i.e. its name) can be retained and raster datasets can easily be added or removed from the stack. Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system. If they are not aligned, then for convenience the ```pyspatialml.utils.align_rasters``` function can be used to resample a list of raster datasets. A Raster object can also be initaited directly from a single, or list of  ```RasterLayer``` objects
 
-Pyspatialml is built upon the ```rasterio``` Python module. Each stacked raster dataset is a rasterio DatasetReader object and contains all of the methods available in the rasterio package. Pyspatialml is also designed for working with vector data using the ```geopandas``` module.
+
+### The RasterLayer class
+Each file-based raster dataset within a Raster object is represented as a  ```RasterLayer``` object, which is simple wrapper around a rasterio.band object that refers to a single band within a file-based raster. The RasterLayer.ds attribute stores the original rasterio.band dataset. A RasterLayer object can be initiated directly by using the ```pyspatialml.layer_from_file``` function. 
+
+Generally, pyspatialml is intends users to work with the Raster object. However, access to individual RasterLayer objects, or the underlying rasterio.band datasets can be useful if pyspatialml is being used in conjunction with other functions and methods in the Rasterio package.
 
 ## Installation
+
+The package is currently not available on PyPI, but can be installed from GitHub directly via:
+
 ```
 pip install git+https://github.com/stevenpawley/Pyspatialml
 ```
 
 ## Usage
-
-### Basic workflow
 
 This is an example using the imagery data that is bundled with the package. This data is derived from the GRASS GIS North Carolina dataset and comprises Landsat 7 VNIR and SWIR bands along with some land cover training data that were derived from a land cover classification from an earlier date.
 
@@ -50,7 +55,7 @@ import rasterio.plot
 import matplotlib.pyplot as plt
 ```
 
-#### Creating a RasterStack
+### The Raster object
 
 We are going to use a set of Landsat 7 bands contained within the pyspatialml/tests directory:
 
@@ -68,8 +73,98 @@ predictors = [band1, band2, band3, band4, band5, band7]
 These raster datasets are aligned in terms of their extent and coordinate reference systems. We can 'stack' these into a RasterStack class so that we can perform machine learning related operations on the set of rasters:
 
 ```
-stack = RasterStack(predictors)
+stack = pyspatialml.stack_from_files(predictors)
 ```
+
+Upon 'stacking', syntactically-correct names for each RasterLayer are automatically generated from the file_paths.
+
+#### Indexing
+
+Indexing of Raster objects is provided by several methods
+
+- Raster.loc[key] : provides key-based indexing based on the names of the RasterLayers, and always returns a RasterLayer object. Unlike a regular dict, a list or tuple of keys can be provided to return multiple layers.
+- Raster.iloc[int, list, tuple, slice] : provides integer-based indexing or slicing, and always returns a RasterLayer object, or list of RasterLayers.
+- Raster[key] : provides key-based indexing, but returns a new Raster object with the subsetted layers
+- Raster.name : attribute names can be used directly, and always returns a single RasterLayer object
+
+##### Examples
+
+RasterLayer indexing which returns a RasterLayer:
+```
+stack.iloc[0]  # index
+stack.iloc[0:3]  # slice
+stack.loc['lsat7_2000_10']  # key
+stack.loc[('lsat7_2000_10', 'lsat7_2000_20')]  # list or tuple of keys
+stack.lsat7_2000_10  # attribute
+```
+
+Iterate through RasterLayers:
+```
+for name, layer in stack:
+    print(layer)
+```
+
+Subset a Raster object
+```
+subset_raster = stack[['lsat7_2000_10', 'lsat7_2000_70']]
+subset_raster.names
+```
+
+Replace a RasterLayer with another:
+```
+stack.iloc[0] = pyspatialml.layer_from_file(band7)
+```
+
+Append layers from another Raster to the stack. Note that this occurs in-place. Duplicate names are automatically given a suffix:
+```
+stack.append(ps.stack_from_files(band7))
+stack.names
+```
+
+Rename RasterLayers using a dict of old_name : new_name pairs:
+```
+stack.names
+stack.rename({'lsat7_2000_30': 'crazy'})
+stack.names
+stack.crazy
+stack['crazy']
+stack.loc['crazy']
+```
+
+Drop a RasterLayer:
+
+```
+stack.names
+stack.drop(labels='lsat7_2000_70_1')
+stack.names
+```
+
+Save a Raster:
+
+```
+newstack = stack.write(file_path="test.tif", nodata=-9999)
+newstack.crazy.read()
+newstack=None
+```
+
+### Integration with Pandas
+
+Data from a Raster object can converted into a Pandas dataframe, with each pixel representing by a row, and columns reflecting the x, y coordinates and the values of each RasterLayer in the Raster object:
+
+```
+df = stack.to_pandas(max_pixels=50000, resampling='nearest')
+df.head()
+```
+
+The original raster is up-sampled based on max_pixels and the resampling method, which uses all of resampling methods available in the underlying rasterio library for decimated reads. The Raster.to_pandas method can be useful for plotting datasets, or combining with a library such as plotnine to create ggplot2-style plots of stacks of RasterLayers:
+
+```
+from plotnine import *
+(ggplot(df.melt(id_vars=['x', 'y']), aes(x='x', y='y', fill='value')) +
+geom_tile() + facet_wrap('variable'))
+```
+
+### A machine learning workflow
 
 #### Extract Training Data
 
@@ -85,7 +180,7 @@ training_lines['geometry'] = training_lines.geometry.boundary
 
 Show training data points and a single raster band using numpy and matplotlib:
 ```
-plt.imshow(stack.lsat7_2000_70.read(1, masked=True),
+plt.imshow(stack.lsat7_2000_70.read(masked=True),
            extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
 plt.scatter(x=training_pt.bounds.iloc[:, 0],
             y=training_pt.bounds.iloc[:, 1],
@@ -93,7 +188,7 @@ plt.scatter(x=training_pt.bounds.iloc[:, 0],
 plt.show()
 ```
 
-Pixel values in the RasterStack can be spatially queried using the ```extract_vector``` and ```extract_raster``` methods. In addition, the ```extract_xy``` method can be used to query pixel values using a 2d array of x and y coordinates.
+Pixel values in the Raster object can be spatially queried using the ```extract_vector``` and ```extract_raster``` methods. In addition, the ```extract_xy``` method can be used to query pixel values using a 2d array of x and y coordinates.
 
 The ```extract_vector``` method accepts a Geopandas GeoDataFrame as the ```response``` argument. The ```field``` argument is used to indicate if values in a column in the GeoDataFrame should be extracted with the pixel values. For GeoDataFrames containing shapely point geometries, the closest pixel to each point is sampled. For shapely polygon geometries, all pixels whose centres are inside the polygon are sampled. For shapely linestring geometries, every pixel touched by the line is sampled. For all geometry types, pixel values are queries for each geometry separately. This means that overlapping polygons or points that fall within the same pixel with cause the same pixel to be sampled multiple times.
 

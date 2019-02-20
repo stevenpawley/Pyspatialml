@@ -17,7 +17,7 @@ from shapely.geometry import Point
 from tqdm import tqdm
 from collections.abc import Mapping
 
-def from_files(file_path, mode='r'):
+def stack_from_files(file_path, mode='r'):
     """
     Create a Raster object from a GDAL-supported raster file, or list of files
 
@@ -51,6 +51,18 @@ def from_files(file_path, mode='r'):
 
     raster = Raster(bands)
     return raster
+
+
+def layer_from_file(file_path, bidx=1, mode='r'):
+    """
+    Simple wrapper to create a RasterLayer object which refers to a single band
+    within rasterio.band object
+    """
+
+    if mode not in ['r', 'r+', 'w']:
+        raise ValueError("mode must be one of 'r', 'r+', or 'w'")
+
+    return RasterLayer(rasterio.band(rasterio.open(file_path, mode), bidx))
 
 
 class BaseRaster(object):
@@ -228,7 +240,7 @@ class BaseRaster(object):
         raster : pyspatialml.Raster object
         """
 
-        raster = from_files(file_path)
+        raster = stack_from_files(file_path)
 
         if names is not None:
             rename = {old : new for old, new in zip(raster.names, self.names)}
@@ -560,7 +572,7 @@ class Raster(BaseRaster):
     individual bands from multi-band rasters and single-band rasters.
     RasterLayer objects only exist within Raster objects.
 
-    A Raster object should be created using the pyspatialml.from_files()
+    A Raster object should be created using the pyspatialml.stack_from_files()
     function, where a single file, or a list of files is passed as the file_path
     argument.
 
@@ -1050,7 +1062,7 @@ class Raster(BaseRaster):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
 
-        raster = from_files(file_path)
+        raster = stack_from_files(file_path)
         if len(indexes) > 1:
             raster.names = ['_'.join(['prob', str(i+1)]) for i in range(raster.count)]
 
