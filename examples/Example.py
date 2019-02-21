@@ -68,7 +68,7 @@ stack.landsat_multiband_band1_2.read(masked=True).mean()
 
 # Rename layers
 stack.names
-stack.rename({'lsat7_2000_30': 'crazy'})
+stack.rename({'lsat7_2000_30': 'new_name'})
 stack.names
 stack.crazy
 stack['crazy']

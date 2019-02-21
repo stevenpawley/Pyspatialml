@@ -18,6 +18,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
+import rasterio.plot
 from shapely.geometry import Point
 from tqdm import tqdm
 
@@ -1389,7 +1390,7 @@ class Raster(BaseRaster):
             return X, y, xy
 
     def plot(self, width=5, height=5, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
-             names=None):
+             names=None, **kwargs):
         """
         Plotting of a Raster object
 
@@ -1411,6 +1412,8 @@ class Raster(BaseRaster):
         names : list, optional
             Optionally supply a list of names for each RasterLayer to override the
             default layer names for the titles
+
+        **kwargs
         """
 
         # estimate required number of rows and columns in figure
@@ -1432,9 +1435,10 @@ class Raster(BaseRaster):
             arr = self.iloc[n].read(masked=True, out_shape=out_shape)
 
             ax.set_title(name, fontsize=title_fontsize, y=1.00)
-            im = ax.imshow(arr,
-                           extent=[self.bounds.left, self.bounds.right, self.bounds.bottom, self.bounds.top],
-                           cmap=cmap)
+            im = ax.imshow(
+                arr,
+                extent=[self.bounds.left, self.bounds.right, self.bounds.bottom, self.bounds.top],
+                cmap=cmap, **kwargs)
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="10%", pad=0.1)
