@@ -251,7 +251,7 @@ class BaseRaster(object):
         raster = stack_from_files(file_path)
 
         if names is not None:
-            rename = {old : new for old, new in zip(raster.names, self.names)}
+            rename = {old: new for old, new in zip(raster.names, names)}
             raster.rename(rename)
 
         return raster
@@ -1001,7 +1001,14 @@ class Raster(BaseRaster):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
 
-        return self._newraster(file_path)
+        # generate layer names
+        if predict_type == 'raw':
+            prefix = "pred_raw_"
+        else:
+            prefix = "prob_"
+
+        names = [prefix + str(i) for i in range(len(indexes))]
+        return self._newraster(file_path, names)
 
     @staticmethod
     def _predfun(img, estimator):
