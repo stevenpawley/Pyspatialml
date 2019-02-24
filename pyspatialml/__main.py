@@ -953,6 +953,7 @@ class Raster(BaseRaster):
         # chose prediction function
         if predict_type == 'raw':
             predfun = self._predfun
+
         elif predict_type == 'prob':
             predfun = self._probfun
 
@@ -1000,11 +1001,7 @@ class Raster(BaseRaster):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
 
-        raster = stack_from_files(file_path)
-        if len(indexes) > 1:
-            raster.names = ['_'.join(['prob', str(i+1)]) for i in range(raster.count)]
-
-        return raster
+        return self._newraster(file_path)
 
     @staticmethod
     def _predfun(img, estimator):
