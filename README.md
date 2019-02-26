@@ -183,7 +183,7 @@ geom_tile() + facet_wrap('variable'))
 
 ### Extract Training Data
 
-Load some training data in the form of polygons, points and labelled pixels in geopandas GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a RasterStack, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).
+Load some training data in the form of polygons, points and labelled pixels in geopandas GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a Raster object, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).
 
 ```
 training_py = geopandas.read_file(os.path.join(basedir, 'landsat96_polygons.shp'))
@@ -207,9 +207,9 @@ Pixel values in the Raster object can be spatially queried using the ```extract_
 
 The ```extract_vector``` method accepts a Geopandas GeoDataFrame as the ```response``` argument. The ```field``` argument is used to indicate if values in a column in the GeoDataFrame should be extracted with the pixel values. For GeoDataFrames containing shapely point geometries, the closest pixel to each point is sampled. For shapely polygon geometries, all pixels whose centres are inside the polygon are sampled. For shapely linestring geometries, every pixel touched by the line is sampled. For all geometry types, pixel values are queries for each geometry separately. This means that overlapping polygons or points that fall within the same pixel with cause the same pixel to be sampled multiple times.
 
-By default, the extract functions return a Geopandas GeoDataFrame of point geometries and the DataFrame containing the extracted pixels, with the column names set by the names of the raster datasets in the RasterStack. The user can also use the ```return_array=True``` argument, which instead of returning a DataFrame will return three masked numpy arrays (X, y, xy) containing the extracted pixel values, the field attribute, and the spatial coordinates of the sampled pixels. These arrays are masked arrays with nodata values in the RasterStack datasets being masked.
+By default, the extract functions return a Geopandas GeoDataFrame of point geometries and the DataFrame containing the extracted pixels, with the column names set by the names of the raster datasets in the Raster object. The user can also use the ```return_array=True``` argument, which instead of returning a DataFrame will return three masked numpy arrays (X, y, xy) containing the extracted pixel values, the field attribute, and the spatial coordinates of the sampled pixels. These arrays are masked arrays with nodata values in the RasterStack datasets being masked.
 
-The ```extract_raster``` method can also be used to spatially query pixel values from a RasterStack object using another raster containing labelled pixels. This raster has to be spatially aligned with the RasterStack datasets. There is no field attribute for this method because the values of the labelled pixels are returned along with the queried pixel values, but the name of this column in the attibute can be set using the ```value_name``` argument.
+The ```extract_raster``` method can also be used to spatially query pixel values from a Raster object using another raster containing labelled pixels. This raster has to be spatially aligned with the Raster object. There is no field attribute for this method because the values of the labelled pixels are returned along with the queried pixel values, but the name of this column in the attibute can be set using the ```value_name``` argument.
 
 ```
 # Create a training dataset by extracting the raster values at the training point locations:
@@ -264,7 +264,7 @@ scores['test_score'].mean()
 
 ### Raster Prediction
 
-Prediction on the RasterStack is performed using the ```predict``` method. The ```estimator``` is the only required argument. If the ```file_path``` argument is not specified then the result is automatically written to a temporary file. The predict method returns an rasterio.io.DatasetReader object which is open.
+Prediction on the Raster object is performed using the ```predict``` method. The ```estimator``` is the only required argument. If the ```file_path``` argument is not specified then the result is automatically written to a temporary file. The predict method returns an rasterio.io.DatasetReader object which is open.
 
 Other arguments consist of ```predict_type``` can be either 'raw' to output a classification or regression result, or 'prob' to output class probabilities as a multi-band raster (a band for each class probability). In the latter case, ```indexes``` can also be supplied if you only want to output the probabilities for a particular class, or list of classes, by supplying the indices of those classes:
 
