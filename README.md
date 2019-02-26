@@ -142,7 +142,7 @@ Save a Raster:
 ```
 newstack = stack.write(file_path="test.tif", nodata=-9999)
 newstack.new_name.read()
-newstack=None
+newstack = None
 ```
 
 ### Plotting
