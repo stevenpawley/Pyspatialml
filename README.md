@@ -78,7 +78,7 @@ stack = pyspatialml.stack_from_files(predictors)
 
 Upon 'stacking', syntactically-correct names for each RasterLayer are automatically generated from the file_paths.
 
-#### Indexing
+### Indexing
 
 Indexing of Raster objects is provided by several methods:
 
@@ -179,9 +179,9 @@ from plotnine import *
 geom_tile() + facet_wrap('variable'))
 ```
 
-### A machine learning workflow
+## A machine learning workflow
 
-#### Extract Training Data
+### Extract Training Data
 
 Load some training data in the form of polygons, points and labelled pixels in geopandas GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a RasterStack, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).
 
@@ -220,7 +220,7 @@ df_raster = stack.extract_raster(response=training_px, value_name='id')
 df_points.head()
 ```
 
-#### Model Training
+### Model Training
 
 Next we can train a logistic regression classifier:
 
@@ -262,7 +262,7 @@ scores = cross_validate(
 scores['test_score'].mean()
 ```
 
-#### Raster Prediction
+### Raster Prediction
 
 Prediction on the RasterStack is performed using the ```predict``` method. The ```estimator``` is the only required argument. If the ```file_path``` argument is not specified then the result is automatically written to a temporary file. The predict method returns an rasterio.io.DatasetReader object which is open.
 
@@ -275,7 +275,7 @@ plt.imshow(result.read(1, masked=True))
 plt.show()
 ```
 
-### Sampling Tools
+## Sampling Tools
 
 For many spatial models, it is common to take a random sample of the predictors to represent a single class (i.e. an environmental background or pseudo-absences in a binary classification model). The sample function is supplied in the sampling module for this purpose:
 ```
