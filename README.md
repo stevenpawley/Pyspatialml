@@ -21,14 +21,14 @@ Training data consists of two components - a response feature and a set of predi
 
 ![example](https://github.com/stevenpawley/Pyspatialml/blob/master/img/Pyspatialml_training.svg)
 
-## Functions and Classes 
+## Raster and RasterLayer classes
 
-### The Raster class
+### Raster
 
 The main class that facilitates working with multiple raster datasets is the ```Raster``` class, which is inspired by the famous  ```raster``` package in the R statistical programming language. This class can be initiated using the  ```pyspatialml.stack_from_files``` function, which takes a list of file paths to GDAL-supported raster datasets and 'stacks' them into a Raster class object. Because the datasets are not physically-stacked into a multi-band raster dataset, information regarding what each raster dataset means (i.e. its name) can be retained and raster datasets can easily be added or removed from the stack. Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system. If they are not aligned, then for convenience the ```pyspatialml.utils.align_rasters``` function can be used to resample a list of raster datasets. A Raster object can also be initaited directly from a single, or list of  ```RasterLayer``` objects
 
 
-### The RasterLayer class
+### RasterLayer
 Each file-based raster dataset within a Raster object is represented as a  ```RasterLayer``` object, which is simple wrapper around a rasterio.band object that refers to a single band within a file-based raster. The RasterLayer.ds attribute stores the original rasterio.band dataset. A RasterLayer object can be initiated directly by using the ```pyspatialml.layer_from_file``` function. 
 
 Generally, pyspatialml is intends users to work with the Raster object. However, access to individual RasterLayer objects, or the underlying rasterio.band datasets can be useful if pyspatialml is being used in conjunction with other functions and methods in the Rasterio package.
