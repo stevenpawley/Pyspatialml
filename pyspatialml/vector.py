@@ -25,18 +25,20 @@ def filter_points(gdf, min_dist=0, remove='first'):
         Numpy array filtered coordinates
     """
 
-    xy = gdf.geometry.bounds.iloc[:, 0:2]
-    dm = distance_matrix(xy, xy)
-    np.fill_diagonal(dm, np.nan)
-
+	from scipy.cluster.hierarchy import dendrogram, linkage, cut_tree
+	
+	xy = gdf.geometry.bounds.iloc[:, 0:2]
+	Z = linkage(xy, 'complete')
+	tree_thres = cut_tree(Z, height=min_dist)
+	gdf['tree_thres'] = tree_thres
+	
     if remove == 'first':
-        dm[np.tril_indices(dm.shape[0], -1)] = np.nan
+        gdf = gdf.groupby(by='tree_thres').first()
+
     elif remove == 'last':
-        dm[np.triu_indices(dm.shape[0], -1)] = np.nan
-
-    d = np.nanmin(dm, axis=1)
-
-    return gdf.loc[np.greater_equal(d, min_dist), :]
+        gdf = gdf.groupby(by='tree_thres').last()
+	
+    return gdf
 
 
 def get_random_point_in_polygon(poly):
