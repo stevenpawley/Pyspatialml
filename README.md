@@ -47,7 +47,7 @@ This is an example using the imagery data that is bundled with the package. This
 
 First, import the extract and predict functions:
 ```
-from pyspatialml import RasterStack
+import pyspatialml
 from copy import deepcopy
 import os
 import geopandas
@@ -141,7 +141,7 @@ Save a Raster:
 
 ```
 newstack = stack.write(file_path="test.tif", nodata=-9999)
-newstack.crazy.read()
+newstack.new_name.read()
 newstack=None
 ```
 
