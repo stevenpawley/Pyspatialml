@@ -301,7 +301,7 @@ with rasterio.open(os.path.join(basedir, 'strata.tif')) as strata:
 In some cases, we don't need all of the training data, but rather would spatially thin a point dataset. The filter_points function performs point-thinning based on a minimum distance buffer on a geopandas dataframe containing point geometries:
 
 ```
-from pyspatialml.sampling import filter_points
+from pyspatialml.vector import filter_points
 
 thinned_points = filter_points(xy=training_pt, min_dist=500, remove='first')
 thinned_points.shape
@@ -310,7 +310,7 @@ thinned_points.shape
 We can also generate random points within polygons using the get_random_point_in_polygon function. This requires a shapely POLYGON geometry as an input, and returns a shapely POINT object:
 
 ```
-from pyspatialml.sampling import get_random_point_in_polygon
+from pyspatialml.vector import get_random_point_in_polygon
 
 # generate 5 random points in a single polygon
 random_points = [get_random_point_in_polygon(training_py.geometry[0]) for i in range(5)]
