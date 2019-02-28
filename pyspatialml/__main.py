@@ -1364,7 +1364,7 @@ class Raster(BaseRaster):
             if duplicates != "keep":
                 rowcol_df = pd.DataFrame(
                     np.column_stack((rows, cols, y)),
-                    columns=['row', 'col'] + field)
+                    columns=['row', 'col'] + [field])
                 rowcol_df['Duplicated'] = rowcol_df.loc[:, ['row', 'col']].duplicated()
         
                 if duplicates == 'mean':

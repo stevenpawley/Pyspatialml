@@ -157,6 +157,8 @@ scores['test_score'].mean()
 # prediction
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
 result_prob = stack.predict(estimator=lr, predict_type='prob')
+result.names
+result_prob.names
 
 plt.imshow(result.read(masked=True)[0, :, :])
 plt.show()
