@@ -1375,11 +1375,16 @@ class Raster(BaseRaster):
                     rowcol_df = rowcol_df.groupby(by=['Duplicated', 'row', 'col'], sort=False).max().reset_index()
         
                 rows, cols = rowcol_df['row'].values.astype('int'), rowcol_df['col'].values.astype('int')
+                xy = np.stack(
+                    rasterio.transform.xy(
+                        transform=self.transform, rows=rows, cols=cols), axis=1)
                 y = rowcol_df[field].values
 
-        # spatial query of Raster object (by-band)
+        # spatial query of Raster object (loads each band into memory)
         if low_memory is False:
             X = self._extract_by_indices(rows, cols)
+        
+        # samples each point separately (much slower)
         else:
             X = self.extract_xy(xy)
 
