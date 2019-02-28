@@ -1374,7 +1374,7 @@ class Raster(BaseRaster):
                 elif duplicates == 'max':
                     rowcol_df = rowcol_df.groupby(by=['Duplicated', 'row', 'col'], sort=False).max().reset_index()
         
-                rows, cols = rowcol_df['row'].values, rowcol_df['col'].values
+                rows, cols = rowcol_df['row'].values.astype('int'), rowcol_df['col'].values.astype('int')
                 y = rowcol_df[field].values
 
         # spatial query of Raster object (by-band)
