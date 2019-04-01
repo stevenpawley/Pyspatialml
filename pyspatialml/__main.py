@@ -910,10 +910,11 @@ class Raster(BaseRaster):
                 dst.write(arr.astype(dtype), i+1)
 
         return self._newraster(file_path, self.names)
-
-    def predict(self, estimator, file_path=None, predict_type='raw',
-                indexes=None, driver='GTiff', dtype='float32', nodata=-99999,
-                progress=True):
+    
+    def predict_proba(self, estimator, file_path=None, indexes=None, 
+                      driver='GTiff', dtype='float32', nodata=-99999,
+                      progress=True):
+        
         """
         Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
@@ -925,10 +926,6 @@ class Raster(BaseRaster):
         file_path : str, optional
             Path to a GeoTiff raster for the classification results
             If not supplied then output is written to a temporary file
-
-        predict_type : str, optional (default='raw')
-            'raw' for classification/regression
-            'prob' for probabilities
 
         indexes : List, int, optional
             List of class indices to export
@@ -949,31 +946,21 @@ class Raster(BaseRaster):
         -------
         Raster object
         """
-
-        # chose prediction function
-        if predict_type == 'raw':
-            predfun = self._predfun
-
-        elif predict_type == 'prob':
-            predfun = self._probfun
+        predfun = self._probfun
 
         # determine output count
-        if predict_type == 'prob' and isinstance(indexes, int):
+        if isinstance(indexes, int):
             indexes = range(indexes, indexes + 1)
-
-        elif predict_type == 'prob' and indexes is None:
+        
+        elif indexes is None:
             window = Window(0, 0, self.width, 1)
             img = self.read(masked=True, window=window)
             n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
             n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape(
-                (n_samples, n_features))
+            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
             result = estimator.predict_proba(flat_pixels)
             indexes = np.arange(0, result.shape[1])
-
-        elif predict_type == 'raw':
-            indexes = range(1)
-
+        
         # open output file with updated metadata
         meta = self.meta
         meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
@@ -1002,11 +989,85 @@ class Raster(BaseRaster):
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
 
         # generate layer names
-        if predict_type == 'raw':
-            prefix = "pred_raw_"
-        else:
-            prefix = "prob_"
+        prefix = "prob_"
+        names = [prefix + str(i) for i in range(len(indexes))]
+        return self._newraster(file_path, names)
 
+    def predict(self, estimator, file_path=None, driver='GTiff',
+                dtype='float32', nodata=-99999, progress=True):
+        """
+        Apply prediction of a scikit learn model to a pyspatialml.Raster object
+
+        Args
+        ----
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data
+
+        file_path : str, optional
+            Path to a GeoTiff raster for the classification results
+            If not supplied then output is written to a temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        dtype : str, optional. Default is 'float32'
+            Numpy data type for file export
+
+        nodata : any number, optional. Default is -99999
+            Nodata value for file export
+
+        progress : bool, optional. Default is True
+            Show tqdm progress bar for prediction
+
+        Returns
+        -------
+        Raster object
+        """
+       
+        # determine output count for multi output cases
+        window = Window(0, 0, self.width, 1)
+        img = self.read(masked=True, window=window)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+        result = estimator.predict(flat_pixels)
+        indexes = np.arange(0, result.shape[1])
+        
+        # chose prediction function
+        if len(indexes) == 1:
+            predfun = self._predfun
+        else:
+            predfun = self._predfun_multioutput
+
+        # open output file with updated metadata
+        meta = self.meta
+        meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
+
+        # optionally output to a temporary file
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+
+            # define windows
+            windows = [window for ij, window in dst.block_windows()]
+
+            # generator gets raster arrays for each window
+            data_gen = (self.read(window=window, masked=True) for window in windows)
+
+            if progress is True:
+                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
+                    result = predfun(arr, estimator)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result[indexes, :, :].astype(dtype), window=window)
+            else:
+                for window, arr  in zip(windows, data_gen):
+                    result = predfun(arr, estimator)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result[indexes, :, :].astype(dtype), window=window)
+
+        # generate layer names      
+        prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
         return self._newraster(file_path, names)
 
@@ -1098,6 +1159,54 @@ class Raster(BaseRaster):
             fill_value=np.nan)
 
         return result_proba
+
+    @staticmethod
+    def _predfun_multioutput(img, estimator):
+        """
+        Multi output prediction
+
+        Args
+        ----
+        img : 3d numpy array of raster data [band, row, col]
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data
+        Returns
+        -------
+        result_proba : 3d numpy array
+            Multi band raster as a 3d numpy array containing the
+            probabilities associated with each class.
+            Array is in (class, row, col) order
+        """
+
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+
+        mask2d = img.mask.any(axis=0)
+
+        # reshape each image block matrix into a 2D matrix
+        # first reorder into rows,cols,bands(transpose)
+        # then resample into 2D array (rows=sample_n, cols=band_values)
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+
+        # predict probabilities
+        result = estimator.predict(flat_pixels)
+
+        # reshape class probabilities back to 3D image [iclass, rows, cols]
+        result = result.reshape((rows, cols, result.shape[1]))
+
+        # reshape band into rasterio format [band, row, col]
+        result = result.transpose(2, 0, 1)
+
+        # repeat mask for n_bands
+        mask3d = np.repeat(a=mask2d[np.newaxis, :, :], repeats=result.shape[0], axis=0)
+
+        # convert proba to masked array
+        result = np.ma.masked_array(
+            result,
+            mask=mask3d,
+            fill_value=np.nan)
+
+        return result
 
     def append(self, other):
         """
