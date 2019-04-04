@@ -5,3 +5,4 @@ numpy
 scipy
 shapely
 pandas
+matplotlib
