@@ -2,7 +2,7 @@
 
 # NOTE
 
-Pyspatialml is undergoing development at the moment. No major api changes are anticipated now, however various methods are still to be implemented. Alpha version is expected to be ready in March 2019.
+Pyspatialml is undergoing development at the moment. Alpha version is expected to be ready in April 2019. The package is functional, although possible API changes can occur. Unit tests are not completed yet.
 
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
@@ -23,13 +23,21 @@ Training data consists of two components - a response feature and a set of predi
 
 ## Design
 
-### The Raster class
+### The Raster object
 
-The main class that facilitates working with multiple raster datasets is the ```Raster``` class, which is inspired by the famous  ```raster``` package in the R statistical programming language. This class can be initiated using the  ```pyspatialml.stack_from_files``` function, which takes a list of file paths to GDAL-supported raster datasets and 'stacks' them into a Raster class object. Because the datasets are not physically-stacked into a multi-band raster dataset, information regarding what each raster dataset means (i.e. its name) can be retained and raster datasets can easily be added or removed from the stack. Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system. If they are not aligned, then for convenience the ```pyspatialml.utils.align_rasters``` function can be used to resample a list of raster datasets. A Raster object can also be initaited directly from a single, or list of  ```RasterLayer``` objects
+The main class that facilitates working with multiple raster datasets is the ```Raster``` class, which is inspired by the famous  ```raster``` package in the R statistical programming language. The ```Raster``` object takes a list of file paths to GDAL-supported raster datasets and 'stacks' them into a single Raster object. The underlying file-based raster datasets are not physically-stacked, but rather the Raster object internally represents each band within the datasets as a ```RasterLayer```. This means that metadata  regarding what each raster dataset represents (e.g. the dataset's name) can be retained, and additional raster datasets can easily be added or removed from the stack without physical on-disk changes.
 
+Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system. If they are not aligned, then for convenience the ```pyspatialml.utils.align_rasters``` function can be used to resample a list of raster datasets. 
 
-### The RasterLayer class
-Each file-based raster dataset within a Raster object is represented as a  ```RasterLayer``` object, which is simple wrapper around a rasterio.band object that refers to a single band within a file-based raster. The RasterLayer.ds attribute stores the original rasterio.band dataset. A RasterLayer object can be initiated directly by using the ```pyspatialml.layer_from_file``` function. 
+#### Raster object initiation
+
+There are three methods of creating a new Raster object:
+
+1. ```Raster(file_path=[raster1.tif, raster2.tif, raster3.tif])``` creates a Raster object from existing file-based GDAL-supported datasets.
+
+2. ```Raster(arr=new_numpy_array, crs=crs, transform=transform)``` creates a Raster object from a 3D numpy array (band, row, column). The ```crs``` and ```transform``` arguments are optional but are required to provide coordinate reference system information to the Raster object. 
+
+3. ```Raster(layers=[RasterLayer1, RasterLayer2, RasterLayer3])``` creates a Raster object from a single or list of RasterLayer objects. RasterLayers are a thin wrapper around rasterio.Band objects with additional methods. This is mostly used internally. A RasterLayer itself is initiated directly from a rasterio.Band object.
 
 Generally, pyspatialml is intends users to work with the Raster object. However, access to individual RasterLayer objects, or the underlying rasterio.band datasets can be useful if pyspatialml is being used in conjunction with other functions and methods in the Rasterio package.
 
@@ -73,7 +81,7 @@ predictors = [band1, band2, band3, band4, band5, band7]
 These raster datasets are aligned in terms of their extent and coordinate reference systems. We can 'stack' these into a Raster class so that we can perform machine learning related operations on the set of rasters:
 
 ```
-stack = pyspatialml.stack_from_files(predictors)
+stack = Raster(predictors)
 ```
 
 Upon 'stacking', syntactically-correct names for each RasterLayer are automatically generated from the file_paths.
