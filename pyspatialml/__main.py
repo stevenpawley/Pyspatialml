@@ -1122,7 +1122,10 @@ class Raster(BaseRaster):
             dtype = self.meta['dtype']
 
         if nodata is None:
-            nodata = np.iinfo(dtype).min
+            try:
+                nodata = np.iinfo(dtype).min()
+            except ValueError:
+                nodata = np.finfo(dtype).min()
 
         with rasterio.open(file_path, mode='w', driver=driver, nodata=nodata,
                            **self.meta) as dst:
@@ -1133,7 +1136,7 @@ class Raster(BaseRaster):
 
                 dst.write(arr.astype(dtype), i+1)
 
-        return self._newraster(file_path, self.names)
+        return None
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
         """
