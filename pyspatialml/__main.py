@@ -1887,6 +1887,11 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster object
         """
+        # some checks
+        if isinstance(rows, list):
+            rows = np.asarray(rows)
+        if isinstance(cols, list):
+            cols = np.asarray(cols)
 
         if rows.shape != cols.shape:
             raise ValueError('rows and cols must have same dimensions')
