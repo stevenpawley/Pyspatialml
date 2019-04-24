@@ -1,4 +1,4 @@
-import pyspatialml as ps
+from pyspatialml import Raster
 from copy import deepcopy
 import os
 import geopandas
@@ -18,7 +18,11 @@ multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif
 predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
-stack = ps.stack_from_files([band1, band2, band3, band4, band5, band7, multiband])
+stack = Raster([band1, band2, band3, band4, band5, band7, multiband])
+
+# Aggregate a raster to a coarser cell size
+stack_new = stack.aggregate(out_shape=(100, 100))
+stack_new.iloc[0].plot()
 
 # Plot a RasterLayer
 stack.lsat7_2000_10.plot()
@@ -42,37 +46,37 @@ stack.lsat7_2000_10  # attribute
 subset_raster = stack[['lsat7_2000_10', 'lsat7_2000_70']]
 subset_raster.names
 subset_raster.lsat7_2000_10
-subset_raster.lsat7_2000_10.read(masked=True).mean()
-subset_raster.lsat7_2000_70.read(masked=True).mean()
+print(subset_raster.lsat7_2000_10.read(masked=True).mean())
+print(subset_raster.lsat7_2000_70.read(masked=True).mean())
 
 # Replace a layer
-stack.iloc[0].read(masked=True).mean()
-stack.iloc[0] = ps.layer_from_file(band7)
-stack.iloc[0].read(masked=True).mean()
-stack.loc['lsat7_2000_10'].read(masked=True).mean()
-stack['lsat7_2000_10'].read(masked=True).mean()
-stack.lsat7_2000_10.read(masked=True).mean()
+print(stack.iloc[0].read(masked=True).mean())
+stack.iloc[0] = Raster(band7).iloc[0]
+print(stack.iloc[0].read(masked=True).mean())
+print(stack.loc['lsat7_2000_10'].read(masked=True).mean())
+print(stack['lsat7_2000_10'].read(masked=True).mean())
+print(stack.lsat7_2000_10.read(masked=True).mean())
 
 # Add a layer
-stack.append(ps.stack_from_files(band7))
+stack.append(Raster(band7))
 stack.names
-stack.lsat7_2000_10.read(masked=True).mean()
-stack.lsat7_2000_70_1.read(masked=True).mean()
-stack.lsat7_2000_70_2.read(masked=True).mean()
+print(stack.lsat7_2000_10.read(masked=True).mean())
+print(stack.lsat7_2000_70_1.read(masked=True).mean())
+print(stack.lsat7_2000_70_2.read(masked=True).mean())
 
-stack.append(ps.stack_from_files(multiband))
+stack.append(Raster(multiband))
 stack.names
-stack.lsat7_2000_10.read(masked=True).mean()
-stack.landsat_multiband_band1_1.read(masked=True).mean()
-stack.landsat_multiband_band1_2.read(masked=True).mean()
+print(stack.lsat7_2000_10.read(masked=True).mean())
+print(stack.landsat_multiband_band1_1.read(masked=True).mean())
+print(stack.landsat_multiband_band1_2.read(masked=True).mean())
 
 # Rename layers
 stack.names
 stack.rename({'lsat7_2000_30': 'new_name'})
 stack.names
-stack.crazy
-stack['crazy']
-stack.loc['crazy']
+stack.new_name
+stack['new_name']
+stack.loc['new_name']
 
 # convert to pandas
 df = stack.to_pandas()
@@ -81,7 +85,7 @@ df.columns
 
 from plotnine import *
 (ggplot(df.melt(id_vars=['x', 'y']), aes(x='x', y='y', fill='value')) +
- geom_tile() + facet_wrap('variable'))
+ geom_tile(na_rm=True) + facet_wrap('variable'))
 
 # Drop a layer
 stack.names
@@ -89,13 +93,13 @@ stack.drop(labels='lsat7_2000_70_1')
 stack.names
 
 # Modifify a layer
-templayer = ps.from_files(band1, mode='r+')
-arr = templayer.lsat7_2000_10.read(window=Window(0, 0, 100, 100))
-arr[:] += 500
-templayer.lsat7_2000_10.write(arr, window=Window(0, 0, 100, 100))
-ras = templayer.lsat7_2000_10.read(masked=True)
-plt.imshow(ras)
-templayer = None
+# templayer = ps.from_files(band1, mode='r+')
+# arr = templayer.lsat7_2000_10.read(window=Window(0, 0, 100, 100))
+# arr[:] += 500
+# templayer.lsat7_2000_10.write(arr, window=Window(0, 0, 100, 100))
+# ras = templayer.lsat7_2000_10.read(masked=True)
+# plt.imshow(ras)
+# templayer = None
 
 # Save a stack
 newstack = stack.write(file_path="/Users/steven/Downloads/test.tif", nodata=-99)

@@ -14,14 +14,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
+import rasterio.mask
+import rasterio.plot
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
-import rasterio.plot
+from scipy import ndimage
 from shapely.geometry import Point
 from tqdm import tqdm
-from scipy import ndimage
 
 from .indexing import ExtendedDict, LinkedList
 
@@ -29,9 +30,15 @@ from .indexing import ExtendedDict, LinkedList
 class BaseRaster(object):
     """
     Raster base class that contains methods that apply both to RasterLayer and
-    Raster objects. Wraps a rasterio.Band object, which is a named tuple
-    consisting of the file path, the band index, the dtype and shape a
-    individual band within a raster dataset
+    Raster objects
+
+    The methods that are encapsulated within BaseRaster comprise those that
+    return some non-raster type of object, i.e. a geopandas.GeoDataFrame
+    representing a random sample of cells.
+
+    Wraps a rasterio.Band object consisting of a named tuple of the file path,
+    the band index, the dtype and shape an individual band within a raster
+    file-based dataset
     """
 
     def __init__(self, band):
@@ -48,18 +55,18 @@ class BaseRaster(object):
         """
         Converts a filename to a valid class attribute name
 
-        Args
-        ----
+        Parameters
+        ----------
         name : str
             File name for convert to a valid class attribute name
-        
+
         existing_names : list
             List of existing names to check that the new name will not
             result in duplicated layer names
 
         Returns
         -------
-        valid_name : str
+        str
             Syntatically-correct name of layer so that it can form a class
             instance attribute
         """
@@ -113,8 +120,8 @@ class BaseRaster(object):
         Generates a random sample of according to size, and samples the pixel
         values
 
-        Args
-        ----
+        Parameters
+        ----------
         size : int
             Number of random samples or number of samples per strata
             if strategy='stratified'
@@ -135,10 +142,10 @@ class BaseRaster(object):
 
         Returns
         -------
-        samples: array-like
+        numpy.ndarray
             Numpy array of extracted raster values, typically 2d
 
-        valid_coordinates: 2d array-like
+        numpy.ndarray
             2D numpy array of xy coordinates of extracted values
         """
 
@@ -241,156 +248,19 @@ class BaseRaster(object):
         else:
             return valid_samples, valid_coordinates
 
-    def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
-        """
-        Crops a Raster object by the supplied bounds
-
-        Args
-        ----
-        bounds : tuple
-            A tuple containing the bounding box to clip by in the
-            form of (xmin, xmax, ymin, ymax)
-
-        file_path : str, optional. Default=None
-            File path to save to cropped raster.
-            If not supplied then the cropped raster is saved to a
-            temporary file
-
-        driver : str, optional. Default is 'GTiff'
-            Named of GDAL-supported driver for file export
-
-        nodata : int, float
-            Nodata value for cropped dataset
-
-        Returns
-        -------
-        pyspatialml.Raster object cropped to new extent
-        """
-
-        xmin, ymin, xmax, ymax = bounds
-
-        rows, cols = rasterio.transform.rowcol(
-            self.transform, xs=(xmin, xmax), ys=(ymin, ymax))
-
-        window = Window(col_off=min(cols),
-                        row_off=min(rows),
-                        width=max(cols)-min(cols),
-                        height=max(rows)-min(rows))
-
-        cropped_arr = self.read(masked=True, window=window)
-        meta = self.meta
-        aff = self.transform
-        meta['width'] = max(cols) - min(cols)
-        meta['height'] = max(rows) - min(rows)
-        meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
-        meta['driver'] = driver
-        meta['nodata'] = nodata
-
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(cropped_arr)
-
-        return self._newraster(file_path, self.names)
-
-    def reproject(self):
-        raise NotImplementedError
-
-    def mask(self):
-        raise NotImplementedError
-
-    def resample(self):
-        raise NotImplementedError
-
-    def aggregate(self):
-        raise NotImplementedError
-
-    def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
-             nodata=-99999, progress=True):
-        """
-        Apply user-supplied function to a Raster object
-
-        Args
-        ----
-        function : function that takes an numpy array as a single argument
-
-        file_path : str, optional
-            Path to a GeoTiff raster for the classification results
-            If not supplied then output is written to a temporary file
-
-        driver : str, optional. Default is 'GTiff'
-            Named of GDAL-supported driver for file export
-
-        dtype : str, optional. Default is 'float32'
-            Numpy data type for file export
-
-        nodata : any number, optional. Default is -99999
-            Nodata value for file export
-
-        progress : bool, optional. Default is True
-            Show tqdm progress bar for prediction
-
-        Returns
-        -------
-        pyspatialml.Raster object
-        """
-
-        # determine output dimensions
-        window = Window(0, 0, 1, self.width)
-        img = self.read(masked=True, window=window)
-        arr = function(img)
-
-        if len(arr.shape) > 2:
-            indexes = range(arr.shape[0])
-        else:
-            indexes = 1
-
-        count = len(indexes)
-
-        # optionally output to a temporary file
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-
-        # open output file with updated metadata
-        meta = self.meta
-        meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
-
-        with rasterio.open(file_path, 'w', **meta) as dst:
-
-            # define windows
-            windows = [window for ij, window in dst.block_windows()]
-
-            # generator gets raster arrays for each window
-            data_gen = (self.read(window=window, masked=True)
-                        for window in windows)
-
-            if progress is True:
-                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
-                    result = function(arr)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result.astype(dtype), window=window)
-            else:
-                for window, arr in zip(windows, data_gen):
-                    result = function(arr)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result.astype(dtype), window=window)
-
-        return self._newraster(file_path)
-
     def extract_xy(self, xy):
         """
         Samples pixel values of a Raster using an array of xy locations
 
-        Args
-        ----
+        Parameters
+        ----------
         xy : 2d array-like
             x and y coordinates from which to sample the raster (n_samples, xy)
 
         Returns
         -------
-        values : 2d array-like
-            Masked array containing sampled raster values (sample, bands)
+        numpy.ndarray
+            2d masked array containing sampled raster values (sample, bands)
             at x,y locations
         """
 
@@ -420,6 +290,19 @@ class BaseRaster(object):
     def _extract_by_indices(self, rows, cols):
         """
         Spatial query of Raster object (by-band)
+
+        Parameters
+        ----------
+        rows : ndarray
+            1d numpy array of row indices
+
+        cols : ndarray
+            1d numpy array of column induces
+
+        Returns
+        -------
+        numpy.ndarray
+            2d numpy array of extracted training data in [sample, feature] shape
         """
 
         X = np.ma.zeros((len(rows), self.count))
@@ -440,9 +323,13 @@ class BaseRaster(object):
         Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
 
-        Args
+        TODO
         ----
-        response: Geopandas DataFrame
+        Allow multiple 'fields' to be extracted simultaneously
+
+        Parameters
+        ----------
+        response: geopandas.GeoDataFrame
             Containing either point, line or polygon geometries. Overlapping
             geometries will cause the same pixels to be sampled.
 
@@ -450,36 +337,36 @@ class BaseRaster(object):
             Field name of attribute to be used the label the extracted data
             Used only if the response feature represents a GeoDataframe
 
-        return_array : bool, default = False
+        return_array : bool, default=False
             Optionally return extracted data as separate X, y and xy
             masked numpy arrays
         
-        duplicates : str, default = 'keep'
+        duplicates : str, default='keep'
             Method to deal with duplicates points that fall inside the same
             pixel. Available options are ['keep', 'mean', min', 'max']
 
-        na_rm : bool, default = True
+        na_rm : bool, default=True
             Optionally remove rows that contain nodata values
 
-        low_memory : bool, default = False
+        low_memory : bool, default=False
             Optionally extract pixel values in using a slower but memory-safe
             method
 
         Returns
         -------
-        gpd : geopandas GeoDataframe
+        geopandas.GeoDataframe
             Containing extracted data as point geometries
 
-        X : array-like
+        numpy.ndarray
             Numpy masked array of extracted raster values, typically 2d
             Returned only if return_array is True
 
-        y: 1d array like
-            Numpy masked array of labelled sampled
+        numpy.ndarray
+            1d numpy masked array of labelled sampled
             Returned only if return_array is True
 
-        xy: 2d array-like
-            Numpy masked array of row and column indexes of training pixels
+        numpy.ndarray
+            2d numpy masked array of row and column indexes of training pixels
             Returned only if return_array is True
         """
 
@@ -619,8 +506,8 @@ class BaseRaster(object):
         """
         Sample a Raster object by an aligned raster of labelled pixels
 
-        Args
-        ----
+        Parameters
+        ----------
         response: rasterio.io.DatasetReader
             Single band raster containing labelled pixels
 
@@ -633,17 +520,17 @@ class BaseRaster(object):
 
         Returns
         -------
-        gpd : geopandas GeoDataFrame
+        geopandas GeoDataFrame
             Geodataframe containing extracted data as point features
 
-        X : array-like
+        numpy.ndarray
             Numpy masked array of extracted raster values, typically 2d
 
-        y: 1d array like
-            Numpy masked array of labelled sampled
+        numpy.ndarray
+            1d numpy masked array of labelled sampled
 
-        xy: 2d array-like
-            Numpy masked array of row and column indexes of training pixels
+        numpy.ndarray
+            2d numpy masked array of row and column indexes of training pixels
         """
 
         # open response raster and get labelled pixel indices and values
@@ -680,12 +567,16 @@ class BaseRaster(object):
 class RasterLayer(BaseRaster):
     """
     Represents a single rasterband derived from a single or multiband raster
-    dataset. 
+    dataset
 
     Simple wrapper around a rasterio.Band object with additional methods. 
     Used because the Rasterio.Band.ds.read method reads all bands from a
     multiband dataset, whereas the RasterLayer.read method only reads 
     a single band
+
+    Methods encapsulated in RasterLayer objects represent those that can only
+    be applied to a single-band of a raster, i.e. sieve-clump, distance to
+    non-NaN pixels etc.
     """
 
     def __init__(self, band):
@@ -716,15 +607,42 @@ class RasterLayer(BaseRaster):
 
     def focal(self):
         raise NotImplementedError
-    
-    def slope(self):
-        raise NotImplementedError
 
-    def aspect(self):
-        raise NotImplementedError
-    
-    def curvature(self):
-        raise NotImplementedError
+    def distance(self, file_path=None, driver='GTiff', nodata=-99999):
+        """
+        Calculate euclidean grid distances to non-NaN cells in a RasterLayer
+
+        Parameters
+        ----------
+        file_path : str, path to save distance raster, optional
+            If not specified output is saved to a temporary file
+
+        driver : str, default='GTiff'
+            GDAL-supported driver format
+
+        nodata : int, float, default=-99999
+            Value to use as the nodata value of the output raster
+
+        Returns
+        -------
+        pyspatialml.RasterLayer object
+            Grid distance raster as a pyspatialml.RasterLayer object
+        """
+        arr = self.read(masked=True)
+        arr = ndimage.distance_transform_edt(1 - arr)
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        meta = self.ds.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+
+        with rasterio.open(file_path, mode='w', **meta) as dst:
+            dst.write(arr[np.newaxis, :, :].astype('float32'))
+
+        src = rasterio.open(file_path)
+        return RasterLayer(rasterio.band(src, 1))
 
     def plot(self):
         fig, ax = plt.subplots()
@@ -738,28 +656,47 @@ class Raster(BaseRaster):
     """
     Flexible class that represents a collection of file-based GDAL-supported
     raster datasets which share a common coordinate reference system and
-    geometry. Raster objects encapsulate RasterLayer objects, which represent
+    geometry
+
+    Raster objects encapsulate RasterLayer objects, which represent
     single band rasters that can physically be represented by separate
     single-band raster files, multi-band raster files, or any combination of
-    individual bands from multi-band rasters and single-band rasters.
-    RasterLayer objects only exist within Raster objects.
+    individual bands from multi-band rasters and single-band rasters
 
-    A Raster object should be created using the pyspatialml.stack_from_files()
-    function, where a single file, or a list of files is passed as the file_path
-    argument.
-
-    Additional RasterLayer objects can be added to an existing Raster object
-    using the append() method. Either the path to file(s) or an existing
-    RasterLayer from another Raster object can be passed to this method and
-    those layers, if they are spatially aligned, will be appended to the Raster
-    object. Any RasterLayer can also be removed from a Raster object using the
-    drop() method.
+    Methods defined in the Raster class are those that usually would be applied
+    to multiple rasters, and always return a new Raster object
     """
 
     def __init__(self, file_path=None, layers=None, arr=None, crs=None,
                  transform=None, nodata=-99999, mode='r'):
         """
         Initiate a new Raster object
+
+        Parameters
+        ----------
+        file_path : str, list, optional
+            Initiate a Raster object from a file path, or a list of file paths
+            to GDAL-supported raster datasets
+
+        layers : pyspatialml.RasterLayer, or list RasterLayer objects, optional
+            Initiate a Raster object from existing pyspatialml.RasterLayer objects
+
+        arr : ndarray, optional
+            Initiated a Raster object from a numpy.ndarray. Additional arguments
+            crs and transform should also be provided to supply spatial coordinate
+            information
+
+        crs : rasterio.crs.CRS object, optional
+            CRS object containing projection information for the associated
+            arr parameter
+
+        transform : affine.Affine object
+            Affine object containing transform information for the associated
+            arr parameter
+
+        Returns
+        -------
+        pyspatialml.Raster
         """
 
         self.loc = ExtendedDict(self)
@@ -816,20 +753,21 @@ class Raster(BaseRaster):
                     layers.append(RasterLayer(band))
 
         # call property with a list of rasterio.Band objects
-        self.layers = layers
+        self._layers = layers
 
     def __getitem__(self, label):
         """
         Subset the Raster object using a label or list of labels
         
-        Args
-        ----
+        Parameters
+        ----------
         label : str, list
             
         Returns
         -------
-        A new Raster object only containing the subset of layers specified
-        in the label argument
+        pyspatialml.Raster
+            A new Raster object only containing the subset of layers specified
+            in the label argument
         """
 
         if isinstance(label, str):
@@ -856,8 +794,8 @@ class Raster(BaseRaster):
         
         Note that this modifies the Raster object in place
         
-        Args
-        ----
+        Parameters
+        ----------
         key : str
             key-based index of layer to be replaced
         
@@ -883,6 +821,17 @@ class Raster(BaseRaster):
         """
         Check that a list of rasters are aligned with the same pixel dimensions
         and geotransforms
+
+        Parameters
+        ----------
+        layers : list
+            List of RasterLayer objects
+
+        Returns
+        -------
+        dict, False
+            dict of metadata if all layers are spatially aligned,
+            otherwise returns False
         """
 
         src_meta = []
@@ -939,13 +888,25 @@ class Raster(BaseRaster):
         return list(self.loc.keys())
 
     @property
-    def layers(self):
+    def _layers(self):
+        """
+        Getter method
+
+        Returns
+        -------
+        pyspatialml.indexing.ExtendedDict
+        """
         return self.loc
 
-    @layers.setter
-    def layers(self, layers):
+    @_layers.setter
+    def _layers(self, layers):
         """
         Setter method for the files attribute in the Raster object
+
+        Parameters
+        ----------
+        layers : RasterLayer, list of RasterLayer objects, or tuple with
+            (RasterLayers, names_of_layers)
         """
 
         # some checks
@@ -1027,8 +988,8 @@ class Raster(BaseRaster):
         Overrides read BaseRaster class read method and replaces it with a
         method that reads from multiple RasterLayer objects
 
-        Args
-        ----
+        Parameters
+        ----------
         masked : bool, optional, default = False
             Read data into a masked array
 
@@ -1051,7 +1012,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        arr : ndarray
+        ndarray
             Raster values in 3d numpy array [band, row, col]
         """
 
@@ -1100,8 +1061,8 @@ class Raster(BaseRaster):
         Overrides the write RasterBase class method, which is a partial
         function of the rasterio.DatasetReader.write method
 
-        Args
-        ----
+        Parameters
+        ----------
         file_path : str
             File path to save the Raster object as a multiband file-based
             raster dataset
@@ -1116,6 +1077,11 @@ class Raster(BaseRaster):
         nodata : int, float, optional
             Optionally assign a new nodata value when saving to file. Otherwise
             a nodata value that is appropriate for the dtype is used
+
+        Returns
+        -------
+        pyspatialml.Raster
+            New Raster object from saved file
         """
 
         if dtype is None:
@@ -1127,8 +1093,11 @@ class Raster(BaseRaster):
             except ValueError:
                 nodata = np.finfo(dtype).min()
 
-        with rasterio.open(file_path, mode='w', driver=driver, nodata=nodata,
-                           **self.meta) as dst:
+        meta = self.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+
+        with rasterio.open(file_path, mode='w', **self.meta) as dst:
 
             for i, layer in enumerate(self.iloc):
                 arr = layer.read()
@@ -1136,14 +1105,14 @@ class Raster(BaseRaster):
 
                 dst.write(arr.astype(dtype), i+1)
 
-        return None
+        return self._newraster(file_path, self.names)
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
         """
         Raster to pandas DataFrame
 
-        Args
-        ----
+        Parameters
+        ----------
         max_pixels: int, default=50000
             Maximum number of pixels to sample
 
@@ -1155,7 +1124,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        df : pandas DataFrame
+        pandas.DataFrame
         """
 
         n_pixels = self.shape[0] * self.shape[1]
@@ -1167,8 +1136,9 @@ class Raster(BaseRaster):
         arr = self.read(masked=True, out_shape=out_shape,
                         resampling=resampling)
 
-        if isinstance(self, RasterLayer):
-            arr = arr[np.newaxis, :, :]
+        # not required if to_pandas is restricted to Raster objects
+        # if isinstance(self, RasterLayer):
+        #     arr = arr[np.newaxis, :, :]
 
         # x and y grid coordinate arrays
         x_range = np.linspace(start=self.bounds.left,
@@ -1194,8 +1164,8 @@ class Raster(BaseRaster):
         """
         Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
-        Args
-        ----
+        Parameters
+        ----------
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
 
@@ -1220,8 +1190,9 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        Raster object
+        pyspatialml.Raster object
         """
+
         predfun = self._probfun
 
         # determine output count
@@ -1272,6 +1243,7 @@ class Raster(BaseRaster):
         # generate layer names
         prefix = "prob_"
         names = [prefix + str(i) for i in range(len(indexes))]
+
         return self._newraster(file_path, names)
 
     def predict(self, estimator, file_path=None, driver='GTiff',
@@ -1279,8 +1251,8 @@ class Raster(BaseRaster):
         """
         Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
-        Args
-        ----
+        Parameters
+        ----------
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
 
@@ -1302,7 +1274,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        Raster object
+        pyspatialml.Raster object
         """
 
         # determine output count for multi output cases
@@ -1360,15 +1332,18 @@ class Raster(BaseRaster):
     def _predfun(img, estimator):
         """
         Prediction function for classification or regression response
-        Args
+
+        Parameters
         ----
         img : 3d numpy array of raster data
+
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
+
         Returns
         -------
-        result_cla : 2d numpy array
-            Single band raster as a 2d numpy array containing the
+        numpy.ndarray
+            2d numpy array representing a single band raster containing the
             classification or regression result
         """
 
@@ -1378,8 +1353,7 @@ class Raster(BaseRaster):
         # first reorder into rows,cols,bands(transpose)
         # then resample into 2D array (rows=sample_n, cols=band_values)
         n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape(
-            (n_samples, n_features))
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
 
         # create mask for NaN values and replace with number
         flat_pixels_mask = flat_pixels.mask.copy()
@@ -1400,14 +1374,18 @@ class Raster(BaseRaster):
     def _probfun(img, estimator):
         """
         Class probabilities function
-        Args
-        ----
-        img : 3d numpy array of raster data [band, row, col]
+
+        Parameters
+        ----------
+        img : ndarray
+            3d numpy array of raster data [band, row, col]
+
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
+
         Returns
         -------
-        result_proba : 3d numpy array
+        numpy.ndarray
             Multi band raster as a 3d numpy array containing the
             probabilities associated with each class.
             Array is in (class, row, col) order
@@ -1421,15 +1399,13 @@ class Raster(BaseRaster):
         # first reorder into rows,cols,bands(transpose)
         # then resample into 2D array (rows=sample_n, cols=band_values)
         n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape(
-            (n_samples, n_features))
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
 
         # predict probabilities
         result_proba = estimator.predict_proba(flat_pixels)
 
         # reshape class probabilities back to 3D image [iclass, rows, cols]
-        result_proba = result_proba.reshape(
-            (rows, cols, result_proba.shape[1]))
+        result_proba = result_proba.reshape((rows, cols, result_proba.shape[1]))
 
         # reshape band into rasterio format [band, row, col]
         result_proba = result_proba.transpose(2, 0, 1)
@@ -1451,14 +1427,17 @@ class Raster(BaseRaster):
         """
         Multi output prediction
 
-        Args
-        ----
-        img : 3d numpy array of raster data [band, row, col]
+        Parameters
+        ----------
+        img : ndarray
+            3d numpy array of raster data [band, row, col]
+
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
+
         Returns
         -------
-        result_proba : 3d numpy array
+        narray
             Multi band raster as a 3d numpy array containing the
             probabilities associated with each class.
             Array is in (class, row, col) order
@@ -1501,8 +1480,12 @@ class Raster(BaseRaster):
         
         Note that this modifies the Raster object in-place
 
-        Args
+        TODO
         ----
+        Change default behaviour so that in_place = False
+
+        Parameters
+        ----------
         other : Raster object or list of Raster objects
         """
 
@@ -1529,9 +1512,9 @@ class Raster(BaseRaster):
                                 s)] = s + "_" + str(i)
 
             # update layers and names
-            self.layers = (list(self.loc.values()) +
-                           list(new_raster.loc.values()),
-                           combined_names)
+            self._layers = (list(self.loc.values()) +
+                            list(new_raster.loc.values()),
+                            combined_names)
 
     def drop(self, labels):
         """
@@ -1539,8 +1522,12 @@ class Raster(BaseRaster):
         
         Note that this modifies the Raster object in-place
 
-        Args
+        TODO
         ----
+        Change default behaviour so that in_place = False
+
+        Parameters
+        ---------
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label,
             or a list of integers or labels
@@ -1570,7 +1557,7 @@ class Raster(BaseRaster):
             raise ValueError(
                 'Cannot drop layers based on mixture of indexes and labels')
 
-        self.layers = (subset_layers, subset_names)
+        self._layers = (subset_layers, subset_names)
 
     def rename(self, names):
         """
@@ -1578,8 +1565,12 @@ class Raster(BaseRaster):
         
         Note that this modifies the Raster object in-place
 
-        Args
+        TODO
         ----
+        Change default behaviour so that in_place = False
+
+        Parameters
+        ----------
         names : dict
             dict of old_name : new_name
         """
@@ -1595,6 +1586,12 @@ class Raster(BaseRaster):
         """
         Plotting of a Raster object
 
+        TODO
+        ----
+        Fix plot if Raster only contains a single RasterLayer
+
+        Parameters
+        ----------
         width : int, float, default = 5
             Width of plot (inches)
 
@@ -1614,7 +1611,13 @@ class Raster(BaseRaster):
             Optionally supply a list of names for each RasterLayer to override the
             default layer names for the titles
 
-        **kwargs
+        **kwargs : dict
+            Additional arguments. Currently unused
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+        matplotlib.axes.Axes
         """
 
         # estimate required number of rows and columns in figure
@@ -1675,7 +1678,6 @@ class Raster(BaseRaster):
             ax.set_visible(False)
 
         plt.subplots_adjust()
-        plt.show()
 
         # # perform histogram stretching
         # if stretch is True:
@@ -1687,21 +1689,24 @@ class Raster(BaseRaster):
         #     rio_np = exposure.rescale_intensity(
         #         rio_np, in_range=(v_min, v_max), out_range=(out_min, out_max))
 
+        return fig, axs
+
     def _newraster(self, file_path, names=None):
         """
         Return a new Raster object
 
-        Args
-        ----
+        Parameters
+        ----------
         file_path : str
             Path to files to create the new Raster object from
+
         names : list, optional
             List to name the RasterLayer objects in the stack. If not supplied
             then the names will be generated from the filename
 
         Returns
         -------
-        raster : pyspatialml.Raster object
+        pyspatialml.Raster object
         """
 
         if isinstance(file_path, str):
@@ -1849,8 +1854,8 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        grid_buffers : 3d numpy array
-            Euclidean grid distances to each x,y coordinate pair
+        ndarray
+            3d numpy array of euclidean grid distances to each x,y coordinate pair
             [band, row, col]
         """
 
@@ -1913,3 +1918,269 @@ class Raster(BaseRaster):
             dst.write(arr)
         names = ['dist_sample' + str(i+1) for i in range(len(rows))]
         return self._newraster(file_path, names=names)
+
+    def mask(self, shapes=None, invert=False, crop=False, filled=False,
+             pad=False, file_path=None, driver='GTiff', nodata=-99999):
+        """
+        Mask a Raster object based on the outline of shapes in a
+        geopandas.GeoDataFrame
+        """
+
+        masked_ndarrays = []
+
+        for layer in self.iloc:
+            masked_arr, transform = rasterio.mask.mask(
+                dataset=layer.ds, shapes=[shapes.geometry.unary_union],
+                filled=filled, invert=invert, crop=crop, pad=pad)
+
+            if layer.ds.count > 1:
+                masked_arr = masked_arr[layer.bidx - 1, :, :]
+
+            else:
+                masked_arr = np.squeeze(masked_arr)
+
+            masked_ndarrays.append(masked_arr)
+
+        # stack list of 2d arrays into 3d array
+        masked_ndarrays = np.stack(masked_ndarrays)
+
+        # write to file
+        meta = self.meta
+        meta['transform'] = transform
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+        meta['height'] = masked_ndarrays.shape[1]
+        meta['width'] = masked_ndarrays.shape[2]
+
+        masked_ndarrays = np.ma.filled(masked_ndarrays, fill_value=nodata)
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+            dst.write(masked_ndarrays)
+
+        return self._newraster(file_path, self.names)
+
+    def intersect(self, file_path=None, driver='GTiff', nodata=-99999):
+        """
+        Perform a intersect operation on the Raster object
+
+        Computes the geometric intersection of the RasterLayers with the
+        Raster object. This will cause nodata values in any of the rasters
+        to be propagated through all of the output rasters
+
+        Returns
+        -------
+        pyspatial.Raster object
+        """
+
+        arr = self.read(masked=True)
+        mask_2d = arr.mask.any(axis=0)
+
+        # repeat mask for n_bands
+        mask_3d = np.repeat(a=mask_2d[np.newaxis, :, :],
+                           repeats=self.count, axis=0)
+
+        intersected_arr = np.ma.masked_array(arr, mask=mask_3d, fill_value=nodata)
+        intersected_arr = np.ma.filled(intersected_arr, fill_value=nodata)
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        meta = self.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+            dst.write(intersected_arr)
+
+        return self._newraster(file_path, self.names)
+
+    def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
+        """
+        Crops a Raster object by the supplied bounds
+
+        Parameters
+        ----------
+        bounds : tuple
+            A tuple containing the bounding box to clip by in the
+            form of (xmin, xmax, ymin, ymax)
+
+        file_path : str, optional. Default=None
+            File path to save to cropped raster.
+            If not supplied then the cropped raster is saved to a
+            temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        nodata : int, float
+            Nodata value for cropped dataset
+
+        Returns
+        -------
+        pyspatialml.Raster object
+            Cropped to new extent
+        """
+
+        xmin, ymin, xmax, ymax = bounds
+
+        rows, cols = rasterio.transform.rowcol(
+            self.transform, xs=(xmin, xmax), ys=(ymin, ymax))
+
+        window = Window(col_off=min(cols),
+                        row_off=min(rows),
+                        width=max(cols)-min(cols),
+                        height=max(rows)-min(rows))
+
+        cropped_arr = self.read(masked=True, window=window)
+        meta = self.meta
+        aff = self.transform
+        meta['width'] = max(cols) - min(cols)
+        meta['height'] = max(rows) - min(rows)
+        meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+            dst.write(cropped_arr)
+
+        return self._newraster(file_path, self.names)
+
+    def reproject(self):
+        raise NotImplementedError
+
+    def resample(self):
+        raise NotImplementedError
+
+    def aggregate(self, out_shape, resampling='nearest', file_path=None, driver='GTiff', nodata=-99999):
+        """
+        Aggregates a raster to (usually) a coarser grid cell size
+
+        Parameters
+        ----------
+        out_shape : tuple
+            New shape in (rows, cols)
+
+        resampling : str, default='nearest'
+            Resampling method to use when applying decimated reads when
+            out_shape is specified. Supported methods are: 'average',
+            'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
+            'max', 'med', 'min', 'mode', 'q1', 'q3'
+
+        file_path : str, optional. Default=None
+            File path to save to cropped raster.
+            If not supplied then the aggregated raster is saved to a
+            temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        nodata : int, float
+            Nodata value for new dataset
+
+        Returns
+        -------
+        pyspatialml.Raster object
+        """
+
+        rows, cols = out_shape
+
+        arr = self.read(masked=True, out_shape=out_shape,
+                        resampling=resampling)
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        meta = self.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+        meta['height'] = rows
+        meta['width'] = cols
+
+        bnd = self.bounds
+        meta['transform'] = rasterio.transform.from_bounds(
+            west=bnd.left, south=bnd.bottom, east=bnd.right, north=bnd.top,
+            width=cols, height=rows)
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+            dst.write(arr)
+
+        return self._newraster(file_path, self.names)
+
+    def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
+             nodata=-99999, progress=False):
+        """
+        Apply user-supplied function to a Raster object
+
+        Parameters
+        ----------
+        function : function
+            Function that takes an numpy array as a single argument
+
+        file_path : str, optional
+            Path to a GeoTiff raster for the classification results
+            If not supplied then output is written to a temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        dtype : str, optional. Default is 'float32'
+            Numpy data type for file export
+
+        nodata : any number, optional. Default is -99999
+            Nodata value for file export
+
+        progress : bool, optional. Default=False
+            Show tqdm progress bar for prediction
+
+        Returns
+        -------
+        pyspatialml.Raster object
+        """
+
+        # determine output dimensions
+        window = Window(0, 0, 1, self.width)
+        img = self.read(masked=True, window=window)
+        arr = function(img)
+
+        if len(arr.shape) > 2:
+            indexes = range(arr.shape[0])
+        else:
+            indexes = 1
+
+        count = len(indexes)
+
+        # optionally output to a temporary file
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        # open output file with updated metadata
+        meta = self.meta
+        meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+
+            # define windows
+            windows = [window for ij, window in dst.block_windows()]
+
+            # generator gets raster arrays for each window
+            data_gen = (self.read(window=window, masked=True)
+                        for window in windows)
+
+            if progress is True:
+                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
+                    result = function(arr)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result.astype(dtype), window=window)
+            else:
+                for window, arr in zip(windows, data_gen):
+                    result = function(arr)
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result.astype(dtype), window=window)
+
+        return self._newraster(file_path)
