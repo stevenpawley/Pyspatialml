@@ -4,6 +4,7 @@ import os
 import geopandas
 import rasterio.plot
 import matplotlib.pyplot as plt
+import rasterio
 
 # First, import the extract and predict functions:
 basedir = os.getcwd()
@@ -16,6 +17,10 @@ band5 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_50.tif')
 band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
 multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
+
+src = rasterio.open(band1)
+src.block_shapes
+src.block_windows()
 
 # Create a RasterStack instance
 stack = Raster([band1, band2, band3, band4, band5, band7, multiband])

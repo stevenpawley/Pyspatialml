@@ -2184,3 +2184,31 @@ class Raster(BaseRaster):
                     dst.write(result.astype(dtype), window=window)
 
         return self._newraster(file_path)
+
+    def block_shapes(self, rows, cols):
+        """
+        Generator for windows for optimal reading and writing based on the raster format
+        Windows are returns as a tuple with xoff, yoff, width, height
+
+        Parameters
+        ----------
+        rows : int
+            Height of window in rows
+
+        cols : int
+            Width of window in columns
+        """
+
+        for i in range(0, self.width, rows):
+            if i + rows < self.width:
+                num_cols = rows
+            else:
+                num_cols = self.width - i
+
+            for j in range(0, self.height, cols):
+                if j + cols < self.height:
+                    num_rows = rows
+                else:
+                    num_rows = self.height - j
+
+                yield (i, j, num_cols, num_rows)
