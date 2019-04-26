@@ -910,22 +910,12 @@ class Raster(BaseRaster):
         """
 
         # some checks
-        if isinstance(layers, tuple):
-            layers, names = layers
-        else:
-            names = None
-
         if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
             raise ValueError(
                 'Cannot create a Raster object from a mixture of input types')
-
-        if names is not None:
-            if len(names) != len(layers):
-                raise ValueError(
-                    'Number of layer names has to match the number of layers')
 
         meta = self._check_alignment(layers)
         if meta is False:
@@ -950,10 +940,13 @@ class Raster(BaseRaster):
         self.transform = meta['transform']
         self.res = (abs(meta['transform'].a), abs(meta['transform'].e))
         self.crs = meta['crs']
+
         bounds = rasterio.transform.array_bounds(
             self.height, self.width, self.transform)
+
         BoundingBox = namedtuple(
             'BoundingBox', ['left', 'bottom', 'right', 'top'])
+
         self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
         # update attributes per dataset
@@ -962,12 +955,9 @@ class Raster(BaseRaster):
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
 
-            if names is not None:
-                valid_name = names[i]
-            else:
-                valid_name = self._make_name(layer.file, self.names)
-                if layer.ds.count > 1:
-                    valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
+            valid_name = self._make_name(layer.names[0], self.names)
+            if layer.ds.count > 1:
+                valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
             
             layer.names = [valid_name]
             self.loc[valid_name] = layer
@@ -1037,20 +1027,31 @@ class Raster(BaseRaster):
         if out_shape:
             height, width = out_shape
 
-        # read masked or non-masked data
-        if masked is True:
-            arr = np.ma.zeros((self.count, height, width), dtype=dtype)
-        else:
-            arr = np.zeros((self.count, height, width), dtype=dtype)
-
-        # read bands separately into numpy array
-        for i, layer in enumerate(self.iloc):
-            arr[i, :, :] = layer.read(
+        # read using rasterio method is just one file
+        if len(set(self.files)) == 1:
+            arr = self.iloc[0].ds.read(
                 masked=masked,
                 window=window,
                 out_shape=out_shape,
                 resampling=rasterio.enums.Resampling[resampling],
                 **kwargs)
+
+        # read each RasterLayer separately
+        else:
+            # read masked or non-masked data
+            if masked is True:
+                arr = np.ma.zeros((self.count, height, width), dtype=dtype)
+            else:
+                arr = np.zeros((self.count, height, width), dtype=dtype)
+
+            # read bands separately into numpy array
+            for i, layer in enumerate(self.iloc):
+                arr[i, :, :] = layer.read(
+                    masked=masked,
+                    window=window,
+                    out_shape=out_shape,
+                    resampling=rasterio.enums.Resampling[resampling],
+                    **kwargs)
 
         return arr
 
@@ -1486,7 +1487,7 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        other : Raster object or list of Raster objects
+        other : Raster object, or list of Raster objects
         """
 
         if isinstance(other, Raster):
@@ -1498,23 +1499,24 @@ class Raster(BaseRaster):
             combined_names = self.names + new_raster.names
 
             counts = Counter(combined_names)
+
             for s, num in counts.items():
                 if num > 1:
                     for suffix in range(1, num + 1):
                         if s + "_" + str(suffix) not in combined_names:
-                            combined_names[combined_names.index(
-                                s)] = s + "_" + str(suffix)
+                            combined_names[combined_names.index(s)] = s + "_" + str(suffix)
                         else:
                             i = 1
                             while s + "_" + str(i) in combined_names:
                                 i += 1
-                            combined_names[combined_names.index(
-                                s)] = s + "_" + str(i)
+                            combined_names[combined_names.index(s)] = s + "_" + str(i)
 
             # update layers and names
-            self._layers = (list(self.loc.values()) +
-                            list(new_raster.loc.values()),
-                            combined_names)
+            combined_layers = list(self.loc.values()) + list(new_raster.loc.values())
+            for layer, name in zip(combined_layers, combined_names):
+                layer.names = [name]
+
+            self._layers = combined_layers
 
     def drop(self, labels):
         """
@@ -1542,22 +1544,18 @@ class Raster(BaseRaster):
 
             subset_layers = [v for (i, v) in enumerate(
                 list(self.loc.values())) if i not in labels]
-            subset_names = [v for (i, v) in enumerate(
-                self.names) if i not in labels]
 
         # str label based subsetting
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
 
             subset_layers = [v for (i, v) in enumerate(
                 list(self.loc.values())) if self.names[i] not in labels]
-            subset_names = [v for (i, v) in enumerate(
-                self.names) if self.names[i] not in labels]
 
         else:
             raise ValueError(
                 'Cannot drop layers based on mixture of indexes and labels')
 
-        self._layers = (subset_layers, subset_names)
+        self._layers = subset_layers
 
     def rename(self, names):
         """
@@ -1578,9 +1576,10 @@ class Raster(BaseRaster):
         for old_name, new_name in names.items():
             # change internal name of RasterLayer
             self.loc[old_name].names = [new_name]
+
             # change name of layer in stack
             self.loc[new_name] = self.loc.pop(old_name)
-            
+
     def plot(self, width=5, height=5, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
         """
@@ -1815,8 +1814,8 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster object
         """
-        names = ['topleft', 'topright', 'bottomleft',
-                 'bottomright', 'centre indices']
+        names = ['top_left', 'top_right', 'bottom_left',
+                 'bottom_right', 'centre_indices']
         rows = np.asarray(
             [0, 0, self.shape[0]-1, self.shape[0]-1, int(self.shape[0]/2)])
         cols = np.asarray(

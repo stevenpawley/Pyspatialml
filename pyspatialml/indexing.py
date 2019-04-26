@@ -52,9 +52,9 @@ class LinkedList(object):
         changes in the dict, reflecting changes in the RasterLayers occur
     """
 
-    def __init__(self, parent, d):
-        self._index = d
+    def __init__(self, parent, extended_dict):
         self.parent = parent
+        self._index = extended_dict
 
     def __setitem__(self, index, value):
 

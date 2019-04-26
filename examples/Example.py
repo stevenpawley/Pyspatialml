@@ -18,10 +18,6 @@ band7 = os.path.join(basedir, 'pyspatialml', 'tests', 'lsat7_2000_70.tif')
 multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
 
-src = rasterio.open(band1)
-src.block_shapes
-src.block_windows()
-
 # Create a RasterStack instance
 stack = Raster([band1, band2, band3, band4, band5, band7, multiband])
 
@@ -54,34 +50,42 @@ subset_raster.lsat7_2000_10
 print(subset_raster.lsat7_2000_10.read(masked=True).mean())
 print(subset_raster.lsat7_2000_70.read(masked=True).mean())
 
+# subsetting after name change
+stack.rename({'lsat7_2000_10': 'testme'})
+stack.names
+stack.iloc[-1].names
+stack[['testme', 'lsat7_2000_20']].names
+Raster(layers=stack.iloc[-1]).names
+
 # Replace a layer
 print(stack.iloc[0].read(masked=True).mean())
 stack.iloc[0] = Raster(band7).iloc[0]
 print(stack.iloc[0].read(masked=True).mean())
-print(stack.loc['lsat7_2000_10'].read(masked=True).mean())
-print(stack['lsat7_2000_10'].read(masked=True).mean())
-print(stack.lsat7_2000_10.read(masked=True).mean())
+print(stack.loc['testme'].read(masked=True).mean())
+print(stack['testme'].read(masked=True).mean())
+print(stack.testme.read(masked=True).mean())
 
 # Add a layer
 stack.append(Raster(band7))
 stack.names
-print(stack.lsat7_2000_10.read(masked=True).mean())
+print(stack.testme.read(masked=True).mean())
 print(stack.lsat7_2000_70_1.read(masked=True).mean())
 print(stack.lsat7_2000_70_2.read(masked=True).mean())
 
 stack.append(Raster(multiband))
 stack.names
-print(stack.lsat7_2000_10.read(masked=True).mean())
-print(stack.landsat_multiband_band1_1.read(masked=True).mean())
-print(stack.landsat_multiband_band1_2.read(masked=True).mean())
+print(stack.testme.read(masked=True).mean())
+print(stack.landsat_multiband_band1_band1.read(masked=True).mean())
 
 # Rename layers
 stack.names
+print(stack.lsat7_2000_30.read(masked=True).mean())
 stack.rename({'lsat7_2000_30': 'new_name'})
 stack.names
-stack.new_name
-stack['new_name']
-stack.loc['new_name']
+stack.new_name.read(masked=True).mean()
+stack['new_name'].read(masked=True).mean()
+stack.loc['new_name'].read(masked=True).mean()
+stack.loc['new_name'].names
 
 # convert to pandas
 df = stack.to_pandas()
@@ -94,7 +98,7 @@ from plotnine import *
 
 # Drop a layer
 stack.names
-stack.drop(labels='lsat7_2000_70_1')
+stack.drop(labels='lsat7_2000_50')
 stack.names
 
 # Modifify a layer
