@@ -667,19 +667,17 @@ class Raster(BaseRaster):
     to multiple rasters, and always return a new Raster object
     """
 
-    def __init__(self, file_path=None, layers=None, arr=None, crs=None,
-                 transform=None, nodata=-99999, mode='r'):
+    def __init__(self, src=None, arr=None, crs=None, transform=None,
+                 nodata=-99999, mode='r', file_path=None):
         """
         Initiate a new Raster object
 
         Parameters
         ----------
-        file_path : str, list, optional
-            Initiate a Raster object from a file path, or a list of file paths
-            to GDAL-supported raster datasets
-
-        layers : pyspatialml.RasterLayer, or list RasterLayer objects, optional
-            Initiate a Raster object from existing pyspatialml.RasterLayer objects
+        src : file path, RasterLayer or list of either
+            Inititate a Raster object from file paths to GDAL-supported
+            raster datasets, pyspatialml.RasterLayer objects,
+            rasterio.io.datasetreader, or rasterio.band objects
 
         arr : ndarray, optional
             Initiated a Raster object from a numpy.ndarray. Additional arguments
@@ -693,6 +691,9 @@ class Raster(BaseRaster):
         transform : affine.Affine object
             Affine object containing transform information for the associated
             arr parameter
+
+        file_path : str
+            Path to save new Raster object if created from arr
 
         Returns
         -------
@@ -709,51 +710,63 @@ class Raster(BaseRaster):
         self.meta = None
 
         # some checks
-        if layers is not None and file_path is not None:
-            raise ValueError('layers and file_path are mutually exclusive')
-
-        if layers is not None and arr is not None:
-            raise ValueError('layers and arr are mutually exclusive')
-
-        if file_path is not None and arr is not None:
-            raise ValueError('file_path and arr are mutually exclusive')
-
-        if file_path is None and layers is None and arr is None:
-            raise ValueError(
-                'must supply one of file_path, layers, or arr arguments')
+        if src and arr:
+            raise ValueError('Arguments src and arr are mutually exclusive')
 
         if mode not in ['r', 'r+', 'w']:
             raise ValueError("mode must be one of 'r', 'r+', or 'w'")
 
-        # create Raster from file_paths or new array data
-        if layers is None:
+        # initiate from array
+        if arr is not None:
 
-            # initiate from arr
-            if arr is not None:
+            if file_path is None:
                 file_path = tempfile.NamedTemporaryFile().name
 
-                with rasterio.open(
-                    file_path, 'w', driver='GTiff', height=arr.shape[1],
-                    width=arr.shape[2], count=arr.shape[0],
-                    dtype=arr.dtype, crs=crs, transform=transform) as dst:
-                    dst.write(arr)
+            with rasterio.open(
+                file_path, 'w', driver='GTiff', height=arr.shape[1],
+                width=arr.shape[2], count=arr.shape[0],
+                dtype=arr.dtype, crs=crs, transform=transform,
+                nodata=nodata) as dst:
+                dst.write(arr)
 
-                file_path = [file_path]
+            src = [file_path]
 
-            else:
-                if isinstance(file_path, str):
-                    file_path = [file_path]
+        if not isinstance(src, list):
+            src = [src]
 
-            # make list of rasterio.Band objects
-            layers = []
-            for f in file_path:
-                src = rasterio.open(f, mode=mode)
-                for i in range(src.count):
-                    band = rasterio.band(src, i+1)
-                    layers.append(RasterLayer(band))
+        src_layers = []
 
-        # call property with a list of rasterio.Band objects
-        self._layers = layers
+        # initiated from file paths
+        if all(isinstance(x, str) for x in src):
+            for f in src:
+                r = rasterio.open(f, mode=mode)
+                for i in range(r.count):
+                    band = rasterio.band(r, i+1)
+                    src_layers.append(RasterLayer(band))
+
+        # initiate from RasterLayer objects
+        elif all(isinstance(x, RasterLayer) for x in src):
+            src_layers = src
+
+        # initiate from rasterio.io.datasetreader
+        elif all(isinstance(x, rasterio.io.DatasetReader) for x in src):
+            for r in src:
+                for i in range(r.count):
+                    band = rasterio.band(r, i + 1)
+                    src_layers.append(RasterLayer(band))
+
+        # initiate from rasterio.band objects
+        elif all(isinstance(x, rasterio.Band) for x in src):
+            for band in src:
+                src_layers.append(RasterLayer(band))
+
+        # otherwise raise error
+        elif all(isinstance(x, type(x[0]) for x in src)):
+            raise ValueError(
+                'Cannot initiated a Raster from a list of different type objects')
+
+        # call property with a list of rasterio.band objects
+        self._layers = src_layers
 
     def __getitem__(self, label):
         """
@@ -782,7 +795,7 @@ class Raster(BaseRaster):
             else:
                 subset_layers.append(self.loc[i])
 
-        subset_raster = Raster(layers=subset_layers)
+        subset_raster = Raster(subset_layers)
         subset_raster.rename(
             {old: new for old, new in zip(subset_raster.names, label)})
 

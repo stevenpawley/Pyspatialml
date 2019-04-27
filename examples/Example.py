@@ -22,6 +22,9 @@ predictors = [band1, band2, band3, band4, band5, band7]
 stack = Raster([band1, band2, band3, band4, band5, band7, multiband])
 stack.count
 
+with rasterio.open(band1) as src:
+    stack = Raster(src)
+
 # Aggregate a raster to a coarser cell size
 stack_new = stack.aggregate(out_shape=(100, 100))
 stack_new.iloc[0].plot()

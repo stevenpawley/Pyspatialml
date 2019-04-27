@@ -1,1 +1,1 @@
-from .__main import Raster
+from .__main import Raster, RasterLayer
