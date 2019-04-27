@@ -20,8 +20,9 @@ class TestExtract(TestCase):
 
     def test_extract_points(self):
 
-        # extract training data from points
         stack = Raster(self.predictors)
+
+        # extract training data from points
         training_pt = geopandas.read_file('landsat96_points.shp')
         X, y, xy = stack.extract_vector(response=training_pt, field='id', return_array=True)
 
@@ -52,8 +53,9 @@ class TestExtract(TestCase):
 
     def test_extract_polygons(self):
 
-        # extract training data from polygons
         stack = Raster(self.predictors)
+
+        # extract training data from polygons
         training_py = geopandas.read_file('landsat96_polygons.shp')
         X, y, xy = stack.extract_vector(response=training_py, field='id', return_array=True)
 
@@ -70,11 +72,12 @@ class TestExtract(TestCase):
 
     def test_extract_lines(self):
 
+        stack = Raster(self.predictors)
+
         # extract training data from lines
         training_py = geopandas.read_file('landsat96_polygons.shp')
         training_lines = deepcopy(training_py)
         training_lines['geometry'] = training_lines.geometry.boundary
-        stack = Raster(self.predictors)
         X, y, xy = stack.extract_vector(response=training_lines, field='id', return_array=True)
 
         # remove masked values
@@ -89,6 +92,8 @@ class TestExtract(TestCase):
         self.assertTupleEqual(xy.shape, (948, 2))
 
     def test_extract_raster(self):
+
+        stack = Raster(self.predictors)
 
         # extract training data from labelled pixels
         training_px = rasterio.open('landsat96_labelled_pixels.tif')
