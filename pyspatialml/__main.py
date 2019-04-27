@@ -880,6 +880,24 @@ class Raster(BaseRaster):
 
         return dtype
 
+    @staticmethod
+    def _fix_names(combined_names):
+
+        counts = Counter(combined_names)
+
+        for s, num in counts.items():
+            if num > 1:
+                for suffix in range(1, num + 1):
+                    if s + "_" + str(suffix) not in combined_names:
+                        combined_names[combined_names.index(s)] = s + "_" + str(suffix)
+                    else:
+                        i = 1
+                        while s + "_" + str(i) in combined_names:
+                            i += 1
+                        combined_names[combined_names.index(s)] = s + "_" + str(i)
+
+        return combined_names
+
     @property
     def names(self):
         """
@@ -941,27 +959,21 @@ class Raster(BaseRaster):
         self.res = (abs(meta['transform'].a), abs(meta['transform'].e))
         self.crs = meta['crs']
 
-        bounds = rasterio.transform.array_bounds(
-            self.height, self.width, self.transform)
-
-        BoundingBox = namedtuple(
-            'BoundingBox', ['left', 'bottom', 'right', 'top'])
-
+        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
+        BoundingBox = namedtuple('BoundingBox', ['left', 'bottom', 'right', 'top'])
         self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
+        names = [i.names[0] for i in layers]
+        names = self._fix_names(names)
+
         # update attributes per dataset
-        for i, layer in enumerate(layers):
+        for i, (layer, name) in enumerate(zip(layers, names)):
             self.dtypes.append(layer.dtype)
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
-
-            valid_name = self._make_name(layer.names[0], self.names)
-            if layer.ds.count > 1:
-                valid_name = '_'.join([valid_name, "band" + str(layer.bidx)])
-            
-            layer.names = [valid_name]
-            self.loc[valid_name] = layer
-            setattr(self, valid_name, self.loc[valid_name])
+            layer.names = [name]
+            self.loc[name] = layer
+            setattr(self, name, self.loc[name])
 
         self.meta = dict(crs=self.crs,
                          transform=self.transform,
@@ -1497,19 +1509,7 @@ class Raster(BaseRaster):
 
             # check that other raster does not result in duplicated names
             combined_names = self.names + new_raster.names
-
-            counts = Counter(combined_names)
-
-            for s, num in counts.items():
-                if num > 1:
-                    for suffix in range(1, num + 1):
-                        if s + "_" + str(suffix) not in combined_names:
-                            combined_names[combined_names.index(s)] = s + "_" + str(suffix)
-                        else:
-                            i = 1
-                            while s + "_" + str(i) in combined_names:
-                                i += 1
-                            combined_names[combined_names.index(s)] = s + "_" + str(i)
+            combined_names = self._fix_names(combined_names)
 
             # update layers and names
             combined_layers = list(self.loc.values()) + list(new_raster.loc.values())

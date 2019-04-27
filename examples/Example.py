@@ -20,6 +20,7 @@ predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
 stack = Raster([band1, band2, band3, band4, band5, band7, multiband])
+stack.count
 
 # Aggregate a raster to a coarser cell size
 stack_new = stack.aggregate(out_shape=(100, 100))
