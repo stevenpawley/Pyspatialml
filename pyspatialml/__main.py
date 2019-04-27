@@ -761,7 +761,7 @@ class Raster(BaseRaster):
                 src_layers.append(RasterLayer(band))
 
         # otherwise raise error
-        elif all(isinstance(x, type(x[0]) for x in src)):
+        elif all(isinstance(x, type(x[0])) for x in src):
             raise ValueError(
                 'Cannot initiated a Raster from a list of different type objects')
 
