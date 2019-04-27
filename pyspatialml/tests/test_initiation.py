@@ -1,9 +1,6 @@
 from unittest import TestCase
 from pyspatialml import Raster, RasterLayer
-import os
 import rasterio
-
-os.chdir(os.path.join('.', 'pyspatialml', 'tests'))
 
 class TestInit(TestCase):
 
