@@ -346,7 +346,8 @@ class BaseRaster(object):
             pixel. Available options are ['keep', 'mean', min', 'max']
 
         na_rm : bool, default=True
-            Optionally remove rows that contain nodata values
+            Optionally remove rows that contain nodata values if extracted
+            values are returned as a geopandas.GeoDataFrame
 
         low_memory : bool, default=False
             Optionally extract pixel values in using a slower but memory-safe
@@ -354,8 +355,12 @@ class BaseRaster(object):
 
         Returns
         -------
+        Either:
+
         geopandas.GeoDataframe
             Containing extracted data as point geometries
+
+        Or if return_array=True:
 
         numpy.ndarray
             Numpy masked array of extracted raster values, typically 2d
@@ -382,11 +387,6 @@ class BaseRaster(object):
         if all(response.geom_type == 'Polygon') or all(response.geom_type == 'LineString'):
 
             # rasterize
-            if all(response.geom_type == 'LineString'):
-                all_touched = True
-            else:
-                all_touched = False
-
             rows_all, cols_all, y_all = [], [], []
 
             for i, shape in response.iterrows():
@@ -400,7 +400,7 @@ class BaseRaster(object):
                 arr = features.rasterize(
                     shapes=(shapes for i in range(1)), fill=-99999, out=arr,
                     transform=self.transform, default_value=1,
-                    all_touched=all_touched)
+                    all_touched=True)
 
                 rows, cols = np.nonzero(arr != -99999)
 
