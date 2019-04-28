@@ -1,18 +1,15 @@
 from unittest import TestCase
 from pyspatialml import Raster, RasterLayer
 import rasterio
-import os
-
-THIS_DIR = os.path.abspath(__file__)
 
 class TestInit(TestCase):
 
-    band1 = os.path.join(THIS_DIR, 'lsat7_2000_10.tif')
-    band2 = os.path.join(THIS_DIR, 'lsat7_2000_20.tif')
-    band3 = os.path.join(THIS_DIR, 'lsat7_2000_30.tif')
-    band4 = os.path.join(THIS_DIR, 'lsat7_2000_40.tif')
-    band5 = os.path.join(THIS_DIR, 'lsat7_2000_50.tif')
-    band7 = os.path.join(THIS_DIR, 'lsat7_2000_70.tif')
+    band1 = 'tests/lsat7_2000_10.tif'
+    band2 = 'tests/lsat7_2000_20.tif'
+    band3 = 'tests/lsat7_2000_30.tif'
+    band4 = 'tests/lsat7_2000_40.tif'
+    band5 = 'tests/lsat7_2000_50.tif'
+    band7 = 'tests/lsat7_2000_70.tif'
     predictors = [band1, band2, band3, band4, band5, band7]
 
     def test_initiation(self):
