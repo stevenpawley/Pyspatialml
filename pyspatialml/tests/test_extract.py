@@ -6,7 +6,7 @@ import geopandas
 import rasterio
 import numpy as np
 
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+THIS_DIR = os.path.abspath(__file__)
 
 class TestExtract(TestCase):
 
