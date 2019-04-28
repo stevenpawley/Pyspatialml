@@ -1,6 +1,9 @@
 from unittest import TestCase
 from pyspatialml import Raster, RasterLayer
 import rasterio
+import os
+
+THIS_DIR = os.path.abspath(__file__)
 
 class TestInit(TestCase):
 
