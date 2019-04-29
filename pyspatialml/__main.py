@@ -20,6 +20,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from rasterio import features
 from rasterio.transform import Affine
 from rasterio.windows import Window
+from rasterio.warp import calculate_default_transform, reproject
 from scipy import ndimage
 from shapely.geometry import Point
 from tqdm import tqdm
@@ -2063,11 +2064,101 @@ class Raster(BaseRaster):
 
         return self._newraster(file_path, self.names)
 
-    def reproject(self):
-        raise NotImplementedError
+    def to_crs(self, crs, resampling='nearest', file_path=None,
+               driver='GTiff', nodata=-99999, n_jobs=1,
+               warp_mem_lim=0, progress=False):
+        """
+        Reprojects a Raster object to a different crs
 
-    def resample(self):
-        raise NotImplementedError
+        Parameters
+        ----------
+        crs : rasterio.transform.CRS object, or dict
+            Example: CRS({'init': 'EPSG:4326'})
+
+        resampling : str
+            Resampling method to use.  One of the following:
+            Resampling.nearest,
+            Resampling.bilinear,
+            Resampling.cubic,
+            Resampling.cubic_spline,
+            Resampling.lanczos,
+            Resampling.average,
+            Resampling.mode,
+            Resampling.max (GDAL >= 2.2),
+            Resampling.min (GDAL >= 2.2),
+            Resampling.med (GDAL >= 2.2),
+            Resampling.q1 (GDAL >= 2.2),
+            Resampling.q3 (GDAL >= 2.2)
+
+        file_path : str, optional
+            Optional path to save reprojected Raster object. If not
+            specified then a tempfile is used
+
+        driver : str, default='GTiff'
+            GDAL driver
+
+        nodata : int, float
+            No data to use for reprojected layers in reprojected Raster
+
+        n_jobs : int, default=1
+            The number of warp worker threads
+
+        warp_mem_lim : int, default=0
+            The warp operation memory limit in MB. Larger values allow the
+            warp operation to be carried out in fewer chunks. The amount of
+            memory required to warp a 3-band uint8 2000 row x 2000 col
+            raster to a destination of the same size is approximately
+            56 MB. The default (0) means 64 MB with GDAL 2.2.
+
+        progress : bool, default=False
+            Optionally show progress of transform operations
+        """
+
+        resampling_methods = [i.name for i in rasterio.enums.Resampling]
+        if resampling not in resampling_methods:
+            raise ValueError(
+                'Invalid resampling method.' +
+                'Resampling method must be one of {0}:'.format(
+                    resampling_methods))
+
+        if file_path is None:
+            file_path = tempfile.NamedTemporaryFile().name
+
+        dst_transform, dst_width, dst_height = calculate_default_transform(
+            src_crs=self.crs,
+            dst_crs=crs,
+            width=self.width,
+            height=self.height,
+            left=self.bounds.left,
+            right=self.bounds.right,
+            bottom=self.bounds.bottom,
+            top=self.bounds.top)
+
+        meta = self.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+        meta['width'] = dst_width
+        meta['height'] = dst_height
+        meta['transform'] = dst_transform
+        meta['crs'] = crs
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+            if progress is True:
+                t = tqdm(total=self.count)
+                for i, layer in enumerate(self.iloc):
+                    reproject(
+                        source=rasterio.band(layer.ds, layer.bidx),
+                        destination=rasterio.band(dst, i+1),
+                        dst_transform=dst_transform,
+                        dst_crs=crs,
+                        dst_nodata=nodata,
+                        resampling=rasterio.enums.Resampling[resampling],
+                        num_threads=n_jobs,
+                        warp_mem_lim=warp_mem_lim)
+                    if progress is True:
+                        t.update()
+
+        return self._newraster(file_path, self.names)
 
     def aggregate(self, out_shape, resampling='nearest', file_path=None, driver='GTiff', nodata=-99999):
         """
