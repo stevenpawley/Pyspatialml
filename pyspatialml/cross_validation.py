@@ -1,7 +1,7 @@
 import numpy as np
 import inspect
 from numpy.random import RandomState
-from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier
+from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier, RegressorMixin
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.model_selection import check_cv, cross_val_predict
 from sklearn.preprocessing import binarize
@@ -490,3 +490,110 @@ def spatial_loocv(estimator, X, y, coordinates, size, radius,
             y_prob, estimator.predict_proba(X_test[i].reshape(1, -1))))
 
     return y_test, y_pred, y_prob
+
+
+class EnsembleOptRegressor(BaseEstimator, RegressorMixin):
+    """
+    Metaregressor to fit a tree-based ensemble regressor performing
+    hyperparameter using the OOB score
+    """
+    def __init__(self, estimator, param_grid=None, random_state=None):
+        """
+        Initialize a ThresholdClassifierCV instance
+
+        Parameters
+        ----------
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
+
+        param_grid : dict
+            key-value pairs of hyperparameters and values to optimize against
+
+        random_state : int, RandomState instance or None, optional (default=0)
+            If int, random_state is the seed used by the random number
+            generator; If RandomState instance, random_state is the random
+            number generator; If None, the random number generator is the
+            RandomState instance used by `np.random`
+        """
+
+        # get dict of arguments from function call
+        args, _, _, values = inspect.getargvalues(inspect.currentframe())
+        values.pop("self")
+
+        for arg, val in values.items():
+            setattr(self, arg, val)
+
+        self.feature_importances_ = None
+
+    def fit(self, X, y=None, **fit_params):
+        """Run fit method with all sets of parameters
+
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Training vector, where n_samples is the number of samples and
+            n_features is the number of features
+
+        y : array-like, shape = [n_samples] or [n_samples, n_output], optional
+            Target relative to X for classification or regression;
+            None for unsupervised learning
+
+        **fit_params : dict of string -> object
+            Parameters passed to the ``fit`` method of the estimator
+
+        Notes
+        -----
+        - Parameters are checked during the fit method
+        - New attributes created during fitting should end in _, i.e. fitted_
+        - Fit method needs to return self for compatibility reasons with sklearn
+        - The response vector, i.e. y, should be initiated with None"""
+
+        estimator = self.estimator
+        self.oob_results_ = []
+        self.best_params_ = None
+
+        # repeatedly fit model on hyperparameters combinations and monitor oob scores
+        if self.param_grid is not None:
+            for param in ParameterGrid(self.param_grid):
+
+                # update estimator with hyperparameters
+                for k, v in param.items():
+                    setattr(estimator, k, v)
+
+                # fit and collect oob
+                estimator.fit(X, y, **fit_params)
+                param['score'] = estimator.oob_score_
+                self.oob_results_.append(param)
+
+            # select hyperparameters with highest oob score
+            self.best_params_ = deepcopy(
+                self.oob_results_[np.asarray(
+                    [i['score'] for i in self.oob_results_]).argmax()])
+
+            # update estimator with best params
+            del (self.best_params_['score'])
+            for k, v in self.best_params_.items():
+                setattr(estimator, k, v)
+        else:
+            self.estimator.fit(X, y, **fit_params)
+
+        self.feature_importances_ = self.estimator.feature_importances_
+
+        return self
+
+    def predict(self, X):
+        """
+        Overriding the BaseRegressor predict method
+
+        Args
+        ----
+        X : 2d array-like
+            Training data in [n_samples, n_features]
+
+        Return
+        ------
+        preds : array_like, or tuple or percentiles are used
+            array-like [n_samples, n_outputs]
+        """
+        preds = self.estimator.predict(X)
+        return preds

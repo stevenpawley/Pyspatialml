@@ -797,8 +797,6 @@ class Raster(BaseRaster):
                 subset_layers.append(self.loc[i])
 
         subset_raster = Raster(subset_layers)
-        subset_raster.rename(
-            {old: new for old, new in zip(subset_raster.names, label)})
 
         return subset_raster
 
@@ -1035,6 +1033,7 @@ class Raster(BaseRaster):
         dtype = self.meta['dtype']
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
+
         if resampling not in resampling_methods:
             raise ValueError(
                 'Invalid resampling method.' +
@@ -1053,31 +1052,20 @@ class Raster(BaseRaster):
         if out_shape:
             height, width = out_shape
 
-        # read using rasterio method is just one file
-        if len(set(self.files)) == 1:
-            arr = self.iloc[0].ds.read(
+        # read masked or non-masked data
+        if masked is True:
+            arr = np.ma.zeros((self.count, height, width), dtype=dtype)
+        else:
+            arr = np.zeros((self.count, height, width), dtype=dtype)
+
+        # read bands separately into numpy array
+        for i, layer in enumerate(self.iloc):
+            arr[i, :, :] = layer.read(
                 masked=masked,
                 window=window,
                 out_shape=out_shape,
                 resampling=rasterio.enums.Resampling[resampling],
                 **kwargs)
-
-        # read each RasterLayer separately
-        else:
-            # read masked or non-masked data
-            if masked is True:
-                arr = np.ma.zeros((self.count, height, width), dtype=dtype)
-            else:
-                arr = np.zeros((self.count, height, width), dtype=dtype)
-
-            # read bands separately into numpy array
-            for i, layer in enumerate(self.iloc):
-                arr[i, :, :] = layer.read(
-                    masked=masked,
-                    window=window,
-                    out_shape=out_shape,
-                    resampling=rasterio.enums.Resampling[resampling],
-                    **kwargs)
 
         return arr
 
@@ -1274,7 +1262,8 @@ class Raster(BaseRaster):
         return self._newraster(file_path, names)
 
     def predict(self, estimator, file_path=None, driver='GTiff',
-                dtype='float32', nodata=-99999, progress=True):
+                dtype='float32', nodata=-99999, progress=True,
+                block_shape=None):
         """
         Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
@@ -1311,7 +1300,7 @@ class Raster(BaseRaster):
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
         result = estimator.predict(flat_pixels)
-        indexes = np.arange(0, result.shape[1])
+        indexes = np.arange(0, result.ndim)
 
         # chose prediction function
         if len(indexes) == 1:
@@ -1331,7 +1320,10 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
 
             # define windows
-            windows = [window for ij, window in dst.block_windows()]
+            if block_shape is None:
+                windows = [window for ij, window in dst.block_windows()]
+            else:
+                windows = [window for window in self.block_shapes(*block_shape)]
 
             # generator gets raster arrays for each window
             data_gen = (self.read(window=window, masked=True)
@@ -2314,4 +2306,4 @@ class Raster(BaseRaster):
                 else:
                     num_rows = self.height - j
 
-                yield (i, j, num_cols, num_rows)
+                yield Window(i, j, num_cols, num_rows)
