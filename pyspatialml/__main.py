@@ -72,10 +72,11 @@ class BaseRaster(object):
             instance attribute
         """
 
-        # replace spaces with underscore
+        # replace spaces and hyphens with underscore
         valid_name = os.path.basename(name)
         valid_name = valid_name.split(os.path.extsep)[0]
         valid_name = valid_name.replace(' ', '_')
+        valid_name = valid_name.replace('-', '_')
 
         # ensure that does not start with number
         if valid_name[0].isdigit():
@@ -83,6 +84,9 @@ class BaseRaster(object):
 
         # remove parentheses and brackets
         valid_name = re.sub(r'[\[\]\(\)\{\}\;]', '', valid_name)
+
+        # remove occurrences of multiple underscores
+        valid_name = re.sub(r'_+', '_', valid_name)
 
         # check to see if same name already exists
         if existing_names is not None:
