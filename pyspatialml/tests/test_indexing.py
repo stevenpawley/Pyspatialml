@@ -5,16 +5,18 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 test_dir = os.path.dirname(__file__)
+pkg_dir = os.path.join(test_dir, os.path.pardir)
+nc_dir = os.path.join(pkg_dir, 'nc_dataset')
 
 class TestIndexing(TestCase):
 
-    band1 = os.path.join(test_dir, 'lsat7_2000_10.tif')
-    band2 = os.path.join(test_dir, 'lsat7_2000_20.tif')
-    band3 = os.path.join(test_dir, 'lsat7_2000_30.tif')
-    band4 = os.path.join(test_dir, 'lsat7_2000_40.tif')
-    band5 = os.path.join(test_dir, 'lsat7_2000_50.tif')
-    band7 = os.path.join(test_dir, 'lsat7_2000_70.tif')
-    multiband = os.path.join(test_dir, 'landsat_multiband.tif')
+    band1 = os.path.join(nc_dir, 'lsat7_2000_10.tif')
+    band2 = os.path.join(nc_dir, 'lsat7_2000_20.tif')
+    band3 = os.path.join(nc_dir, 'lsat7_2000_30.tif')
+    band4 = os.path.join(nc_dir, 'lsat7_2000_40.tif')
+    band5 = os.path.join(nc_dir, 'lsat7_2000_50.tif')
+    band7 = os.path.join(nc_dir, 'lsat7_2000_70.tif')
+    multiband = os.path.join(nc_dir, 'landsat_multiband.tif')
     predictors = [band1, band2, band3, band4, band5, band7]
 
     def test_naming(self):

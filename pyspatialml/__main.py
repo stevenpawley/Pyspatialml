@@ -1300,7 +1300,13 @@ class Raster(BaseRaster):
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
         result = estimator.predict(flat_pixels)
-        indexes = np.arange(0, result.ndim)
+
+        if result.ndim > 1:
+            n_outputs = result.shape[result.ndim-1]
+        else:
+            n_outputs = 1
+        
+        indexes = np.arange(0, n_outputs)
 
         # chose prediction function
         if len(indexes) == 1:

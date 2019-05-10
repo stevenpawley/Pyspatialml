@@ -19,7 +19,7 @@ multiband = os.path.join(basedir, 'pyspatialml', 'tests', 'landsat_multiband.tif
 predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
-stack = Raster([band1, band2, band3, band4, band5, band7, multiband])
+stack = Raster([band1, band2, band3, band4, band5, band7])
 stack.count
 
 stack_rs = stack.to_crs(crs={'init': 'EPSG:4326'}, progress=False)
@@ -153,8 +153,8 @@ lr = Pipeline(
      ('classifier', LogisticRegressionCV(n_jobs=-1))])
 
 # fit the classifier
-X = df_polygons.drop(columns=['id', 'geometry'])
-y = df_polygons.id
+X = df_points.drop(columns=['id', 'geometry'])
+y = df_points.id
 lr.fit(X, y)
 
 # spatial cross-validation
@@ -173,7 +173,7 @@ scores['test_score'].mean()
 
 # prediction
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
-result_prob = stack.predict(estimator=lr, predict_type='prob')
+result_prob = stack.predict_proba(estimator=lr)
 result.names
 result_prob.names
 
