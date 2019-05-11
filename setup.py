@@ -19,7 +19,7 @@ setup(
         'shapely>=1.6',
         'geopandas>=0.3',
         'matplotlib>=2.2.4',
-        'sklearn>=0.21.0'],
+        'sklearn'],
     python_requires='>=3.5',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
