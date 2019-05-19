@@ -1,7 +1,6 @@
 import random
-import numpy as np
-from scipy.spatial import distance_matrix
 from shapely.geometry import Point
+from scipy.cluster.hierarchy import linkage, cut_tree
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
@@ -24,20 +23,18 @@ def filter_points(gdf, min_dist=0, remove='first'):
     xy : 2d array-like
         Numpy array filtered coordinates
     """
+    xy = gdf.geometry.bounds.iloc[:, 0:2]
 
-	from scipy.cluster.hierarchy import dendrogram, linkage, cut_tree
-	
-	xy = gdf.geometry.bounds.iloc[:, 0:2]
-	Z = linkage(xy, 'complete')
-	tree_thres = cut_tree(Z, height=min_dist)
-	gdf['tree_thres'] = tree_thres
-	
+    Z = linkage(xy, 'complete')
+    tree_thres = cut_tree(Z, height=min_dist)
+    gdf['tree_thres'] = tree_thres
+
     if remove == 'first':
         gdf = gdf.groupby(by='tree_thres').first()
 
     elif remove == 'last':
         gdf = gdf.groupby(by='tree_thres').last()
-	
+
     return gdf
 
 
