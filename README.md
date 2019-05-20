@@ -55,7 +55,7 @@ This is an example using the imagery data that is bundled with the package. This
 
 First, import the extract and predict functions:
 ```
-import pyspatialml
+from pyspatialml import Raster
 from copy import deepcopy
 import os
 import geopandas
@@ -118,12 +118,12 @@ subset_raster.names
 
 Replace a RasterLayer with another:
 ```
-stack.iloc[0] = pyspatialml.layer_from_file(band7)
+stack.iloc[0] = Raster(band7).iloc[0]
 ```
 
 Append layers from another Raster to the stack. Note that this occurs in-place. Duplicate names are automatically given a suffix:
 ```
-stack.append(ps.stack_from_files(band7))
+stack.append(Raster(band7))
 stack.names
 ```
 
@@ -279,6 +279,7 @@ Other arguments consist of ```predict_type``` can be either 'raw' to output a cl
 ```
 # prediction
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
+result_probs = stack.predict_proba(estimator=lr)
 plt.imshow(result.read(1, masked=True))
 plt.show()
 ```
