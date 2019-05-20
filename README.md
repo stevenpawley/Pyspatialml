@@ -65,10 +65,10 @@ import matplotlib.pyplot as plt
 
 ### Stacking 
 
-We are going to use a set of Landsat 7 bands contained within the pyspatialml/tests directory:
+We are going to use a set of Landsat 7 bands contained within the pyspatialml/nc_dataset directory:
 
 ```
-basedir = '../pyspatialml/tests/'
+basedir = '../pyspatialml/nc_dataset/'
 band1 = os.path.join(basedir, 'lsat7_2000_10.tif')
 band2 = os.path.join(basedir, 'lsat7_2000_20.tif')
 band3 = os.path.join(basedir, 'lsat7_2000_30.tif')
