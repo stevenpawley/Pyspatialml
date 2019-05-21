@@ -9,13 +9,13 @@ import rasterio
 # First, import the extract and predict functions:
 basedir = os.getcwd()
 os.chdir(os.path.join('.', 'examples'))
-band1 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_10.tif')
-band2 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_20.tif')
-band3 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_30.tif')
-band4 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_40.tif')
-band5 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_50.tif')
-band7 = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'lsat7_2000_70.tif')
-multiband = os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'landsat_multiband.tif')
+band1 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_10.tif')
+band2 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_20.tif')
+band3 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_30.tif')
+band4 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_40.tif')
+band5 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_50.tif')
+band7 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_70.tif')
+multiband = os.path.join(basedir, 'nc_dataset', 'landsat_multiband.tif')
 predictors = [band1, band2, band3, band4, band5, band7]
 
 # Create a RasterStack instance
@@ -120,9 +120,9 @@ newstack.landsat_multiband_band1_1.read()
 newstack=None
 
 # Load some training data in the form of a shapefile of point feature locations:
-training_py = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'landsat96_polygons.shp'))
-training_pt = geopandas.read_file(os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'landsat96_points.shp'))
-training_px = rasterio.open(os.path.join(basedir, 'pyspatialml', 'nc_dataset', 'landsat96_labelled_pixels.tif'))
+training_py = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_polygons.shp'))
+training_pt = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_points.shp'))
+training_px = rasterio.open(os.path.join(basedir, 'nc_dataset', 'landsat96_labelled_pixels.tif'))
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 
