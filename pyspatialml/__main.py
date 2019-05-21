@@ -1008,7 +1008,7 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        masked : bool, optional, default = False
+        masked : bool, optional, default=False
             Read data into a masked array
 
         window : rasterio.window.Window object, optional
@@ -1019,7 +1019,7 @@ class Raster(BaseRaster):
             Shape of shape of array (rows, cols) to read data into using
             decimated reads
 
-        resampling : str, default = 'nearest'
+        resampling : str, default='nearest'
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
@@ -1070,7 +1070,7 @@ class Raster(BaseRaster):
                 out_shape=out_shape,
                 resampling=rasterio.enums.Resampling[resampling],
                 **kwargs)
-
+        
         return arr
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
@@ -1267,7 +1267,7 @@ class Raster(BaseRaster):
 
     def predict(self, estimator, file_path=None, driver='GTiff',
                 dtype='float32', nodata=-99999, progress=True,
-                block_shape=None):
+                block_shape=None, as_df=False):
         """
         Apply prediction of a scikit learn model to a pyspatialml.Raster object
 
@@ -1292,6 +1292,15 @@ class Raster(BaseRaster):
         progress : bool, optional. Default is True
             Show tqdm progress bar for prediction
 
+        block_shape : tuple, optional
+            Optionally supply a block shape to read and write the
+            raster data. Specified as a tuple (height, width)
+        
+        as_df : bool, optional, default=False
+            Read the raster data via a pandas DataFrame. Useful for
+            cases where the sklearn model is referring to specific
+            column names, i.e. when using sklearn.compose.ColumnTransformer
+
         Returns
         -------
         pyspatialml.Raster object
@@ -1303,6 +1312,10 @@ class Raster(BaseRaster):
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+
+        if as_df is True:
+            result = pd.DataFrame(data=result, columns=self.names)
+
         result = estimator.predict(flat_pixels)
 
         if result.ndim > 1:
@@ -1347,7 +1360,7 @@ class Raster(BaseRaster):
                         dtype), window=window)
             else:
                 for window, arr in zip(windows, data_gen):
-                    result = predfun(arr, estimator)
+                    result = predfun(arr, estimator, as_df)
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(
                         dtype), window=window)
@@ -1357,8 +1370,7 @@ class Raster(BaseRaster):
         names = [prefix + str(i) for i in range(len(indexes))]
         return self._newraster(file_path, names)
 
-    @staticmethod
-    def _predfun(img, estimator):
+    def _predfun(self, img, estimator, as_df=False):
         """
         Prediction function for classification or regression response
 
@@ -1388,6 +1400,8 @@ class Raster(BaseRaster):
         flat_pixels_mask = flat_pixels.mask.copy()
 
         # prediction
+        if as_df is True:
+            flat_pixels = pd.DataFrame(data=flat_pixels, columns=self.names)
         result_cla = estimator.predict(flat_pixels)
 
         # replace mask
@@ -1400,7 +1414,7 @@ class Raster(BaseRaster):
         return result_cla
 
     @staticmethod
-    def _probfun(img, estimator):
+    def _probfun(img, estimator, as_df=False):
         """
         Class probabilities function
 
@@ -1431,6 +1445,8 @@ class Raster(BaseRaster):
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
 
         # predict probabilities
+        if as_df is True:
+            flat_pixels = pd.DataFrame(data=flat_pixels, columns=self.names)
         result_proba = estimator.predict_proba(flat_pixels)
 
         # reshape class probabilities back to 3D image [iclass, rows, cols]
@@ -1452,7 +1468,7 @@ class Raster(BaseRaster):
         return result_proba
 
     @staticmethod
-    def _predfun_multioutput(img, estimator):
+    def _predfun_multioutput(img, estimator, as_df=False):
         """
         Multi output prediction
 
@@ -1483,6 +1499,8 @@ class Raster(BaseRaster):
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
 
         # predict probabilities
+        if as_df is True:
+            flat_pixels = pd.DataFrame(data=flat_pixels, columns=self.names)
         result = estimator.predict(flat_pixels)
 
         # reshape class probabilities back to 3D image [iclass, rows, cols]

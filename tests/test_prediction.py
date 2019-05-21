@@ -5,7 +5,6 @@ import sys
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 test_dir = os.path.dirname(__file__)
 pkg_dir = os.path.join(test_dir, os.path.pardir)
@@ -23,6 +22,7 @@ class TestPrediction(TestCase):
     predictors = [band1, band2, band3, band4, band5, band7]
 
     def test_classification(self):
+        print(self.predictors)
         stack = Raster(self.predictors)
         training_pt = gpd.read_file(
             os.path.join(nc_dir, 'landsat96_points.shp'))
@@ -45,7 +45,7 @@ class TestPrediction(TestCase):
         self.assertIsInstance(cla, Raster)
         self.assertEquals(probs.count, 7)
 
-        for name, layer in probs:
+        for _, layer in probs:
             self.assertEquals(layer.read(masked=True).count(), 135092)
 
     def test_regression(self):
