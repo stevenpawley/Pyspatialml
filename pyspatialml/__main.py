@@ -1008,7 +1008,7 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        masked : bool, optional, default = False
+        masked : bool, optional, default=False
             Read data into a masked array
 
         window : rasterio.window.Window object, optional
@@ -1019,7 +1019,7 @@ class Raster(BaseRaster):
             Shape of shape of array (rows, cols) to read data into using
             decimated reads
 
-        resampling : str, default = 'nearest'
+        resampling : str, default='nearest'
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
@@ -1070,7 +1070,7 @@ class Raster(BaseRaster):
                 out_shape=out_shape,
                 resampling=rasterio.enums.Resampling[resampling],
                 **kwargs)
-
+        
         return arr
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
@@ -1292,6 +1292,10 @@ class Raster(BaseRaster):
         progress : bool, optional. Default is True
             Show tqdm progress bar for prediction
 
+        block_shape : tuple, optional
+            Optionally supply a block shape to read and write the
+            raster data. Specified as a tuple (height, width)
+
         Returns
         -------
         pyspatialml.Raster object
@@ -1357,8 +1361,7 @@ class Raster(BaseRaster):
         names = [prefix + str(i) for i in range(len(indexes))]
         return self._newraster(file_path, names)
 
-    @staticmethod
-    def _predfun(img, estimator):
+    def _predfun(self, img, estimator):
         """
         Prediction function for classification or regression response
 
