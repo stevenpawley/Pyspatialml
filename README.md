@@ -58,6 +58,7 @@ First, import the extract and predict functions:
 from pyspatialml import Raster
 from copy import deepcopy
 import os
+import tempfile
 import geopandas
 import rasterio.plot
 import matplotlib.pyplot as plt
@@ -65,17 +66,12 @@ import matplotlib.pyplot as plt
 
 ### Stacking 
 
-We are going to use a set of Landsat 7 bands contained within the pyspatialml/nc_dataset directory:
+We are going to use a set of Landsat 7 bands contained within the nc_dataset:
 
 ```
-basedir = '../pyspatialml/nc_dataset/'
-band1 = os.path.join(basedir, 'lsat7_2000_10.tif')
-band2 = os.path.join(basedir, 'lsat7_2000_20.tif')
-band3 = os.path.join(basedir, 'lsat7_2000_30.tif')
-band4 = os.path.join(basedir, 'lsat7_2000_40.tif')
-band5 = os.path.join(basedir, 'lsat7_2000_50.tif')
-band7 = os.path.join(basedir, 'lsat7_2000_70.tif')
-predictors = [band1, band2, band3, band4, band5, band7]
+import pyspatialml.datasets.nc_dataset as nc
+
+predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 ```
 
 These raster datasets are aligned in terms of their extent and coordinate reference systems. We can 'stack' these into a Raster class so that we can perform machine learning related operations on the set of rasters:
@@ -118,12 +114,12 @@ subset_raster.names
 
 Replace a RasterLayer with another:
 ```
-stack.iloc[0] = Raster(band7).iloc[0]
+stack.iloc[0] = Raster(nc.band7).iloc[0]
 ```
 
 Append layers from another Raster to the stack. Note that this occurs in-place. Duplicate names are automatically given a suffix:
 ```
-stack.append(Raster(band7))
+stack.append(Raster(nc.band7))
 stack.names
 ```
 
@@ -148,7 +144,8 @@ stack.names
 Save a Raster:
 
 ```
-newstack = stack.write(file_path="test.tif", nodata=-9999)
+tmp_tif = tempfile.NamedTemporaryFile().name + '.tif'
+newstack = stack.write(file_path=tmp_tif, nodata=-9999)
 newstack.new_name.read()
 newstack = None
 ```
@@ -194,9 +191,9 @@ geom_tile() + facet_wrap('variable'))
 Load some training data in the form of polygons, points and labelled pixels in geopandas GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a Raster object, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).
 
 ```
-training_py = geopandas.read_file(os.path.join(basedir, 'landsat96_polygons.shp'))
-training_pt = geopandas.read_file(os.path.join(basedir, 'landsat96_points.shp'))
-training_px = rasterio.open(os.path.join(basedir, 'landsat96_labelled_pixels.tif'))
+training_py = geopandas.read_file(nc.polygons)
+training_pt = geopandas.read_file(nc.points)
+training_px = rasterio.open(nc.labelled_pixels)
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 ```
@@ -302,7 +299,7 @@ df_rand.plot()
 
 The sample function also enables stratified random sampling based on passing a categorical raster dataset to the strata argument. The categorical raster should spatially overlap with the dataset to be sampled, but it does not need to be of the same grid resolution. This raster should be passed as a opened rasterio dataset:
 ```
-with rasterio.open(os.path.join(basedir, 'nc_dataset', 'strata.tif')) as strata:
+with rasterio.open(nc.strata) as strata:
     df_strata = stack.sample(size=5, strata=strata, random_state=1)
     df_strata = df_strata.dropna()
 
