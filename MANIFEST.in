@@ -1,0 +1,3 @@
+include README.rst
+include pyspatialml/datasets/nc_files/*.*
+include pyspatialml/datasets/meuse_files/*.*

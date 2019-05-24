@@ -1,23 +1,12 @@
 from unittest import TestCase
 from pyspatialml import Raster, RasterLayer
+import pyspatialml.datasets.nc_dataset as nc
 import rasterio
 import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-test_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(test_dir, os.path.pardir)
-nc_dir = os.path.join(pkg_dir, 'nc_dataset')
 
 class TestInit(TestCase):
 
-    band1 = os.path.join(nc_dir, 'lsat7_2000_10.tif')
-    band2 = os.path.join(nc_dir, 'lsat7_2000_20.tif')
-    band3 = os.path.join(nc_dir, 'lsat7_2000_30.tif')
-    band4 = os.path.join(nc_dir, 'lsat7_2000_40.tif')
-    band5 = os.path.join(nc_dir, 'lsat7_2000_50.tif')
-    band7 = os.path.join(nc_dir, 'lsat7_2000_70.tif')
-    predictors = [band1, band2, band3, band4, band5, band7]
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_initiation(self):
 
@@ -29,14 +18,14 @@ class TestInit(TestCase):
         stack = None
 
         # test init from single file path
-        stack = Raster(self.band1)
+        stack = Raster(nc.band1)
         self.assertIsInstance(stack, Raster)
         self.assertEqual(stack.count, 1)
         stack = None
 
         # rasterio.io.datasetreader --------
         # test init from single rasterio.io.datasetreader
-        with rasterio.open(self.band1) as src:
+        with rasterio.open(nc.band1) as src:
             stack = Raster(src)
             self.assertIsInstance(stack, Raster)
             self.assertEqual(stack.count, 1)
@@ -53,7 +42,7 @@ class TestInit(TestCase):
 
         # rasterio.band ---------------------
         # test init from single rasterio.band object
-        with rasterio.open(self.band1) as src:
+        with rasterio.open(nc.band1) as src:
             band = rasterio.band(src, 1)
             stack = Raster(band)
             self.assertIsInstance(stack, Raster)
@@ -72,7 +61,7 @@ class TestInit(TestCase):
 
         # RasterLayer objects ---------------
         # test init from a single RasterLayer object
-        with rasterio.open(self.band1) as src:
+        with rasterio.open(nc.band1) as src:
             band = rasterio.band(src, 1)
             layer = RasterLayer(band)
             stack = Raster(layer)

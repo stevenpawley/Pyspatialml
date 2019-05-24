@@ -1,28 +1,16 @@
 from unittest import TestCase
 from pyspatialml import Raster, RasterLayer
+import pyspatialml.datasets.nc_dataset as nc
 import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-test_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(test_dir, os.path.pardir)
-nc_dir = os.path.join(pkg_dir, 'nc_dataset')
 
 class TestIndexing(TestCase):
 
-    band1 = os.path.join(nc_dir, 'lsat7_2000_10.tif')
-    band2 = os.path.join(nc_dir, 'lsat7_2000_20.tif')
-    band3 = os.path.join(nc_dir, 'lsat7_2000_30.tif')
-    band4 = os.path.join(nc_dir, 'lsat7_2000_40.tif')
-    band5 = os.path.join(nc_dir, 'lsat7_2000_50.tif')
-    band7 = os.path.join(nc_dir, 'lsat7_2000_70.tif')
-    multiband = os.path.join(nc_dir, 'landsat_multiband.tif')
-    predictors = [band1, band2, band3, band4, band5, band7]
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_naming(self):
 
         # check unique naming when stacking multiband raster
-        stack = Raster(self.predictors + [self.multiband])
+        stack = Raster(self.predictors + [nc.multiband])
         self.assertEqual(stack.count, 11)
         expected_names = [
             'lsat7_2000_10',
@@ -41,7 +29,7 @@ class TestIndexing(TestCase):
 
     def test_subseting(self):
 
-        stack = Raster(self.predictors + [self.multiband])
+        stack = Raster(self.predictors + [nc.multiband])
 
         # RasterLayer indexing which returns a RasterLayer
         self.assertIsInstance(stack.iloc[0], RasterLayer)
@@ -80,19 +68,19 @@ class TestIndexing(TestCase):
 
     def test_indexing(self):
 
-        stack = Raster(self.predictors + [self.multiband])
+        stack = Raster(self.predictors + [nc.multiband])
 
         # replace band 1 with band 7
         band7_mean = stack.loc['lsat7_2000_70'].read(masked=True).mean()
 
-        stack.iloc[0] = Raster(self.band7).iloc[0]
+        stack.iloc[0] = Raster(nc.band7).iloc[0]
         self.assertEqual(stack.iloc[0].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack.loc['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack.lsat7_2000_10.read(masked=True).mean(), band7_mean)
 
         # append another Raster containing a single layer
-        stack.append(Raster(self.band7))
+        stack.append(Raster(nc.band7))
         self.assertEqual(stack.names[5], 'lsat7_2000_70_1')
         self.assertEqual(stack.names[-1], 'lsat7_2000_70_2')
         self.assertEqual(stack.lsat7_2000_70_1.read(masked=True).mean(),
@@ -100,7 +88,7 @@ class TestIndexing(TestCase):
                          band7_mean)
 
         # append a multiband raster
-        stack.append(Raster(self.multiband))
+        stack.append(Raster(nc.multiband))
         self.assertEqual(stack.names[6], 'landsat_multiband_1_1')
         self.assertEqual(stack.names[12], 'landsat_multiband_1_2')
 

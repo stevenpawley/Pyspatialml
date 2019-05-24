@@ -5,21 +5,14 @@ import geopandas
 import rasterio.plot
 import matplotlib.pyplot as plt
 import rasterio
+import pyspatialml.datasets.nc_dataset as nc
+import tempfile
 
 # First, import the extract and predict functions:
-basedir = os.getcwd()
-os.chdir(os.path.join('.', 'examples'))
-band1 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_10.tif')
-band2 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_20.tif')
-band3 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_30.tif')
-band4 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_40.tif')
-band5 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_50.tif')
-band7 = os.path.join(basedir, 'nc_dataset', 'lsat7_2000_70.tif')
-multiband = os.path.join(basedir, 'nc_dataset', 'landsat_multiband.tif')
-predictors = [band1, band2, band3, band4, band5, band7]
+predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
 # Create a RasterStack instance
-stack = Raster([band1, band2, band3, band4, band5, band7])
+stack = Raster(predictors)
 stack.count
 
 stack_rs = stack.to_crs(crs={'init': 'EPSG:4326'}, progress=False)
@@ -63,20 +56,20 @@ Raster(layers=stack.iloc[-1]).names
 
 # Replace a layer
 print(stack.iloc[0].read(masked=True).mean())
-stack.iloc[0] = Raster(band7).iloc[0]
+stack.iloc[0] = Raster(nc.band7).iloc[0]
 print(stack.iloc[0].read(masked=True).mean())
 print(stack.loc['testme'].read(masked=True).mean())
 print(stack['testme'].read(masked=True).mean())
 print(stack.testme.read(masked=True).mean())
 
 # Add a layer
-stack.append(Raster(band7))
+stack.append(Raster(nc.band7))
 stack.names
 print(stack.testme.read(masked=True).mean())
 print(stack.lsat7_2000_70_1.read(masked=True).mean())
 print(stack.lsat7_2000_70_2.read(masked=True).mean())
 
-stack.append(Raster(multiband))
+stack.append(Raster(nc.multiband))
 stack.names
 print(stack.testme.read(masked=True).mean())
 print(stack.landsat_multiband_band1_band1.read(masked=True).mean())
@@ -105,7 +98,7 @@ stack.names
 stack.drop(labels='lsat7_2000_50')
 stack.names
 
-# Modifify a layer
+# Modify a layer
 # templayer = ps.from_files(band1, mode='r+')
 # arr = templayer.lsat7_2000_10.read(window=Window(0, 0, 100, 100))
 # arr[:] += 500
@@ -115,24 +108,25 @@ stack.names
 # templayer = None
 
 # Save a stack
-newstack = stack.write(file_path="/Users/steven/Downloads/test.tif", nodata=-99)
+tmp_tif = tempfile.NamedTemporaryFile().name + '.tif'
+newstack = stack.write(file_path=tmp_tif, nodata=-99)
 newstack.landsat_multiband_band1_1.read()
 newstack=None
 
 # Load some training data in the form of a shapefile of point feature locations:
-training_py = geopandas.read_file(os.path.join(basedir, 'landsat96_polygons.shp'))
-training_pt = geopandas.read_file(os.path.join(basedir, 'landsat96_points.shp'))
-training_px = rasterio.open(os.path.join(basedir, 'landsat96_labelled_pixels.tif'))
+training_py = geopandas.read_file(nc.polygons)
+training_pt = geopandas.read_file(nc.points)
+training_px = rasterio.open(os.path.join(nc.labelled_pixels))
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 
 # Plot some training data
-# plt.imshow(stack.lsat7_2000_70.read(masked=True),
-#            extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70.ds))
-# plt.scatter(x=training_pt.bounds.iloc[:, 0],
-#             y=training_pt.bounds.iloc[:, 1],
-#             s=2, color='black')
-# plt.show()
+plt.imshow(stack.lsat7_2000_70.read(masked=True),
+           extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70.ds))
+plt.scatter(x=training_pt.bounds.iloc[:, 0],
+            y=training_pt.bounds.iloc[:, 1],
+            s=2, color='black')
+plt.show()
 
 # Create a training dataset by extracting the raster values at the training point locations:
 stack = Raster(predictors)

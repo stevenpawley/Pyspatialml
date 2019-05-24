@@ -1,31 +1,20 @@
 from unittest import TestCase
 from pyspatialml import Raster
+import pyspatialml.datasets.nc_dataset as nc
+import pyspatialml.datasets.meuse_dataset as ms
 import os
-import sys
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-test_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(test_dir, os.path.pardir)
-nc_dir = os.path.join(pkg_dir, 'nc_dataset')
-meuse_dir = os.path.join(pkg_dir, 'meuse_dataset')
 
 class TestPrediction(TestCase):
 
-    band1 = os.path.join(nc_dir, 'lsat7_2000_10.tif')
-    band2 = os.path.join(nc_dir, 'lsat7_2000_20.tif')
-    band3 = os.path.join(nc_dir, 'lsat7_2000_30.tif')
-    band4 = os.path.join(nc_dir, 'lsat7_2000_40.tif')
-    band5 = os.path.join(nc_dir, 'lsat7_2000_50.tif')
-    band7 = os.path.join(nc_dir, 'lsat7_2000_70.tif')
-    predictors = [band1, band2, band3, band4, band5, band7]
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_classification(self):
         print(self.predictors)
         stack = Raster(self.predictors)
-        training_pt = gpd.read_file(
-            os.path.join(nc_dir, 'landsat96_points.shp'))
+        training_pt = gpd.read_file(nc.points)
         
         df_points = stack.extract_vector(response=training_pt, field='id')
 
@@ -50,13 +39,10 @@ class TestPrediction(TestCase):
 
     def test_regression(self):
 
-        meuse_predictors = os.listdir(meuse_dir)
-        meuse_predictors = [os.path.join(meuse_dir, i) for i in meuse_predictors if i.endswith('.tif')]
-        stack = Raster(meuse_predictors)
+        stack = Raster(ms.predictors)
         self.assertEqual(stack.count, 21)
         
-        training_pt = gpd.read_file(
-            os.path.join(meuse_dir, 'meuse.shp'))
+        training_pt = gpd.read_file(ms.meuse)
         training = stack.extract_vector(
             response=training_pt, field='cadmium')
         training['copper'] = stack.extract_vector(

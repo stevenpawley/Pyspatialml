@@ -1,34 +1,23 @@
 from unittest import TestCase
 from pyspatialml import Raster
+import pyspatialml.datasets.nc_dataset as nc
 from copy import deepcopy
 import geopandas
 import rasterio
 import numpy as np
 import os
-import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-test_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(test_dir, os.path.pardir)
-nc_dir = os.path.join(pkg_dir, 'nc_dataset')
 
 class TestExtract(TestCase):
 
-    band1 = os.path.join(nc_dir, 'lsat7_2000_10.tif')
-    band2 = os.path.join(nc_dir, 'lsat7_2000_20.tif')
-    band3 = os.path.join(nc_dir, 'lsat7_2000_30.tif')
-    band4 = os.path.join(nc_dir, 'lsat7_2000_40.tif')
-    band5 = os.path.join(nc_dir, 'lsat7_2000_50.tif')
-    band7 = os.path.join(nc_dir, 'lsat7_2000_70.tif')
-    predictors = [band1, band2, band3, band4, band5, band7]
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_extract_points(self):
 
         stack = Raster(self.predictors)
 
         # extract training data from points
-        training_pt = geopandas.read_file(
-            os.path.join(nc_dir, 'landsat96_points.shp'))
+        training_pt = geopandas.read_file(nc.points)
         X, y, xy = stack.extract_vector(
             response=training_pt, field='id', return_array=True)
 
@@ -62,8 +51,7 @@ class TestExtract(TestCase):
         stack = Raster(self.predictors)
 
         # extract training data from polygons
-        training_py = geopandas.read_file(
-            os.path.join(nc_dir, 'landsat96_polygons.shp'))
+        training_py = geopandas.read_file(nc.polygons)
         X, y, xy = stack.extract_vector(
             response=training_py, field='id', return_array=True)
 
@@ -83,8 +71,7 @@ class TestExtract(TestCase):
         stack = Raster(self.predictors)
 
         # extract training data from lines
-        training_py = geopandas.read_file(
-            os.path.join(nc_dir, 'landsat96_polygons.shp'))
+        training_py = geopandas.read_file(nc.polygons)
         training_lines = deepcopy(training_py)
         training_lines['geometry'] = training_lines.geometry.boundary
         X, y, xy = stack.extract_vector(
@@ -106,8 +93,7 @@ class TestExtract(TestCase):
         stack = Raster(self.predictors)
 
         # extract training data from labelled pixels
-        training_px = rasterio.open(os.path.join(
-            nc_dir, 'landsat96_labelled_pixels.tif'))
+        training_px = rasterio.open(nc.labelled_pixels)
         X, y, xy = stack.extract_raster(
             response=training_px, value_name='id', return_array=True)
 
