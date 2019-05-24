@@ -283,7 +283,7 @@ result = stack.predict(estimator=lr, dtype='int16', nodata=0)
 result_probs = stack.predict_proba(estimator=lr)
 
 # plot classification result
-result.iloc[0].plot()
+result.plot()
 plt.show()
 
 # plot class probabilities
