@@ -194,9 +194,9 @@ geom_tile() + facet_wrap('variable'))
 Load some training data in the form of polygons, points and labelled pixels in geopandas GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a Raster object, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).
 
 ```
-training_py = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_polygons.shp'))
-training_pt = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_points.shp'))
-training_px = rasterio.open(os.path.join(basedir, 'nc_dataset', 'landsat96_labelled_pixels.tif'))
+training_py = geopandas.read_file(os.path.join(basedir, 'landsat96_polygons.shp'))
+training_pt = geopandas.read_file(os.path.join(basedir, 'landsat96_points.shp'))
+training_px = rasterio.open(os.path.join(basedir, 'landsat96_labelled_pixels.tif'))
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 ```
