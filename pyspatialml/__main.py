@@ -394,7 +394,7 @@ class BaseRaster(object):
             # rasterize
             rows_all, cols_all, y_all = [], [], []
 
-            for i, shape in response.iterrows():
+            for _, shape in response.iterrows():
                 if not field:
                     shapes = (shape.geometry, 1)
                 else:
@@ -984,7 +984,7 @@ class Raster(BaseRaster):
         names = self._fix_names(names)
 
         # update attributes per dataset
-        for i, (layer, name) in enumerate(zip(layers, names)):
+        for layer, name in zip(layers, names):
             self.dtypes.append(layer.dtype)
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
@@ -1799,7 +1799,7 @@ class Raster(BaseRaster):
         x_range = np.arange(start=xmin, stop=xmax, step=1)
         y_range = np.arange(start=ymin, stop=ymax, step=1)
 
-        X_var, Y_var, angle = np.meshgrid(x_range, y_range, n_angles)
+        X_var, Y_var, _ = np.meshgrid(x_range, y_range, n_angles)
         angles = np.deg2rad(np.linspace(0, 180, n_angles, endpoint=False))
         grids_directional = X_var + np.tan(angles) * Y_var
 
