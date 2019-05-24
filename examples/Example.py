@@ -120,9 +120,9 @@ newstack.landsat_multiband_band1_1.read()
 newstack=None
 
 # Load some training data in the form of a shapefile of point feature locations:
-training_py = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_polygons.shp'))
-training_pt = geopandas.read_file(os.path.join(basedir, 'nc_dataset', 'landsat96_points.shp'))
-training_px = rasterio.open(os.path.join(basedir, 'nc_dataset', 'landsat96_labelled_pixels.tif'))
+training_py = geopandas.read_file(os.path.join(basedir, 'landsat96_polygons.shp'))
+training_pt = geopandas.read_file(os.path.join(basedir, 'landsat96_points.shp'))
+training_px = rasterio.open(os.path.join(basedir, 'landsat96_labelled_pixels.tif'))
 training_lines = deepcopy(training_py)
 training_lines['geometry'] = training_lines.geometry.boundary
 
@@ -135,6 +135,7 @@ training_lines['geometry'] = training_lines.geometry.boundary
 # plt.show()
 
 # Create a training dataset by extracting the raster values at the training point locations:
+stack = Raster(predictors)
 df_points = stack.extract_vector(response=training_pt, field='id')
 df_polygons = stack.extract_vector(response=training_py, field='id')
 df_lines = stack.extract_vector(response=training_lines, field='id')
@@ -177,10 +178,10 @@ result_prob = stack.predict_proba(estimator=lr)
 result.names
 result_prob.names
 
-plt.imshow(result.read(masked=True)[0, :, :])
+result.plot()
 plt.show()
 
-plt.imshow(result_prob.iloc[0].read(masked=True))
+result_prob.plot()
 plt.show()
 
 # sampling

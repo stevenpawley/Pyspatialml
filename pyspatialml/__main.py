@@ -654,7 +654,8 @@ class RasterLayer(BaseRaster):
         arr = self.read(masked=True)
         ax.imshow(arr, extent=rasterio.plot.plotting_extent(
             self.ds), cmap=self.cmap)
-        plt.show()
+        
+        return fig, ax
 
 
 class Raster(BaseRaster):
@@ -1604,10 +1605,6 @@ class Raster(BaseRaster):
         """
         Plotting of a Raster object
 
-        TODO
-        ----
-        Fix plot if Raster only contains a single RasterLayer
-
         Parameters
         ----------
         width : int, float, default = 5
@@ -1637,6 +1634,10 @@ class Raster(BaseRaster):
         matplotlib.figure.Figure
         matplotlib.axes.Axes
         """
+
+        if self.count == 1:
+            fig, ax = self.iloc[0].plot()
+            return fig, ax
 
         # estimate required number of rows and columns in figure
         rows = int(np.sqrt(self.count))
