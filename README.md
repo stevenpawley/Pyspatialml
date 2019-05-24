@@ -203,6 +203,7 @@ training_lines['geometry'] = training_lines.geometry.boundary
 
 Show training data points and a single raster band using numpy and matplotlib:
 ```
+stack = Raster(predictors)
 plt.imshow(stack.lsat7_2000_70.read(masked=True),
            extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
 plt.scatter(x=training_pt.bounds.iloc[:, 0],
@@ -280,7 +281,13 @@ Other arguments consist of ```predict_type``` can be either 'raw' to output a cl
 # prediction
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
 result_probs = stack.predict_proba(estimator=lr)
-plt.imshow(result.read(1, masked=True))
+
+# plot classification result
+result.iloc[0].plot()
+plt.show()
+
+# plot class probabilities
+result_probs.plot()
 plt.show()
 ```
 
