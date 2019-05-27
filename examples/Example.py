@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import rasterio
 import pyspatialml.datasets.nc_dataset as nc
 import tempfile
+from pyspatialml.preprocessing import xy, distance_to_corners
 
 # First, import the extract and predict functions:
 predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
@@ -63,7 +64,7 @@ print(stack['testme'].read(masked=True).mean())
 print(stack.testme.read(masked=True).mean())
 
 # Add a layer
-stack.append(Raster(nc.band7))
+new_raster = stack.append(Raster(nc.band7))
 stack.names
 print(stack.testme.read(masked=True).mean())
 print(stack.lsat7_2000_70_1.read(masked=True).mean())

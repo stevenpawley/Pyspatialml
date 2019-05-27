@@ -8,6 +8,7 @@ from collections import Counter
 from collections import namedtuple
 from functools import partial
 from itertools import chain
+from copy import deepcopy
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -1507,19 +1508,19 @@ class Raster(BaseRaster):
 
         return result
 
-    def append(self, other):
+    def append(self, other, in_place=True):
         """
         Setter method to add new RasterLayers to a Raster object
         
-        Note that this modifies the Raster object in-place
-
-        TODO
-        ----
-        Change default behaviour so that in_place = False
+        Note that this modifies the Raster object in-place by default
 
         Parameters
         ----------
         other : Raster object, or list of Raster objects
+        
+        in_place : bool, default=True
+            Change the Raster object in-place or 
+            leave original and return a new Raster object
         """
 
         if isinstance(other, Raster):
@@ -1536,23 +1537,28 @@ class Raster(BaseRaster):
             for layer, name in zip(combined_layers, combined_names):
                 layer.names = [name]
 
-            self._layers = combined_layers
+            if in_place is True:
+                self._layers = combined_layers
+            else:
+                new_raster = self._newraster(self.files, self.names)
+                new_raster._layers = combined_layers
+                return new_raster
 
-    def drop(self, labels):
+    def drop(self, labels, in_place=True):
         """
         Drop individual RasterLayers from a Raster object
         
-        Note that this modifies the Raster object in-place
-
-        TODO
-        ----
-        Change default behaviour so that in_place = False
-
+        Note that this modifies the Raster object in-place by default
+        
         Parameters
         ---------
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label,
             or a list of integers or labels
+        
+        in_place : bool, default=True
+            Change the Raster object in-place or 
+            leave original and return a new Raster object
         """
 
         # convert single label to list
@@ -1575,30 +1581,46 @@ class Raster(BaseRaster):
             raise ValueError(
                 'Cannot drop layers based on mixture of indexes and labels')
 
-        self._layers = subset_layers
+        if in_place is True:
+            self._layers = subset_layers
+        else:
+            new_raster = self._newraster(self.files, self.names)
+            new_raster._layers = subset_layers
+            return new_raster
 
-    def rename(self, names):
+    def rename(self, names, in_place=True):
         """
         Rename a RasterLayer within the Raster object
         
-        Note that this modifies the Raster object in-place
-
-        TODO
-        ----
-        Change default behaviour so that in_place = False
+        Note that by default this modifies the Raster object in-place
 
         Parameters
         ----------
         names : dict
             dict of old_name : new_name
+        
+        in_place : bool, default=True
+            Change names of the Raster object in-place or 
+            leave original and return a new Raster object
         """
 
-        for old_name, new_name in names.items():
-            # change internal name of RasterLayer
-            self.loc[old_name].names = [new_name]
+        if in_place is True:
+            for old_name, new_name in names.items():
+                # change internal name of RasterLayer
+                self.loc[old_name].names = [new_name]
 
-            # change name of layer in stack
-            self.loc[new_name] = self.loc.pop(old_name)
+                # change name of layer in stack
+                self.loc[new_name] = self.loc.pop(old_name)
+        else:
+            new_raster = self._newraster(self.files, self.names)
+            for old_name, new_name in names.items():
+                # change internal name of RasterLayer
+                new_raster.loc[old_name].names = [new_name]
+
+                # change name of layer in stack
+                new_raster.loc[new_name] = new_raster.loc.pop(old_name)
+            return(new_raster)
+
 
     def plot(self, width=5, height=5, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
@@ -1738,205 +1760,6 @@ class Raster(BaseRaster):
             raster.rename(rename)
 
         return raster
-
-    def xy(self, file_path=None, driver='GTiff'):
-        """
-        Fill 2d arrays with their x,y indices
-
-        Parameters
-        ----------
-        file_path : str, optional. Default=None
-            File path to save to the resulting Raster object.
-            If not supplied then the cropped raster is saved to a
-            temporary file.
-
-        Returns
-        -------
-        pyspatialml.Raster object
-        """
-
-        arr = np.zeros(self.shape)
-        arr = arr[np.newaxis, :, :]
-        xyarrays = np.repeat(arr[0:1, :, :], 2, axis=0)
-        xx, xy = np.meshgrid(np.arange(arr.shape[2]), np.arange(arr.shape[1]))
-        xyarrays[0, :, :] = xx
-        xyarrays[1, :, :] = xy
-
-        # create new stack
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-        meta = self.meta
-        meta['driver'] = driver
-        meta['count'] = 2
-        meta['dtype'] = xyarrays.dtype
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(xyarrays)
-        return self._newraster(
-            file_path=file_path, names=['x_coordinates', 'y_coordinates'])
-
-    def rotated_grids(self, n_angles=8, file_path=None, driver='GTiff'):
-        """
-        Generate 2d arrays with n_angles rotated coordinates
-
-        Parameters
-        ----------
-
-        n_angles : int, default=8
-            Number of angles to rotate coordinate system by
-
-        file_path : str, optional. Default=None
-            File path to save to the resulting Raster object.
-            If not supplied then the cropped raster is saved to a
-            temporary file.
-
-        Returns
-        -------
-        pyspatialml.Raster object
-        """
-
-        # define x and y grid dimensions
-        xmin, ymin, xmax, ymax = 0, 0, self.shape[1], self.shape[0]
-        x_range = np.arange(start=xmin, stop=xmax, step=1)
-        y_range = np.arange(start=ymin, stop=ymax, step=1)
-
-        X_var, Y_var, _ = np.meshgrid(x_range, y_range, n_angles)
-        angles = np.deg2rad(np.linspace(0, 180, n_angles, endpoint=False))
-        grids_directional = X_var + np.tan(angles) * Y_var
-
-        # reorder to band, row, col order
-        grids_directional = grids_directional.transpose((2, 0, 1))
-
-        # create new stack
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-        meta = self.meta
-        meta['driver'] = driver
-        meta['count'] = n_angles
-        meta['dtype'] = grids_directional.dtype
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(grids_directional)
-
-        names = ['angle_' + str(i+1) for i in range(n_angles)]
-        return self._newraster(file_path, names=names)
-
-    def distance_to_corners(self, file_path=None, driver='GTiff'):
-        """
-        Generate buffer distances to corner and centre coordinates of raster extent
-
-        Parameters
-        ----------
-        file_path : str, optional. Default=None
-            File path to save to the resulting Raster object.
-            If not supplied then the cropped raster is saved to a
-            temporary file.
-
-        Returns
-        -------
-        pyspatialml.Raster object
-        """
-        names = ['top_left', 'top_right', 'bottom_left',
-                 'bottom_right', 'centre_indices']
-        rows = np.asarray(
-            [0, 0, self.shape[0]-1, self.shape[0]-1, int(self.shape[0]/2)])
-        cols = np.asarray(
-            [0, self.shape[1]-1, 0, self.shape[1]-1, int(self.shape[1]/2)])
-
-        # euclidean distances
-        arr = self._grid_distance(self.shape, rows, cols)
-
-        # create new stack
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-        meta = self.meta
-        meta['driver'] = driver
-        meta['count'] = 5
-        meta['dtype'] = arr.dtype
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(arr)
-        return self._newraster(file_path, names=names)
-
-    @staticmethod
-    def _grid_distance(shape, rows, cols):
-        """
-        Generate buffer distances to x,y coordinates
-
-        Parameters
-        ----------
-        shape : tuple
-            shape of numpy array (rows, cols) to create buffer distances within
-
-        rows : 1d numpy array
-            array of row indexes
-
-        cols : 1d numpy array
-            array of column indexes
-
-        Returns
-        -------
-        ndarray
-            3d numpy array of euclidean grid distances to each x,y coordinate pair
-            [band, row, col]
-        """
-
-        # create buffer distances
-        grids_buffers = np.zeros((shape[0], shape[1], rows.shape[0]))
-
-        for i, (y, x) in enumerate(zip(rows, cols)):
-            # create 2d array (image) with pick indexes set to z
-            point_arr = np.zeros((shape[0], shape[1]))
-            point_arr[y, x] = 1
-            buffer = ndimage.morphology.distance_transform_edt(1 - point_arr)
-            grids_buffers[:, :, i] = buffer
-
-        # reorder to band, row, column
-        grids_buffers = grids_buffers.transpose((2, 0, 1))
-
-        return grids_buffers
-
-    def distance_to_samples(self, rows, cols, file_path=None, driver='GTiff'):
-        """
-        Generate buffer distances to x,y coordinates
-
-        Parameters
-        ----------
-        rows : 1d numpy array
-            array of row indexes
-
-        cols : 1d numpy array
-            array of column indexes
-
-        file_path : str, optional. Default=None
-            File path to save to the resulting Raster object.
-            If not supplied then the cropped raster is saved to a
-            temporary file.
-
-        Returns
-        -------
-        pyspatialml.Raster object
-        """
-        # some checks
-        if isinstance(rows, list):
-            rows = np.asarray(rows)
-        if isinstance(cols, list):
-            cols = np.asarray(cols)
-
-        if rows.shape != cols.shape:
-            raise ValueError('rows and cols must have same dimensions')
-
-        shape = self.shape
-        arr = self._grid_distance(shape, rows, cols)
-
-        # create new stack
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-        meta = self.meta
-        meta['driver'] = driver
-        meta['count'] = arr.shape[0]
-        meta['dtype'] = arr.dtype
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(arr)
-        names = ['dist_sample' + str(i+1) for i in range(len(rows))]
-        return self._newraster(file_path, names=names)
 
     def mask(self, shapes=None, invert=False, crop=False, filled=False,
              pad=False, file_path=None, driver='GTiff', nodata=-99999):
