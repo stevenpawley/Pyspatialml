@@ -1110,9 +1110,9 @@ class Raster(BaseRaster):
 
         if nodata is None:
             try:
-                nodata = np.iinfo(dtype).min()
+                nodata = np.iinfo(dtype).min
             except ValueError:
-                nodata = np.finfo(dtype).min()
+                nodata = np.finfo(dtype).min
 
         meta = self.meta
         meta['driver'] = driver
