@@ -715,6 +715,7 @@ class Raster(BaseRaster):
         self.count = 0
         self.res = None
         self.meta = None
+        self.tempfiles = []
 
         # some checks
         if src and arr:
@@ -833,6 +834,16 @@ class Raster(BaseRaster):
         Iterate over RasterLayers
         """
         return(iter(self.loc.items()))
+    
+    def __del__(self):
+        self.close()
+    
+    def close(self):
+        for layer in self.iloc:
+            layer.ds.close()
+        
+        for f in self.tempfiles:
+            os.remove(f)
 
     @staticmethod
     def _check_alignment(layers):
@@ -1214,6 +1225,8 @@ class Raster(BaseRaster):
         pyspatialml.Raster object
         """
 
+        tempfiles = None
+
         predfun = self._probfun
 
         # determine output count
@@ -1238,6 +1251,7 @@ class Raster(BaseRaster):
         # optionally output to a temporary file
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         with rasterio.open(file_path, 'w', **meta) as dst:
 
@@ -1264,8 +1278,11 @@ class Raster(BaseRaster):
         # generate layer names
         prefix = "prob_"
         names = [prefix + str(i) for i in range(len(indexes))]
+        
+        new_raster = self._newraster(file_path, names)
+        new_raster.tempfiles.append(tempfiles)
 
-        return self._newraster(file_path, names)
+        return new_raster
 
     def predict(self, estimator, file_path=None, driver='GTiff',
                 dtype='float32', nodata=-99999, progress=True,
@@ -1303,6 +1320,8 @@ class Raster(BaseRaster):
         pyspatialml.Raster object
         """
 
+        tempfiles = None
+
         # determine output count for multi output cases
         window = Window(0, 0, self.width, 1)
         img = self.read(masked=True, window=window)
@@ -1332,6 +1351,7 @@ class Raster(BaseRaster):
         # optionally output to a temporary file
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         with rasterio.open(file_path, 'w', **meta) as dst:
 
@@ -1361,7 +1381,11 @@ class Raster(BaseRaster):
         # generate layer names
         prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
-        return self._newraster(file_path, names)
+        
+        new_raster = self._newraster(file_path, names)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def _predfun(self, img, estimator):
         """
@@ -1619,6 +1643,7 @@ class Raster(BaseRaster):
 
                 # change name of layer in stack
                 new_raster.loc[new_name] = new_raster.loc.pop(old_name)
+                
             return(new_raster)
 
 
@@ -1768,6 +1793,7 @@ class Raster(BaseRaster):
         geopandas.GeoDataFrame
         """
 
+        tempfiles = None
         masked_ndarrays = []
 
         for layer in self.iloc:
@@ -1798,11 +1824,15 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(masked_ndarrays)
 
-        return self._newraster(file_path, self.names)
+        new_raster = self._newraster(file_path, self.names)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def intersect(self, file_path=None, driver='GTiff', nodata=-99999):
         """
@@ -1816,6 +1846,7 @@ class Raster(BaseRaster):
         -------
         pyspatial.Raster object
         """
+        tempfiles = None
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
@@ -1829,6 +1860,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         meta = self.meta
         meta['driver'] = driver
@@ -1837,7 +1869,10 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(intersected_arr)
 
-        return self._newraster(file_path, self.names)
+        new_raster = self._newraster(file_path, self.names)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
         """
@@ -1866,6 +1901,8 @@ class Raster(BaseRaster):
             Cropped to new extent
         """
 
+        tempfiles = None
+
         xmin, ymin, xmax, ymax = bounds
 
         rows, cols = rasterio.transform.rowcol(
@@ -1887,11 +1924,15 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr)
 
-        return self._newraster(file_path, self.names)
+        new_raster = self._newraster(file_path, self.names)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def to_crs(self, crs, resampling='nearest', file_path=None,
                driver='GTiff', nodata=-99999, n_jobs=1,
@@ -1943,6 +1984,8 @@ class Raster(BaseRaster):
             Optionally show progress of transform operations
         """
 
+        tempfiles = None
+
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
             raise ValueError(
@@ -1952,6 +1995,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=self.crs,
@@ -1987,7 +2031,10 @@ class Raster(BaseRaster):
                     if progress is True:
                         t.update()
 
-        return self._newraster(file_path, self.names)
+        new_raster = self._newraster(file_path, self.names)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def aggregate(self, out_shape, resampling='nearest', file_path=None, driver='GTiff', nodata=-99999):
         """
@@ -2020,6 +2067,8 @@ class Raster(BaseRaster):
         pyspatialml.Raster object
         """
 
+        tempfiles = None
+
         rows, cols = out_shape
 
         arr = self.read(masked=True, out_shape=out_shape,
@@ -2027,6 +2076,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         meta = self.meta
         meta['driver'] = driver
@@ -2041,8 +2091,11 @@ class Raster(BaseRaster):
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(arr)
+            
+        new_raster = self._newraster(file_path, self.names)
+        new_raster.tempfiles.append(tempfiles)
 
-        return self._newraster(file_path, self.names)
+        return new_raster
 
     def calc(self, function, file_path=None, driver='GTiff', dtype='float32',
              nodata=-99999, progress=False):
@@ -2074,6 +2127,8 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster object
         """
+        
+        tempfiles = None
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)
@@ -2090,6 +2145,7 @@ class Raster(BaseRaster):
         # optionally output to a temporary file
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
+            tempfiles = file_path
 
         # open output file with updated metadata
         meta = self.meta
@@ -2115,7 +2171,10 @@ class Raster(BaseRaster):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result.astype(dtype), window=window)
 
-        return self._newraster(file_path)
+        new_raster = self._newraster(file_path)
+        new_raster.tempfiles.append(tempfiles)
+        
+        return new_raster
 
     def block_shapes(self, rows, cols):
         """

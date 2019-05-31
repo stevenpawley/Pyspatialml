@@ -16,9 +16,6 @@ predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 stack = Raster(predictors)
 stack.count
 
-stack_rs = stack.to_crs(crs={'init': 'EPSG:4326'}, progress=False)
-stack_rs.plot()
-
 # Aggregate a raster to a coarser cell size
 stack_new = stack.aggregate(out_shape=(100, 100))
 stack_new.iloc[0].plot()
