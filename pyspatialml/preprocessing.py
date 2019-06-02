@@ -31,6 +31,8 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
         Each categorical value is encoded as a layer with a Raster object
     """
 
+    tempfiles = None
+
     arr = layer.read(masked=True)
 
     if categories is None:
@@ -52,6 +54,7 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
 
     if file_path is None:
         file_path = tempfile.NamedTemporaryFile().name
+        tempfiles = file_path
 
     meta = layer.ds.meta
     meta['driver'] = driver
@@ -64,6 +67,7 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
 
     new_raster = Raster(file_path)
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.tempfiles.append(tempfiles)
 
     return new_raster
 
@@ -89,6 +93,8 @@ def xy(layer, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
+    
+    tempfiles = None
 
     arr = np.zeros(layer.shape)
     arr = arr[np.newaxis, :, :]
@@ -100,6 +106,8 @@ def xy(layer, file_path=None, driver='GTiff'):
     # create new stack
     if file_path is None:
         file_path = tempfile.NamedTemporaryFile().name
+        tempfiles = file_path
+        
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 2
@@ -110,6 +118,7 @@ def xy(layer, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     names = ['x_coordinates', 'y_coordinates']
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.tempfiles.append(tempfiles)
     
     return new_raster
 
@@ -138,6 +147,8 @@ def rotated_grids(layer, n_angles=8, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
+    
+    tempfiles = None
 
     # define x and y grid dimensions
     xmin, ymin, xmax, ymax = 0, 0, layer.shape[1], layer.shape[0]
@@ -154,6 +165,8 @@ def rotated_grids(layer, n_angles=8, file_path=None, driver='GTiff'):
     # create new stack
     if file_path is None:
         file_path = tempfile.NamedTemporaryFile().name
+        tempfiles = file_path
+        
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = n_angles
@@ -164,6 +177,7 @@ def rotated_grids(layer, n_angles=8, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     names = ['angle_' + str(i+1) for i in range(n_angles)]
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.tempfiles.append(tempfiles)
     
     return new_raster
 
@@ -188,6 +202,9 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
+    
+    tempfiles = None
+    
     names = ['top_left', 'top_right', 'bottom_left',
                 'bottom_right', 'centre_indices']
     rows = np.asarray(
@@ -201,6 +218,8 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     # create new stack
     if file_path is None:
         file_path = tempfile.NamedTemporaryFile().name
+        tempfiles = file_path
+        
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 5
@@ -211,6 +230,7 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     new_raster.rename({
         old: new for old, new in zip(new_raster.names, names)})
+    new_raster.tempfiles.append(tempfiles)
         
     return new_raster
 
@@ -278,6 +298,9 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
+    
+    tempfiles = None
+    
     # some checks
     if isinstance(rows, list):
         rows = np.asarray(rows)
@@ -293,6 +316,9 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     # create new stack
     if file_path is None:
         file_path = tempfile.NamedTemporaryFile().name
+        tempfiles = file_path
+    
+    
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = arr.shape[0]
@@ -304,5 +330,6 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     new_raster.rename(
         {old: new for old, new in zip(new_raster.names, names)})
+    new_raster.tempfiles.append(tempfiles)
     
     return new_raster
