@@ -650,8 +650,8 @@ class RasterLayer(BaseRaster):
         src = rasterio.open(file_path)
         return RasterLayer(rasterio.band(src, 1))
 
-    def plot(self):
-        fig, ax = plt.subplots()
+    def plot(self, **kwargs):
+        fig, ax = plt.subplots(**kwargs)
         arr = self.read(masked=True)
         ax.imshow(arr, extent=rasterio.plot.plotting_extent(
             self.ds), cmap=self.cmap)
@@ -1566,6 +1566,10 @@ class Raster(BaseRaster):
             else:
                 new_raster = self._newraster(self.files, self.names)
                 new_raster._layers = combined_layers
+                
+                for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+                    new_layer.cmap = old_layer.cmap
+                
                 return new_raster
 
     def drop(self, labels, in_place=True):
@@ -1610,6 +1614,10 @@ class Raster(BaseRaster):
         else:
             new_raster = self._newraster(self.files, self.names)
             new_raster._layers = subset_layers
+            
+            for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+                new_layer.cmap = old_layer.cmap
+            
             return new_raster
 
     def rename(self, names, in_place=True):
@@ -1644,23 +1652,20 @@ class Raster(BaseRaster):
                 # change name of layer in stack
                 new_raster.loc[new_name] = new_raster.loc.pop(old_name)
                 
+                for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+                    new_layer.cmap = old_layer.cmap
+                
             return(new_raster)
 
 
-    def plot(self, width=5, height=5, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
+    def plot(self, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
         """
         Plotting of a Raster object
 
         Parameters
         ----------
-        width : int, float, default = 5
-            Width of plot (inches)
-
-        height : int, float, default = 5
-            Height of plot (inches)
-
-         out_shape : tuple
+        out_shape : tuple
             Number of rows, cols to read from the raster datasets for plotting
 
         label_fontsize : int, float, default = 8
@@ -1674,7 +1679,7 @@ class Raster(BaseRaster):
             default layer names for the titles
 
         **kwargs : dict
-            Additional arguments. Currently unused
+            Additional arguments to pass when creating the figure object
 
         Returns
         -------
@@ -1694,10 +1699,11 @@ class Raster(BaseRaster):
             rows += 1
 
         cmaps = [i.cmap for i in self.iloc]
+
         if names is None:
             names = self.names
 
-        fig, axs = plt.subplots(rows, cols, figsize=(width, height))
+        fig, axs = plt.subplots(rows, cols, **kwargs)
 
         # axs.flat is an iterator over the row-order flattened axs array
         for ax, n, cmap, name in zip(axs.flat, range(self.count), cmaps, names):
@@ -1709,7 +1715,7 @@ class Raster(BaseRaster):
                 arr,
                 extent=[self.bounds.left, self.bounds.right,
                         self.bounds.bottom, self.bounds.top],
-                cmap=cmap, **kwargs)
+                cmap=cmap)
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="10%", pad=0.1)
@@ -1832,6 +1838,9 @@ class Raster(BaseRaster):
         new_raster = self._newraster(file_path, self.names)
         new_raster.tempfiles.append(tempfiles)
         
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
+        
         return new_raster
 
     def intersect(self, file_path=None, driver='GTiff', nodata=-99999):
@@ -1871,6 +1880,9 @@ class Raster(BaseRaster):
 
         new_raster = self._newraster(file_path, self.names)
         new_raster.tempfiles.append(tempfiles)
+
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
         
         return new_raster
 
@@ -1931,6 +1943,9 @@ class Raster(BaseRaster):
 
         new_raster = self._newraster(file_path, self.names)
         new_raster.tempfiles.append(tempfiles)
+        
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
         
         return new_raster
 
@@ -2034,6 +2049,9 @@ class Raster(BaseRaster):
         new_raster = self._newraster(file_path, self.names)
         new_raster.tempfiles.append(tempfiles)
         
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
+        
         return new_raster
 
     def aggregate(self, out_shape, resampling='nearest', file_path=None, driver='GTiff', nodata=-99999):
@@ -2094,6 +2112,9 @@ class Raster(BaseRaster):
             
         new_raster = self._newraster(file_path, self.names)
         new_raster.tempfiles.append(tempfiles)
+        
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
 
         return new_raster
 
