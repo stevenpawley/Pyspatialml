@@ -1,9 +1,5 @@
 [![Build Status](https://travis-ci.org/stevenpawley/Pyspatialml.svg?branch=master)](https://travis-ci.org/stevenpawley/Pyspatialml) [![Documentation Status](https://readthedocs.org/projects/pyspatialml/badge/?version=latest)](https://pyspatialml.readthedocs.io/en/latest/?badge=latest)
 
-# NOTE
-
-Pyspatialml is undergoing development at the moment. Alpha version is expected to be ready in April 2019. The package is functional, although possible API changes can occur. Unit tests are not completed yet.
-
 # Pyspatialml
 Machine learning classification and regresssion modelling for spatial raster data.
 
@@ -219,9 +215,9 @@ The ```extract_raster``` method can also be used to spatially query pixel values
 
 ```
 # Create a training dataset by extracting the raster values at the training point locations:
-df_points = stack.extract_vector(response=training_pt, field='id')
-df_polygons = stack.extract_vector(response=training_py, field='id')
-df_lines = stack.extract_vector(response=training_lines, field='id')
+df_points = stack.extract_vector(response=training_pt, columns='id')
+df_polygons = stack.extract_vector(response=training_py, columns='id')
+df_lines = stack.extract_vector(response=training_lines, columns='id')
 df_raster = stack.extract_raster(response=training_px, value_name='id')
 df_points.head()
 ```
