@@ -40,7 +40,6 @@ class TestPrediction(TestCase):
     def test_regression(self):
 
         stack = Raster(ms.predictors)
-        self.assertEqual(stack.count, 21)
         
         training_pt = gpd.read_file(ms.meuse)
         training = stack.extract_vector(

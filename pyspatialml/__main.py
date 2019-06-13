@@ -1769,9 +1769,10 @@ class Raster(BaseRaster):
             raster.rename(rename)
         
         for old_layer, new_layer in zip(self.iloc, raster.iloc):
-            raster.new_layer.cmap = old_layer.cmap
+            new_layer.cmap = old_layer.cmap
         
-        raster.tempfiles = self.tempfiles + tempfiles
+        if tempfiles is not None:
+            raster.tempfiles = self.tempfiles + tempfiles
 
         return raster
 
