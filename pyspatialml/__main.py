@@ -323,15 +323,11 @@ class BaseRaster(object):
 
         return X
 
-    def extract_vector(self, response, field=None, return_array=False,
+    def extract_vector(self, response, columns=None, return_array=False,
                        duplicates='keep', na_rm=True, low_memory=False):
         """
         Sample a Raster object by a geopandas GeoDataframe containing points,
         lines or polygon features
-
-        TODO
-        ----
-        Allow multiple 'fields' to be extracted simultaneously
 
         Parameters
         ----------
@@ -339,8 +335,8 @@ class BaseRaster(object):
             Containing either point, line or polygon geometries. Overlapping
             geometries will cause the same pixels to be sampled.
 
-        field : str, optional
-            Field name of attribute to be used the label the extracted data
+        columns : str, optional
+            Column names of attribute to be used the label the extracted data
             Used only if the response feature represents a GeoDataframe
 
         return_array : bool, default=False
@@ -380,8 +376,12 @@ class BaseRaster(object):
             2d numpy masked array of row and column indexes of training pixels
             Returned only if return_array is True
         """
+        
+        if columns is not None:
+            if isinstance(columns, str):
+                columns = [columns]
 
-        if not field:
+        if not columns:
             y = None
 
         duplicate_methods = ['keep', 'mean', 'min', 'max']
@@ -391,15 +391,19 @@ class BaseRaster(object):
 
         # polygon and line geometries
         if all(response.geom_type == 'Polygon') or all(response.geom_type == 'LineString'):
+            
+            if len(columns) > 1:
+                raise NotImplementedError(
+                    'Support for extracting values from multiple columns is only supported for point geometries')
 
             # rasterize
             rows_all, cols_all, y_all = [], [], []
 
             for _, shape in response.iterrows():
-                if not field:
+                if not columns:
                     shapes = (shape.geometry, 1)
                 else:
-                    shapes = (shape.geometry, shape[field])
+                    shapes = (shape.geometry, shape[columns])
 
                 arr = np.zeros((self.height, self.width))
                 arr[:] = -99999
@@ -410,7 +414,7 @@ class BaseRaster(object):
 
                 rows, cols = np.nonzero(arr != -99999)
 
-                if field:
+                if columns:
                     y_all.append(arr[rows, cols])
 
                 rows_all.append(rows)
@@ -427,8 +431,8 @@ class BaseRaster(object):
         # point geometries
         elif all(response.geom_type == 'Point'):
             xy = response.bounds.iloc[:, 2:].values
-            if field:
-                y = response[field].values
+            if columns:
+                y = response[columns].values
 
             # clip points to extent of raster
             extent = self.bounds
@@ -449,7 +453,7 @@ class BaseRaster(object):
             if duplicates != "keep":
                 rowcol_df = pd.DataFrame(
                     np.column_stack((rows, cols, y)),
-                    columns=['row', 'col'] + [field])
+                    columns=['row', 'col'] + columns)
                 rowcol_df['Duplicated'] = rowcol_df.loc[:, ['row', 'col']].duplicated()
 
                 if duplicates == 'mean':
@@ -467,7 +471,7 @@ class BaseRaster(object):
                 xy = np.stack(
                     rasterio.transform.xy(
                         transform=self.transform, rows=rows, cols=cols), axis=1)
-                y = rowcol_df[field].values
+                y = rowcol_df[columns].values
 
         # spatial query of Raster object (loads each band into memory)
         if low_memory is False:
@@ -481,20 +485,24 @@ class BaseRaster(object):
         mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
         xy = np.ma.masked_array(xy, mask=mask_2d)
 
-        if field:
-            y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
+        if columns is not None:
+            X_mask_columns = X.mask.any(axis=1)
+            X_mask_columns = X_mask_columns.repeat(len(columns))
+            y = np.ma.masked_array(y, mask=X_mask_columns)
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
             if na_rm is True:
                 X = np.ma.compress_rows(X)
                 xy = np.ma.compress_rows(xy)
-                if field is not None:
-                    y = np.ma.compressed(y)
+                
+                if columns is not None:
+                    y = np.ma.compress_rows(y)
 
-            if field is not None:
+            if columns is not None:
                 data = np.ma.column_stack((y, X))
-                column_names = [field] + self.names
+                column_names = columns + self.names
+                
             else:
                 data = X
                 column_names = self.names
@@ -835,8 +843,8 @@ class Raster(BaseRaster):
         """
         return(iter(self.loc.items()))
     
-    def __del__(self):
-        self.close()
+    # def __del__(self):
+    #     self.close()
     
     def close(self):
         for layer in self.iloc:
