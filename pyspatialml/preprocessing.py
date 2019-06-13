@@ -72,7 +72,7 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     return new_raster
 
 
-def xy(layer, file_path=None, driver='GTiff'):
+def xy_coordinates(layer, file_path=None, driver='GTiff'):
     """
     Fill 2d arrays with their x,y indices
 
@@ -123,7 +123,7 @@ def xy(layer, file_path=None, driver='GTiff'):
     return new_raster
 
 
-def rotated_grids(layer, n_angles=8, file_path=None, driver='GTiff'):
+def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     """
     Generate 2d arrays with n_angles rotated coordinates
 

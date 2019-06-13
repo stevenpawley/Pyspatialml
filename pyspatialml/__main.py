@@ -1167,11 +1167,7 @@ class Raster(BaseRaster):
                      round(self.shape[1] * scaling))
         arr = self.read(masked=True, out_shape=out_shape,
                         resampling=resampling)
-
-        # not required if to_pandas is restricted to Raster objects
-        # if isinstance(self, RasterLayer):
-        #     arr = arr[np.newaxis, :, :]
-
+        
         # x and y grid coordinate arrays
         x_range = np.linspace(start=self.bounds.left,
                               stop=self.bounds.right, num=arr.shape[2])
@@ -1567,9 +1563,6 @@ class Raster(BaseRaster):
                 new_raster = self._newraster(self.files, self.names)
                 new_raster._layers = combined_layers
                 
-                for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-                    new_layer.cmap = old_layer.cmap
-                
                 return new_raster
 
     def drop(self, labels, in_place=True):
@@ -1615,9 +1608,6 @@ class Raster(BaseRaster):
             new_raster = self._newraster(self.files, self.names)
             new_raster._layers = subset_layers
             
-            for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-                new_layer.cmap = old_layer.cmap
-            
             return new_raster
 
     def rename(self, names, in_place=True):
@@ -1651,9 +1641,6 @@ class Raster(BaseRaster):
 
                 # change name of layer in stack
                 new_raster.loc[new_name] = new_raster.loc.pop(old_name)
-                
-                for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-                    new_layer.cmap = old_layer.cmap
                 
             return(new_raster)
 
@@ -1743,27 +1730,14 @@ class Raster(BaseRaster):
                     ax.xaxis.get_majorticklocs().astype('int'),
                     fontsize=label_fontsize)
 
-        # To hide the last plot that isn't showing, do this:
-        # axs.flat[-1].set_visible(False)
-        # or more generally to hide empty plots
         for ax in axs.flat[axs.size - 1:self.count - 1:-1]:
             ax.set_visible(False)
 
         plt.subplots_adjust()
 
-        # # perform histogram stretching
-        # if stretch is True:
-        #     v_min, v_max = np.percentile(rio_np[~rio_np.mask], (smin, smax))
-        #
-        #     out_min, out_max = \
-        #         rio_np[~rio_np.mask].min(), rio_np[~rio_np.mask].max()
-        #
-        #     rio_np = exposure.rescale_intensity(
-        #         rio_np, in_range=(v_min, v_max), out_range=(out_min, out_max))
-
         return fig, axs
 
-    def _newraster(self, file_path, names=None):
+    def _newraster(self, file_path, names=None, tempfiles=None):
         """
         Return a new Raster object
 
@@ -1775,6 +1749,10 @@ class Raster(BaseRaster):
         names : list, optional
             List to name the RasterLayer objects in the stack. If not supplied
             then the names will be generated from the filename
+        
+        tempfiles : list, optional
+            List of file paths for RasterLayer objects that are stored as tempfiles
+            These will be deleted on destruction of the Raster object
 
         Returns
         -------
@@ -1789,6 +1767,11 @@ class Raster(BaseRaster):
         if names is not None:
             rename = {old: new for old, new in zip(raster.names, names)}
             raster.rename(rename)
+        
+        for old_layer, new_layer in zip(self.iloc, raster.iloc):
+            raster.new_layer.cmap = old_layer.cmap
+        
+        raster.tempfiles = self.tempfiles + tempfiles
 
         return raster
 
@@ -1799,7 +1782,7 @@ class Raster(BaseRaster):
         geopandas.GeoDataFrame
         """
 
-        tempfiles = None
+        tempfiles = []
         masked_ndarrays = []
 
         for layer in self.iloc:
@@ -1830,16 +1813,12 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(masked_ndarrays)
 
-        new_raster = self._newraster(file_path, self.names)
-        new_raster.tempfiles.append(tempfiles)
-        
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
+        new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
@@ -1855,7 +1834,7 @@ class Raster(BaseRaster):
         -------
         pyspatial.Raster object
         """
-        tempfiles = None
+        tempfiles = []
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
@@ -1869,7 +1848,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         meta = self.meta
         meta['driver'] = driver
@@ -1878,11 +1857,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(intersected_arr)
 
-        new_raster = self._newraster(file_path, self.names)
-        new_raster.tempfiles.append(tempfiles)
-
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
+        new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
@@ -1913,7 +1888,7 @@ class Raster(BaseRaster):
             Cropped to new extent
         """
 
-        tempfiles = None
+        tempfiles = []
 
         xmin, ymin, xmax, ymax = bounds
 
@@ -1936,16 +1911,12 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr)
 
-        new_raster = self._newraster(file_path, self.names)
-        new_raster.tempfiles.append(tempfiles)
-        
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
+        new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
@@ -1999,7 +1970,7 @@ class Raster(BaseRaster):
             Optionally show progress of transform operations
         """
 
-        tempfiles = None
+        tempfiles = []
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
@@ -2010,7 +1981,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=self.crs,
@@ -2046,15 +2017,12 @@ class Raster(BaseRaster):
                     if progress is True:
                         t.update()
 
-        new_raster = self._newraster(file_path, self.names)
-        new_raster.tempfiles.append(tempfiles)
-        
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
+        new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
-    def aggregate(self, out_shape, resampling='nearest', file_path=None, driver='GTiff', nodata=-99999):
+    def aggregate(self, out_shape, resampling='nearest', file_path=None, 
+                  driver='GTiff', nodata=-99999):
         """
         Aggregates a raster to (usually) a coarser grid cell size
 
@@ -2085,7 +2053,7 @@ class Raster(BaseRaster):
         pyspatialml.Raster object
         """
 
-        tempfiles = None
+        tempfiles = []
 
         rows, cols = out_shape
 
@@ -2094,7 +2062,7 @@ class Raster(BaseRaster):
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         meta = self.meta
         meta['driver'] = driver
@@ -2110,11 +2078,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(arr)
             
-        new_raster = self._newraster(file_path, self.names)
-        new_raster.tempfiles.append(tempfiles)
-        
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
+        new_raster = self._newraster(file_path, self.names, tempfiles)
 
         return new_raster
 
@@ -2149,7 +2113,7 @@ class Raster(BaseRaster):
         pyspatialml.Raster object
         """
         
-        tempfiles = None
+        tempfiles = []
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)
@@ -2166,7 +2130,7 @@ class Raster(BaseRaster):
         # optionally output to a temporary file
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
+            tempfiles.append(file_path)
 
         # open output file with updated metadata
         meta = self.meta
@@ -2193,7 +2157,6 @@ class Raster(BaseRaster):
                     dst.write(result.astype(dtype), window=window)
 
         new_raster = self._newraster(file_path)
-        new_raster.tempfiles.append(tempfiles)
         
         return new_raster
 

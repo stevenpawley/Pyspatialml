@@ -61,3 +61,10 @@ tests/__pycache__/test_extract.cpython-37.pyc
 tests/__pycache__/test_indexing.cpython-37.pyc
 tests/__pycache__/test_initiation.cpython-37.pyc
 tests/__pycache__/test_prediction.cpython-37.pyc
+pyspatialml/__pycache__/__init__.cpython-36.pyc
+pyspatialml/__pycache__/__init__.cpython-37.pyc
+pyspatialml/__pycache__/__main.cpython-36.pyc
+pyspatialml/__pycache__/__main.cpython-37.pyc
+pyspatialml/__pycache__/utils.cpython-37.pyc
+pyspatialml/__pycache__/vector.cpython-36.pyc
+pyspatialml/datasets/__pycache__/nc_dataset.cpython-37.pyc
