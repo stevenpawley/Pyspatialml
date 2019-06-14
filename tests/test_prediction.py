@@ -16,7 +16,7 @@ class TestPrediction(TestCase):
         stack = Raster(self.predictors)
         training_pt = gpd.read_file(nc.points)
         
-        df_points = stack.extract_vector(response=training_pt, field='id')
+        df_points = stack.extract_vector(response=training_pt, columns='id')
 
         clf = RandomForestClassifier(n_estimators=50)
         X = df_points.drop(columns=['id', 'geometry'])
@@ -43,13 +43,7 @@ class TestPrediction(TestCase):
         
         training_pt = gpd.read_file(ms.meuse)
         training = stack.extract_vector(
-            response=training_pt, field='cadmium')
-        training['copper'] = stack.extract_vector(
-            response=training_pt, field='copper')['copper']
-        training['lead'] = stack.extract_vector(
-            response=training_pt, field='lead')['lead']
-        training['zinc'] = stack.extract_vector(
-            response=training_pt, field='zinc')['zinc']
+            response=training_pt, columns=['cadmium', 'copper', 'lead', 'zinc'])
 
         # single target regression
         regr = RandomForestRegressor(n_estimators=50)

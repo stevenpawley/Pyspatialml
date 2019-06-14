@@ -513,6 +513,9 @@ class BaseRaster(object):
             gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
             return gdf
         
+        if len(columns) == 1:
+            y = y.squeeze()
+        
         return X, y, xy
 
     def extract_raster(self, response, value_name='value', return_array=False,
