@@ -19,7 +19,7 @@ class TestExtract(TestCase):
         # extract training data from points
         training_pt = geopandas.read_file(nc.points)
         X, y, xy = stack.extract_vector(
-            response=training_pt, field='id', return_array=True)
+            response=training_pt, columns='id', return_array=True)
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -53,7 +53,7 @@ class TestExtract(TestCase):
         # extract training data from polygons
         training_py = geopandas.read_file(nc.polygons)
         X, y, xy = stack.extract_vector(
-            response=training_py, field='id', return_array=True)
+            response=training_py, columns='id', return_array=True)
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -75,7 +75,7 @@ class TestExtract(TestCase):
         training_lines = deepcopy(training_py)
         training_lines['geometry'] = training_lines.geometry.boundary
         X, y, xy = stack.extract_vector(
-            response=training_lines, field='id', return_array=True)
+            response=training_lines, columns='id', return_array=True)
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
