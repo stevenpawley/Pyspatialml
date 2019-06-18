@@ -1080,21 +1080,30 @@ class Raster(BaseRaster):
         if out_shape:
             height, width = out_shape
 
-        # read masked or non-masked data
-        if masked is True:
-            arr = np.ma.zeros((self.count, height, width), dtype=dtype)
-        else:
-            arr = np.zeros((self.count, height, width), dtype=dtype)
-
-        # read bands separately into numpy array
-        for i, layer in enumerate(self.iloc):
-            arr[i, :, :] = layer.read(
+        # read all bands from a single file
+        if (len(list(set(self.files))) == 1 and 
+            self.count == self.iloc[0].ds.count):
+            arr = self.iloc[0].ds.read(
                 masked=masked,
                 window=window,
                 out_shape=out_shape,
                 resampling=rasterio.enums.Resampling[resampling],
                 **kwargs)
-        
+        else:
+            # read bands separately into numpy array
+            if masked is True:
+                arr = np.ma.zeros((self.count, height, width), dtype=dtype)
+            else:
+                arr = np.zeros((self.count, height, width), dtype=dtype)
+            
+            for i, layer in enumerate(self.iloc):
+                arr[i, :, :] = layer.read(
+                    masked=masked,
+                    window=window,
+                    out_shape=out_shape,
+                    resampling=rasterio.enums.Resampling[resampling],
+                    **kwargs)
+                
         return arr
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
