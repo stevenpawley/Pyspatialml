@@ -6,7 +6,6 @@ import re
 import tempfile
 from collections import Counter
 from collections import namedtuple
-from functools import partial
 from itertools import chain
 from copy import deepcopy
 
@@ -50,7 +49,6 @@ class BaseRaster(object):
         self.width = band.ds.width
         self.height = band.ds.height
         self.bounds = band.ds.bounds  # namedtuple('left', 'bottom', 'right', 'top')
-        self.read = partial(band.ds.read, indexes=band.bidx)
 
     @staticmethod
     def _make_name(name, existing_names=None):
@@ -120,6 +118,110 @@ class BaseRaster(object):
         arr = self.read(window=window)
 
         return arr
+    
+    def _stats(self, max_pixels):
+        n_pixels = self.shape[0] * self.shape[1]
+        scaling = max_pixels / n_pixels
+
+        # read dataset using decimated reads
+        out_shape = (round(self.shape[0] * scaling),
+                     round(self.shape[1] * scaling))
+        arr = self.read(masked=True, out_shape=out_shape)
+
+        # reshape for summary stats
+        if arr.ndim > 2:
+            arr = arr.reshape((arr.shape[0], arr.shape[1]*arr.shape[2]))
+        else:
+            arr = arr.flatten()
+        return arr
+    
+    def min(self, max_pixels=10000):
+        """
+        Minimum value
+        
+        Parameters
+        ----------
+        max_pixels : int
+            Number of pixels used to inform statistical estimate
+        
+        Returns
+        -------
+        numpy.float32
+        """
+        arr = self._stats(max_pixels)
+        
+        if arr.ndim > 1:
+            stats = arr.min(axis=1).data
+        else:
+            stats = arr.min()
+        
+        return stats
+    
+    def max(self, max_pixels=10000):
+        """
+        Maximum value
+        
+        Parameters
+        ----------
+        max_pixels : int
+            Number of pixels used to inform statistical estimate
+        
+        Returns
+        -------
+        numpy.float32
+        """
+        arr = self._stats(max_pixels)
+        
+        if arr.ndim > 1:
+            stats = arr.max(axis=1).data
+        else:
+            stats = arr.max()
+        
+        return stats
+    
+    def mean(self, max_pixels=10000):
+        """
+        Mean value
+        
+        Parameters
+        ----------
+        max_pixels : int
+            Number of pixels used to inform statistical estimate
+        
+        Returns
+        -------
+        numpy.float32
+        """
+        arr = self._stats(max_pixels)
+        
+        if arr.ndim > 1:
+            stats = arr.mean(axis=1).data
+        else:
+            stats = arr.mean()
+        
+        return stats
+
+    def median(self, max_pixels=10000):
+        """
+        Median value
+        
+        Parameters
+        ----------
+        max_pixels : int
+            Number of pixels used to inform statistical estimate
+        
+        Returns
+        -------
+        numpy.float32
+        """
+        arr = self._stats(max_pixels)
+        
+        if arr.ndim > 1:
+            stats = np.median(arr, axis=1).data
+        else:
+            stats = np.median(arr)
+        
+        return stats
 
     def sample(self, size, strata=None, return_array=False, random_state=None):
         """
@@ -278,7 +380,7 @@ class BaseRaster(object):
                              (xy[:, 1] < extent.top))[0]
         xy = xy[valid_idx, :]
 
-        dtype = self._maximum_dtype()
+        dtype = np.find_common_type([], self.dtypes)
         values = np.ma.zeros((xy.shape[0], self.count), dtype=dtype)
         rows, cols = rasterio.transform.rowcol(
             transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
@@ -311,7 +413,7 @@ class BaseRaster(object):
             2d numpy array of extracted training data in [sample, feature] shape
         """
 
-        X = np.ma.zeros((len(rows), self.count))
+        X = np.ma.zeros((len(rows), self.count), dtype='float32')
 
         if isinstance(self, Raster):
             for i, layer in enumerate(self.iloc):
@@ -612,6 +714,21 @@ class RasterLayer(BaseRaster):
         self.cmap = 'viridis'
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
+    
+    def read(self, **kwargs):
+        
+        if 'resampling' in kwargs.keys():
+            resampling_methods = [i.name for i in rasterio.enums.Resampling]
+
+            if kwargs['resampling'] not in resampling_methods:
+                raise ValueError(
+                    'Invalid resampling method.' +
+                    'Resampling method must be one of {0}:'.format(
+                        resampling_methods))
+
+            kwargs['resampling'] = rasterio.enums.Resampling[kwargs['resampling']]
+            
+        return self.ds.read(indexes=self.bidx, **kwargs)
 
     def fill(self):
         raise NotImplementedError
@@ -889,37 +1006,6 @@ class Raster(BaseRaster):
         else:
             return src_meta[0]
 
-    def _maximum_dtype(self):
-        """
-        Returns a single dtype that is large enough to store data
-        within all raster bands
-        """
-
-        if 'complex128' in self.dtypes:
-            dtype = 'complex128'
-        elif 'complex64' in self.dtypes:
-            dtype = 'complex64'
-        elif 'complex' in self.dtypes:
-            dtype = 'complex'
-        elif 'float64' in self.dtypes:
-            dtype = 'float64'
-        elif 'float32' in self.dtypes:
-            dtype = 'float32'
-        elif 'int32' in self.dtypes:
-            dtype = 'int32'
-        elif 'uint32' in self.dtypes:
-            dtype = 'uint32'
-        elif 'int16' in self.dtypes:
-            dtype = 'int16'
-        elif 'uint16' in self.dtypes:
-            dtype = 'uint16'
-        elif 'uint16' in self.dtypes:
-            dtype = 'uint16'
-        elif 'bool' in self.dtypes:
-            dtype = 'bool'
-
-        return dtype
-
     @staticmethod
     def _fix_names(combined_names):
 
@@ -1020,7 +1106,7 @@ class Raster(BaseRaster):
                          width=self.width,
                          height=self.height,
                          count=self.count,
-                         dtype=self._maximum_dtype())
+                         dtype=np.find_common_type([], self.dtypes))
 
     def read(self, masked=False, window=None, out_shape=None,
              resampling='nearest', **kwargs):
@@ -1060,14 +1146,6 @@ class Raster(BaseRaster):
 
         dtype = self.meta['dtype']
 
-        resampling_methods = [i.name for i in rasterio.enums.Resampling]
-
-        if resampling not in resampling_methods:
-            raise ValueError(
-                'Invalid resampling method.' +
-                'Resampling method must be one of {0}:'.format(
-                    resampling_methods))
-
         # get window to read from window or height/width of dataset
         if window is None:
             width = self.width
@@ -1091,8 +1169,13 @@ class Raster(BaseRaster):
                 masked=masked,
                 window=window,
                 out_shape=out_shape,
-                resampling=rasterio.enums.Resampling[resampling],
+                resampling=resampling,
                 **kwargs)
+            
+            if masked is True:
+                arr[i, :, :] = np.ma.MaskedArray(
+                    data=arr[i, :, :], 
+                    mask=np.isfinite(arr[i, :, :]).mask)
                 
         return arr
 
@@ -1138,13 +1221,13 @@ class Raster(BaseRaster):
         meta = self.meta
         meta['driver'] = driver
         meta['nodata'] = nodata
+        meta['dtype'] = dtype
 
-        with rasterio.open(file_path, mode='w', **self.meta) as dst:
+        with rasterio.open(file_path, mode='w', **meta) as dst:
 
             for i, layer in enumerate(self.iloc):
                 arr = layer.read()
                 arr[arr == layer.nodata] = nodata
-
                 dst.write(arr.astype(dtype), i+1)
 
         return self._newraster(file_path, self.names)
@@ -1787,7 +1870,7 @@ class Raster(BaseRaster):
         return raster
 
     def mask(self, shapes=None, invert=False, crop=False, filled=False,
-             pad=False, file_path=None, driver='GTiff', nodata=-99999):
+             pad=False, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
         """
         Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
@@ -1819,6 +1902,11 @@ class Raster(BaseRaster):
         meta['nodata'] = nodata
         meta['height'] = masked_ndarrays.shape[1]
         meta['width'] = masked_ndarrays.shape[2]
+        
+        if dtype is None:
+            dtype = meta['dtype']
+        
+        meta['dtype'] = dtype
 
         masked_ndarrays = np.ma.filled(masked_ndarrays, fill_value=nodata)
 
@@ -1827,13 +1915,13 @@ class Raster(BaseRaster):
             tempfiles.append(file_path)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(masked_ndarrays)
+            dst.write(masked_ndarrays.astype(dtype))
 
         new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
-    def intersect(self, file_path=None, driver='GTiff', nodata=-99999):
+    def intersect(self, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
         """
         Perform a intersect operation on the Raster object
 
@@ -1864,15 +1952,20 @@ class Raster(BaseRaster):
         meta = self.meta
         meta['driver'] = driver
         meta['nodata'] = nodata
+        
+        if dtype is None:
+            dtype = meta['dtype']
+        
+        meta['dtype'] = dtype
 
         with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(intersected_arr)
+            dst.write(intersected_arr.astype(dtype))
 
         new_raster = self._newraster(file_path, self.names, tempfiles)
         
         return new_raster
 
-    def crop(self, bounds, file_path=None, driver='GTiff', nodata=-99999):
+    def crop(self, bounds, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
         """
         Crops a Raster object by the supplied bounds
 
@@ -1889,6 +1982,9 @@ class Raster(BaseRaster):
 
         driver : str, optional. Default is 'GTiff'
             Named of GDAL-supported driver for file export
+        
+        dtype : str, optional. Default is None
+            Coerce RasterLayers to the specified dtype
 
         nodata : int, float
             Nodata value for cropped dataset
@@ -1919,13 +2015,18 @@ class Raster(BaseRaster):
         meta['transform'] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
         meta['driver'] = driver
         meta['nodata'] = nodata
+        
+        if dtype is None:
+            dtype = meta['dtype']
+        
+        meta['dtype'] = dtype
 
         if file_path is None:
             file_path = tempfile.NamedTemporaryFile().name
             tempfiles.append(file_path)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(cropped_arr)
+            dst.write(cropped_arr.astype(dtype))
 
         new_raster = self._newraster(file_path, self.names, tempfiles)
         
@@ -2033,7 +2134,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def aggregate(self, out_shape, resampling='nearest', file_path=None, 
-                  driver='GTiff', nodata=-99999):
+                  driver='GTiff', dtype=None, nodata=-99999):
         """
         Aggregates a raster to (usually) a coarser grid cell size
 
@@ -2055,6 +2156,9 @@ class Raster(BaseRaster):
 
         driver : str, optional. Default is 'GTiff'
             Named of GDAL-supported driver for file export
+        
+        dtype : str, optional. Default is None
+            Coerce RasterLayers to the specified dtype
 
         nodata : int, float
             Nodata value for new dataset
@@ -2080,6 +2184,10 @@ class Raster(BaseRaster):
         meta['nodata'] = nodata
         meta['height'] = rows
         meta['width'] = cols
+        
+        if dtype is None:
+            dtype = meta['dtype']
+        meta['dtype'] = dtype
 
         bnd = self.bounds
         meta['transform'] = rasterio.transform.from_bounds(
@@ -2087,7 +2195,7 @@ class Raster(BaseRaster):
             width=cols, height=rows)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
-            dst.write(arr)
+            dst.write(arr.astype(dtype))
             
         new_raster = self._newraster(file_path, self.names, tempfiles)
 
