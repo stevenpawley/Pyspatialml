@@ -11,7 +11,7 @@ class TestPrediction(TestCase):
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_classification(self):
-        print(self.predictors)
+
         stack = Raster(self.predictors)
         training_pt = gpd.read_file(nc.points)
         
@@ -25,16 +25,16 @@ class TestPrediction(TestCase):
         # classification
         cla = stack.predict(estimator=clf, dtype='int16', nodata=0)
         self.assertIsInstance(cla, Raster)
-        self.assertEquals(cla.count, 1)
-        self.assertEquals(cla.read(masked=True).count(), 135092)
+        self.assertEqual(cla.count, 1)
+        self.assertEqual(cla.read(masked=True).count(), 135092)
 
         # class probabilities
         probs = stack.predict_proba(estimator=clf)
         self.assertIsInstance(cla, Raster)
-        self.assertEquals(probs.count, 7)
+        self.assertEqual(probs.count, 7)
 
         for _, layer in probs:
-            self.assertEquals(layer.read(masked=True).count(), 135092)
+            self.assertEqual(layer.read(masked=True).count(), 135092)
 
     def test_regression(self):
 

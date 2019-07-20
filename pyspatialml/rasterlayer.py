@@ -6,7 +6,6 @@ import rasterio
 from scipy import ndimage
 
 import pyspatialml.base
-import pyspatialml.rasterlayer
 
 
 class RasterLayer(pyspatialml.base.BaseRaster):
