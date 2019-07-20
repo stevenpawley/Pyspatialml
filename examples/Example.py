@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import rasterio
 import pyspatialml.datasets.nc_dataset as nc
 import tempfile
-from pyspatialml.preprocessing import xy_coordinates, distance_to_corners
 
 # First, import the extract and predict functions:
 predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
@@ -15,6 +14,10 @@ predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 # Create a RasterStack instance
 stack = Raster(predictors)
 stack.count
+
+# Perform band math
+ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
+ndvi.plot()
 
 # Aggregate a raster to a coarser cell size
 stack_new = stack.aggregate(out_shape=(100, 100))

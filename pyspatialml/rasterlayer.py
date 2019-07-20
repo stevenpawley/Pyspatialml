@@ -39,22 +39,69 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.cmap = 'viridis'
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
+
+    def _arith(self, other, function):
+        """
+        General method for performing arithmetic operations on RasterLayer
+        objects
+        """
+
+        file_path = tempfile.NamedTemporaryFile().name
+        dtype = np.find_common_type([], [self.dtype, other.dtype])
+        driver = self.driver
+
+        try:
+            nodata = np.iinfo(dtype).min
+        except ValueError:
+            nodata = np.finfo(dtype).min
+
+        # open output file with updated metadata
+        meta = self.meta
+        meta.update(driver=driver, count=1, dtype=dtype, nodata=nodata)
+
+        with rasterio.open(file_path, 'w', **meta) as dst:
+
+            # define windows
+            windows = [window for ij, window in dst.block_windows()]
+
+            # generator gets raster arrays for each window
+            self_gen = (self.read(window=w, masked=True) for w in windows)
+            other_gen = (other.read(window=w, masked=True) for w in windows)
+
+            for window, arr1, arr2 in zip(windows, self_gen, other_gen):
+                result = function(arr1, arr2)
+                result = np.ma.filled(result, fill_value=nodata)
+                dst.write(result.astype(dtype), window=window, indexes=1)
+
+        src = rasterio.open(file_path)
+        band = rasterio.band(src, 1)
+
+        return pyspatialml.RasterLayer(band)
     
     def __add__(self, other):
-        raise NotImplementedError
-    
+        def func(arr1, arr2):
+            return arr1 + arr2
+
+        return self._arith(other, func)
+
     def __sub__(self, other):
-        raise NotImplementedError
+        def func(arr1, arr2):
+            return arr1 - arr2
+
+        return self._arith(other, func)
     
     def __mul__(self, other):
-        raise NotImplementedError
+        def func(arr1, arr2):
+            return arr1 * arr2
 
-    def __div__(self, other):
-        raise NotImplementedError
-    
-    def __pow__(self, other):
-        raise NotImplementedError
-    
+        return self._arith(other, func)
+
+    def __truediv__(self, other):
+        def func(arr1, arr2):
+            return arr1 / arr2
+
+        return self._arith(other, func)
+
     def __and__(self, other):
         """
         Intersects self with other. Equivalent to a intersection operation
