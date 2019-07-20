@@ -5,7 +5,6 @@ from copy import deepcopy
 import geopandas
 import rasterio
 import numpy as np
-import os
 
 
 class TestExtract(TestCase):

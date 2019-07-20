@@ -2,14 +2,10 @@ from __future__ import print_function
 
 import math
 import os
-import re
 import tempfile
 from collections import Counter
 from collections import namedtuple
-from itertools import chain
-from copy import deepcopy
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,777 +13,17 @@ import rasterio
 import rasterio.mask
 import rasterio.plot
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from rasterio import features
 from rasterio.transform import Affine
-from rasterio.windows import Window
 from rasterio.warp import calculate_default_transform, reproject
-from scipy import ndimage
-from shapely.geometry import Point
+from rasterio.windows import Window
 from tqdm import tqdm
 
+import pyspatialml.base
+import pyspatialml.rasterlayer
 from .indexing import ExtendedDict, LinkedList
 
 
-class BaseRaster(object):
-    """
-    Raster base class that contains methods that apply both to RasterLayer and
-    Raster objects
-
-    The methods that are encapsulated within BaseRaster comprise those that
-    return some non-raster type of object, i.e. a geopandas.GeoDataFrame
-    representing a random sample of cells.
-
-    Wraps a rasterio.Band object consisting of a named tuple of the file path,
-    the band index, the dtype and shape an individual band within a raster
-    file-based dataset
-    """
-
-    def __init__(self, band):
-        self.shape = band.shape
-        self.crs = band.ds.crs
-        self.transform = band.ds.transform
-        self.width = band.ds.width
-        self.height = band.ds.height
-        self.bounds = band.ds.bounds  # namedtuple('left', 'bottom', 'right', 'top')
-
-    @staticmethod
-    def _make_name(name, existing_names=None):
-        """
-        Converts a filename to a valid class attribute name
-
-        Parameters
-        ----------
-        name : str
-            File name for convert to a valid class attribute name
-
-        existing_names : list
-            List of existing names to check that the new name will not
-            result in duplicated layer names
-
-        Returns
-        -------
-        str
-            Syntatically-correct name of layer so that it can form a class
-            instance attribute
-        """
-
-        # replace spaces and hyphens with underscore
-        valid_name = os.path.basename(name)
-        valid_name = valid_name.split(os.path.extsep)[0]
-        valid_name = valid_name.replace(' ', '_')
-        valid_name = valid_name.replace('-', '_')
-
-        # ensure that does not start with number
-        if valid_name[0].isdigit():
-            valid_name = "x" + valid_name
-
-        # remove parentheses and brackets
-        valid_name = re.sub(r'[\[\]\(\)\{\}\;]', '', valid_name)
-
-        # remove occurrences of multiple underscores
-        valid_name = re.sub(r'_+', '_', valid_name)
-
-        # check to see if same name already exists
-        if existing_names is not None:
-            if valid_name in existing_names:
-                valid_name = '_'.join([valid_name, '1'])
-
-        return valid_name
-
-    def head(self):
-        """
-        Show the head (first rows, first columns) or tail
-        (last rows, last columns) of the cells of a Raster object
-        """
-
-        window = Window(col_off=0, row_off=0, width=20, height=10)
-        arr = self.read(window=window)
-
-        return arr
-
-    def tail(self):
-        """
-        Show the head (first rows, first columns) or tail
-        (last rows, last columns) of the cells of a Raster object
-        """
-
-        window = Window(col_off=self.width-20,
-                        row_off=self.height-10,
-                        width=20,
-                        height=10)
-        arr = self.read(window=window)
-
-        return arr
-    
-    def _stats(self, max_pixels):
-        n_pixels = self.shape[0] * self.shape[1]
-        scaling = max_pixels / n_pixels
-
-        # read dataset using decimated reads
-        out_shape = (round(self.shape[0] * scaling),
-                     round(self.shape[1] * scaling))
-        arr = self.read(masked=True, out_shape=out_shape)
-
-        # reshape for summary stats
-        if arr.ndim > 2:
-            arr = arr.reshape((arr.shape[0], arr.shape[1]*arr.shape[2]))
-        else:
-            arr = arr.flatten()
-        return arr
-    
-    def min(self, max_pixels=10000):
-        """
-        Minimum value
-        
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate
-        
-        Returns
-        -------
-        numpy.float32
-        """
-        arr = self._stats(max_pixels)
-        
-        if arr.ndim > 1:
-            stats = arr.min(axis=1).data
-        else:
-            stats = arr.min()
-        
-        return stats
-    
-    def max(self, max_pixels=10000):
-        """
-        Maximum value
-        
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate
-        
-        Returns
-        -------
-        numpy.float32
-        """
-        arr = self._stats(max_pixels)
-        
-        if arr.ndim > 1:
-            stats = arr.max(axis=1).data
-        else:
-            stats = arr.max()
-        
-        return stats
-    
-    def mean(self, max_pixels=10000):
-        """
-        Mean value
-        
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate
-        
-        Returns
-        -------
-        numpy.float32
-        """
-        arr = self._stats(max_pixels)
-        
-        if arr.ndim > 1:
-            stats = arr.mean(axis=1).data
-        else:
-            stats = arr.mean()
-        
-        return stats
-
-    def median(self, max_pixels=10000):
-        """
-        Median value
-        
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate
-        
-        Returns
-        -------
-        numpy.float32
-        """
-        arr = self._stats(max_pixels)
-        
-        if arr.ndim > 1:
-            stats = np.median(arr, axis=1).data
-        else:
-            stats = np.median(arr)
-        
-        return stats
-
-    def sample(self, size, strata=None, return_array=False, random_state=None):
-        """
-        Generates a random sample of according to size, and samples the pixel
-        values
-
-        Parameters
-        ----------
-        size : int
-            Number of random samples or number of samples per strata
-            if strategy='stratified'
-
-        strata : rasterio.io.DatasetReader, optional (default=None)
-            To use stratified instead of random sampling, strata can be
-            supplied using an open rasterio DatasetReader object
-
-        return_array : bool, default = False
-            Optionally return extracted data as separate X, y and xy
-            masked numpy arrays
-
-        na_rm : bool, default = True
-            Optionally remove rows that contain nodata values
-
-        random_state : int
-            integer to use within random.seed
-
-        Returns
-        -------
-        numpy.ndarray
-            Numpy array of extracted raster values, typically 2d
-
-        numpy.ndarray
-            2D numpy array of xy coordinates of extracted values
-        """
-
-        # set the seed
-        np.random.seed(seed=random_state)
-
-        if not strata:
-
-            # create np array to store randomly sampled data
-            # we are starting with zero initial rows because data will be appended,
-            # and number of columns are equal to n_features
-            valid_samples = np.zeros((0, self.count))
-            valid_coordinates = np.zeros((0, 2))
-
-            # loop until target number of samples is satified
-            satisfied = False
-
-            n = size
-            while satisfied is False:
-
-                # generate random row and column indices
-                Xsample = np.random.choice(range(0, self.width), n)
-                Ysample = np.random.choice(range(0, self.height), n)
-
-                # create 2d numpy array with sample locations set to 1
-                sample_raster = np.empty((self.height, self.width))
-                sample_raster[:] = np.nan
-                sample_raster[Ysample, Xsample] = 1
-
-                # get indices of sample locations
-                rows, cols = np.nonzero(np.isnan(sample_raster) == False)
-
-                # convert row, col indices to coordinates
-                xy = np.transpose(rasterio.transform.xy(
-                    self.transform, rows, cols))
-
-                # sample at random point locations
-                samples = self.extract_xy(xy)
-
-                # append only non-masked data to each row of X_random
-                samples = samples.astype('float32').filled(np.nan)
-                invalid_ind = np.isnan(samples).any(axis=1)
-                samples = samples[~invalid_ind, :]
-                valid_samples = np.append(valid_samples, samples, axis=0)
-
-                xy = xy[~invalid_ind, :]
-                valid_coordinates = np.append(
-                    valid_coordinates, xy, axis=0)
-
-                # check to see if target_nsamples has been reached
-                if len(valid_samples) >= size:
-                    satisfied = True
-                else:
-                    n = size - len(valid_samples)
-
-        else:
-            # get number of unique categories
-            strata_arr = strata.read(1)
-            categories = np.unique(strata_arr)
-            categories = categories[np.nonzero(categories != strata.nodata)]
-            categories = categories[~np.isnan(categories)]
-
-            # store selected coordinates
-            selected = np.zeros((0, 2))
-
-            for cat in categories:
-
-                # get row,col positions for cat strata
-                ind = np.transpose(np.nonzero(strata_arr == cat))
-
-                if size > ind.shape[0]:
-                    msg = 'Sample size is greater than number of pixels in strata {0}'.format(
-                        str(ind))
-                    msg = os.linesep.join([msg, 'Sampling using replacement'])
-                    Warning(msg)
-
-                # random sample
-                sample = np.random.uniform(
-                    low=0, high=ind.shape[0], size=size).astype('int')
-                xy = ind[sample, :]
-
-                selected = np.append(selected, xy, axis=0)
-
-            # convert row, col indices to coordinates
-            x, y = rasterio.transform.xy(
-                self.transform, selected[:, 0], selected[:, 1])
-            valid_coordinates = np.column_stack((x, y))
-
-            # extract data
-            valid_samples = self.extract_xy(valid_coordinates)
-
-        # return as geopandas array as default (or numpy arrays)
-        if return_array is False:
-            gdf = pd.DataFrame(valid_samples, columns=self.names)
-            gdf['geometry'] = list(
-                zip(valid_coordinates[:, 0], valid_coordinates[:, 1]))
-            gdf['geometry'] = gdf['geometry'].apply(Point)
-            gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
-            return gdf
-        else:
-            return valid_samples, valid_coordinates
-
-    def extract_xy(self, xy):
-        """
-        Samples pixel values of a Raster using an array of xy locations
-
-        Parameters
-        ----------
-        xy : 2d array-like
-            x and y coordinates from which to sample the raster (n_samples, xy)
-
-        Returns
-        -------
-        numpy.ndarray
-            2d masked array containing sampled raster values (sample, bands)
-            at x,y locations
-        """
-
-        # clip coordinates to extent of raster
-        extent = self.bounds
-        valid_idx = np.where((xy[:, 0] > extent.left) &
-                             (xy[:, 0] < extent.right) &
-                             (xy[:, 1] > extent.bottom) &
-                             (xy[:, 1] < extent.top))[0]
-        xy = xy[valid_idx, :]
-
-        dtype = np.find_common_type([], self.dtypes)
-        values = np.ma.zeros((xy.shape[0], self.count), dtype=dtype)
-        rows, cols = rasterio.transform.rowcol(
-            transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
-
-        for i, (row, col) in enumerate(zip(rows, cols)):
-            window = Window(col_off=col,
-                            row_off=row,
-                            width=1,
-                            height=1)
-            values[i, :] = self.read(
-                masked=True, window=window).reshape((1, self.count))
-
-        return values
-
-    def _extract_by_indices(self, rows, cols):
-        """
-        Spatial query of Raster object (by-band)
-
-        Parameters
-        ----------
-        rows : ndarray
-            1d numpy array of row indices
-
-        cols : ndarray
-            1d numpy array of column induces
-
-        Returns
-        -------
-        numpy.ndarray
-            2d numpy array of extracted training data in [sample, feature] shape
-        """
-
-        X = np.ma.zeros((len(rows), self.count), dtype='float32')
-
-        if isinstance(self, Raster):
-            for i, layer in enumerate(self.iloc):
-                arr = layer.read(masked=True)
-                X[:, i] = arr[rows, cols]
-        else:
-            arr = self.read(masked=True)
-            X[:, 0] = arr[rows, cols]
-
-        return X
-
-    def extract_vector(self, response, columns=None, return_array=False,
-                       duplicates='keep', na_rm=True, low_memory=False):
-        """
-        Sample a Raster object by a geopandas GeoDataframe containing points,
-        lines or polygon features
-
-        Parameters
-        ----------
-        response: geopandas.GeoDataFrame
-            Containing either point, line or polygon geometries. Overlapping
-            geometries will cause the same pixels to be sampled.
-
-        columns : str, optional
-            Column names of attribute to be used the label the extracted data
-            Used only if the response feature represents a GeoDataframe
-
-        return_array : bool, default=False
-            Optionally return extracted data as separate X, y and xy
-            masked numpy arrays
-        
-        duplicates : str, default='keep'
-            Method to deal with duplicates points that fall inside the same
-            pixel. Available options are ['keep', 'mean', min', 'max']
-
-        na_rm : bool, default=True
-            Optionally remove rows that contain nodata values if extracted
-            values are returned as a geopandas.GeoDataFrame
-
-        low_memory : bool, default=False
-            Optionally extract pixel values in using a slower but memory-safe
-            method
-
-        Returns
-        -------
-        Either:
-
-        geopandas.GeoDataframe
-            Containing extracted data as point geometries
-
-        Or if return_array=True:
-
-        numpy.ndarray
-            Numpy masked array of extracted raster values, typically 2d
-            Returned only if return_array is True
-
-        numpy.ndarray
-            1d numpy masked array of labelled sampled
-            Returned only if return_array is True
-
-        numpy.ndarray
-            2d numpy masked array of row and column indexes of training pixels
-            Returned only if return_array is True
-        """
-        
-        if columns is not None:
-            if isinstance(columns, str):
-                columns = [columns]
-
-        if not columns:
-            y = None
-
-        duplicate_methods = ['keep', 'mean', 'min', 'max']
-        if duplicates not in duplicate_methods:
-            raise ValueError('duplicates must be one of ' +
-                             str(duplicate_methods))
-
-        # polygon and line geometries
-        if all(response.geom_type == 'Polygon') or all(response.geom_type == 'LineString'):
-            
-            if len(columns) > 1:
-                raise NotImplementedError(
-                    'Support for extracting values from multiple columns is only supported for point geometries')
-
-            # rasterize
-            rows_all, cols_all, y_all = [], [], []
-
-            for _, shape in response.iterrows():
-                if not columns:
-                    shapes = (shape.geometry, 1)
-                else:
-                    shapes = (shape.geometry, shape[columns])
-
-                arr = np.zeros((self.height, self.width))
-                arr[:] = -99999
-                arr = features.rasterize(
-                    shapes=(shapes for i in range(1)), fill=-99999, out=arr,
-                    transform=self.transform, default_value=1,
-                    all_touched=True)
-
-                rows, cols = np.nonzero(arr != -99999)
-
-                if columns:
-                    y_all.append(arr[rows, cols])
-
-                rows_all.append(rows)
-                cols_all.append(cols)
-
-            rows = list(chain.from_iterable(rows_all))
-            cols = list(chain.from_iterable(cols_all))
-            y = list(chain.from_iterable(y_all))
-
-            xy = np.transpose(
-                rasterio.transform.xy(transform=self.transform,
-                                      rows=rows, cols=cols))
-
-        # point geometries
-        elif all(response.geom_type == 'Point'):
-            xy = response.bounds.iloc[:, 2:].values
-            if columns:
-                y = response[columns].values
-
-            # clip points to extent of raster
-            extent = self.bounds
-            valid_idx = np.where((xy[:, 0] > extent.left) &
-                                (xy[:, 0] < extent.right) &
-                                (xy[:, 1] > extent.bottom) &
-                                (xy[:, 1] < extent.top))[0]
-            xy = xy[valid_idx, :]
-
-            if y is not None:
-                y = y[valid_idx]
-            
-            # convert to row, col indices
-            rows, cols = rasterio.transform.rowcol(
-                transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
-
-            # deal with duplicate points that fall inside same pixel
-            if duplicates != "keep":
-                rowcol_df = pd.DataFrame(
-                    np.column_stack((rows, cols, y)),
-                    columns=['row', 'col'] + columns)
-                rowcol_df['Duplicated'] = rowcol_df.loc[:, ['row', 'col']].duplicated()
-
-                if duplicates == 'mean':
-                    rowcol_df = rowcol_df.groupby(
-                        by=['Duplicated', 'row', 'col'], sort=False).mean().reset_index()
-                elif duplicates == 'min':
-                    rowcol_df = rowcol_df.groupby(
-                        by=['Duplicated', 'row', 'col'], sort=False).min().reset_index()
-                elif duplicates == 'max':
-                    rowcol_df = rowcol_df.groupby(
-                        by=['Duplicated', 'row', 'col'], sort=False).max().reset_index()
-
-                rows, cols = rowcol_df['row'].values.astype(
-                    'int'), rowcol_df['col'].values.astype('int')
-                xy = np.stack(
-                    rasterio.transform.xy(
-                        transform=self.transform, rows=rows, cols=cols), axis=1)
-                y = rowcol_df[columns].values
-
-        # spatial query of Raster object (loads each band into memory)
-        if low_memory is False:
-            X = self._extract_by_indices(rows, cols)
-
-        # samples each point separately (much slower)
-        else:
-            X = self.extract_xy(xy)
-
-        # apply mask
-        mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        xy = np.ma.masked_array(xy, mask=mask_2d)
-
-        if columns is not None:
-            X_mask_columns = X.mask.any(axis=1)
-            X_mask_columns = X_mask_columns.repeat(len(columns))
-            y = np.ma.masked_array(y, mask=X_mask_columns)
-
-        # return as geopandas array as default (or numpy arrays)
-        if return_array is False:
-            if na_rm is True:
-                X = np.ma.compress_rows(X)
-                xy = np.ma.compress_rows(xy)
-                
-                if columns is not None:
-                    y = np.ma.compress_rows(y)
-
-            if columns is not None:
-                data = np.ma.column_stack((y, X))
-                column_names = columns + self.names
-                
-            else:
-                data = X
-                column_names = self.names
-
-            gdf = pd.DataFrame(data, columns=column_names)
-            gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
-            gdf['geometry'] = gdf['geometry'].apply(Point)
-            gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
-            return gdf
-        
-        if len(columns) == 1:
-            y = y.squeeze()
-        
-        return X, y, xy
-
-    def extract_raster(self, response, value_name='value', return_array=False,
-                       na_rm=True):
-        """
-        Sample a Raster object by an aligned raster of labelled pixels
-
-        Parameters
-        ----------
-        response: rasterio.io.DatasetReader
-            Single band raster containing labelled pixels
-
-        return_array : bool, default = False
-            Optionally return extracted data as separate X, y and xy
-            masked numpy arrays
-
-        na_rm : bool, default = True
-            Optionally remove rows that contain nodata values
-
-        Returns
-        -------
-        geopandas GeoDataFrame
-            Geodataframe containing extracted data as point features
-
-        numpy.ndarray
-            Numpy masked array of extracted raster values, typically 2d
-
-        numpy.ndarray
-            1d numpy masked array of labelled sampled
-
-        numpy.ndarray
-            2d numpy masked array of row and column indexes of training pixels
-        """
-
-        # open response raster and get labelled pixel indices and values
-        arr = response.read(1, masked=True)
-        rows, cols = np.nonzero(~arr.mask)
-        xy = np.transpose(rasterio.transform.xy(
-            response.transform, rows, cols))
-        y = arr.data[rows, cols]
-
-        # extract Raster object values at row, col indices
-        X = self._extract_by_indices(rows, cols)
-
-        # summarize data and mask nodatavals in X, y, and xy
-        mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
-        xy = np.ma.masked_array(xy, mask=mask_2d)
-
-        if return_array is False:
-            if na_rm is True:
-                X = np.ma.compress_rows(X)
-                y = np.ma.compressed(y)
-                xy = np.ma.compress_rows(xy)
-
-            column_names = [value_name] + self.names
-            gdf = pd.DataFrame(np.ma.column_stack(
-                (y, X)), columns=column_names)
-            gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
-            gdf['geometry'] = gdf['geometry'].apply(Point)
-            gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
-            return gdf
-        else:
-            return X, y, xy
-
-class RasterLayer(BaseRaster):
-    """
-    Represents a single rasterband derived from a single or multiband raster
-    dataset
-
-    Simple wrapper around a rasterio.Band object with additional methods. 
-    Used because the Rasterio.Band.ds.read method reads all bands from a
-    multiband dataset, whereas the RasterLayer.read method only reads 
-    a single band
-
-    Methods encapsulated in RasterLayer objects represent those that can only
-    be applied to a single-band of a raster, i.e. sieve-clump, distance to
-    non-NaN pixels etc.
-    """
-
-    def __init__(self, band):
-
-        # access inherited methods/attributes overriden by __init__
-        super().__init__(band)
-
-        # rasterlayer specific attributes
-        self.bidx = band.bidx
-        self.dtype = band.dtype
-        self.nodata = band.ds.nodata
-        self.file = band.ds.files[0]
-        self.driver = band.ds.meta['driver']
-        self.meta = band.ds.meta
-        self.ds = band.ds
-        self.cmap = 'viridis'
-        self.names = [self._make_name(band.ds.files[0])]
-        self.count = 1
-    
-    def read(self, **kwargs):
-        
-        if 'resampling' in kwargs.keys():
-            resampling_methods = [i.name for i in rasterio.enums.Resampling]
-
-            if kwargs['resampling'] not in resampling_methods:
-                raise ValueError(
-                    'Invalid resampling method.' +
-                    'Resampling method must be one of {0}:'.format(
-                        resampling_methods))
-
-            kwargs['resampling'] = rasterio.enums.Resampling[kwargs['resampling']]
-            
-        return self.ds.read(indexes=self.bidx, **kwargs)
-
-    def fill(self):
-        raise NotImplementedError
-
-    def sieve(self):
-        raise NotImplementedError
-
-    def clump(self):
-        raise NotImplementedError
-
-    def focal(self):
-        raise NotImplementedError
-
-    def distance(self, file_path=None, driver='GTiff', nodata=-99999):
-        """
-        Calculate euclidean grid distances to non-NaN cells in a RasterLayer
-
-        Parameters
-        ----------
-        file_path : str, path to save distance raster, optional
-            If not specified output is saved to a temporary file
-
-        driver : str, default='GTiff'
-            GDAL-supported driver format
-
-        nodata : int, float, default=-99999
-            Value to use as the nodata value of the output raster
-
-        Returns
-        -------
-        pyspatialml.RasterLayer object
-            Grid distance raster as a pyspatialml.RasterLayer object
-        """
-        arr = self.read(masked=True)
-        arr = ndimage.distance_transform_edt(1 - arr)
-
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-
-        meta = self.ds.meta
-        meta['driver'] = driver
-        meta['nodata'] = nodata
-
-        with rasterio.open(file_path, mode='w', **meta) as dst:
-            dst.write(arr[np.newaxis, :, :].astype('float32'))
-
-        src = rasterio.open(file_path)
-        return RasterLayer(rasterio.band(src, 1))
-
-    def plot(self, **kwargs):
-        fig, ax = plt.subplots(**kwargs)
-        arr = self.read(masked=True)
-        ax.imshow(arr, extent=rasterio.plot.plotting_extent(
-            self.ds), cmap=self.cmap)
-        
-        return fig, ax
-
-
-class Raster(BaseRaster):
+class Raster(pyspatialml.base.BaseRaster):
     """
     Flexible class that represents a collection of file-based GDAL-supported
     raster datasets which share a common coordinate reference system and
@@ -816,8 +52,8 @@ class Raster(BaseRaster):
 
         arr : ndarray, optional
             Initiated a Raster object from a numpy.ndarray. Additional arguments
-            crs and transform should also be provided to supply spatial coordinate
-            information
+            crs and transform should also be provided to supply spatial
+            coordinate information
 
         crs : rasterio.crs.CRS object, optional
             CRS object containing projection information for the associated
@@ -878,10 +114,11 @@ class Raster(BaseRaster):
                 r = rasterio.open(f, mode=mode)
                 for i in range(r.count):
                     band = rasterio.band(r, i+1)
-                    src_layers.append(RasterLayer(band))
+                    src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
 
         # initiate from RasterLayer objects
-        elif all(isinstance(x, RasterLayer) for x in src):
+        elif all(isinstance(x, pyspatialml.rasterlayer.RasterLayer)
+                 for x in src):
             src_layers = src
 
         # initiate from rasterio.io.datasetreader
@@ -889,17 +126,18 @@ class Raster(BaseRaster):
             for r in src:
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
-                    src_layers.append(RasterLayer(band))
+                    src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
 
         # initiate from rasterio.band objects
         elif all(isinstance(x, rasterio.Band) for x in src):
             for band in src:
-                src_layers.append(RasterLayer(band))
+                src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
 
         # otherwise raise error
         elif all(isinstance(x, type(x[0])) for x in src):
             raise ValueError(
-                'Cannot initiated a Raster from a list of different type objects')
+                'Cannot initiated a Raster from a list of different type '
+                'objects')
 
         # call property with a list of rasterio.band objects
         self._layers = src_layers
@@ -931,7 +169,7 @@ class Raster(BaseRaster):
             else:
                 subset_layers.append(self.loc[i])
 
-        subset_raster = Raster(subset_layers)
+        subset_raster = pyspatialml.raster.Raster(subset_layers)
 
         return subset_raster
 
@@ -950,7 +188,7 @@ class Raster(BaseRaster):
             RasterLayer to use for replacement
         """
 
-        if isinstance(value, RasterLayer):
+        if isinstance(value, pyspatialml.rasterlayer.RasterLayer):
             self.loc[key] = value
             self.iloc[self.names.index(key)] = value
             setattr(self, key, value)
@@ -961,7 +199,7 @@ class Raster(BaseRaster):
         """
         Iterate over RasterLayers
         """
-        return(iter(self.loc.items()))
+        return iter(self.loc.items())
     
     # def __del__(self):
     #     self.close()
@@ -1001,8 +239,10 @@ class Raster(BaseRaster):
 
         if not all([i['height'] == src_meta[0]['height'] or
                     i['width'] == src_meta[0]['width'] or
-                    i['transform'] == src_meta[0]['transform'] for i in src_meta]):
+                    i['transform'] == src_meta[0]['transform']
+                    for i in src_meta]):
             return False
+
         else:
             return src_meta[0]
 
@@ -1015,12 +255,14 @@ class Raster(BaseRaster):
             if num > 1:
                 for suffix in range(1, num + 1):
                     if s + "_" + str(suffix) not in combined_names:
-                        combined_names[combined_names.index(s)] = s + "_" + str(suffix)
+                        combined_names[combined_names.index(s)] = (
+                                s + "_" + str(suffix))
                     else:
                         i = 1
                         while s + "_" + str(i) in combined_names:
                             i += 1
-                        combined_names[combined_names.index(s)] = s + "_" + str(i)
+                        combined_names[combined_names.index(s)] = (
+                                s + "_" + str(i))
 
         return combined_names
 
@@ -1054,7 +296,7 @@ class Raster(BaseRaster):
         """
 
         # some checks
-        if isinstance(layers, RasterLayer):
+        if isinstance(layers, pyspatialml.rasterlayer.RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
@@ -1064,7 +306,8 @@ class Raster(BaseRaster):
         meta = self._check_alignment(layers)
         if meta is False:
             raise ValueError(
-                'Raster datasets do not all have the same dimensions or transform')
+                'Raster datasets do not all have the same dimensions or '
+                'transform')
 
         # reset existing attributes
         for name in self.names:
@@ -1085,8 +328,12 @@ class Raster(BaseRaster):
         self.res = (abs(meta['transform'].a), abs(meta['transform'].e))
         self.crs = meta['crs']
 
-        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
-        BoundingBox = namedtuple('BoundingBox', ['left', 'bottom', 'right', 'top'])
+        bounds = rasterio.transform.array_bounds(
+            self.height,
+            self.width,
+            self.transform)
+        BoundingBox = namedtuple(
+            'BoundingBox', ['left', 'bottom', 'right', 'top'])
         self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
         names = [i.names[0] for i in layers]
@@ -1258,20 +505,24 @@ class Raster(BaseRaster):
         # read dataset using decimated reads
         out_shape = (round(self.shape[0] * scaling),
                      round(self.shape[1] * scaling))
-        arr = self.read(masked=True, out_shape=out_shape,
+        arr = self.read(masked=True,
+                        out_shape=out_shape,
                         resampling=resampling)
         
         # x and y grid coordinate arrays
         x_range = np.linspace(start=self.bounds.left,
-                              stop=self.bounds.right, num=arr.shape[2])
+                              stop=self.bounds.right,
+                              num=arr.shape[2])
         y_range = np.linspace(start=self.bounds.top,
-                              stop=self.bounds.bottom, num=arr.shape[1])
+                              stop=self.bounds.bottom,
+                              num=arr.shape[1])
         xs, ys = np.meshgrid(x_range, y_range)
 
         arr = arr.reshape((arr.shape[0], arr.shape[1] * arr.shape[2]))
         arr = arr.transpose()
-        df = pd.DataFrame(np.column_stack((xs.flatten(), ys.flatten(), arr)),
-                          columns=['x', 'y'] + self.names)
+        df = pd.DataFrame(
+            data=np.column_stack((xs.flatten(), ys.flatten(), arr)),
+            columns=['x', 'y'] + self.names)
 
         # set nodata values to nan
         for i, col_name in enumerate(self.names):
@@ -1636,7 +887,7 @@ class Raster(BaseRaster):
             leave original and return a new Raster object
         """
 
-        if isinstance(other, Raster):
+        if isinstance(other, pyspatialml.raster.Raster):
             other = [other]
 
         for new_raster in other:
@@ -1855,7 +1106,7 @@ class Raster(BaseRaster):
         if isinstance(file_path, str):
             file_path = [file_path]
 
-        raster = Raster(file_path)
+        raster = pyspatialml.raster.Raster(file_path)
 
         if names is not None:
             rename = {old: new for old, new in zip(raster.names, names)}
@@ -1965,7 +1216,8 @@ class Raster(BaseRaster):
         
         return new_raster
 
-    def crop(self, bounds, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
+    def crop(self, bounds, file_path=None, driver='GTiff', dtype=None,
+             nodata=-99999):
         """
         Crops a Raster object by the supplied bounds
 
@@ -2000,7 +1252,9 @@ class Raster(BaseRaster):
         xmin, ymin, xmax, ymax = bounds
 
         rows, cols = rasterio.transform.rowcol(
-            self.transform, xs=(xmin, xmax), ys=(ymin, ymax))
+            transform=self.transform,
+            xs=(xmin, xmax),
+            ys=(ymin, ymax))
 
         window = Window(col_off=min(cols),
                         row_off=min(rows),
@@ -2032,9 +1286,8 @@ class Raster(BaseRaster):
         
         return new_raster
 
-    def to_crs(self, crs, resampling='nearest', file_path=None,
-               driver='GTiff', nodata=-99999, n_jobs=1,
-               warp_mem_lim=0, progress=False):
+    def to_crs(self, crs, resampling='nearest', file_path=None, driver='GTiff',
+               nodata=-99999, n_jobs=1, warp_mem_lim=0, progress=False):
         """
         Reprojects a Raster object to a different crs
 
@@ -2241,10 +1494,10 @@ class Raster(BaseRaster):
 
         if len(arr.shape) > 2:
             indexes = range(arr.shape[0])
+            count = len(indexes)
         else:
             indexes = 1
-
-        count = len(indexes)
+            count = 1
 
         # optionally output to a temporary file
         if file_path is None:
@@ -2281,8 +1534,9 @@ class Raster(BaseRaster):
 
     def block_shapes(self, rows, cols):
         """
-        Generator for windows for optimal reading and writing based on the raster format
-        Windows are returns as a tuple with xoff, yoff, width, height
+        Generator for windows for optimal reading and writing based on the
+        raster format Windows are returns as a tuple with xoff, yoff, width,
+        height
 
         Parameters
         ----------

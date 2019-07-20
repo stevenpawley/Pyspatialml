@@ -2,7 +2,6 @@ from unittest import TestCase
 from pyspatialml import Raster
 import pyspatialml.datasets.nc_dataset as nc
 import pyspatialml.datasets.meuse_dataset as ms
-import os
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
@@ -61,8 +60,3 @@ class TestPrediction(TestCase):
         multi_regr = stack.predict(regr)
         self.assertIsInstance(multi_regr, Raster)
         self.assertEqual(multi_regr.count, 4)
-
-
-
-
-        
