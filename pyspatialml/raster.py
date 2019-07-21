@@ -18,12 +18,12 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
 
-import pyspatialml.base
-import pyspatialml.rasterlayer
+from .base import BaseRaster
+from .rasterlayer import RasterLayer
 from .indexing import ExtendedDict, LinkedList
 
 
-class Raster(pyspatialml.base.BaseRaster):
+class Raster(BaseRaster):
     """
     Flexible class that represents a collection of file-based GDAL-supported
     raster datasets which share a common coordinate reference system and
@@ -47,8 +47,8 @@ class Raster(pyspatialml.base.BaseRaster):
         ----------
         src : file path, RasterLayer or list of either
             Inititate a Raster object from file paths to GDAL-supported
-            raster datasets, pyspatialml.RasterLayer objects,
-            rasterio.io.datasetreader, or rasterio.band objects
+            raster datasets, RasterLayer objects,
+            rasterio.io.DatasetReader, or rasterio.band objects
 
         arr : ndarray, optional
             Initiated a Raster object from a numpy.ndarray. Additional arguments
@@ -59,11 +59,11 @@ class Raster(pyspatialml.base.BaseRaster):
             CRS object containing projection information for the associated
             arr parameter
 
-        transform : affine.Affine object
+        transform : affine.Affine object, optional
             Affine object containing transform information for the associated
             arr parameter
 
-        file_path : str
+        file_path : str, optional
             Path to save new Raster object if created from arr
 
         Returns
@@ -114,10 +114,10 @@ class Raster(pyspatialml.base.BaseRaster):
                 r = rasterio.open(f, mode=mode)
                 for i in range(r.count):
                     band = rasterio.band(r, i+1)
-                    src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
+                    src_layers.append(RasterLayer(band))
 
         # initiate from RasterLayer objects
-        elif all(isinstance(x, pyspatialml.rasterlayer.RasterLayer)
+        elif all(isinstance(x, RasterLayer)
                  for x in src):
             src_layers = src
 
@@ -126,12 +126,12 @@ class Raster(pyspatialml.base.BaseRaster):
             for r in src:
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
-                    src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
+                    src_layers.append(RasterLayer(band))
 
         # initiate from rasterio.band objects
         elif all(isinstance(x, rasterio.Band) for x in src):
             for band in src:
-                src_layers.append(pyspatialml.rasterlayer.RasterLayer(band))
+                src_layers.append(RasterLayer(band))
 
         # otherwise raise error
         elif all(isinstance(x, type(x[0])) for x in src):
@@ -169,7 +169,7 @@ class Raster(pyspatialml.base.BaseRaster):
             else:
                 subset_layers.append(self.loc[i])
 
-        subset_raster = pyspatialml.raster.Raster(subset_layers)
+        subset_raster = Raster(subset_layers)
 
         return subset_raster
 
@@ -188,7 +188,7 @@ class Raster(pyspatialml.base.BaseRaster):
             RasterLayer to use for replacement
         """
 
-        if isinstance(value, pyspatialml.rasterlayer.RasterLayer):
+        if isinstance(value, RasterLayer):
             self.loc[key] = value
             self.iloc[self.names.index(key)] = value
             setattr(self, key, value)
@@ -296,7 +296,7 @@ class Raster(pyspatialml.base.BaseRaster):
         """
 
         # some checks
-        if isinstance(layers, pyspatialml.rasterlayer.RasterLayer):
+        if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
@@ -365,7 +365,7 @@ class Raster(pyspatialml.base.BaseRaster):
 
         Parameters
         ----------
-        masked : bool, optional, default=False
+        masked : bool, optional. Default is False
             Read data into a masked array
 
         window : rasterio.window.Window object, optional
@@ -376,7 +376,7 @@ class Raster(pyspatialml.base.BaseRaster):
             Shape of shape of array (rows, cols) to read data into using
             decimated reads
 
-        resampling : str, default='nearest'
+        resampling : str, optional. Default is 'nearest'
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
@@ -436,10 +436,9 @@ class Raster(pyspatialml.base.BaseRaster):
         Parameters
         ----------
         file_path : str
-            File path to save the Raster object as a multiband file-based
-            raster dataset
+            File path to save the Raster object
 
-        driver : str, default = GTiff
+        driver : str, optional. Default is 'GTiff'
             GDAL compatible driver
 
         dtype : str, optional
@@ -488,7 +487,7 @@ class Raster(pyspatialml.base.BaseRaster):
         max_pixels: int, default=50000
             Maximum number of pixels to sample
 
-        resampling : str, default = 'nearest'
+        resampling : str, optional. Default is 'nearest'
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
@@ -534,7 +533,7 @@ class Raster(pyspatialml.base.BaseRaster):
                       driver='GTiff', dtype='float32', nodata=-99999,
                       progress=True):
         """
-        Apply prediction of a scikit learn model to a pyspatialml.Raster object
+        Apply prediction of a scikit learn model to a Raster
 
         Parameters
         ----------
@@ -545,7 +544,7 @@ class Raster(pyspatialml.base.BaseRaster):
             Path to a GeoTiff raster for the classification results
             If not supplied then output is written to a temporary file
 
-        indexes : List, int, optional
+        indexes : list, int, optional
             List of class indices to export
 
         driver : str, optional. Default is 'GTiff'
@@ -562,7 +561,7 @@ class Raster(pyspatialml.base.BaseRaster):
 
         Returns
         -------
-        pyspatialml.Raster object
+        pyspatialml.Raster
         """
 
         tempfiles = None
@@ -628,7 +627,7 @@ class Raster(pyspatialml.base.BaseRaster):
                 dtype='float32', nodata=-99999, progress=True,
                 block_shape=None):
         """
-        Apply prediction of a scikit learn model to a pyspatialml.Raster object
+        Apply prediction of a scikit learn model to a Raster
 
         Parameters
         ----------
@@ -657,7 +656,7 @@ class Raster(pyspatialml.base.BaseRaster):
 
         Returns
         -------
-        pyspatialml.Raster object
+        pyspatialml.Raster
         """
 
         tempfiles = None
@@ -733,7 +732,8 @@ class Raster(pyspatialml.base.BaseRaster):
 
         Parameters
         ----
-        img : 3d numpy array of raster data
+        img : nd.array
+            3d numpy array of raster data
 
         estimator : estimator object implementing 'fit'
             The object to use to fit the data
@@ -882,12 +882,17 @@ class Raster(pyspatialml.base.BaseRaster):
         ----------
         other : Raster object, or list of Raster objects
         
-        in_place : bool, default=True
-            Change the Raster object in-place or 
-            leave original and return a new Raster object
+        in_place : bool, optional. Default is True
+            Change the Raster object in-place or leave original and return a new
+            Raster object
+
+        Returns
+        -------
+        pyspatialml.Raster
+            If in_place is True
         """
 
-        if isinstance(other, pyspatialml.raster.Raster):
+        if isinstance(other, Raster):
             other = [other]
 
         for new_raster in other:
@@ -921,9 +926,14 @@ class Raster(pyspatialml.base.BaseRaster):
             Index (int) or layer name to drop. Can be a single integer or label,
             or a list of integers or labels
         
-        in_place : bool, default=True
-            Change the Raster object in-place or 
-            leave original and return a new Raster object
+        in_place : bool, optional. Default is True
+            Change the Raster object in-place or leave original and return a new
+            Raster object
+
+        Returns
+        -------
+        pyspatialml.Raster
+            If in_place is True
         """
 
         # convert single label to list
@@ -965,9 +975,14 @@ class Raster(pyspatialml.base.BaseRaster):
         names : dict
             dict of old_name : new_name
         
-        in_place : bool, default=True
+        in_place : bool, optional. Default is True
             Change names of the Raster object in-place or 
             leave original and return a new Raster object
+
+        Returns
+        -------
+        pyspatialml.Raster
+            If in_place is True
         """
 
         if in_place is True:
@@ -992,22 +1007,22 @@ class Raster(pyspatialml.base.BaseRaster):
     def plot(self, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
         """
-        Plotting of a Raster object
+        Plot a Raster object as a raster matrix
 
         Parameters
         ----------
-        out_shape : tuple
+        out_shape : tuple, optional. Default is (100, 100)
             Number of rows, cols to read from the raster datasets for plotting
 
-        label_fontsize : int, float, default = 8
+        label_fontsize : any number, optional. Default is 8
             Size in pts of labels
 
-        title_fontsize : int, float, default = 8
+        title_fontsize : any number, optional. Default is 8
             Size in pts of titles
 
         names : list, optional
-            Optionally supply a list of names for each RasterLayer to override the
-            default layer names for the titles
+            Optionally supply a list of names for each RasterLayer to override
+            the default layer names for the titles
 
         **kwargs : dict
             Additional arguments to pass when creating the figure object
@@ -1095,18 +1110,18 @@ class Raster(pyspatialml.base.BaseRaster):
             then the names will be generated from the filename
         
         tempfiles : list, optional
-            List of file paths for RasterLayer objects that are stored as tempfiles
-            These will be deleted on destruction of the Raster object
+            List of file paths for RasterLayer objects that are stored as
+            tempfiles. These will be deleted on destruction of the Raster object
 
         Returns
         -------
-        pyspatialml.Raster object
+        pyspatialml.Raster
         """
 
         if isinstance(file_path, str):
             file_path = [file_path]
 
-        raster = pyspatialml.raster.Raster(file_path)
+        raster = Raster(file_path)
 
         if names is not None:
             rename = {old: new for old, new in zip(raster.names, names)}
@@ -1120,11 +1135,45 @@ class Raster(pyspatialml.base.BaseRaster):
 
         return raster
 
-    def mask(self, shapes=None, invert=False, crop=False, filled=False,
+    def mask(self, shapes, invert=False, crop=True, filled=True,
              pad=False, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
         """
         Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
+
+        Parameters
+        ----------
+        shapes : geopandas.GeoDataFrame
+            GeoDataFrame containing masking features
+
+        invert : bool, optional. Default is False
+            If False (default) pixels outside shapes will be masked. If True,
+            pixels inside shape will be masked
+
+        crop : bool, optional. Default is True
+            Crop the raster to the extent of the shapes
+
+        filled : bool, optional. Default is True
+            If True, the pixels outside the features will be set to nodata.
+            If False, the output array will contain the original pixel data, and
+            only the mask will be based on shapes
+
+        pad : bool, optional. Default is False
+            If True, the features will be padded in each direction by one half
+            of a pixel prior to cropping raster
+
+        file_path : str, optional. Default is None
+            File path to save to resulting Raster. If not supplied then the
+            resulting Raster is saved to a temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        dtype : str, optional
+            Coerce RasterLayers to the specified dtype
+
+        nodata : any number, optional. Default is -99999
+            Nodata value for cropped dataset
         """
 
         tempfiles = []
@@ -1172,7 +1221,8 @@ class Raster(pyspatialml.base.BaseRaster):
         
         return new_raster
 
-    def intersect(self, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
+    def intersect(self, file_path=None, driver='GTiff', dtype=None,
+                  nodata=-99999):
         """
         Perform a intersect operation on the Raster object
 
@@ -1180,10 +1230,27 @@ class Raster(pyspatialml.base.BaseRaster):
         Raster object. This will cause nodata values in any of the rasters
         to be propagated through all of the output rasters
 
+        Parameters
+        ----------
+        file_path : str, optional. Default is None
+            File path to save to resulting Raster. If not supplied then the
+            resulting Raster is saved to a temporary file
+
+        driver : str, optional. Default is 'GTiff'
+            Named of GDAL-supported driver for file export
+
+        dtype : str, optional
+            Coerce RasterLayers to the specified dtype
+
+        nodata : any number, optional. Default is -99999
+            Nodata value for cropped dataset
+
+
         Returns
         -------
-        pyspatial.Raster object
+        pyspatial.Raster
         """
+
         tempfiles = []
 
         arr = self.read(masked=True)
@@ -1227,7 +1294,7 @@ class Raster(pyspatialml.base.BaseRaster):
             A tuple containing the bounding box to clip by in the
             form of (xmin, xmax, ymin, ymax)
 
-        file_path : str, optional. Default=None
+        file_path : str, optional
             File path to save to cropped raster.
             If not supplied then the cropped raster is saved to a
             temporary file
@@ -1238,13 +1305,13 @@ class Raster(pyspatialml.base.BaseRaster):
         dtype : str, optional. Default is None
             Coerce RasterLayers to the specified dtype
 
-        nodata : int, float
+        nodata : any number, optional. Default is -99999
             Nodata value for cropped dataset
 
         Returns
         -------
-        pyspatialml.Raster object
-            Cropped to new extent
+        pyspatialml.Raster
+            Raster cropped to new extent
         """
 
         tempfiles = []
@@ -1333,6 +1400,11 @@ class Raster(pyspatialml.base.BaseRaster):
 
         progress : bool, default=False
             Optionally show progress of transform operations
+
+        Returns
+        -------
+        pyspatialml.Raster
+            Raster following reprojection
         """
 
         tempfiles = []
@@ -1396,13 +1468,13 @@ class Raster(pyspatialml.base.BaseRaster):
         out_shape : tuple
             New shape in (rows, cols)
 
-        resampling : str, default='nearest'
+        resampling : str, optional. Default is 'nearest'
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
             'max', 'med', 'min', 'mode', 'q1', 'q3'
 
-        file_path : str, optional. Default=None
+        file_path : str, optional
             File path to save to cropped raster.
             If not supplied then the aggregated raster is saved to a
             temporary file
@@ -1410,15 +1482,15 @@ class Raster(pyspatialml.base.BaseRaster):
         driver : str, optional. Default is 'GTiff'
             Named of GDAL-supported driver for file export
         
-        dtype : str, optional. Default is None
+        dtype : str, optional
             Coerce RasterLayers to the specified dtype
 
-        nodata : int, float
+        nodata : any number, optional. Default is -99999
             Nodata value for new dataset
 
         Returns
         -------
-        pyspatialml.Raster object
+        pyspatialml.Raster
         """
 
         tempfiles = []
@@ -1482,7 +1554,7 @@ class Raster(pyspatialml.base.BaseRaster):
 
         Returns
         -------
-        pyspatialml.Raster object
+        pyspatialml.Raster
         """
         
         tempfiles = []
@@ -1560,3 +1632,15 @@ class Raster(pyspatialml.base.BaseRaster):
                     num_rows = self.height - j
 
                 yield Window(i, j, num_cols, num_rows)
+
+    def _extract_by_indices(self, rows, cols):
+        """
+        Spatial query of Raster object (by-band)
+        """
+        X = np.ma.zeros((len(rows), self.count), dtype='float32')
+
+        for i, layer in enumerate(self.iloc):
+            arr = layer.read(masked=True)
+            X[:, i] = arr[rows, cols]
+
+        return X

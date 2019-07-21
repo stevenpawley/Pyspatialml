@@ -15,7 +15,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     Simple wrapper around a rasterio.Band object with additional methods. 
     Used because the Rasterio.Band.ds.read method reads all bands from a
-    multiband dataset, whereas the RasterLayer.read method only reads 
+    multiband dataset, whereas the RasterLayer read method only reads
     a single band
 
     Methods encapsulated in RasterLayer objects represent those that can only
@@ -152,7 +152,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def distance(self, file_path=None, driver='GTiff', nodata=-99999):
         """
-        Calculate euclidean grid distances to non-NaN cells in a RasterLayer
+        Calculate euclidean grid distances to non-NaN pixels
 
         Parameters
         ----------
@@ -162,13 +162,13 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         driver : str, default='GTiff'
             GDAL-supported driver format
 
-        nodata : int, float, default=-99999
+        nodata : any number, optional. Default is -99999
             Value to use as the nodata value of the output raster
 
         Returns
         -------
-        pyspatialml.RasterLayer object
-            Grid distance raster as a pyspatialml.RasterLayer object
+        pyspatialml.RasterLayer
+            Grid distance raster
         """
         arr = self.read(masked=True)
         arr = ndimage.distance_transform_edt(1 - arr)
@@ -187,6 +187,9 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return pyspatialml.rasterlayer.RasterLayer(rasterio.band(src, 1))
 
     def plot(self, **kwargs):
+        """
+        Plot a RasterLayer using matplotlib.pyplot.imshow
+        """
         fig, ax = plt.subplots(**kwargs)
         arr = self.read(masked=True)
         im = ax.imshow(arr,
@@ -195,3 +198,14 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         plt.colorbar(im)
         
         return fig, ax
+
+    def _extract_by_indices(self, rows, cols):
+        """
+        Spatial query of Raster object (by-band)
+        """
+
+        X = np.ma.zeros((len(rows), self.count), dtype='float32')
+        arr = self.read(masked=True)
+        X[:, 0] = arr[rows, cols]
+
+        return X

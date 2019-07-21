@@ -10,21 +10,15 @@ from rasterio import features
 from rasterio.windows import Window
 from shapely.geometry import Point
 
-import pyspatialml.raster
-
 
 class BaseRaster(object):
     """
     Raster base class that contains methods that apply both to RasterLayer and
     Raster objects
 
-    The methods that are encapsulated within BaseRaster comprise those that
-    return some non-raster type of object, i.e. a geopandas.GeoDataFrame
-    representing a random sample of cells.
-
-    Wraps a rasterio.Band object consisting of a named tuple of the file path,
-    the band index, the dtype and shape an individual band within a raster
-    file-based dataset
+    Internally comprises a rasterio.Band object consisting of a named tuple of
+    the file path, the band index, the dtype and shape an individual band within
+    a raster file-based dataset
     """
 
     def __init__(self, band):
@@ -52,7 +46,7 @@ class BaseRaster(object):
         Returns
         -------
         str
-            Syntatically-correct name of layer so that it can form a class
+            Syntatically correct name of layer so that it can form a class
             instance attribute
         """
 
@@ -82,29 +76,30 @@ class BaseRaster(object):
     def head(self):
         """
         Show the head (first rows, first columns) or tail (last rows, last
-        columns) of the cells of a Raster object
+        columns) of pixels
         """
 
         window = Window(col_off=0, row_off=0, width=20, height=10)
-        arr = self.read(window=window)
 
-        return arr
+        return self.read(window=window)
 
     def tail(self):
         """
         Show the head (first rows, first columns) or tail (last rows, last
-        columns) of the cells of a Raster object
+        columns) of pixels
         """
 
         window = Window(col_off=self.width-20,
                         row_off=self.height-10,
                         width=20,
                         height=10)
-        arr = self.read(window=window)
 
-        return arr
+        return self.read(window=window)
     
     def _stats(self, max_pixels):
+        """
+        Take a sample of pixels from which to derive per-band statistics
+        """
         n_pixels = self.shape[0] * self.shape[1]
         scaling = max_pixels / n_pixels
 
@@ -118,6 +113,7 @@ class BaseRaster(object):
             arr = arr.reshape((arr.shape[0], arr.shape[1]*arr.shape[2]))
         else:
             arr = arr.flatten()
+
         return arr
     
     def min(self, max_pixels=10000):
@@ -219,15 +215,15 @@ class BaseRaster(object):
             Number of random samples or number of samples per strata if
             strategy='stratified'
 
-        strata : rasterio.io.DatasetReader, optional (default=None)
+        strata : rasterio DatasetReader, optional (default=None)
             To use stratified instead of random sampling, strata can be supplied
             using an open rasterio DatasetReader object
 
-        return_array : bool, default = False
+        return_array : bool, default=False
             Optionally return extracted data as separate X, y and xy masked
             numpy arrays
 
-        na_rm : bool, default = True
+        na_rm : bool, default=True
             Optionally remove rows that contain nodata values
 
         random_state : int
@@ -341,7 +337,7 @@ class BaseRaster(object):
 
     def extract_xy(self, xy):
         """
-        Samples pixel values of a Raster using an array of xy locations
+        Samples pixel values using an array of xy locations
 
         Parameters
         ----------
@@ -379,41 +375,11 @@ class BaseRaster(object):
 
         return values
 
-    def _extract_by_indices(self, rows, cols):
-        """
-        Spatial query of Raster object (by-band)
-
-        Parameters
-        ----------
-        rows : ndarray
-            1d numpy array of row indices
-
-        cols : ndarray
-            1d numpy array of column induces
-
-        Returns
-        -------
-        numpy.ndarray
-            2d numpy array of extracted training data in [sample, feature] shape
-        """
-
-        X = np.ma.zeros((len(rows), self.count), dtype='float32')
-
-        if isinstance(self, pyspatialml.raster.Raster):
-            for i, layer in enumerate(self.iloc):
-                arr = layer.read(masked=True)
-                X[:, i] = arr[rows, cols]
-        else:
-            arr = self.read(masked=True)
-            X[:, 0] = arr[rows, cols]
-
-        return X
-
     def extract_vector(self, response, columns=None, return_array=False,
                        duplicates='keep', na_rm=True, low_memory=False):
         """
-        Sample a Raster object by a geopandas GeoDataframe containing points,
-        lines or polygon features
+        Sample a Raster/RasterLayer using a geopandas GeoDataframe containing
+        points, lines or polygon features
 
         Parameters
         ----------
@@ -435,7 +401,7 @@ class BaseRaster(object):
 
         na_rm : bool, default=True
             Optionally remove rows that contain nodata values if extracted
-            values are returned as a geopandas.GeoDataFrame
+            values are returned as a GeoDataFrame
 
         low_memory : bool, default=False
             Optionally extract pixel values in using a slower but memory-safe
@@ -638,19 +604,20 @@ class BaseRaster(object):
 
         Parameters
         ----------
-        response: rasterio.io.DatasetReader
-            Single band raster containing labelled pixels
+        response: rasterio DatasetReader
+            Single band raster containing labelled pixels as an open
+            rasterio DatasetReader object
 
-        return_array : bool, default = False
+        return_array : bool, default=False
             Optionally return extracted data as separate X, y and xy
             masked numpy arrays
 
-        na_rm : bool, default = True
+        na_rm : bool, default=True
             Optionally remove rows that contain nodata values
 
         Returns
         -------
-        geopandas GeoDataFrame
+        geopandas.GeoDataFrame
             Geodataframe containing extracted data as point features
 
         numpy.ndarray
