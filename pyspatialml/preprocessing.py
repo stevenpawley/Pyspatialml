@@ -1,4 +1,5 @@
-from .__main import Raster, RasterLayer
+from .raster import Raster
+from .rasterlayer import RasterLayer
 import numpy as np
 import tempfile
 import rasterio
