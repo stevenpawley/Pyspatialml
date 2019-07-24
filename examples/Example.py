@@ -4,9 +4,9 @@ import os
 import geopandas
 import rasterio.plot
 import matplotlib.pyplot as plt
-import rasterio
 import pyspatialml.datasets.nc_dataset as nc
 import tempfile
+import rasterio
 
 # First, import the extract and predict functions:
 predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
@@ -17,7 +17,11 @@ stack.count
 
 # Perform band math
 ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
+ndvi = Raster(ndvi)
 ndvi.plot()
+
+tmp = ndvi.aggregate(out_shape=(50, 50))
+tmp.plot()
 
 # Perform OR operation (union two layers)
 (stack.iloc[5] | stack.iloc[0]).plot()

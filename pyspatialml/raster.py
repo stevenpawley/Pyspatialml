@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import math
-import os
 import tempfile
 from collections import Counter
 from collections import namedtuple
@@ -80,7 +79,6 @@ class Raster(BaseRaster):
         self.res = None
         self.meta = None
         self._block_shape = (256, 256)
-        self.tempfiles = []
 
         # some checks
         if src and arr:
@@ -207,10 +205,7 @@ class Raster(BaseRaster):
     
     def close(self):
         for layer in self.iloc:
-            layer.ds.close()
-        
-        for f in self.tempfiles:
-            os.remove(f)
+            layer.close()
 
     @staticmethod
     def _check_alignment(layers):
@@ -510,7 +505,9 @@ class Raster(BaseRaster):
                 arr[arr == layer.nodata] = nodata
                 dst.write(arr.astype(dtype), i+1)
 
-        return self._newraster(file_path, self.names)
+        raster = self._newraster(file_path, self.names)
+
+        return raster
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
         """
@@ -597,9 +594,7 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster
         """
-
-        tempfiles = None
-
+        file_path, tfile = self._file_path_tempfile(file_path)
         predfun = self._probfun
 
         # determine output count
@@ -620,11 +615,6 @@ class Raster(BaseRaster):
         meta = self.meta
         meta.update(driver=driver, count=len(
             indexes), dtype=dtype, nodata=nodata)
-
-        # optionally output to a temporary file
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
 
         with rasterio.open(file_path, 'w', **meta) as dst:
 
@@ -651,9 +641,13 @@ class Raster(BaseRaster):
         # generate layer names
         prefix = "prob_"
         names = [prefix + str(i) for i in range(len(indexes))]
-        
+
+        # create new raster object
         new_raster = self._newraster(file_path, names)
-        new_raster.tempfiles.append(tempfiles)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
 
         return new_raster
 
@@ -687,8 +681,7 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster
         """
-
-        tempfiles = None
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         # determine output count for multi output cases
         window = Window(0, 0, self.width, 1)
@@ -716,11 +709,6 @@ class Raster(BaseRaster):
         meta.update(driver=driver, count=len(
             indexes), dtype=dtype, nodata=nodata)
 
-        # optionally output to a temporary file
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles = file_path
-
         with rasterio.open(file_path, 'w', **meta) as dst:
 
             # define windows
@@ -747,10 +735,14 @@ class Raster(BaseRaster):
         # generate layer names
         prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
-        
+
+        # create new raster object
         new_raster = self._newraster(file_path, names)
-        new_raster.tempfiles.append(tempfiles)
-        
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
+
         return new_raster
 
     def _predfun(self, img, estimator):
@@ -1028,8 +1020,7 @@ class Raster(BaseRaster):
                 # change name of layer in stack
                 new_raster.loc[new_name] = new_raster.loc.pop(old_name)
                 
-            return(new_raster)
-
+            return new_raster
 
     def plot(self, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
@@ -1123,7 +1114,7 @@ class Raster(BaseRaster):
 
         return fig, axs
 
-    def _newraster(self, file_path, names=None, tempfiles=None):
+    def _newraster(self, file_path, names=None):
         """
         Return a new Raster object
 
@@ -1135,35 +1126,32 @@ class Raster(BaseRaster):
         names : list, optional
             List to name the RasterLayer objects in the stack. If not supplied
             then the names will be generated from the filename
-        
-        tempfiles : list, optional
-            List of file paths for RasterLayer objects that are stored as
-            tempfiles. These will be deleted on destruction of the Raster object
 
         Returns
         -------
         pyspatialml.Raster
         """
 
+        # some checks
         if isinstance(file_path, str):
             file_path = [file_path]
 
+        # create new raster from supplied file path
         raster = Raster(file_path)
 
+        # rename and set cmaps
         if names is not None:
             rename = {old: new for old, new in zip(raster.names, names)}
             raster.rename(rename)
         
         for old_layer, new_layer in zip(self.iloc, raster.iloc):
             new_layer.cmap = old_layer.cmap
-        
-        if tempfiles is not None:
-            raster.tempfiles = self.tempfiles + tempfiles
 
         return raster
 
     def mask(self, shapes, invert=False, crop=True, filled=True,
-             pad=False, file_path=None, driver='GTiff', dtype=None, nodata=-99999):
+             pad=False, file_path=None, driver='GTiff', dtype=None,
+             nodata=-99999):
         """
         Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
@@ -1203,7 +1191,8 @@ class Raster(BaseRaster):
             Nodata value for cropped dataset
         """
 
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
+
         masked_ndarrays = []
 
         for layer in self.iloc:
@@ -1237,16 +1226,26 @@ class Raster(BaseRaster):
 
         masked_ndarrays = np.ma.filled(masked_ndarrays, fill_value=nodata)
 
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
-
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(masked_ndarrays.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names, tempfiles)
+        new_raster = self._newraster(file_path, self.names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
         
         return new_raster
+
+    @staticmethod
+    def _file_path_tempfile(file_path):
+        if file_path is None:
+            tfile = tempfile.NamedTemporaryFile()
+            file_path = tfile.name
+        else:
+            tfile = None
+
+        return file_path, tfile
 
     def intersect(self, file_path=None, driver='GTiff', dtype=None,
                   nodata=-99999):
@@ -1278,7 +1277,7 @@ class Raster(BaseRaster):
         pyspatial.Raster
         """
 
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
@@ -1287,12 +1286,10 @@ class Raster(BaseRaster):
         mask_3d = np.repeat(a=mask_2d[np.newaxis, :, :],
                            repeats=self.count, axis=0)
 
-        intersected_arr = np.ma.masked_array(arr, mask=mask_3d, fill_value=nodata)
-        intersected_arr = np.ma.filled(intersected_arr, fill_value=nodata)
+        intersected_arr = np.ma.masked_array(
+            arr, mask=mask_3d, fill_value=nodata)
 
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
+        intersected_arr = np.ma.filled(intersected_arr, fill_value=nodata)
 
         meta = self.meta
         meta['driver'] = driver
@@ -1306,8 +1303,12 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(intersected_arr.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names, tempfiles)
-        
+        new_raster = self._newraster(file_path, self.names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
+
         return new_raster
 
     def crop(self, bounds, file_path=None, driver='GTiff', dtype=None,
@@ -1341,7 +1342,7 @@ class Raster(BaseRaster):
             Raster cropped to new extent
         """
 
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         xmin, ymin, xmax, ymax = bounds
 
@@ -1369,14 +1370,14 @@ class Raster(BaseRaster):
         
         meta['dtype'] = dtype
 
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
-
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names, tempfiles)
+        new_raster = self._newraster(file_path, self.names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
         
         return new_raster
 
@@ -1434,7 +1435,7 @@ class Raster(BaseRaster):
             Raster following reprojection
         """
 
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
@@ -1442,10 +1443,6 @@ class Raster(BaseRaster):
                 'Invalid resampling method.' +
                 'Resampling method must be one of {0}:'.format(
                     resampling_methods))
-
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
 
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=self.crs,
@@ -1481,7 +1478,11 @@ class Raster(BaseRaster):
                     if progress is True:
                         t.update()
 
-        new_raster = self._newraster(file_path, self.names, tempfiles)
+        new_raster = self._newraster(file_path, self.names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
         
         return new_raster
 
@@ -1520,16 +1521,12 @@ class Raster(BaseRaster):
         pyspatialml.Raster
         """
 
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         rows, cols = out_shape
 
         arr = self.read(masked=True, out_shape=out_shape,
                         resampling=resampling)
-
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
 
         meta = self.meta
         meta['driver'] = driver
@@ -1549,7 +1546,11 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(arr.astype(dtype))
             
-        new_raster = self._newraster(file_path, self.names, tempfiles)
+        new_raster = self._newraster(file_path, self.names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
 
         return new_raster
 
@@ -1584,7 +1585,7 @@ class Raster(BaseRaster):
         pyspatialml.Raster
         """
         
-        tempfiles = []
+        file_path, tfile = self._file_path_tempfile(file_path)
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)
@@ -1597,11 +1598,6 @@ class Raster(BaseRaster):
         else:
             indexes = 1
             count = 1
-
-        # optionally output to a temporary file
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
-            tempfiles.append(file_path)
 
         # open output file with updated metadata
         meta = self.meta
@@ -1628,6 +1624,10 @@ class Raster(BaseRaster):
                     dst.write(result.astype(dtype), window=window)
 
         new_raster = self._newraster(file_path)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer.close = tfile.close
         
         return new_raster
 

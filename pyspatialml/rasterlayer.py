@@ -35,13 +35,13 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.dtype = band.dtype
         self.nodata = band.ds.nodata
         self.file = band.ds.files[0]
+        self.ds = band.ds
         self.driver = band.ds.meta['driver']
         self.meta = band.ds.meta
-        self.ds = band.ds
         self.cmap = 'viridis'
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
-        # self.temporary_file = False
+        self.close = band.ds.close
 
     def _arith(self, function, other=None):
         """
@@ -49,7 +49,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         objects
         """
 
-        file_path = tempfile.NamedTemporaryFile().name
+        tfile = tempfile.NamedTemporaryFile()
         driver = self.driver
 
         # determine dtype of result based on calc on single pixel
@@ -70,7 +70,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         meta = self.meta
         meta.update(driver=driver, count=1, dtype=dtype, nodata=nodata)
 
-        with rasterio.open(file_path, 'w', **meta) as dst:
+        with rasterio.open(tfile.name, 'w', **meta) as dst:
 
             # define windows
             windows = [window for ij, window in dst.block_windows()]
@@ -93,11 +93,16 @@ class RasterLayer(pyspatialml.base.BaseRaster):
                 result = np.ma.filled(result, fill_value=nodata)
                 dst.write(result.astype(dtype), window=window, indexes=1)
 
-        src = rasterio.open(file_path)
+        # create RasterLayer from result
+        src = rasterio.open(tfile.name)
         band = rasterio.band(src, 1)
+        layer = pyspatialml.RasterLayer(band)
 
-        return pyspatialml.RasterLayer(band)
-    
+        # overwrite close attribute with close method from temporaryfilewrapper
+        layer.close = tfile.close
+
+        return layer
+
     def __add__(self, other):
         """
         Implements behaviour for addition of two RasterLayers

@@ -31,9 +31,6 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     pyspatialml.Raster
         Each categorical value is encoded as a layer with a Raster object
     """
-
-    tempfiles = None
-
     arr = layer.read(masked=True)
 
     if categories is None:
@@ -54,9 +51,12 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
 
         names.append('_'.join([prefix, 'cat',  str(cat)]))
 
+    # create new stack
     if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-        tempfiles = file_path
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
 
     meta = layer.ds.meta
     meta['driver'] = driver
@@ -69,7 +69,10 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
 
     new_raster = Raster(file_path)
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
-    new_raster.tempfiles.append(tempfiles)
+
+    if tfile is not None:
+        for layer in new_raster.iloc:
+            layer.close = tfile.close
 
     return new_raster
 
@@ -95,8 +98,6 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
-    
-    tempfiles = None
 
     arr = np.zeros(layer.shape)
     arr = arr[np.newaxis, :, :]
@@ -107,21 +108,27 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
 
     # create new stack
     if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-        tempfiles = file_path
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
         
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 2
     meta['dtype'] = xyarrays.dtype
+
     with rasterio.open(file_path, 'w', **meta) as dst:
         dst.write(xyarrays)
     
     new_raster = Raster(file_path)
     names = ['x_coordinates', 'y_coordinates']
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
-    new_raster.tempfiles.append(tempfiles)
-    
+
+    if tfile is not None:
+        for layer in new_raster.iloc:
+            layer.close = tfile.close
+
     return new_raster
 
 
@@ -149,8 +156,6 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
-    
-    tempfiles = None
 
     # define x and y grid dimensions
     xmin, ymin, xmax, ymax = 0, 0, layer.shape[1], layer.shape[0]
@@ -166,8 +171,10 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
 
     # create new stack
     if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-        tempfiles = file_path
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
         
     meta = layer.meta
     meta['driver'] = driver
@@ -179,8 +186,11 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     names = ['angle_' + str(i+1) for i in range(n_angles)]
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
-    new_raster.tempfiles.append(tempfiles)
-    
+
+    if tfile is not None:
+        for layer in new_raster.iloc:
+            layer.close = tfile.close
+
     return new_raster
 
 
@@ -204,9 +214,7 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
-    
-    tempfiles = None
-    
+
     names = [
         'top_left',
         'top_right',
@@ -225,21 +233,27 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
 
     # create new stack
     if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-        tempfiles = file_path
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
         
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 5
     meta['dtype'] = arr.dtype
+
     with rasterio.open(file_path, 'w', **meta) as dst:
         dst.write(arr)
         
     new_raster = Raster(file_path)
     new_raster.rename({
         old: new for old, new in zip(new_raster.names, names)})
-    new_raster.tempfiles.append(tempfiles)
-        
+
+    if tfile is not None:
+        for layer in new_raster.iloc:
+            layer.close = tfile.close
+
     return new_raster
 
 
@@ -280,6 +294,7 @@ def _grid_distance(shape, rows, cols):
 
     return grids_buffers
 
+
 def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     """
     Generate buffer distances to x,y coordinates
@@ -306,9 +321,7 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     -------
     pyspatialml.Raster object
     """
-    
-    tempfiles = None
-    
+
     # some checks
     if isinstance(rows, list):
         rows = np.asarray(rows)
@@ -323,14 +336,16 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
 
     # create new stack
     if file_path is None:
-        file_path = tempfile.NamedTemporaryFile().name
-        tempfiles = file_path
-    
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
     
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = arr.shape[0]
     meta['dtype'] = arr.dtype
+
     with rasterio.open(file_path, 'w', **meta) as dst:
         dst.write(arr)
         
@@ -338,6 +353,9 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     new_raster = Raster(file_path)
     new_raster.rename(
         {old: new for old, new in zip(new_raster.names, names)})
-    new_raster.tempfiles.append(tempfiles)
-    
+
+    if tfile is not None:
+        for layer in new_raster.iloc:
+            layer.close = tfile.close
+
     return new_raster
