@@ -1,10 +1,10 @@
 from .raster import Raster
-from .rasterlayer import RasterLayer
 import numpy as np
 import tempfile
 import rasterio
 from copy import deepcopy
 from scipy import ndimage
+
 
 def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     """
@@ -19,11 +19,11 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
         Optional list of categories to extract. Default performs one-hot encoding
         on all categorical values in the input layer
 
-    file_path : str, optional (default=None)
+    file_path : str, optional. Default is None
         File path to save one-hot encoded raster. If not supplied then data
         is written to a tempfile
 
-    driver : str (default='GTiff')
+    driver : str, options. Default is 'GTiff'
         GDAL-compatible driver
 
     Returns
@@ -41,7 +41,8 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
         categories = categories[~categories.mask]
         categories = categories.data.astype('int32')
 
-    arr_ohe = np.ma.zeros((len(categories), arr.shape[0], arr.shape[1]), dtype='int32')
+    arr_ohe = np.ma.zeros(
+        (len(categories), arr.shape[0], arr.shape[1]), dtype='int32')
     names = []
     prefix = layer.names[0]
 
@@ -82,12 +83,12 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
         RasterLayer to use as a template
     
-    file_path : str, optional. Default=None
+    file_path : str, optional. Default is None
         File path to save to the resulting Raster object.
         If not supplied then the cropped raster is saved to a
         temporary file.
     
-    driver : str, default='GTiff'
+    driver : str, options. Default is 'GTiff'
         GDAL driver to use to save raster
 
     Returns
@@ -133,15 +134,15 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
         RasterLayer to use as a template
 
-    n_angles : int, default=8
+    n_angles : int, optional. Default is 8
         Number of angles to rotate coordinate system by
 
-    file_path : str, optional. Default=None
+    file_path : str, optional. Default is None
         File path to save to the resulting Raster object.
         If not supplied then the cropped raster is saved to a
         temporary file.
     
-    driver : str, default='GTiff'
+    driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster
 
     Returns
@@ -191,12 +192,12 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
     
-    file_path : str, optional. Default=None
+    file_path : str, optional. Default is None
         File path to save to the resulting Raster object.
         If not supplied then the cropped raster is saved to a
         temporary file.
     
-    driver : str, default='GTiff'
+    driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster
 
     Returns
@@ -206,8 +207,14 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     
     tempfiles = None
     
-    names = ['top_left', 'top_right', 'bottom_left',
-                'bottom_right', 'centre_indices']
+    names = [
+        'top_left',
+        'top_right',
+        'bottom_left',
+        'bottom_right',
+        'centre_indices'
+    ]
+
     rows = np.asarray(
         [0, 0, layer.shape[0]-1, layer.shape[0]-1, int(layer.shape[0]/2)])
     cols = np.asarray(

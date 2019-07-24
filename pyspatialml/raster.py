@@ -29,10 +29,10 @@ class Raster(BaseRaster):
     raster datasets which share a common coordinate reference system and
     geometry
 
-    Raster objects encapsulate RasterLayer objects, which represent
-    single band rasters that can physically be represented by separate
-    single-band raster files, multi-band raster files, or any combination of
-    individual bands from multi-band rasters and single-band rasters
+    Raster objects encapsulate RasterLayer objects, which represent single band
+    rasters that can physically be represented by separate single-band raster
+    files, multi-band raster files, or any combination of individual bands from
+    multi-band rasters and single-band rasters
 
     Methods defined in the Raster class are those that usually would be applied
     to multiple rasters, and always return a new Raster object
@@ -79,6 +79,7 @@ class Raster(BaseRaster):
         self.count = 0
         self.res = None
         self.meta = None
+        self._block_shape = (256, 256)
         self.tempfiles = []
 
         # some checks
@@ -265,6 +266,39 @@ class Raster(BaseRaster):
                                 s + "_" + str(i))
 
         return combined_names
+
+    @property
+    def block_shape(self):
+        """
+        Return the windows size used for raster calculations,
+        specified as a tuple (rows, columns)
+        """
+        return self._block_shape
+
+    @block_shape.setter
+    def block_shape(self, value):
+        """
+        Set the windows size used for raster calculations,
+        specified as a tuple (rows, columns)
+
+        Parameters
+        ----------
+        value : tuple
+            Tuple of integers for default block shape to read and write
+            data from the Raster object for memory-safe calculations.
+            Specified as (rows, cols).
+        """
+        if not isinstance(value, tuple):
+            raise ValueError('block_shape must be set using an integer tuple '
+                             'as (rows, cols)')
+
+        rows, cols = value
+
+        if not isinstance(rows, int) or not isinstance(cols, int):
+            raise ValueError('tuple must consist of integer values referring '
+                             'to number of rows, cols')
+
+        self._block_shape = (rows, cols)
 
     @property
     def names(self):
@@ -624,8 +658,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def predict(self, estimator, file_path=None, driver='GTiff',
-                dtype='float32', nodata=-99999, progress=True,
-                block_shape=None):
+                dtype='float32', nodata=-99999, progress=True):
         """
         Apply prediction of a scikit learn model to a Raster
 
@@ -649,10 +682,6 @@ class Raster(BaseRaster):
 
         progress : bool, optional. Default is True
             Show tqdm progress bar for prediction
-
-        block_shape : tuple, optional
-            Optionally supply a block shape to read and write the
-            raster data. Specified as a tuple (height, width)
 
         Returns
         -------
@@ -695,10 +724,8 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
 
             # define windows
-            if block_shape is None:
-                windows = [window for ij, window in dst.block_windows()]
-            else:
-                windows = [window for window in self.block_shapes(*block_shape)]
+            # windows = [window for ij, window in dst.block_windows()]
+            windows = [window for window in self.block_shapes(*self._block_shape)]
 
             # generator gets raster arrays for each window
             data_gen = (self.read(window=window, masked=True)

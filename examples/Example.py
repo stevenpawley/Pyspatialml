@@ -19,6 +19,21 @@ stack.count
 ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
 ndvi.plot()
 
+# Perform OR operation (union two layers)
+(stack.iloc[5] | stack.iloc[0]).plot()
+plt.show()
+
+# Perform AND operation (intersect two layers)
+(stack.iloc[5] & stack.iloc[0]).plot()
+plt.show()
+
+# Perform XOR operation (symmetrical difference)
+(stack.iloc[5] ^ stack.iloc[0]).plot()
+plt.show()
+
+import math
+math.trunc(ndvi).plot()
+
 # Aggregate a raster to a coarser cell size
 stack_new = stack.aggregate(out_shape=(100, 100))
 stack_new.iloc[0].plot()

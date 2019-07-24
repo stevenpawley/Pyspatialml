@@ -22,11 +22,11 @@ def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
         If not set, it will default to the nodata value stored in the source
         image
 
-    dst_nodata : int or float, optional (default -99999)
+    dst_nodata : int or float, optional. Default is -99999
         The nodata value that the outout raster will receive after
         reclassifying pixels with the src_nodata value
 
-    itern : bool, optional (default=False)
+    itern : bool, optional. Default is False
         Optionally return the reclassified raster as a numpy array
 
     Returns

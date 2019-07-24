@@ -70,3 +70,7 @@ pyspatialml/__pycache__/vector.cpython-36.pyc
 pyspatialml/datasets/__pycache__/nc_dataset.cpython-37.pyc
 pyspatialml/__pycache__/__main.cpython-37.pyc
 pyspatialml/__pycache__/__main.cpython-37.pyc
+pyspatialml/__pycache__/base.cpython-37.pyc
+pyspatialml/__pycache__/raster.cpython-37.pyc
+pyspatialml/__pycache__/rasterlayer.cpython-37.pyc
+.idea/codeStyles/codeStyleConfig.xml
