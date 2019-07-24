@@ -1,6 +1,6 @@
 from .raster import Raster
+from .base import _file_path_tempfile
 import numpy as np
-import tempfile
 import rasterio
 from copy import deepcopy
 from scipy import ndimage
@@ -52,11 +52,7 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
         names.append('_'.join([prefix, 'cat',  str(cat)]))
 
     # create new stack
-    if file_path is None:
-        tfile = tempfile.NamedTemporaryFile()
-        file_path = tfile.name
-    else:
-        tfile = None
+    file_path, tfile = _file_path_tempfile(file_path)
 
     meta = layer.ds.meta
     meta['driver'] = driver
@@ -107,12 +103,8 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     xyarrays[1, :, :] = xy
 
     # create new stack
-    if file_path is None:
-        tfile = tempfile.NamedTemporaryFile()
-        file_path = tfile.name
-    else:
-        tfile = None
-        
+    file_path, tfile = _file_path_tempfile(file_path)
+
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 2
@@ -170,12 +162,8 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     grids_directional = grids_directional.transpose((2, 0, 1))
 
     # create new stack
-    if file_path is None:
-        tfile = tempfile.NamedTemporaryFile()
-        file_path = tfile.name
-    else:
-        tfile = None
-        
+    file_path, tfile = _file_path_tempfile(file_path)
+
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = n_angles
@@ -232,12 +220,8 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     arr = _grid_distance(layer.shape, rows, cols)
 
     # create new stack
-    if file_path is None:
-        tfile = tempfile.NamedTemporaryFile()
-        file_path = tfile.name
-    else:
-        tfile = None
-        
+    file_path, tfile = _file_path_tempfile(file_path)
+
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = 5
@@ -335,12 +319,8 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     arr = _grid_distance(shape, rows, cols)
 
     # create new stack
-    if file_path is None:
-        tfile = tempfile.NamedTemporaryFile()
-        file_path = tfile.name
-    else:
-        tfile = None
-    
+    file_path, tfile = _file_path_tempfile(file_path)
+
     meta = layer.meta
     meta['driver'] = driver
     meta['count'] = arr.shape[0]

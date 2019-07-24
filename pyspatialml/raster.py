@@ -17,7 +17,7 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
 
-from .base import BaseRaster
+from .base import BaseRaster, _file_path_tempfile
 from .rasterlayer import RasterLayer
 from .indexing import ExtendedDict, LinkedList
 
@@ -594,7 +594,7 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster
         """
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
         predfun = self._probfun
 
         # determine output count
@@ -681,7 +681,7 @@ class Raster(BaseRaster):
         -------
         pyspatialml.Raster
         """
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         # determine output count for multi output cases
         window = Window(0, 0, self.width, 1)
@@ -1191,7 +1191,7 @@ class Raster(BaseRaster):
             Nodata value for cropped dataset
         """
 
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         masked_ndarrays = []
 
@@ -1237,16 +1237,6 @@ class Raster(BaseRaster):
         
         return new_raster
 
-    @staticmethod
-    def _file_path_tempfile(file_path):
-        if file_path is None:
-            tfile = tempfile.NamedTemporaryFile()
-            file_path = tfile.name
-        else:
-            tfile = None
-
-        return file_path, tfile
-
     def intersect(self, file_path=None, driver='GTiff', dtype=None,
                   nodata=-99999):
         """
@@ -1277,7 +1267,7 @@ class Raster(BaseRaster):
         pyspatial.Raster
         """
 
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
@@ -1342,7 +1332,7 @@ class Raster(BaseRaster):
             Raster cropped to new extent
         """
 
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         xmin, ymin, xmax, ymax = bounds
 
@@ -1435,7 +1425,7 @@ class Raster(BaseRaster):
             Raster following reprojection
         """
 
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
@@ -1521,7 +1511,7 @@ class Raster(BaseRaster):
         pyspatialml.Raster
         """
 
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         rows, cols = out_shape
 
@@ -1585,7 +1575,7 @@ class Raster(BaseRaster):
         pyspatialml.Raster
         """
         
-        file_path, tfile = self._file_path_tempfile(file_path)
+        file_path, tfile = _file_path_tempfile(file_path)
 
         # determine output dimensions
         window = Window(0, 0, 1, self.width)

@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 from itertools import chain
 
 import geopandas as gpd
@@ -663,3 +664,17 @@ class BaseRaster(object):
 
         else:
             return X, y, xy
+
+
+def _file_path_tempfile(file_path):
+    """
+    Simple function to return a TemporaryFileWrapper and file path
+    if a file_path parameter is None
+    """
+    if file_path is None:
+        tfile = tempfile.NamedTemporaryFile()
+        file_path = tfile.name
+    else:
+        tfile = None
+
+    return file_path, tfile
