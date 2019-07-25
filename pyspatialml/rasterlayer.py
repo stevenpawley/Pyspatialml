@@ -1,28 +1,29 @@
 import tempfile
+from functools import partial
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 from rasterio.windows import Window
 from scipy import ndimage
-from functools import partial
+from .base import _get_nodata, _file_path_tempfile
 
 import pyspatialml.base
 
 
 class RasterLayer(pyspatialml.base.BaseRaster):
     """
-    Represents a single rasterband derived from a single or multiband raster
-    dataset
+    Represents a single raster band derived from a single or multi-band raster
+    dataset.
 
     Simple wrapper around a rasterio.Band object with additional methods. 
     Used because the Rasterio.Band.ds.read method reads all bands from a
-    multiband dataset, whereas the RasterLayer read method only reads
-    a single band
+    multi-band dataset, whereas the RasterLayer read method only reads
+    a single band.
 
-    Methods encapsulated in RasterLayer objects represent those that can only
-    be applied to a single-band of a raster, i.e. sieve-clump, distance to
-    non-NaN pixels etc.
+    Methods encapsulated in RasterLayer objects represent those that typically
+    would only be applied to a single-band of a raster, i.e. sieve-clump,
+    distance to non-NaN pixels, or arithmetic operations on individual layers.
     """
 
     def __init__(self, band):
@@ -46,7 +47,25 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     def _arith(self, function, other=None):
         """
         General method for performing arithmetic operations on RasterLayer
-        objects
+        objects.
+
+        Parameters
+        ----------
+        function : function
+            Custom function that takes either one or two arrays, and
+            returns a single array following a pre-defined calculation.
+
+        other : pyspatialml.RasterLayer (opt)
+            If not specified, then a `function` should be provided that performs
+            a calculation using only the selected RasterLayer. If `other` is
+            specified, then a `function` should be supplied that takes to
+            ndarrays as arguments and performs a calculation using both layers,
+            i.e. layer1 - layer2.
+
+        Returns
+        -------
+        pyspatialml.RasterLayer
+            Returns a single RasterLayer containing the calculated result.
         """
 
         tfile = tempfile.NamedTemporaryFile()
@@ -61,10 +80,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         else:
             dtype = self.dtype
 
-        try:
-            nodata = np.iinfo(dtype).min
-        except ValueError:
-            nodata = np.finfo(dtype).min
+        nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
         meta = self.meta
@@ -105,7 +121,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __add__(self, other):
         """
-        Implements behaviour for addition of two RasterLayers
+        Implements behaviour for addition of two RasterLayers, i.e.
+        added_layer = layer1 + layer2.
         """
         def func(arr1, arr2):
             return arr1 + arr2
@@ -114,7 +131,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __sub__(self, other):
         """
-        Implements behaviour for subtraction of two RasterLayers
+        Implements behaviour for subtraction of two RasterLayers, i.e.
+        subtracted_layer = layer1 - layer2.
         """
         def func(arr1, arr2):
             return arr1 - arr2
@@ -123,7 +141,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     
     def __mul__(self, other):
         """
-        Implements behaviour for multiplication of two RasterLayers
+        Implements behaviour for multiplication of two RasterLayers, i.e.
+        product = layer1 * layer2.
         """
         def func(arr1, arr2):
             return arr1 * arr2
@@ -132,7 +151,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __truediv__(self, other):
         """
-        Implements behaviour for division using `/` of two RasterLayers
+        Implements behaviour for division using `/` of two RasterLayers, i.e.
+        div = layer1 / layer2.
         """
         def func(arr1, arr2):
             return arr1 / arr2
@@ -142,7 +162,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     def __and__(self, other):
         """
         Implements & operator. Equivalent to a intersection operation of self
-        with other
+        with other, i.e. intersected = layer1 & layer2.
         """
         def func(arr1, arr2):
             mask = np.logical_and(arr1, arr2).mask
@@ -154,7 +174,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     def __or__(self, other):
         """
         Implements | operator. Fills gaps in self with pixels from other.
-        Equivalent to a union operation
+        Equivalent to a union operation, i.e. union = layer1 | layer2.
         """
         def func(arr1, arr2):
             idx = np.logical_or(arr1, arr2.mask).mask
@@ -167,7 +187,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         """
         Exclusive OR using ^.
         Equivalent to a symmetrical difference where the result
-        comprises pixels that occur in self or other, but not both
+        comprises pixels that occur in self or other, but not both, i.e.
+        xor = layer1 ^ layer2.
 
         """
         def func(arr1, arr2):
@@ -181,7 +202,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __round__(self, ndigits):
         """
-        Behaviour for round() function
+        Behaviour for round() function, i.e. round(layer).
         """
         def func(arr, ndigits):
             return np.round(arr, ndigits)
@@ -192,7 +213,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __floor__(self):
         """
-        Rounding down to the nearest integer using math.floor()
+        Rounding down to the nearest integer using math.floor(), i.e.
+        math.floor(layer).
         """
         def func(arr):
             return np.floor(arr)
@@ -201,7 +223,8 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __ceil__(self):
         """
-        Rounding up to the nearest integer using math.ceil()
+        Rounding up to the nearest integer using math.ceil(), i.e.
+        math.ceil(layer).
         """
         def func(arr):
             return np.ceil(arr)
@@ -210,7 +233,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __trunc__(self):
         """
-        Truncating to an integral using math.trunc()
+        Truncating to an integral using math.trunc(), i.e. math.trunc(layer).
         """
         def func(arr):
             return np.trunc(arr)
@@ -219,7 +242,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __abs__(self):
         """
-        Abs() function as applied to a RasterLayer
+        abs() function as applied to a RasterLayer, i.e. abs(layer).
         """
         def func(arr):
             return np.abs(arr)
@@ -228,7 +251,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __pos__(self):
         """
-        Unary positive
+        Unary positive, i.e. +layer1.
         """
         def func(arr):
             return np.positive(arr)
@@ -237,7 +260,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __neg__(self):
         """
-        Unary negative
+        Unary negative, i.e. -layer1.
         """
         def func(arr):
             return np.negative(arr)
@@ -245,7 +268,18 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def read(self, **kwargs):
-        
+        """
+        Read method for a single RasterLayer.
+
+        Reads the pixel values from a RasterLayer into a ndarray that always
+        will have two dimensions in the order of (rows, columns).
+
+        Parameters
+        ----------
+        **kwargs : named arguments that can be passed to the the
+        rasterio.DatasetReader.read method.
+
+        """
         if 'resampling' in kwargs.keys():
             resampling_methods = [i.name for i in rasterio.enums.Resampling]
 
@@ -272,20 +306,23 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     def focal(self):
         raise NotImplementedError
 
-    def distance(self, file_path=None, driver='GTiff', nodata=-99999):
+    def distance(self, file_path=None, driver='GTiff', nodata=None):
         """
-        Calculate euclidean grid distances to non-NaN pixels
+        Calculate euclidean grid distances to non-NaN pixels.
 
         Parameters
         ----------
-        file_path : str, path to save distance raster, optional
-            If not specified output is saved to a temporary file
+        file_path : str (opt)
+            Optional path to save calculated Raster object. If not
+            specified then a tempfile is used.
 
-        driver : str, default='GTiff'
-            GDAL-supported driver format
+        driver : str (opt). Default is 'GTiff'
+            Named of GDAL-supported driver for file export.
 
-        nodata : any number, optional. Default is -99999
-            Value to use as the nodata value of the output raster
+        nodata : any number (opt)
+            Nodata value for new dataset. If not specified then a nodata
+            value is set based on the minimum permissible value of the Raster's
+            data type.
 
         Returns
         -------
@@ -294,19 +331,30 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         """
         arr = self.read(masked=True)
         arr = ndimage.distance_transform_edt(1 - arr)
+        dtype = arr.dtype
 
-        if file_path is None:
-            file_path = tempfile.NamedTemporaryFile().name
+        file_path, tfile = _file_path_tempfile(file_path)
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
 
         meta = self.ds.meta
         meta['driver'] = driver
         meta['nodata'] = nodata
+        meta['dtype'] = dtype
 
         with rasterio.open(file_path, mode='w', **meta) as dst:
-            dst.write(arr[np.newaxis, :, :].astype('float32'))
+            dst.write(arr[np.newaxis, :, :].astype(dtype))
 
         src = rasterio.open(file_path)
-        return pyspatialml.rasterlayer.RasterLayer(rasterio.band(src, 1))
+        band = rasterio.Band(src, 1)
+        layer = pyspatialml.RasterLayer(band)
+
+        # override RasterLayer close method if temp file is used
+        if tfile is not None:
+            layer.close = tfile.close
+
+        return layer
 
     def plot(self, **kwargs):
         """
