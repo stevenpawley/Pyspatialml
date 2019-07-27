@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Pyspatialml &#8212; Pyspatialml 0.0.1 documentation</title>
+    <title>&lt;no title&gt; &#8212; Pyspatialml 0.0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -14,6 +14,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction" href="quickstart.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -30,42 +31,11 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="pyspatialml">
-<h1>Pyspatialml<a class="headerlink" href="#pyspatialml" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-</div>
-<p>Pyspatialml is a Python module for applying scikit-learn machine learning
-models to raster datasets. Pyspatialml includes functions and classes for
-working with multiple raster datasets and performing a typical machine
-learning workflow consisting of extracting training data and applying the
-predict or predict_proba methods of scikit-learn estimators to a stack of
-raster datasets. Pyspatialml is built upon the <code class="docutils literal notranslate"><span class="pre">rasterio</span></code> Python module
-for all of the heavy lifting.  Pyspatialml is also designed for working with
-vector data using the <code class="docutils literal notranslate"><span class="pre">geopandas</span></code> module.</p>
-</div>
-<div class="section" id="background">
-<h1>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h1>
-<p>A supervised machine-learning workflow as applied to spatial raster data
-involves several steps:</p>
-<ol class="arabic simple">
-<li><p>Extracting training data.</p></li>
-</ol>
-<p>2. Developing a machine learning classifier or regressor model. Pyspatialml
-uses scikit-learn for this purpose.</p>
-<ol class="arabic simple" start="3">
-<li><p>Performing the prediction on the raster data.</p></li>
-</ol>
-<p>Training data consists of two components - a response feature and a set of
-predictors. With spatial data, the response feature is often represented by a
-locations when some property/state/concentration is already established. This
-data can be represented by point locations (e.g. arsenic concentrations soil
-samples), pixel locations where the pixel value represents the target of
-interest, or polygon features (e.g. labelled with landcover type). The
-predictors are represented by raster data, which contain variables that that
-in part may explaining the spatial distribution of the response variable
-(e.g., raster data representing soil types, soil properties, climatic data
-etc.).</p>
+  <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html#background">Background</a></li>
+</ul>
 </div>
 
 
@@ -85,11 +55,16 @@ etc.).</p>
 
 
 <h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html#background">Background</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="quickstart.html" title="next chapter">Introduction</a></li>
   </ul></li>
 </ul>
 </div>
