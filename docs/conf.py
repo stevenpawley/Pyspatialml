@@ -56,3 +56,6 @@ html_static_path = ['_static']
 
 # explicitly assign the master document
 master_doc = 'index'
+
+# Add napoleon to the extensions list
+extensions = ['sphinx.ext.napoleon']
