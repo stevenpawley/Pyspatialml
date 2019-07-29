@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rationale &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="rationale">
+<h1>Rationale<a class="headerlink" href="#rationale" title="Permalink to this headline">¶</a></h1>
+<p>A supervised machine-learning workflow as applied to spatial raster data
+involves several steps:</p>
+<ol class="arabic simple">
+<li><p>Extracting training data.</p></li>
+</ol>
+<p>2. Developing a machine learning classifier or regressor model. Pyspatialml
+uses scikit-learn for this purpose.</p>
+<ol class="arabic simple" start="3">
+<li><p>Performing the prediction on the raster data.</p></li>
+</ol>
+<p>Training data consists of two components - a response feature and a set of
+predictors. With spatial data, the response feature is often represented by a
+locations when some property/state/concentration is already established. This
+data can be represented by point locations (e.g. arsenic concentrations soil
+samples), pixel locations where the pixel value represents the target of
+interest, or polygon features (e.g. labelled with landcover type). The
+predictors are represented by raster data, which contain variables that that
+in part may explaining the spatial distribution of the response variable
+(e.g., raster data representing soil types, soil properties, climatic data
+etc).</p>
+</div>
+<div class="section" id="design">
+<h1>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h1>
+<p>The Raster object</p>
+<p>The main class that facilitates working with multiple raster datasets is the
+<code class="docutils literal notranslate"><span class="pre">Raster</span></code> class, which is inspired by the famous  <code class="docutils literal notranslate"><span class="pre">raster</span></code> package in the R
+statistical programming language. The <code class="docutils literal notranslate"><span class="pre">Raster</span></code> object takes a list of file
+paths to GDAL-supported raster datasets and ‘stacks’ them into a single Raster
+object. The underlying file-based raster datasets are not physically-stacked,
+but rather the Raster object internally represents each band within the datasets
+as a <code class="docutils literal notranslate"><span class="pre">RasterLayer</span></code>. This means that metadata  regarding what each raster
+dataset represents (e.g. the dataset’s name) can be retained, and additional
+raster datasets can easily be added or removed from the stack without physical
+on-disk changes.</p>
+<p>Note these raster datasets need to be spatially aligned in terms of their
+extent, resolution and coordinate reference system. If they are not aligned,
+then for convenience the <code class="docutils literal notranslate"><span class="pre">pyspatialml.utils.align_rasters</span></code> function can be
+used to resample a list of raster datasets.</p>
+<p>#### Raster object initiation</p>
+<p>There are three methods of creating a new Raster object:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Raster(file_path=[raster1.tif,</span> <span class="pre">raster2.tif,</span> <span class="pre">raster3.tif])</span></code> creates a
+Raster object from existing file-based GDAL-supported datasets.</p>
+<p>2. <code class="docutils literal notranslate"><span class="pre">Raster(arr=new_numpy_array,</span> <span class="pre">crs=crs,</span> <span class="pre">transform=transform)</span></code> creates a
+Raster object from a 3D numpy array (band, row, column). The <code class="docutils literal notranslate"><span class="pre">crs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">transform</span></code> arguments are optional but are required to provide coordinate
+reference system information to the Raster object.</p>
+<p>3. <code class="docutils literal notranslate"><span class="pre">Raster(layers=[RasterLayer1,</span> <span class="pre">RasterLayer2,</span> <span class="pre">RasterLayer3])</span></code> creates a
+Raster object from a single or list of RasterLayer objects. RasterLayers are a
+thin wrapper around rasterio.Band objects with additional methods. This is
+mostly used internally. A RasterLayer itself is initiated directly from a
+rasterio.Band object.</p>
+<p>Generally, pyspatialml is intends users to work with the Raster object. However,
+access to individual RasterLayer objects, or the underlying rasterio.band
+datasets can be useful if pyspatialml is being used in conjunction with other
+functions and methods in the Rasterio package.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Pyspatialml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Steven Pawley.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/rationale.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

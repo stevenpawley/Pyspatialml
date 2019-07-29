@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>A Machine Learning Example &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyspatialml" href="modules.html" />
+    <link rel="prev" title="Random Sampling" href="sampling.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="a-machine-learning-example">
+<h1>A Machine Learning Example<a class="headerlink" href="#a-machine-learning-example" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="extraction-training-data">
+<h2>Extraction Training Data<a class="headerlink" href="#extraction-training-data" title="Permalink to this headline">¶</a></h2>
+<p>Load some training data in the form of polygons, points and labelled pixels in
+geopandas GeoDataFrame objects. We will also generate some line geometries by
+converting the polygon boundaries into linestrings. All of these geometry types
+can be used to spatially query pixel values in a Raster object, however each
+GeoDataFrame must contain only one type of geometry (i.e. either shapely points,
+polygons or linestrings).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">training_py</span> <span class="o">=</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">polygons</span><span class="p">)</span>
+<span class="n">training_pt</span> <span class="o">=</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+<span class="n">training_px</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">labelled_pixels</span><span class="p">)</span>
+<span class="n">training_lines</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">training_py</span><span class="p">)</span>
+<span class="n">training_lines</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_lines</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">boundary</span>
+</pre></div>
+</div>
+<p>Show training data points and a single raster band using numpy and matplotlib:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">predictors</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+           <span class="n">extent</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plotting_extent</span><span class="p">(</span><span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">training_pt</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">training_pt</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Pixel values in the Raster object can be spatially queried using the
+<code class="docutils literal notranslate"><span class="pre">extract_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">extract_raster</span></code> methods. In addition, the
+<code class="docutils literal notranslate"><span class="pre">extract_xy</span></code> method can be used to query pixel values using a 2d array of x
+and y coordinates.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">extract_vector</span></code> method accepts a Geopandas GeoDataFrame as the
+<code class="docutils literal notranslate"><span class="pre">response</span></code> argument. The <code class="docutils literal notranslate"><span class="pre">field</span></code> argument is used to indicate if values in
+a column in the GeoDataFrame should be extracted with the pixel values. For
+GeoDataFrames containing shapely point geometries, the closest pixel to each
+point is sampled. For shapely polygon geometries, all pixels whose centres are
+inside the polygon are sampled. For shapely linestring geometries, every pixel
+touched by the line is sampled. For all geometry types, pixel values are queries
+for each geometry separately. This means that overlapping polygons or points
+that fall within the same pixel with cause the same pixel to be sampled multiple
+times.</p>
+<p>By default, the extract functions return a Geopandas GeoDataFrame of point
+geometries and the DataFrame containing the extracted pixels, with the column
+names set by the names of the raster datasets in the Raster object. The user can
+also use the <code class="docutils literal notranslate"><span class="pre">return_array=True</span></code> argument, which instead of returning a
+DataFrame will return three masked numpy arrays (X, y, xy) containing the
+extracted pixel values, the field attribute, and the spatial coordinates of the
+sampled pixels. These arrays are masked arrays with nodata values in the
+RasterStack datasets being masked.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">extract_raster</span></code> method can also be used to spatially query pixel values
+from a Raster object using another raster containing labelled pixels. This
+raster has to be spatially aligned with the Raster object. There is no field
+attribute for this method because the values of the labelled pixels are returned
+along with the queried pixel values, but the name of this column in the
+attribute can be set using the <code class="docutils literal notranslate"><span class="pre">value_name</span></code> argument.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a training dataset by extracting the raster values at the</span>
+<span class="c1"># training point locations:</span>
+<span class="n">df_points</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_pt</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_py</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">df_lines</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_lines</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">df_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_raster</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_px</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">df_points</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-training">
+<h2>Model Training<a class="headerlink" href="#model-training" title="Permalink to this headline">¶</a></h2>
+<p>Next we can train a logistic regression classifier:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Next we can train a logistic regression classifier:</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LogisticRegressionCV</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="k">import</span> <span class="n">StandardScaler</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">cross_validate</span>
+
+<span class="c1"># define the classifier with standardization of the input features</span>
+<span class="c1"># in a pipeline</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
+    <span class="p">[(</span><span class="s1">&#39;scaling&#39;</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">()),</span>
+     <span class="p">(</span><span class="s1">&#39;classifier&#39;</span><span class="p">,</span> <span class="n">LogisticRegressionCV</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">))])</span>
+
+<span class="c1"># fit the classifier</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">id</span>
+<span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After defining a classifier, a typical step consists of performing a
+cross-validation to evaluate the performance of the model. Scikit-learn provides
+the cross_validate function for this purpose. In comparison to non-spatial data,
+spatial data can be spatially correlated, which potentially can mean that
+geographically proximal samples may not represent truely independent samples if
+they are within the autocorrelation range of some of the predictors. This will
+lead to overly optimistic performance measures if samples in the training
+dataset / cross-validation partition are strongly spatially correlated with
+samples in the test dataset / cross-validation partition.</p>
+<p>In this case, performing cross-validation using groups is useful, because these
+groups can represent spatial clusters of training samples, and samples from the
+same group will never occur in both the training and test partitions of a
+cross-validation. An example of creating random spatial clusters from point
+coordinates is provided here:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># spatial cross-validation</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="k">import</span> <span class="n">KMeans</span>
+
+<span class="c1"># create 10 spatial clusters based on clustering of the training</span>
+<span class="c1"># data point x,y coordinates</span>
+<span class="n">clusters</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">clusters</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df_polygons</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="c1"># cross validate</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">cross_validate</span><span class="p">(</span>
+  <span class="n">lr</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">clusters</span><span class="o">.</span><span class="n">labels_</span><span class="p">,</span>
+  <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span>
+  <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">scores</span><span class="p">[</span><span class="s1">&#39;test_score&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="raster-prediction">
+<h2>Raster Prediction<a class="headerlink" href="#raster-prediction" title="Permalink to this headline">¶</a></h2>
+<p>Prediction on the Raster object is performed using the <code class="docutils literal notranslate"><span class="pre">`predict`</span></code> method. The
+<code class="docutils literal notranslate"><span class="pre">estimator</span></code> is the only required argument. If the <code class="docutils literal notranslate"><span class="pre">file_path</span></code> argument is
+not specified then the result is automatically written to a temporary file. The
+predict method returns an rasterio.io.DatasetReader object which is open.</p>
+<p>Other arguments consist of <code class="docutils literal notranslate"><span class="pre">predict_type</span></code> can be either ‘raw’ to output a
+classification or regression result, or ‘prob’ to output class probabilities as
+a multi-band raster (a band for each class probability). In the latter case,
+<code class="docutils literal notranslate"><span class="pre">indexes</span></code> can also be supplied if you only want to output the probabilities
+for a particular class, or list of classes, by supplying the indices of those
+classes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># prediction</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">result_probs</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+
+<span class="c1"># plot classification result</span>
+<span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># plot class probabilities</span>
+<span class="n">result_probs</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Pyspatialml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A Machine Learning Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#extraction-training-data">Extraction Training Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-training">Model Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#raster-prediction">Raster Prediction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="sampling.html" title="previous chapter">Random Sampling</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">pyspatialml</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Steven Pawley.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/mlworkflow.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

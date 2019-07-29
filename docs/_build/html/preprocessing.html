@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Preprocessing and Feature Engineering &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cropping, Masking and Intersecting" href="geoprocessing.html" />
+    <link rel="prev" title="Plotting" href="plotting.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="preprocessing-and-feature-engineering">
+<h1>Preprocessing and Feature Engineering<a class="headerlink" href="#preprocessing-and-feature-engineering" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="raster-math">
+<h2>Raster Math<a class="headerlink" href="#raster-math" title="Permalink to this headline">¶</a></h2>
+<p>Simple raster arithmetic operations can be performed directly on RasterLayer
+objects directly</p>
+<p>More complex operations should be performed using the <code class="docutils literal notranslate"><span class="pre">calc</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raster</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="one-hot-encoding">
+<h2>One-Hot Encoding<a class="headerlink" href="#one-hot-encoding" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ohe_raster</span> <span class="o">=</span> <span class="n">one_hot_encode</span><span class="p">(</span>
+    <span class="n">layer</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generating-grids-of-spatial-coordinates-information">
+<h2>Generating Grids of Spatial Coordinates Information<a class="headerlink" href="#generating-grids-of-spatial-coordinates-information" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xy_grids</span> <span class="o">=</span> <span class="n">xy_coordinates</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+<span class="n">angled_grids</span> <span class="o">=</span> <span class="n">rotated_coordinates</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">n_angles</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+<span class="n">edm_grids</span> <span class="o">=</span> <span class="n">distance_to_corners</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+<span class="n">sample_grids</span> <span class="o">=</span> <span class="n">distance_to_samples</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="handling-of-temporary-files">
+<h2>Handling of Temporary Files<a class="headerlink" href="#handling-of-temporary-files" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Pyspatialml</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing and Feature Engineering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#raster-math">Raster Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#one-hot-encoding">One-Hot Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generating-grids-of-spatial-coordinates-information">Generating Grids of Spatial Coordinates Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-of-temporary-files">Handling of Temporary Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Cropping, Masking and Intersecting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="plotting.html" title="previous chapter">Plotting</a></li>
+      <li>Next: <a href="geoprocessing.html" title="next chapter">Cropping, Masking and Intersecting</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Steven Pawley.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/preprocessing.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
