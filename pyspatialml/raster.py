@@ -1379,6 +1379,13 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
+        meta = self.meta
+
+        if dtype is None:
+            dtype = meta['dtype']
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
@@ -1391,14 +1398,6 @@ class Raster(BaseRaster):
             arr, mask=mask_3d, fill_value=nodata)
 
         intersected_arr = np.ma.filled(intersected_arr, fill_value=nodata)
-
-        meta = self.meta
-
-        if dtype is None:
-            dtype = meta['dtype']
-
-        if nodata is None:
-            nodata = _get_nodata(dtype)
 
         meta['driver'] = driver
         meta['nodata'] = nodata
