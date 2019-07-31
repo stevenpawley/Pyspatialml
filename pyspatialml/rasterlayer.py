@@ -68,13 +68,18 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             Returns a single RasterLayer containing the calculated result.
         """
 
-        tfile = tempfile.NamedTemporaryFile()
+        _, tfile = _file_path_tempfile(None)
         driver = self.driver
 
         # determine dtype of result based on calc on single pixel
         if other is not None:
             arr1 = self.read(masked=True, window=Window(0, 0, 1, 1))
-            arr2 = other.read(masked=True, window=Window(0, 0, 1, 1))
+
+            try:
+                arr2 = other.read(masked=True, window=Window(0, 0, 1, 1))
+            except AttributeError:
+                arr2 = other
+
             test = function(arr1, arr2)
             dtype = test.dtype
         else:
@@ -94,10 +99,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             # generator gets raster arrays for each window
             self_gen = (self.read(window=w, masked=True) for w in windows)
 
-            if other is not None:
+            if isinstance(other, RasterLayer):
                 other_gen = (other.read(window=w, masked=True) for w in windows)
             else:
-                other_gen = (None for w in windows)
+                other_gen = (other for w in windows)
 
             for window, arr1, arr2 in zip(windows, self_gen, other_gen):
 
