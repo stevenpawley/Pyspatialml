@@ -531,7 +531,9 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Optionally assign a new nodata value when saving to file. If not
             specified a nodata value based on the minimum permissible value for
-            the data types of RasterLayers in the Raster object is used.
+            the data types of RasterLayers in the Raster object is used. Note
+            that this does not change the pixel nodata values of the raster, it
+            only changes the metadata of what value represents a nodata pixel.
 
         Returns
         -------
@@ -1290,7 +1292,8 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Nodata value for cropped dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
-            data type.
+            data type. Note that this changes the values of the pixels to the
+            new nodata value, and changes the metadata of the raster.
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
@@ -1369,7 +1372,8 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
-            data type.
+            data type. Note that this changes the values of the pixels that
+            represent nodata to the new value.
 
         Returns
         -------
@@ -1441,7 +1445,9 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
-            data type.
+            data type. Note that this does not change the pixel nodata values
+            of the raster, it only changes the metadata of what value
+            represents a nodata pixel.
 
         Returns
         -------
@@ -1630,7 +1636,9 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
-            dtype.
+            dtype. Note that this does not change the pixel nodata values of
+            the raster, it only changes the metadata of what value represents
+            a nodata pixel.
 
         Returns
         -------
@@ -1700,7 +1708,8 @@ class Raster(BaseRaster):
         nodata : any number (opt)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
-            data type.
+            data type. Note that this changes the values of the pixels that
+            represent nodata pixels.
 
         progress : bool (opt). Default is False
             Optionally show progress of transform operations.
