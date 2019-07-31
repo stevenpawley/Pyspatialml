@@ -1294,13 +1294,22 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
+        meta = self.meta
+
+        if dtype is None:
+            dtype = meta['dtype']
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
+
+        meta['dtype'] = dtype
 
         masked_ndarrays = []
 
         for layer in self.iloc:
             masked_arr, transform = rasterio.mask.mask(
                 dataset=layer.ds, shapes=[shapes.geometry.unary_union],
-                filled=filled, invert=invert, crop=crop, pad=pad)
+                filled=filled, invert=invert, crop=crop, pad=pad, nodata=nodata)
 
             if layer.ds.count > 1:
                 masked_arr = masked_arr[layer.bidx - 1, :, :]
@@ -1314,20 +1323,11 @@ class Raster(BaseRaster):
         masked_ndarrays = np.stack(masked_ndarrays)
 
         # write to file
-        meta = self.meta
         meta['transform'] = transform
         meta['driver'] = driver
         meta['nodata'] = nodata
         meta['height'] = masked_ndarrays.shape[1]
         meta['width'] = masked_ndarrays.shape[2]
-        
-        if dtype is None:
-            dtype = meta['dtype']
-
-        if nodata is None:
-            nodata = _get_nodata(dtype)
-        
-        meta['dtype'] = dtype
 
         masked_ndarrays = np.ma.filled(masked_ndarrays, fill_value=nodata)
 
