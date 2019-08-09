@@ -9,7 +9,7 @@ setup(
     license="GNU",
     keywords="GIS",
     url="https://github.com/stevenpawley/pyspatialml",
-    packages=["pyspatialml"],
+    packages=find_packages(),
     install_requires=[
         'numpy>=1.10.0',
         'scipy>1.0.0',
@@ -23,6 +23,5 @@ setup(
     python_requires='>=3.5',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
-    include_package_data=True,
-    packages=find_packages()
+    include_package_data=True
 )
