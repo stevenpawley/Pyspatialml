@@ -1,7 +1,7 @@
 from unittest import TestCase
 from pyspatialml import Raster
-import pyspatialml.datasets.nc_dataset as nc
-import pyspatialml.datasets.meuse_dataset as ms
+from pyspatialml.datasets import nc
+import pyspatialml.datasets.meuse as ms
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 

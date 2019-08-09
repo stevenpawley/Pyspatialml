@@ -1,6 +1,6 @@
 from unittest import TestCase
 from pyspatialml import Raster
-import pyspatialml.datasets.nc_dataset as nc
+from pyspatialml.datasets import nc
 from copy import deepcopy
 import geopandas
 import rasterio
