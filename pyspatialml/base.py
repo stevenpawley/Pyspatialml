@@ -596,8 +596,7 @@ class BaseRaster(object):
 
             return gdf
         
-        if len(columns) == 1:
-            y = y.squeeze()
+        y = y.squeeze()
         
         return X, y, xy
 
