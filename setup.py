@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="pyspatialml",
@@ -23,5 +23,6 @@ setup(
     python_requires='>=3.5',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
-    include_package_data=True
+    include_package_data=True,
+    packages=find_packages()
 )
