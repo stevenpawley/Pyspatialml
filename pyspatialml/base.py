@@ -363,7 +363,7 @@ class BaseRaster(object):
                              (xy[:, 1] < extent.top))[0]
         xy = xy[valid_idx, :]
 
-        dtype = np.find_common_type([], self.dtypes)
+        dtype = np.find_common_type([np.float32], self.dtypes)
         values = np.ma.zeros((xy.shape[0], self.count), dtype=dtype)
         rows, cols = rasterio.transform.rowcol(
             transform=self.transform, xs=xy[:, 0], ys=xy[:, 1])
@@ -589,7 +589,7 @@ class BaseRaster(object):
                 data = X
                 column_names = self.names
 
-            gdf = pd.DataFrame(data, columns=column_names)
+            gdf = pd.DataFrame(data, columns=column_names, dtype=self.meta['dtype'])
             gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
             gdf['geometry'] = gdf['geometry'].apply(Point)
             gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)

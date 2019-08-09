@@ -424,7 +424,7 @@ class Raster(BaseRaster):
                          width=self.width,
                          height=self.height,
                          count=self.count,
-                         dtype=np.find_common_type([], self.dtypes))
+                         dtype=np.find_common_type([np.float32], self.dtypes))
 
     def read(self, masked=False, window=None, out_shape=None,
              resampling='nearest', **kwargs):
