@@ -39,26 +39,25 @@ class Raster(BaseRaster):
 
     def __init__(self, src=None, arr=None, crs=None, transform=None,
                  nodata=None, mode='r', file_path=None):
-        """
-        Initiate a new Raster object
+        """Initiate a new Raster object.
 
         Parameters
         ----------
         src : file path, RasterLayer, or rasterio dataset (opt)
-            Initiate a Raster object from any combination of a file path or list
-            of file paths to GDAL-supported raster datasets, RasterLayer
+            Initiate a Raster object from any combination of a file path or
+            list of file paths to GDAL-supported raster datasets, RasterLayer
             objects, or directly from a rasterio dataset or band object that is
             opened in 'r' or 'rw' mode.
 
         arr : ndarray (opt)
-            Whether to initiate a Raster object from a numpy.ndarray. Additional
-            arguments `crs` and `transform` should also be provided to supply
-            spatial coordinate information. Parameters `arr` and `src` are
-            mutually-exclusive.
+            Whether to initiate a Raster object from a numpy.ndarray. 
+            Additional arguments `crs` and `transform` should also be provided
+            to supply spatial coordinate information. Parameters `arr` and
+            `src` are mutually-exclusive.
 
         crs : rasterio.crs.CRS object (opt)
-            CRS object containing projection information for data if provided by
-            the associated `arr` parameter.
+            CRS object containing projection information for data if provided
+            by the associated `arr` parameter.
 
         transform : affine.Affine object (opt)
             Affine object containing transform information for data if provided
@@ -80,7 +79,8 @@ class Raster(BaseRaster):
         Returns
         -------
         pyspatialml.Raster
-            Raster object containing the src layers stacked into a single object
+            Raster object containing the src layers stacked into a single
+            object
         """
 
         self.loc = ExtendedDict(self)
@@ -157,8 +157,7 @@ class Raster(BaseRaster):
         self._layers = src_layers
 
     def __getitem__(self, key):
-        """
-        Subset the Raster object using a label or list of labels.
+        """Subset the Raster object using a label or list of labels.
         
         Parameters
         ----------
@@ -189,8 +188,8 @@ class Raster(BaseRaster):
         return subset_raster
 
     def __setitem__(self, key, value):
-        """
-        Replace a RasterLayer within the Raster object with a new RasterLayer.
+        """Replace a RasterLayer within the Raster object with a new 
+        RasterLayer.
         
         Note that this modifies the Raster object in place.
         
@@ -211,14 +210,12 @@ class Raster(BaseRaster):
             raise ValueError('value is not a RasterLayer object')
 
     def __iter__(self):
-        """
-        Iterate over RasterLayers
+        """Iterate over RasterLayers.
         """
         return iter(self.loc.items())
 
     def close(self):
-        """
-        Close all of the RasterLayer objects in the Raster.
+        """Close all of the RasterLayer objects in the Raster.
 
         Note that this will cause any rasters based on temporary files to be
         removed. This is intended as a method of clearing temporary files that
@@ -229,8 +226,7 @@ class Raster(BaseRaster):
 
     @staticmethod
     def _check_alignment(layers):
-        """
-        Check that a list of raster datasets are aligned with the same pixel
+        """Check that a list of raster datasets are aligned with the same pixel
         dimensions and geotransforms.
 
         Parameters
@@ -264,14 +260,13 @@ class Raster(BaseRaster):
 
     @staticmethod
     def _fix_names(combined_names):
-        """
-        Adjusts the names of pyspatialml.RasterLayer objects within the Raster
-        when appending new layers. This avoids the Raster object containing
-        duplicated names in the case that multiple RasterLayer's are appended
-        with the same name.
+        """Adjusts the names of pyspatialml.RasterLayer objects within the
+        Raster when appending new layers. This avoids the Raster object
+        containing duplicated names in the case that multiple RasterLayer's are
+        appended with the same name.
 
-        In the case of duplicated names, the RasterLayer names are appended with
-        a `_n` with n = 1, 2, 3 .. n.
+        In the case of duplicated names, the RasterLayer names are appended
+        with a `_n` with n = 1, 2, 3 .. n.
 
         Parameters
         ----------
@@ -304,9 +299,8 @@ class Raster(BaseRaster):
 
     @property
     def block_shape(self):
-        """
-        Return the windows size used for raster calculations,
-        specified as a tuple (rows, columns).
+        """Return the windows size used for raster calculations, specified as a
+        tuple (rows, columns).
 
         Returns
         -------
@@ -318,9 +312,8 @@ class Raster(BaseRaster):
 
     @block_shape.setter
     def block_shape(self, value):
-        """
-        Set the windows size used for raster calculations,
-        specified as a tuple (rows, columns).
+        """Set the windows size used for raster calculations, specified as a
+        tuple (rows, columns).
 
         Parameters
         ----------
@@ -343,8 +336,7 @@ class Raster(BaseRaster):
 
     @property
     def names(self):
-        """
-        Return the names of the RasterLayers in the Raster object.
+        """Return the names of the RasterLayers in the Raster object.
 
         Returns
         -------
@@ -355,20 +347,18 @@ class Raster(BaseRaster):
 
     @property
     def _layers(self):
-        """
-        Getter method.
+        """Getter method.
 
         Returns
         -------
         pyspatialml.indexing.ExtendedDict
-            Returns a dict of key-value pairs of names and RasterLayers
+            Returns a dict of key-value pairs of names and RasterLayers.
         """
         return self.loc
 
     @_layers.setter
     def _layers(self, layers):
-        """
-        Setter method for the files attribute in the Raster object.
+        """Setter method for the files attribute in the Raster object.
 
         Parameters
         ----------
@@ -438,8 +428,7 @@ class Raster(BaseRaster):
 
     def read(self, masked=False, window=None, out_shape=None,
              resampling='nearest', **kwargs):
-        """
-        Reads data from the Raster object into a numpy array.
+        """Reads data from the Raster object into a numpy array.
 
         Overrides read BaseRaster class read method and replaces it with a
         method that reads from multiple RasterLayer objects.
@@ -509,8 +498,7 @@ class Raster(BaseRaster):
         return arr
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
-        """
-        Write the Raster object to a file.
+        """Write the Raster object to a file.
 
         Overrides the write RasterBase class method, which is a partial
         function of the rasterio.DatasetReader.write method.
@@ -524,9 +512,9 @@ class Raster(BaseRaster):
             Name of GDAL driver used to save Raster data.
 
         dtype : str (opt)
-            Optionally specify a numpy compatible data type when saving to file.
-            If not specified, a data type is selected based on the data types of
-            RasterLayers in the Raster object.
+            Optionally specify a numpy compatible data type when saving to
+            file. If not specified, a data type is selected based on the data
+            types of RasterLayers in the Raster object.
 
         nodata : any number (opt)
             Optionally assign a new nodata value when saving to file. If not
@@ -563,8 +551,7 @@ class Raster(BaseRaster):
         return raster
 
     def to_pandas(self, max_pixels=50000, resampling='nearest'):
-        """
-        Raster to pandas DataFrame.
+        """Raster to pandas DataFrame.
 
         Parameters
         ----------
@@ -618,8 +605,8 @@ class Raster(BaseRaster):
     def predict_proba(self, estimator, file_path=None, indexes=None,
                       driver='GTiff', dtype=None, nodata=None,
                       progress=True):
-        """
-        Apply class probability prediction of a scikit learn model to a Raster.
+        """Apply class probability prediction of a scikit learn model to a
+        Raster.
 
         Parameters
         ----------
@@ -640,13 +627,13 @@ class Raster(BaseRaster):
             Named of GDAL-supported driver for file export.
 
         dtype : str (opt)
-            Optionally specify a numpy compatible data type when saving to file.
-            If not specified, a data type is set based on the data type of
-            the prediction.
+            Optionally specify a numpy compatible data type when saving to
+            file. If not specified, a data type is set based on the data type
+            of the prediction.
 
         nodata : any number (opt)
-            Nodata value for file export. If not specified then the nodata value
-            is derived from the minimum permissible value for the given
+            Nodata value for file export. If not specified then the nodata
+            value is derived from the minimum permissible value for the given
             data type.
 
         progress : bool (opt). Default is True
@@ -729,8 +716,7 @@ class Raster(BaseRaster):
 
     def predict(self, estimator, file_path=None, driver='GTiff', dtype=None,
                 nodata=None, progress=True):
-        """
-        Apply prediction of a scikit learn model to a Raster. The model can
+        """Apply prediction of a scikit learn model to a Raster. The model can
         represent any scikit learn model or compatible api with a `fit` and
         `predict` method. These can consist of classification or regression
         models. Multi-class classifications and multi-target regressions are
@@ -754,9 +740,9 @@ class Raster(BaseRaster):
             the prediction.
 
         nodata : any number (opt)
-            Nodata value for file export. If not specified then the nodata value
-            is derived from the minimum permissible value for the given data
-            type.
+            Nodata value for file export. If not specified then the nodata
+            value is derived from the minimum permissible value for the given
+            data type.
 
         progress : bool (opt). Default is True
             Show progress bar for prediction.
@@ -766,8 +752,9 @@ class Raster(BaseRaster):
         pyspatial.Raster
             Raster object containing prediction results as a RasterLayers.
             For classification and regression models, the Raster will contain a
-            single RasterLayer, unless the model is multi-class or multi-target.
-            Layers are named automatically as `pred_raw_n` with n = 1, 2, 3 ..n.
+            single RasterLayer, unless the model is multi-class or
+            multi-target. Layers are named automatically as `pred_raw_n` with
+            n = 1, 2, 3 ..n.
         """
         file_path, tfile = _file_path_tempfile(file_path)
 
@@ -806,7 +793,8 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, 'w', **meta) as dst:
             # define windows
             # windows = [window for ij, window in dst.block_windows()]
-            windows = [window for window in self.block_shapes(*self._block_shape)]
+            windows = [window for window in 
+                       self.block_shapes(*self._block_shape)]
 
             # generator gets raster arrays for each window
             data_gen = (self.read(window=window, masked=True)
@@ -839,8 +827,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def _predfun(self, img, estimator):
-        """
-        Prediction function for classification or regression response.
+        """Prediction function for classification or regression response.
 
         Parameters
         ----
@@ -883,8 +870,7 @@ class Raster(BaseRaster):
 
     @staticmethod
     def _probfun(img, estimator):
-        """
-        Class probabilities function.
+        """Class probabilities function.
 
         Parameters
         ----------
@@ -917,7 +903,8 @@ class Raster(BaseRaster):
         result_proba = estimator.predict_proba(flat_pixels)
 
         # reshape class probabilities back to 3D image [iclass, rows, cols]
-        result_proba = result_proba.reshape((rows, cols, result_proba.shape[1]))
+        result_proba = result_proba.reshape(
+            (rows, cols, result_proba.shape[1]))
 
         # reshape band into rasterio format [band, row, col]
         result_proba = result_proba.transpose(2, 0, 1)
@@ -936,8 +923,7 @@ class Raster(BaseRaster):
 
     @staticmethod
     def _predfun_multioutput(img, estimator):
-        """
-        Multi-target prediction function.
+        """Multi-target prediction function.
 
         Parameters
         ----------
@@ -987,8 +973,7 @@ class Raster(BaseRaster):
         return result
 
     def append(self, other, in_place=True):
-        """
-        Method to add new RasterLayers to a Raster object.
+        """Method to add new RasterLayers to a Raster object.
         
         Note that this modifies the Raster object in-place by default.
 
@@ -1017,7 +1002,9 @@ class Raster(BaseRaster):
             combined_names = self._fix_names(combined_names)
 
             # update layers and names
-            combined_layers = list(self.loc.values()) + list(new_raster.loc.values())
+            combined_layers = (
+                list(self.loc.values()) + list(new_raster.loc.values()))
+            
             for layer, name in zip(combined_layers, combined_names):
                 layer.names = [name]
 
@@ -1030,16 +1017,15 @@ class Raster(BaseRaster):
                 return new_raster
 
     def drop(self, labels, in_place=True):
-        """
-        Drop individual RasterLayers from a Raster object.
+        """Drop individual RasterLayers from a Raster object.
         
         Note that this modifies the Raster object in-place by default.
         
         Parameters
         ---------
         labels : single label or list-like
-            Index (int) or layer name to drop. Can be a single integer or label,
-            or a list of integers or labels.
+            Index (int) or layer name to drop. Can be a single integer or
+            label, or a list of integers or labels.
         
         in_place : bool (opt). Default is True
             Whether to change the Raster object in-place or leave original and
@@ -1080,8 +1066,7 @@ class Raster(BaseRaster):
             return new_raster
 
     def rename(self, names, in_place=True):
-        """
-        Rename a RasterLayer within the Raster object.
+        """Rename a RasterLayer within the Raster object.
         
         Note that by default this modifies the Raster object in-place.
 
@@ -1120,8 +1105,7 @@ class Raster(BaseRaster):
 
     def plot(self, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
              names=None, **kwargs):
-        """
-        Plot a Raster object as a raster matrix.
+        """Plot a Raster object as a raster matrix.
 
         Parameters
         ----------
@@ -1169,7 +1153,8 @@ class Raster(BaseRaster):
         fig, axs = plt.subplots(rows, cols, **kwargs)
 
         # axs.flat is an iterator over the row-order flattened axs array
-        for ax, n, cmap, name in zip(axs.flat, range(self.count), cmaps, names):
+        for ax, n, cmap, name in zip(
+            axs.flat, range(self.count), cmaps, names):
 
             arr = self.iloc[n].read(masked=True, out_shape=out_shape)
 
@@ -1214,8 +1199,7 @@ class Raster(BaseRaster):
         return fig, axs
 
     def _newraster(self, file_path, names=None):
-        """
-        Return a new Raster object.
+        """Return a new Raster object.
 
         Parameters
         ----------
@@ -1251,8 +1235,7 @@ class Raster(BaseRaster):
     def mask(self, shapes, invert=False, crop=True, filled=True,
              pad=False, file_path=None, driver='GTiff', dtype=None,
              nodata=None):
-        """
-        Mask a Raster object based on the outline of shapes in a
+        """Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame.
 
         Parameters
@@ -1285,9 +1268,9 @@ class Raster(BaseRaster):
 
         dtype : str (opt)
             Coerce RasterLayers to the specified dtype. If not specified then
-            the cropped Raster is created using the existing dtype, which uses a
-            dtype that can accommodate the data types of all of the individual
-            RasterLayers.
+            the cropped Raster is created using the existing dtype, which uses
+            a dtype that can accommodate the data types of all of the
+            individual RasterLayers.
 
         nodata : any number (opt)
             Nodata value for cropped dataset. If not specified then a nodata
@@ -1312,7 +1295,8 @@ class Raster(BaseRaster):
         for layer in self.iloc:
             masked_arr, transform = rasterio.mask.mask(
                 dataset=layer.ds, shapes=[shapes.geometry.unary_union],
-                filled=filled, invert=invert, crop=crop, pad=pad, nodata=nodata)
+                filled=filled, invert=invert, crop=crop, pad=pad,
+                nodata=nodata)
 
             if layer.ds.count > 1:
                 masked_arr = masked_arr[layer.bidx - 1, :, :]
@@ -1347,8 +1331,7 @@ class Raster(BaseRaster):
 
     def intersect(self, file_path=None, driver='GTiff', dtype=None,
                   nodata=None):
-        """
-        Perform a intersect operation on the Raster object.
+        """Perform a intersect operation on the Raster object.
 
         Computes the geometric intersection of the RasterLayers with the
         Raster object. This will cause nodata values in any of the rasters
@@ -1420,8 +1403,7 @@ class Raster(BaseRaster):
 
     def crop(self, bounds, file_path=None, driver='GTiff', dtype=None,
              nodata=None):
-        """
-        Crops a Raster object by the supplied bounds.
+        """Crops a Raster object by the supplied bounds.
 
         Parameters
         ----------
@@ -1499,8 +1481,7 @@ class Raster(BaseRaster):
 
     def to_crs(self, crs, resampling='nearest', file_path=None, driver='GTiff',
                nodata=None, n_jobs=1, warp_mem_lim=0, progress=False):
-        """
-        Reprojects a Raster object to a different crs.
+        """Reprojects a Raster object to a different crs.
 
         Parameters
         ----------
@@ -1606,8 +1587,7 @@ class Raster(BaseRaster):
 
     def aggregate(self, out_shape, resampling='nearest', file_path=None, 
                   driver='GTiff', dtype=None, nodata=None):
-        """
-        Aggregates a raster to (usually) a coarser grid cell size.
+        """Aggregates a raster to (usually) a coarser grid cell size.
 
         Parameters
         ----------
@@ -1685,8 +1665,7 @@ class Raster(BaseRaster):
 
     def calc(self, function, file_path=None, driver='GTiff', dtype=None,
              nodata=None, progress=False):
-        """
-        Apply user-supplied function to a Raster object.
+        """Apply user-supplied function to a Raster object.
 
         Parameters
         ----------
@@ -1777,8 +1756,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def block_shapes(self, rows, cols):
-        """
-        Generator for windows for optimal reading and writing based on the
+        """Generator for windows for optimal reading and writing based on the
         raster format Windows are returns as a tuple with xoff, yoff, width,
         height.
 
@@ -1806,8 +1784,7 @@ class Raster(BaseRaster):
                 yield Window(i, j, num_cols, num_rows)
 
     def _extract_by_indices(self, rows, cols):
-        """
-        Spatial query of Raster object (by-band).
+        """Spatial query of Raster object (by-band).
         """
         X = np.ma.zeros((len(rows), self.count), dtype='float32')
 
