@@ -596,7 +596,8 @@ class BaseRaster(object):
 
             return gdf
         
-        y = y.squeeze()
+        if y is not None:
+            y = y.squeeze()
         
         return X, y, xy
 
