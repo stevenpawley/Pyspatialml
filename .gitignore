@@ -84,3 +84,6 @@ docs/.eggs/pytest_runner-5.1-py3.7.egg/EGG-INFO/top_level.txt
 docs/.eggs/pytest_runner-5.1-py3.7.egg/EGG-INFO/WHEEL
 docs/.eggs/pytest_runner-5.1-py3.7.egg/ptr.py
 docs/.eggs/README.txt
+pyspatialml.egg-info/dependency_links.txt
+pyspatialml/datasets/__pycache__/meuse.cpython-37.pyc
+pyspatialml/datasets/__pycache__/nc.cpython-37.pyc

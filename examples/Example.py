@@ -1,10 +1,14 @@
+from sklearn.model_selection import cross_validate
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegressionCV
 from pyspatialml import Raster
 from copy import deepcopy
 import os
 import geopandas
 import rasterio.plot
 import matplotlib.pyplot as plt
-import pyspatialml.datasets.nc_dataset as nc
+from pyspatialml.datasets import nc
 import tempfile
 import rasterio
 
@@ -14,6 +18,33 @@ predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 # Create a RasterStack instance
 stack = Raster(predictors)
 stack.count
+
+training_py = geopandas.read_file(nc.polygons)
+training_pt = geopandas.read_file(nc.points)
+training_px = rasterio.open(os.path.join(nc.labelled_pixels))
+training_lines = deepcopy(training_py)
+training_lines['geometry'] = training_lines.geometry.boundary
+
+stack = Raster(predictors)
+df_points = stack.extract_vector(response=training_pt, columns='id')
+df_polygons = stack.extract_vector(response=training_py, columns='id')
+df_lines = stack.extract_vector(response=training_lines, columns='id')
+df_raster = stack.extract_raster(response=training_px, value_name='id')
+df_points.head()
+
+lr = Pipeline(
+    [('scaling', StandardScaler()),
+     ('classifier', LogisticRegressionCV(n_jobs=-1))])
+
+X = df_points.drop(columns=['id', 'geometry'])
+y = df_points.id
+lr.fit(X, y)
+
+result = stack.predict(estimator=lr, dtype='int16', nodata=0, as_df=True)
+result.plot()
+
+
+
 
 # Perform band math
 ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
@@ -150,9 +181,9 @@ plt.show()
 
 # Create a training dataset by extracting the raster values at the training point locations:
 stack = Raster(predictors)
-df_points = stack.extract_vector(response=training_pt, field='id')
-df_polygons = stack.extract_vector(response=training_py, field='id')
-df_lines = stack.extract_vector(response=training_lines, field='id')
+df_points = stack.extract_vector(response=training_pt, columns='id')
+df_polygons = stack.extract_vector(response=training_py, columns='id')
+df_lines = stack.extract_vector(response=training_lines, columns='id')
 df_raster = stack.extract_raster(response=training_px, value_name='id')
 df_points.head()
 
@@ -187,7 +218,10 @@ scores = cross_validate(
 scores['test_score'].mean()
 
 # prediction
+df = stack.read(as_df=True, masked=True)
+
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
+result = stack.predict(estimator=lr, dtype='int16', nodata=0, as_df=True)
 result_prob = stack.predict_proba(estimator=lr)
 result.names
 result_prob.names

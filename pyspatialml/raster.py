@@ -427,7 +427,7 @@ class Raster(BaseRaster):
                          dtype=np.find_common_type([np.float32], self.dtypes))
 
     def read(self, masked=False, window=None, out_shape=None,
-             resampling='nearest', **kwargs):
+             resampling='nearest', as_df=False, **kwargs):
         """Reads data from the Raster object into a numpy array.
 
         Overrides read BaseRaster class read method and replaces it with a
@@ -451,6 +451,12 @@ class Raster(BaseRaster):
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
             'max', 'med', 'min', 'mode', 'q1', 'q3'.
+        
+        as_df : bool (opt). Default is False
+            Whether to return the data as a pandas.DataFrame with columns
+            named by the RasterLayer names. Can be useful when using
+            scikit-learn ColumnTransformer to select columns based on
+            names rather than keeping track of indexes.
 
         **kwargs : dict
             Other arguments to pass to rasterio.DatasetReader.read method
@@ -494,7 +500,13 @@ class Raster(BaseRaster):
                 arr[i, :, :] = np.ma.MaskedArray(
                     data=arr[i, :, :], 
                     mask=np.isfinite(arr[i, :, :]).mask)
-                
+        
+        if as_df is True:
+            arr_flat = arr.reshape((arr.shape[1]*arr.shape[2], arr.shape[0]))
+            df = pd.DataFrame(data=arr_flat, columns=self.names)
+            
+            return df
+        
         return arr
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
@@ -685,7 +697,7 @@ class Raster(BaseRaster):
             windows = [window for ij, window in dst.block_windows()]
 
             # generator gets raster arrays for each window
-            data_gen = (self.read(window=window, masked=True)
+            data_gen = (self.read(window=window, masked=True, as_df=as_df)
                         for window in windows)
 
             if progress is True:
@@ -797,8 +809,9 @@ class Raster(BaseRaster):
                        self.block_shapes(*self._block_shape)]
 
             # generator gets raster arrays for each window
-            data_gen = (self.read(window=window, masked=True)
-                        for window in windows)
+            data_gen = (
+                self.read(window=window, masked=True)
+                for window in windows)
 
             if progress is True:
                 for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
@@ -846,7 +859,7 @@ class Raster(BaseRaster):
         """
 
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-
+    
         # reshape each image block matrix into a 2D matrix
         # first reorder into rows,cols,bands(transpose)
         # then resample into 2D array (rows=sample_n, cols=band_values)
@@ -855,14 +868,12 @@ class Raster(BaseRaster):
 
         # create mask for NaN values and replace with number
         flat_pixels_mask = flat_pixels.mask.copy()
-
-        # prediction
+        
+        # predict and replace masl
         result_cla = estimator.predict(flat_pixels)
-
-        # replace mask
         result_cla = np.ma.masked_array(
             data=result_cla, mask=flat_pixels_mask.any(axis=1))
-
+            
         # reshape the prediction from a 1D into 3D array [band, row, col]
         result_cla = result_cla.reshape((1, rows, cols))
 

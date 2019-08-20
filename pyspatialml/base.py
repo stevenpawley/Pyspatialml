@@ -579,8 +579,10 @@ class BaseRaster(object):
                 xy = np.ma.compress_rows(xy)
                 
                 if columns is not None:
+                    if y.ndim == 1:
+                        y = y[:, np.newaxis]
                     y = np.ma.compress_rows(y)
-
+            
             if columns is not None:
                 data = np.ma.column_stack((y, X))
                 column_names = columns + self.names
