@@ -697,7 +697,7 @@ class Raster(BaseRaster):
             windows = [window for ij, window in dst.block_windows()]
 
             # generator gets raster arrays for each window
-            data_gen = (self.read(window=window, masked=True, as_df=as_df)
+            data_gen = (self.read(window=window, masked=True)
                         for window in windows)
 
             if progress is True:

@@ -19,33 +19,6 @@ predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 stack = Raster(predictors)
 stack.count
 
-training_py = geopandas.read_file(nc.polygons)
-training_pt = geopandas.read_file(nc.points)
-training_px = rasterio.open(os.path.join(nc.labelled_pixels))
-training_lines = deepcopy(training_py)
-training_lines['geometry'] = training_lines.geometry.boundary
-
-stack = Raster(predictors)
-df_points = stack.extract_vector(response=training_pt, columns='id')
-df_polygons = stack.extract_vector(response=training_py, columns='id')
-df_lines = stack.extract_vector(response=training_lines, columns='id')
-df_raster = stack.extract_raster(response=training_px, value_name='id')
-df_points.head()
-
-lr = Pipeline(
-    [('scaling', StandardScaler()),
-     ('classifier', LogisticRegressionCV(n_jobs=-1))])
-
-X = df_points.drop(columns=['id', 'geometry'])
-y = df_points.id
-lr.fit(X, y)
-
-result = stack.predict(estimator=lr, dtype='int16', nodata=0, as_df=True)
-result.plot()
-
-
-
-
 # Perform band math
 ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
 ndvi = Raster(ndvi)
