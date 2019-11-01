@@ -591,7 +591,9 @@ class BaseRaster(object):
                 data = X
                 column_names = self.names
 
-            gdf = pd.DataFrame(data, columns=column_names, dtype=self.meta['dtype'])
+            gdf = pd.DataFrame(data, columns=column_names)
+            df_dtypes = {k: v for k, v in zip(self.names, self.dtypes)}
+            gdf = gdf.astype(df_dtypes)
             gdf['geometry'] = list(zip(xy[:, 0], xy[:, 1]))
             gdf['geometry'] = gdf['geometry'].apply(Point)
             gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs=self.crs)
