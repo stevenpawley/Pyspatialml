@@ -95,3 +95,9 @@ pyspatialml/datasets/__pycache__/nc.cpython-37.pyc
 .eggs/pytest_runner-5.2-py3.7.egg/EGG-INFO/PKG-INFO
 .eggs/pytest_runner-5.2-py3.7.egg/EGG-INFO/LICENSE
 .eggs/pytest_runner-5.2-py3.7.egg/EGG-INFO/entry_points.txt
+
+pyspatialml/__pycache__/base\.cpython-36\.pyc
+
+pyspatialml/__pycache__/preprocessing\.cpython-36\.pyc
+
+pyspatialml/__pycache__/raster\.cpython-36\.pyc
