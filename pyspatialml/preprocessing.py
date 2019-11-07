@@ -95,7 +95,7 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     pyspatialml.Raster object
     """
 
-    arr = np.zeros(layer.shape)
+    arr = np.zeros(layer.shape, dtype=np.float32)
     arr = arr[np.newaxis, :, :]
     xyarrays = np.repeat(arr[0:1, :, :], 2, axis=0)
     xx, xy = np.meshgrid(np.arange(arr.shape[2]), np.arange(arr.shape[1]))
@@ -152,7 +152,7 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     # define x and y grid dimensions
     xmin, ymin, xmax, ymax = 0, 0, layer.shape[1], layer.shape[0]
     x_range = np.arange(start=xmin, stop=xmax, step=1)
-    y_range = np.arange(start=ymin, stop=ymax, step=1)
+    y_range = np.arange(start=ymin, stop=ymax, step=1, dtype=np.float32)
 
     X_var, Y_var, _ = np.meshgrid(x_range, y_range, n_angles)
     angles = np.deg2rad(np.linspace(0, 180, n_angles, endpoint=False))
@@ -264,7 +264,8 @@ def _grid_distance(shape, rows, cols):
     """
 
     # create buffer distances
-    grids_buffers = np.zeros((shape[0], shape[1], rows.shape[0]))
+    grids_buffers = np.zeros((shape[0], shape[1], rows.shape[0]),
+                             dtype=np.float32)
 
     for i, (y, x) in enumerate(zip(rows, cols)):
         # create 2d array (image) with pick indexes set to z

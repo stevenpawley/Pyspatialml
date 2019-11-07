@@ -424,7 +424,7 @@ class Raster(BaseRaster):
                          width=self.width,
                          height=self.height,
                          count=self.count,
-                         dtype=np.find_common_type([np.float32], self.dtypes))
+                         dtype=np.find_common_type(self.dtypes, []))
 
     def read(self, masked=False, window=None, out_shape=None,
              resampling='nearest', as_df=False, **kwargs):
@@ -616,7 +616,7 @@ class Raster(BaseRaster):
 
     def predict_proba(self, estimator, file_path=None, indexes=None,
                       driver='GTiff', dtype=None, nodata=None,
-                      progress=True):
+                      progress=False):
         """Apply class probability prediction of a scikit learn model to a
         Raster.
 
@@ -648,7 +648,7 @@ class Raster(BaseRaster):
             value is derived from the minimum permissible value for the given
             data type.
 
-        progress : bool (opt). Default is True
+        progress : bool (opt). Default is False
             Show progress bar for prediction.
 
         Returns
@@ -727,7 +727,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def predict(self, estimator, file_path=None, driver='GTiff', dtype=None,
-                nodata=None, progress=True):
+                nodata=None, progress=False):
         """Apply prediction of a scikit learn model to a Raster. The model can
         represent any scikit learn model or compatible api with a `fit` and
         `predict` method. These can consist of classification or regression
@@ -756,7 +756,7 @@ class Raster(BaseRaster):
             value is derived from the minimum permissible value for the given
             data type.
 
-        progress : bool (opt). Default is True
+        progress : bool (opt). Default is False
             Show progress bar for prediction.
 
         Returns
