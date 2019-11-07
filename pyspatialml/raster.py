@@ -4,6 +4,7 @@ import math
 import tempfile
 from collections import Counter
 from collections import namedtuple
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -687,7 +688,7 @@ class Raster(BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = self.meta
+        meta = deepcopy(self.meta)
         meta.update(driver=driver, count=len(
             indexes), dtype=dtype, nodata=nodata)
 
@@ -798,7 +799,7 @@ class Raster(BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = self.meta
+        meta = deepcopy(self.meta)
         meta.update(driver=driver, count=len(
             indexes), dtype=dtype, nodata=nodata)
 
@@ -1291,7 +1292,7 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
-        meta = self.meta
+        meta = deepcopy(self.meta)
 
         if dtype is None:
             dtype = meta['dtype']
@@ -1377,7 +1378,7 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
-        meta = self.meta
+        meta = deepcopy(self.meta)
 
         if dtype is None:
             dtype = meta['dtype']
@@ -1463,7 +1464,7 @@ class Raster(BaseRaster):
                         height=max(rows)-min(rows))
 
         cropped_arr = self.read(masked=True, window=window)
-        meta = self.meta
+        meta = deepcopy(self.meta)
         aff = self.transform
 
         if dtype is None:
@@ -1564,7 +1565,7 @@ class Raster(BaseRaster):
             bottom=self.bounds.bottom,
             top=self.bounds.top)
 
-        meta = self.meta
+        meta = deepcopy(self.meta)
         meta['driver'] = driver
         meta['nodata'] = nodata
         meta['width'] = dst_width
@@ -1644,7 +1645,7 @@ class Raster(BaseRaster):
         arr = self.read(masked=True, out_shape=out_shape,
                         resampling=resampling)
 
-        meta = self.meta
+        meta = deepcopy(self.meta)
 
         if dtype is None:
             dtype = meta['dtype']
@@ -1735,7 +1736,7 @@ class Raster(BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = self.meta
+        meta = deepcopy(self.meta)
         meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
 
         with rasterio.open(file_path, 'w', **meta) as dst:

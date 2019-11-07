@@ -54,7 +54,7 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     # create new stack
     file_path, tfile = _file_path_tempfile(file_path)
 
-    meta = layer.ds.meta
+    meta = deepcopy(layer.ds.meta)
     meta['driver'] = driver
     meta['nodata'] = -99999
     meta['count'] = arr_ohe.shape[0]
@@ -105,7 +105,7 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     # create new stack
     file_path, tfile = _file_path_tempfile(file_path)
 
-    meta = layer.meta
+    meta = deepcopy(layer.meta)
     meta['driver'] = driver
     meta['count'] = 2
     meta['dtype'] = xyarrays.dtype
@@ -164,7 +164,7 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     # create new stack
     file_path, tfile = _file_path_tempfile(file_path)
 
-    meta = layer.meta
+    meta = deepcopy(layer.meta)
     meta['driver'] = driver
     meta['count'] = n_angles
     meta['dtype'] = grids_directional.dtype
@@ -222,7 +222,7 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
     # create new stack
     file_path, tfile = _file_path_tempfile(file_path)
 
-    meta = layer.meta
+    meta = deepcopy(layer.meta)
     meta['driver'] = driver
     meta['count'] = 5
     meta['dtype'] = arr.dtype
@@ -322,7 +322,7 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     # create new stack
     file_path, tfile = _file_path_tempfile(file_path)
 
-    meta = layer.meta
+    meta = deepcopy(layer.meta)
     meta['driver'] = driver
     meta['count'] = arr.shape[0]
     meta['dtype'] = arr.dtype
