@@ -14,7 +14,8 @@ from shapely.geometry import Point
 
 class BaseRaster(object):
     """
-    Raster base class that contains methods that apply both to RasterLayer and
+    Raster base class provides a general structure for Rasterlayer and Raster
+    objects, and contains methods that apply both to RasterLayer and
     Raster objects.
 
     Internally comprises a rasterio.Band object consisting of a named tuple of

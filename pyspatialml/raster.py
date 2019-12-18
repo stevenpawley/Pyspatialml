@@ -590,6 +590,7 @@ class Raster(BaseRaster):
         # read dataset using decimated reads
         out_shape = (round(self.shape[0] * scaling),
                      round(self.shape[1] * scaling))
+        
         arr = self.read(masked=True,
                         out_shape=out_shape,
                         resampling=resampling)
@@ -1244,10 +1245,10 @@ class Raster(BaseRaster):
 
         return raster
 
-    def mask(self, shapes, invert=False, crop=True, filled=True,
-             pad=False, file_path=None, driver='GTiff', dtype=None,
-             nodata=None):
-        """Mask a Raster object based on the outline of shapes in a
+    def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None, 
+             driver='GTiff', dtype=None, nodata=None):
+        """
+        Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame.
 
         Parameters
@@ -1261,11 +1262,6 @@ class Raster(BaseRaster):
 
         crop : bool (opt). Default is True
             Crop the raster to the extent of the shapes.
-
-        filled : bool (opt). Default is True
-            If True, the pixels outside the features will be set to nodata.
-            If False, the output array will contain the original pixel data,
-            and only the mask will be based on shapes.
 
         pad : bool (opt). Default is False
             If True, the features will be padded in each direction by one half
@@ -1290,6 +1286,10 @@ class Raster(BaseRaster):
             data type. Note that this changes the values of the pixels to the
             new nodata value, and changes the metadata of the raster.
         """
+        
+        # some checks
+        if invert is True:
+            crop = False
 
         file_path, tfile = _file_path_tempfile(file_path)
         meta = deepcopy(self.meta)
@@ -1305,21 +1305,21 @@ class Raster(BaseRaster):
         masked_ndarrays = []
 
         for layer in self.iloc:
+            # set pixels outside of mask to raster band's nodata value
             masked_arr, transform = rasterio.mask.mask(
                 dataset=layer.ds, shapes=[shapes.geometry.unary_union],
-                filled=filled, invert=invert, crop=crop, pad=pad,
-                nodata=nodata)
+                filled=False, invert=invert, crop=crop, pad=pad)
 
             if layer.ds.count > 1:
                 masked_arr = masked_arr[layer.bidx - 1, :, :]
 
             else:
-                masked_arr = np.squeeze(masked_arr)
+                masked_arr = np.ma.squeeze(masked_arr)
 
             masked_ndarrays.append(masked_arr)
 
         # stack list of 2d arrays into 3d array
-        masked_ndarrays = np.stack(masked_ndarrays)
+        masked_ndarrays = np.ma.stack(masked_ndarrays)
 
         # write to file
         meta['transform'] = transform
@@ -1328,7 +1328,7 @@ class Raster(BaseRaster):
         meta['height'] = masked_ndarrays.shape[1]
         meta['width'] = masked_ndarrays.shape[2]
 
-        masked_ndarrays = np.ma.filled(masked_ndarrays, fill_value=nodata)
+        masked_ndarrays = masked_ndarrays.filled(fill_value=nodata)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(masked_ndarrays.astype(dtype))
@@ -1479,6 +1479,8 @@ class Raster(BaseRaster):
         meta['driver'] = driver
         meta['nodata'] = nodata
         meta['dtype'] = dtype
+        
+        cropped_arr = cropped_arr.filled(fill_value=nodata)
 
         with rasterio.open(file_path, 'w', **meta) as dst:
             dst.write(cropped_arr.astype(dtype))
@@ -1502,18 +1504,18 @@ class Raster(BaseRaster):
 
         resampling : str (opt)
             Resampling method to use.  One of the following:
-            Resampling.nearest,
-            Resampling.bilinear,
-            Resampling.cubic,
-            Resampling.cubic_spline,
-            Resampling.lanczos,
-            Resampling.average,
-            Resampling.mode,
-            Resampling.max (GDAL >= 2.2),
-            Resampling.min (GDAL >= 2.2),
-            Resampling.med (GDAL >= 2.2),
-            Resampling.q1 (GDAL >= 2.2),
-            Resampling.q3 (GDAL >= 2.2)
+            nearest,
+            bilinear,
+            cubic,
+            cubic_spline,
+            lanczos,
+            average,
+            mode,
+            max (GDAL >= 2.2),
+            min (GDAL >= 2.2),
+            med (GDAL >= 2.2),
+            q1 (GDAL >= 2.2),
+            q3 (GDAL >= 2.2)
 
         file_path : str (opt)
             Optional path to save reprojected Raster object. If not
@@ -1547,6 +1549,11 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
+        
+        if nodata is None:
+            nodata = _get_nodata(self.meta['dtype'])
+        
+        dtype = self.meta['dtype']
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
@@ -1566,28 +1573,27 @@ class Raster(BaseRaster):
             top=self.bounds.top)
 
         meta = deepcopy(self.meta)
-        meta['driver'] = driver
         meta['nodata'] = nodata
         meta['width'] = dst_width
         meta['height'] = dst_height
         meta['transform'] = dst_transform
         meta['crs'] = crs
 
-        with rasterio.open(file_path, 'w', **meta) as dst:
-            if progress is True:
-                t = tqdm(total=self.count)
-                for i, layer in enumerate(self.iloc):
-                    reproject(
-                        source=rasterio.band(layer.ds, layer.bidx),
-                        destination=rasterio.band(dst, i+1),
-                        dst_transform=dst_transform,
-                        dst_crs=crs,
-                        dst_nodata=nodata,
-                        resampling=rasterio.enums.Resampling[resampling],
-                        num_threads=n_jobs,
-                        warp_mem_lim=warp_mem_lim)
-                    if progress is True:
-                        t.update()
+        if progress is True:
+            t = tqdm(total=self.count)
+        
+        with rasterio.open(file_path, 'w', driver=driver, **meta) as dst:
+                
+            for i, layer in enumerate(self.iloc):
+                reproject(
+                    source=rasterio.band(layer.ds, layer.bidx),
+                    destination=rasterio.band(dst, i+1),
+                    resampling=rasterio.enums.Resampling[resampling],
+                    num_threads=n_jobs,
+                    warp_mem_lim=warp_mem_lim)
+                
+                if progress is True:
+                    t.update()
 
         new_raster = self._newraster(file_path, self.names)
 
@@ -1652,6 +1658,8 @@ class Raster(BaseRaster):
 
         if nodata is None:
             nodata = _get_nodata(dtype)
+        
+        arr = arr.filled(fill_value=nodata)
 
         meta['driver'] = driver
         meta['nodata'] = nodata
