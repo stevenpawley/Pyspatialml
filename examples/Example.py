@@ -26,43 +26,15 @@ mask_py.plot()
 masked_object = stack.mask(mask_py, invert=False, pad=True)
 masked_object.plot()
 
+# cropping
+training_py = geopandas.read_file(nc.polygons)
+crop_bounds = training_py.loc[0, 'geometry'].bounds
+stack_cropped = stack.crop(crop_bounds)
+stack_cropped.plot()
+
 # reprojection
 stack_prj = stack.to_crs({'init': 'EPSG:4326'})
-stack_prj.lsat7_2000_10.plot()
-
-from rasterio.warp import reproject, calculate_default_transform
-import numpy as np
-
-dst_transform, dst_width, dst_height = calculate_default_transform(
-    src_crs=stack.crs,
-    dst_crs={'init': 'EPSG:4326'},
-    width=stack.width,
-    height=stack.height,
-    left=stack.bounds.left,
-    right=stack.bounds.right,
-    bottom=stack.bounds.bottom,
-    top=stack.bounds.top)
-
-meta = deepcopy(stack.meta)
-meta['nodata'] = -99999
-meta['width'] = dst_width
-meta['height'] = dst_height
-meta['transform'] = dst_transform
-meta['crs'] = {'init': 'EPSG:4326'}
-
-with rasterio.open('/Users/steven/Downloads/test.tif', 'w', driver='GTiff', **meta) as dst:
-  for i, layer in enumerate(stack.iloc):
-    reproject(
-        source=rasterio.band(layer.ds, layer.bidx),
-        destination=rasterio.band(dst, i+1),
-        resampling=rasterio.enums.Resampling['nearest'],
-        num_threads=1,
-        warp_mem_lim=0)
-
-src = rasterio.open('/Users/steven/Downloads/test.tif')
-arr = src.read(1, masked=True)
-plt.imshow(arr)
-
+stack_prj.plot()
 
 # Perform band math
 ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])

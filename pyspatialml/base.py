@@ -680,6 +680,7 @@ class BaseRaster(object):
         else:
             return X, y, xy
 
+
 class TempRasterLayer():
     """Create a NamedTemporaryFile like object on Windows that has a close
     method. Workaround used on Windows which cannot open the file a second time

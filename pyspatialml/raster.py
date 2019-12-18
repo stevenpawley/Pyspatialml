@@ -1415,13 +1415,14 @@ class Raster(BaseRaster):
 
     def crop(self, bounds, file_path=None, driver='GTiff', dtype=None,
              nodata=None):
-        """Crops a Raster object by the supplied bounds.
+        """
+        Crops a Raster object by the supplied bounds.
 
         Parameters
         ----------
         bounds : tuple
             A tuple containing the bounding box to clip by in the
-            form of (xmin, xmax, ymin, ymax).
+            form of (xmin, ymin, xmax, ymax).
 
         file_path : str (opt)
             File path to save to cropped raster. If not supplied then the
