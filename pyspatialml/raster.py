@@ -12,6 +12,8 @@ import pandas as pd
 import rasterio
 import rasterio.mask
 import rasterio.plot
+import concurrent.futures
+import multiprocessing
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from rasterio.transform import Affine
 from rasterio.warp import calculate_default_transform, reproject
@@ -1714,7 +1716,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def calc(self, function, file_path=None, driver='GTiff', dtype=None,
-             nodata=None, progress=False):
+             nodata=None, progress=False, n_jobs=-1):
         """
         Apply user-supplied function to a Raster object.
 
@@ -1740,6 +1742,10 @@ class Raster(BaseRaster):
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this changes the values of the pixels that
             represent nodata pixels.
+        
+        n_jobs : int
+            Number of processing cores to use for parallel execution. Default
+            of -1 is all cores.
 
         progress : bool (opt). Default is False
             Optionally show progress of transform operations.
@@ -1751,22 +1757,23 @@ class Raster(BaseRaster):
         """
         
         file_path, tfile = _file_path_tempfile(file_path)
+        
+        n_cpus = multiprocessing.cpu_count()
 
-        # determine output dimensions
-        window = Window(0, 0, 1, self.width)
+        if n_jobs < 0:
+            n_jobs = n_cpus + n_jobs + 1
+
+        # perform test calculation determine dimensions, dtype, nodata
+        window = Window(0, 0, self.width, 1)
         img = self.read(masked=True, window=window)
         arr = function(img)
 
-        if len(arr.shape) > 2:
-            indexes = range(arr.shape[0])
+        if np.ndim(arr) > 2:
+            indexes = np.arange(1, arr.shape[0] + 1)
             count = len(indexes)
         else:
             indexes = 1
             count = 1
-
-        # perform test calculation
-        arr = self.read(masked=True, window=Window(0, 0, 1, 1))
-        arr = function(arr)
 
         if dtype is None:
             dtype = arr.dtype
@@ -1787,16 +1794,15 @@ class Raster(BaseRaster):
             data_gen = (self.read(window=window, masked=True)
                         for window in windows)
 
-            if progress is True:
-                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
-                    result = function(arr)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result.astype(dtype), window=window)
-            else:
-                for window, arr in zip(windows, data_gen):
-                    result = function(arr)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result.astype(dtype), window=window)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
+                if progress is True:
+                    for window, result, pbar in zip(windows, executor.map(function, data_gen), tqdm(windows)):
+                        result = np.ma.filled(result, fill_value=nodata)
+                        dst.write(result.astype(dtype), window=window, indexes=indexes)
+                else:
+                    for window, result in zip(windows, executor.map(function, data_gen)):
+                        result = np.ma.filled(result, fill_value=nodata)
+                        dst.write(result.astype(dtype), window=window, indexes=indexes)
 
         new_raster = self._newraster(file_path)
 

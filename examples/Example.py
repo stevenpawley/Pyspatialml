@@ -19,6 +19,18 @@ predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 stack = Raster(predictors)
 stack.count
 
+# calculation
+def compute(arr):
+  new_arr = arr[0, :, :] + arr[1, :, :]
+  return new_arr
+
+def compute(arr):
+  arr[0, :, :] = arr[0, :, :] + arr[1, : :]
+  return arr
+
+calculation = stack.calc(function=compute)
+calculation.plot()
+
 # masking
 training_py = geopandas.read_file(nc.polygons)
 mask_py = training_py.iloc[0:1, :]
