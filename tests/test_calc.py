@@ -33,6 +33,10 @@ class TestCalc(TestCase):
         self.assertEqual(calculation.count, 1)
         self.assertEqual(calculation.read(masked=True).count(), 183418)
 
+        # test that nodata value is properly recognised
+        self.assertEqual(calculation.read(masked=True).min(), 94)
+        self.assertEqual(calculation.read(masked=True).max(), 510)
+
     def test_calc_with_3d_output(self):
 
         def compute_outputs_3d_array(arr):
