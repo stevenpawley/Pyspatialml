@@ -1797,11 +1797,16 @@ class Raster(BaseRaster):
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
                 if progress is True:
-                    for window, result, pbar in zip(windows, executor.map(function, data_gen), tqdm(windows)):
+                    for window, result, pbar in zip(
+                        windows, executor.map(function, data_gen), 
+                        tqdm(windows)):
+
                         result = np.ma.filled(result, fill_value=nodata)
                         dst.write(result.astype(dtype), window=window, indexes=indexes)
                 else:
-                    for window, result in zip(windows, executor.map(function, data_gen)):
+                    for window, result in zip(
+                        windows, executor.map(function, data_gen)):
+                        
                         result = np.ma.filled(result, fill_value=nodata)
                         dst.write(result.astype(dtype), window=window, indexes=indexes)
 

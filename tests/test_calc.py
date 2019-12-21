@@ -1,6 +1,7 @@
 from unittest import TestCase
 from pyspatialml import Raster
 import pyspatialml.datasets.nc as nc
+import numpy as np
 
 
 class TestCalc(TestCase):
@@ -15,6 +16,18 @@ class TestCalc(TestCase):
             return new_arr
         
         calculation = self.stack.calc(compute_outputs_2d_array, n_jobs=1)
+        
+        self.assertIsInstance(calculation, Raster)
+        self.assertEqual(calculation.count, 1)
+        self.assertEqual(calculation.read(masked=True).count(), 183418)
+
+    def test_calc_with_2d_output_coerce_dtype(self):
+
+        def compute_outputs_2d_array(arr):
+            new_arr = arr[0, :, :] + arr[1, :, :]
+            return new_arr
+        
+        calculation = stack.calc(compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
         
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)

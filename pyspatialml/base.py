@@ -720,7 +720,6 @@ def _get_nodata(dtype):
         nodata = np.iinfo(dtype).min
     except ValueError:
         nodata = np.finfo(dtype).min
-        # nodata = -99999
 
     return nodata
 
