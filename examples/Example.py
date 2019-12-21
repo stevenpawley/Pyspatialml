@@ -220,7 +220,6 @@ scores['test_score'].mean()
 df = stack.read(as_df=True, masked=True)
 
 result = stack.predict(estimator=lr, dtype='int16', nodata=0)
-result = stack.predict(estimator=lr, dtype='int16', nodata=0, as_df=True)
 result_prob = stack.predict_proba(estimator=lr)
 result.names
 result_prob.names

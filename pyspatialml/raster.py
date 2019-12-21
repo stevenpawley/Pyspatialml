@@ -5,6 +5,7 @@ import tempfile
 from collections import Counter
 from collections import namedtuple
 from copy import deepcopy
+from functools import partial
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,14 +14,14 @@ import rasterio
 import rasterio.mask
 import rasterio.plot
 import concurrent.futures
-import multiprocessing
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from rasterio.transform import Affine
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
 
-from .base import BaseRaster, _file_path_tempfile, _get_nodata
+from .base import (BaseRaster, _file_path_tempfile, _get_nodata,
+                  _get_num_workers)
 from .indexing import ExtendedDict, LinkedList
 from .rasterlayer import RasterLayer
 
@@ -748,7 +749,7 @@ class Raster(BaseRaster):
         return new_raster
 
     def predict(self, estimator, file_path=None, driver='GTiff', dtype=None,
-                nodata=None, progress=False):
+                nodata=None, n_jobs=-1, progress=False):
         """
         Apply prediction of a scikit learn model to a Raster. The model can
         represent any scikit learn model or compatible api with a `fit` and
@@ -777,6 +778,10 @@ class Raster(BaseRaster):
             Nodata value for file export. If not specified then the nodata
             value is derived from the minimum permissible value for the given
             data type.
+        
+        n_jobs : int
+            Number of processing cores to use for parallel execution. Default
+            is n_jobs=1. -1 is all cores; -2 is all cores -1. 
 
         progress : bool (opt). Default is False
             Show progress bar for prediction.
@@ -791,6 +796,7 @@ class Raster(BaseRaster):
             n = 1, 2, 3 ..n.
         """
         file_path, tfile = _file_path_tempfile(file_path)
+        n_jobs = _get_num_workers(n_jobs)
 
         # determine output count for multi output cases
         window = Window(0, 0, self.width, 1)
@@ -809,9 +815,9 @@ class Raster(BaseRaster):
 
         # chose prediction function
         if len(indexes) == 1:
-            predfun = self._predfun
+            predfun = partial(self._predfun, estimator=estimator)
         else:
-            predfun = self._predfun_multioutput
+            predfun = partial(self._predfun_multioutput, estimator=estimator)
 
         if dtype is None:
             dtype = result.dtype
@@ -835,18 +841,17 @@ class Raster(BaseRaster):
                 self.read(window=window, masked=True)
                 for window in windows)
 
-            if progress is True:
-                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
-                    result = predfun(arr, estimator)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result[indexes, :, :].astype(
-                        dtype), window=window)
-            else:
-                for window, arr in zip(windows, data_gen):
-                    result = predfun(arr, estimator)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result[indexes, :, :].astype(
-                        dtype), window=window)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
+                if progress is True:
+                    for window, result, pbar in zip(windows, executor.map(predfun, data_gen), tqdm(windows)):
+                        result = np.ma.filled(result, fill_value=nodata)
+                        dst.write(result[indexes, :, :].astype(
+                            dtype), window=window)
+                else:
+                    for window, result in zip(windows, executor.map(predfun, data_gen)):
+                        result = np.ma.filled(result, fill_value=nodata)
+                        dst.write(result[indexes, :, :].astype(
+                            dtype), window=window)
 
         # generate layer names
         prefix = "pred_raw_"
@@ -1757,11 +1762,7 @@ class Raster(BaseRaster):
         """
         
         file_path, tfile = _file_path_tempfile(file_path)
-        
-        n_cpus = multiprocessing.cpu_count()
-
-        if n_jobs < 0:
-            n_jobs = n_cpus + n_jobs + 1
+        n_jobs = _get_num_workers(n_jobs)
 
         # perform test calculation determine dimensions, dtype, nodata
         window = Window(0, 0, self.width, 1)

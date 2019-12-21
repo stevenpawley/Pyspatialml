@@ -10,6 +10,7 @@ import rasterio
 from rasterio import features
 from rasterio.windows import Window
 from shapely.geometry import Point
+import multiprocessing
 
 
 class BaseRaster(object):
@@ -722,3 +723,12 @@ def _get_nodata(dtype):
         # nodata = -99999
 
     return nodata
+
+
+def _get_num_workers(n_jobs):
+    n_cpus = multiprocessing.cpu_count()
+
+    if n_jobs < 0:
+        n_jobs = n_cpus + n_jobs + 1
+
+    return n_jobs
