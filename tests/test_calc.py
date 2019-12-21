@@ -27,7 +27,7 @@ class TestCalc(TestCase):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
         
-        calculation = stack.calc(compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
+        calculation = self.stack.calc(compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
         
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)
