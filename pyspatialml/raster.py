@@ -392,6 +392,7 @@ class Raster(BaseRaster):
                 'Cannot create a Raster object from a mixture of input types')
 
         meta = self._check_alignment(layers)
+        
         if meta is False:
             raise ValueError(
                 'Raster datasets do not all have the same dimensions or '
@@ -1135,7 +1136,8 @@ class Raster(BaseRaster):
                 self.loc[old_name].names = [new_name]
 
                 # change name of layer in stack
-                self.loc[new_name] = self.loc.pop(old_name)
+                # self.loc[new_name] = self.loc.pop(old_name)
+                self.loc.rename(old_name, new_name)
         else:
             new_raster = self._newraster(self.files, self.names)
             for old_name, new_name in names.items():
@@ -1143,7 +1145,8 @@ class Raster(BaseRaster):
                 new_raster.loc[old_name].names = [new_name]
 
                 # change name of layer in stack
-                new_raster.loc[new_name] = new_raster.loc.pop(old_name)
+                # new_raster.loc[new_name] = new_raster.loc.pop(old_name)
+                new_raster.loc.rename(old_name, new_name)
                 
             return new_raster
 

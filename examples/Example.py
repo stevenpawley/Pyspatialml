@@ -98,10 +98,12 @@ print(subset_raster.lsat7_2000_10.read(masked=True).mean())
 print(subset_raster.lsat7_2000_70.read(masked=True).mean())
 
 # subsetting after name change
+band1_stats = stack.lsat7_2000_10.mean()
 stack.rename({'lsat7_2000_10': 'testme'})
 stack.names
 stack.iloc[-1].names
 stack[['testme', 'lsat7_2000_20']].names
+stack.testme.mean()
 Raster(layers=stack.iloc[-1]).names
 
 # Replace a layer

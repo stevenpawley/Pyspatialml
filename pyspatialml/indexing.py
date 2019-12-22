@@ -39,6 +39,15 @@ class ExtendedDict(Mapping):
         pop = self._dict.pop(key)
         delattr(self.parent, key)
         return pop
+    
+    def rename(self, old, new):
+        """
+        Renames a key while preserving the order
+        """
+        self._dict = OrderedDict([(new, v) if k == old else (k, v) 
+                                 for k, v in self._dict.items()])
+        delattr(self.parent, old)
+        setattr(self.parent, new, self._dict[new])
 
 
 class LinkedList(object):

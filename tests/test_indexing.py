@@ -91,16 +91,3 @@ class TestIndexing(TestCase):
         stack.append(Raster(nc.multiband))
         self.assertEqual(stack.names[6], 'landsat_multiband_1_1')
         self.assertEqual(stack.names[12], 'landsat_multiband_1_2')
-
-        # rename layers
-        band3_mean = stack.lsat7_2000_30.read(masked=True).mean()
-        stack.rename({'lsat7_2000_30': 'new_name'})
-        self.assertEqual(stack['new_name'].read(masked=True).mean(), band3_mean)
-        self.assertEqual(stack.new_name.read(masked=True).mean(), band3_mean)
-        self.assertEqual(stack.loc['new_name'].read(masked=True).mean(), band3_mean)
-        self.assertEqual(stack.iloc[-1].read(masked=True).mean(), band3_mean)
-
-        # Drop a layer
-        stack.names
-        stack.drop(labels='lsat7_2000_50')
-        self.assertNotIn('lsat7_2000_50', stack.names)
