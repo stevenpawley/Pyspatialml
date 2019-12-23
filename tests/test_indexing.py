@@ -48,6 +48,7 @@ class TestIndexing(TestCase):
         # subsetting after name change
         stack.rename({'lsat7_2000_10': 'testme'})
         expected_names = [
+            'testme',
             'lsat7_2000_20',
             'lsat7_2000_30',
             'lsat7_2000_40',
@@ -57,14 +58,17 @@ class TestIndexing(TestCase):
             'landsat_multiband_2',
             'landsat_multiband_3',
             'landsat_multiband_4',
-            'landsat_multiband_5',
-            'testme']
+            'landsat_multiband_5'
+            ]
+            
         self.assertListEqual(stack.names, expected_names)
-        self.assertListEqual(stack.iloc[-1].names, ['testme'])
-        self.assertListEqual(stack[['testme', 'lsat7_2000_20']].names, ['testme', 'lsat7_2000_20'])
+        self.assertListEqual(stack.iloc[0].names, ['testme'])
+        self.assertListEqual(
+            stack[['testme', 'lsat7_2000_20']].names, 
+            ['testme', 'lsat7_2000_20'])
 
         # check that RasterLayer internal name is carried over to new Raster
-        self.assertListEqual(Raster(stack.iloc[-1]).names, ['testme'])
+        self.assertListEqual(Raster(stack.iloc[0]).names, ['testme'])
 
     def test_indexing(self):
 
@@ -78,16 +82,3 @@ class TestIndexing(TestCase):
         self.assertEqual(stack.loc['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack.lsat7_2000_10.read(masked=True).mean(), band7_mean)
-
-        # append another Raster containing a single layer
-        stack.append(Raster(nc.band7))
-        self.assertEqual(stack.names[5], 'lsat7_2000_70_1')
-        self.assertEqual(stack.names[-1], 'lsat7_2000_70_2')
-        self.assertEqual(stack.lsat7_2000_70_1.read(masked=True).mean(),
-                         stack.lsat7_2000_70_2.read(masked=True).mean(),
-                         band7_mean)
-
-        # append a multiband raster
-        stack.append(Raster(nc.multiband))
-        self.assertEqual(stack.names[6], 'landsat_multiband_1_1')
-        self.assertEqual(stack.names[12], 'landsat_multiband_1_2')

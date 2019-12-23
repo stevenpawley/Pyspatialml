@@ -110,3 +110,4 @@ tests/__pycache__/test_intersect.cpython-37.pyc
 tests/__pycache__/test_rename.cpython-37.pyc
 tests/__pycache__/test_to_crs.cpython-37.pyc
 tests/__pycache__/test_tocrs.cpython-37.pyc
+tests/__pycache__/test_append.cpython-37.pyc
