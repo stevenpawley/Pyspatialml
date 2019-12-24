@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 from .base import (BaseRaster, _file_path_tempfile, _get_nodata,
                   _get_num_workers)
-from .indexing import ExtendedDict, LinkedList
+from .indexing import _LocIndexer, _iLocIndexer
 from .rasterlayer import RasterLayer
 
 
@@ -89,8 +89,8 @@ class Raster(BaseRaster):
             object
         """
 
-        self.loc = ExtendedDict(self)
-        self.iloc = LinkedList(self, self.loc)
+        self.loc = _LocIndexer(self)
+        self.iloc = _iLocIndexer(self, self.loc)
         self.files = []
         self.dtypes = []
         self.nodatavals = []
@@ -367,7 +367,7 @@ class Raster(BaseRaster):
 
         Returns
         -------
-        pyspatialml.indexing.ExtendedDict
+        pyspatialml.indexing._LocIndexer
             Returns a dict of key-value pairs of names and RasterLayers.
         """
         return self.loc
@@ -402,8 +402,8 @@ class Raster(BaseRaster):
         for name in self.names:
             delattr(self, name)
 
-        self.loc = ExtendedDict(self)
-        self.iloc = LinkedList(self, self.loc)
+        self.loc = _LocIndexer(self)
+        self.iloc = _iLocIndexer(self, self.loc)
         self.files = []
         self.dtypes = []
         self.nodatavals = []

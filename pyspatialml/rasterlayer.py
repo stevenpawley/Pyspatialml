@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 from rasterio.windows import Window
+from rasterio.fill import fillnodata
+from rasterio.features import sieve
 from scipy import ndimage
 from .base import _get_nodata, _file_path_tempfile
 
@@ -299,17 +301,161 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             
         return self.ds.read(indexes=self.bidx, **kwargs)
 
-    def fill(self):
-        raise NotImplementedError
+    def fill(self, mask=None, max_search_distance=100, smoothing_iterations=0,
+             file_path=None, driver='GTiff', dtype=None, nodata=None):
+        """
+        Fill nodata gaps in a RasterLayer. Thin wrapper around the
+        rasterio.fill.fillnodata method.
 
-    def sieve(self):
-        raise NotImplementedError
+        Parameters
+        ----------
+        mask : ndarray (opt)
+            Optionally provide a numpy array to indice which pixels
+            to fill. Pixels designated to fill should have zero values
+            in the mask, and values > 0 in the mask indicate pixels
+            to use for interpolation.
+        
+        max_search_distance : float (opt)
+            The maximum number of pixels in all directions to use
+            for interpolation.
+        
+        smoothing_iterations : integer (opt)
+            The number of 3x3 smoothing filter passes to run. The default
+            is 0.
+        
+        file_path : str (opt)
+            Optional path to save calculated Raster object. If not
+            specified then a tempfile is used.
 
-    def clump(self):
-        raise NotImplementedError
+        driver : str (opt). Default is 'GTiff'
+            Named of GDAL-supported driver for file export.
 
-    def focal(self):
-        raise NotImplementedError
+        nodata : any number (opt)
+            Nodata value for new dataset. If not specified then a nodata
+            value is set based on the minimum permissible value of the Raster's
+            data type.
+
+        dtype : str (opt)
+            Optionally specify a numpy compatible data type when saving to
+            file. If not specified, a data type is set based on the data type
+            of the RasterLayer.
+
+        Returns
+        -------
+        pyspatialml.RasterLayer
+            Filled RasterLayer
+        """
+
+        file_path, tfile = _file_path_tempfile(file_path)
+
+        if dtype is None:
+            dtype = self.dtype
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
+
+        arr = rasterio.fill.fillnodata(
+            image=self.read(masked=True), 
+            mask=mask,
+            max_search_distance=max_search_distance,
+            smoothing_iterations=smoothing_iterations)
+        
+        arr = np.ma.masked_equal(arr, self.nodata)
+        arr = arr.filled(fill_value=nodata)
+
+        meta = self.ds.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+        meta['dtype'] = dtype
+
+        with rasterio.open(file_path, mode='w', **meta) as dst:
+            dst.write(arr[np.newaxis, :, :].astype(dtype))
+
+        src = rasterio.open(file_path)
+        band = rasterio.band(src, 1)
+        layer = pyspatialml.RasterLayer(band)
+
+        # override RasterLayer close method if temp file is used
+        if tfile is not None:
+            layer.close = tfile.close
+
+        return layer
+
+    def sieve(self, size=2, mask=None, connectivity=4, file_path=None,
+              driver='GTiff', nodata=None, dtype=None):
+        """
+        Replace pixels with their largest neighbor. Thin wrapper around the
+        rasterio.features.sieve method.
+
+        Parameters
+        ----------
+        size : integer
+            Minimum number of contigous pixels to retain
+        
+        mask : ndarray (opt)
+            Values of False or 0 will be excluded from the sieving process
+        
+        connectivity : integer (opt)
+            Use 4 or 8 pixel connectivity for grouping pixels into features.
+            Default is 4.
+
+        file_path : str (opt)
+            Optional path to save calculated Raster object. If not
+            specified then a tempfile is used.
+
+        driver : str (opt). Default is 'GTiff'
+            Named of GDAL-supported driver for file export.
+
+        nodata : any number (opt)
+            Nodata value for new dataset. If not specified then a nodata
+            value is set based on the minimum permissible value of the Raster's
+            data type.
+
+        dtype : str (opt)
+            Optionally specify a numpy compatible data type when saving to
+            file. If not specified, a data type is set based on the data type
+            of the RasterLayer.
+
+        Returns
+        -------
+        pyspatialml.RasterLayer
+            Filled RasterLayer
+        """
+
+        file_path, tfile = _file_path_tempfile(file_path)
+
+        if dtype is None:
+            dtype = self.dtype
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
+
+        arr = sieve(
+            source=self.read(masked=True), 
+            size=size,
+            mask=mask,
+            connectivity=connectivity)
+
+        arr = np.ma.masked_equal(arr, 0)
+        arr = arr.filled(fill_value=nodata)
+
+        meta = self.ds.meta
+        meta['driver'] = driver
+        meta['nodata'] = nodata
+        meta['dtype'] = dtype
+
+        with rasterio.open(file_path, mode='w', **meta) as dst:
+            dst.write(arr[np.newaxis, :, :].astype(dtype))
+
+        src = rasterio.open(file_path)
+        band = rasterio.band(src, 1)
+        layer = pyspatialml.RasterLayer(band)
+
+        # override RasterLayer close method if temp file is used
+        if tfile is not None:
+            layer.close = tfile.close
+
+        return layer
 
     def distance(self, file_path=None, driver='GTiff', nodata=None):
         """
@@ -352,7 +498,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             dst.write(arr[np.newaxis, :, :].astype(dtype))
 
         src = rasterio.open(file_path)
-        band = rasterio.Band(src, 1)
+        band = rasterio.band(src, 1)
         layer = pyspatialml.RasterLayer(band)
 
         # override RasterLayer close method if temp file is used

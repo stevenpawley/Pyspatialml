@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from collections import OrderedDict
 
 
-class ExtendedDict(Mapping):
+class _LocIndexer(Mapping):
     """
     Dict that can return based on multiple keys
 
@@ -50,9 +50,9 @@ class ExtendedDict(Mapping):
         setattr(self.parent, new, self._dict[new])
 
 
-class LinkedList(object):
+class _iLocIndexer(object):
     """
-    Provides integer-based indexing of a ExtendedDict
+    Provides integer-based indexing of a _LocIndexer
 
     Args
     ---
@@ -61,9 +61,9 @@ class LinkedList(object):
         changes in the dict, reflecting changes in the RasterLayers occur
     """
 
-    def __init__(self, parent, extended_dict):
+    def __init__(self, parent, loc_indexer):
         self.parent = parent
-        self._index = extended_dict
+        self._index = loc_indexer
 
     def __setitem__(self, index, value):
 
