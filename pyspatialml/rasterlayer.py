@@ -9,6 +9,7 @@ from rasterio.fill import fillnodata
 from rasterio.features import sieve
 from scipy import ndimage
 from .base import _get_nodata, _file_path_tempfile
+from .plotting import discrete_cmap
 
 import pyspatialml.base
 
@@ -42,6 +43,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.driver = band.ds.meta['driver']
         self.meta = band.ds.meta
         self.cmap = 'viridis'
+        self.categorical = False
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
         self.close = band.ds.close
@@ -57,7 +59,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             Custom function that takes either one or two arrays, and
             returns a single array following a pre-defined calculation.
 
-        other : pyspatialml.RasterLayer (opt)
+        other : pyspatialml.RasterLayer (optional, default None)
             If not specified, then a `function` should be provided that performs
             a calculation using only the selected RasterLayer. If `other` is
             specified, then a `function` should be supplied that takes to
@@ -309,33 +311,33 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         Parameters
         ----------
-        mask : ndarray (opt)
+        mask : numpy.ndarray (optional, default None)
             Optionally provide a numpy array to indice which pixels
             to fill. Pixels designated to fill should have zero values
             in the mask, and values > 0 in the mask indicate pixels
             to use for interpolation.
         
-        max_search_distance : float (opt)
+        max_search_distance : float (default 100)
             The maximum number of pixels in all directions to use
             for interpolation.
         
-        smoothing_iterations : integer (opt)
+        smoothing_iterations : integer (default 0)
             The number of 3x3 smoothing filter passes to run. The default
             is 0.
         
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Optionally specify a numpy compatible data type when saving to
             file. If not specified, a data type is set based on the data type
             of the RasterLayer.
@@ -389,29 +391,29 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         Parameters
         ----------
-        size : integer
+        size : integer (default 2)
             Minimum number of contigous pixels to retain
         
-        mask : ndarray (opt)
+        mask : ndarray (optional, default None)
             Values of False or 0 will be excluded from the sieving process
         
-        connectivity : integer (opt)
+        connectivity : integer (default 4)
             Use 4 or 8 pixel connectivity for grouping pixels into features.
             Default is 4.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Optionally specify a numpy compatible data type when saving to
             file. If not specified, a data type is set based on the data type
             of the RasterLayer.
@@ -463,14 +465,14 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         Parameters
         ----------
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type.
@@ -507,18 +509,83 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         return layer
 
-    def plot(self, **kwargs):
+    def plot(self, cmap=None, ax=None, cax=None, figsize=None,
+             categorical=None, legend=False, vmin=None, vmax=None,
+             legend_kwds=None):
         """
         Plot a RasterLayer using matplotlib.pyplot.imshow
-        """
-        fig, ax = plt.subplots(**kwargs)
-        arr = self.read(masked=True)
-        im = ax.imshow(arr,
-                       extent=rasterio.plot.plotting_extent(self.ds),
-                       cmap=self.cmap)
-        plt.colorbar(im)
+
+        Parameters
+        ----------
+        cmap : str (default None)
+            The name of a colormap recognized by matplotlib.
         
-        return fig, ax
+        ax : matplotlib.pyplot.Artist (optional, default None)
+            axes instance on which to draw to plot.
+        
+        cax : matplotlib.pyplot.Artist (optional, default None)
+            axes on which to draw the legend.
+        
+        figsize : tuple of integers (optional, default None)
+            Size of the matplotlib.figure.Figure. If the ax
+            argument is given explicitly, figsize is ignored.
+                
+        categorical : bool (optional, default False)
+            if True then the raster values will be considered to represent
+            discrete values, otherwise they are considered to represent
+            continuous values. This overrides the  RasterLayer 'categorical'
+            attribute. Setting the argument categorical to True is ignored
+            if the RasterLayer.categorical is already True.
+        
+        legend : bool (optional, default False)
+            Whether to plot the legend.
+
+        vmin, xmax : scale (optional, default None)
+            vmin and vmax define the data range that the colormap covers.
+            By default, the colormap covers the complete value range of the
+            supplied data. vmin, vmax are ignored if the norm parameter is
+            used.
+        
+        legend_kwds : dict (optional, default None)
+            Keyword arguments to pass to matplotlib.pyplot.colorbar().
+
+        Returns
+        -------
+        ax : matplotlib axes instance
+        """
+        
+        if ax is None:
+            if cax is not None:
+                raise ValueError("'ax' can not be None if 'cax' is not.")
+            fig, ax = plt.subplots(figsize=figsize)
+        ax.set_aspect("equal")
+
+        if cmap is None:
+            cmap = self.cmap
+        
+        if legend_kwds is None:
+            legend_kwds = {}
+        
+        arr = self.read(masked=True)
+
+        if categorical is True:
+            if self.categorical is False:
+                N = np.bincount(arr)
+                cmap = discrete_cmap(N, base_cmap=cmap)
+            
+            vmin, vmax = None, None
+
+        im = ax.imshow(
+            X=arr,
+            extent=rasterio.plot.plotting_extent(self.ds),
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax)
+        
+        if legend is True:
+            plt.colorbar(im, cax=cax, ax=ax, **legend_kwds)
+        
+        return ax
 
     def _extract_by_indices(self, rows, cols):
         """

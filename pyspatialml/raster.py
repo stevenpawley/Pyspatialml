@@ -49,37 +49,37 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        src : file path, RasterLayer, or rasterio dataset (opt)
+        src : file path, RasterLayer, or rasterio dataset (optional, default None)
             Initiate a Raster object from any combination of a file path or
             list of file paths to GDAL-supported raster datasets, RasterLayer
             objects, or directly from a rasterio dataset or band object that is
             opened in 'r' or 'rw' mode.
 
-        arr : ndarray (opt)
+        arr : numpy.ndarray (optional, default None)
             Whether to initiate a Raster object from a numpy.ndarray. 
             Additional arguments `crs` and `transform` should also be provided
             to supply spatial coordinate information. Parameters `arr` and
             `src` are mutually-exclusive.
 
-        crs : rasterio.crs.CRS object (opt)
+        crs : rasterio.crs.CRS object (optional, default None)
             CRS object containing projection information for data if provided
             by the associated `arr` parameter.
 
-        transform : affine.Affine object (opt)
+        transform : affine.Affine object (optional, default None)
             Affine object containing transform information for data if provided
             by the associated `arr` parameter.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Assign a nodata value to the Raster dataset when `arr` is used
             for initiation. If a nodata value is not specified then it is
             determined based on the minimum permissible value for the array's
             data type.
 
-        mode : str (opt). Default is 'r'
+        mode : str (default 'r')
             Mode used to open the raster datasets. Can be one of 'r', 'r+' or
             'rw'.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Path to save new Raster object if created from `arr`.
 
         Returns
@@ -168,7 +168,7 @@ class Raster(BaseRaster):
         
         Parameters
         ----------
-        key : str or list
+        key : str, or list of str
             Key-based indexing of RasterLayer objects within the Raster.
             
         Returns
@@ -454,24 +454,24 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        masked : bool (opt). Default is False
+        masked : bool (default False)
             Read data into a masked array.
 
-        window : rasterio.window.Window object (opt)
+        window : rasterio.window.Window object (optional, default None)
             Tuple of col_off, row_off, width, height of a window of data
             to read a chunk of data into a ndarray.
 
-        out_shape : tuple (opt)
+        out_shape : tuple (optional, default None)
             Shape of shape of array (rows, cols) to read data into using
             decimated reads.
 
-        resampling : str (opt). Default is 'nearest'
+        resampling : str (default 'nearest')
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
             'max', 'med', 'min', 'mode', 'q1', 'q3'.
         
-        as_df : bool (opt). Default is False
+        as_df : bool (default False)
             Whether to return the data as a pandas.DataFrame with columns
             named by the RasterLayer names. Can be useful when using
             scikit-learn ColumnTransformer to select columns based on
@@ -540,15 +540,15 @@ class Raster(BaseRaster):
         file_path : str
             File path used to save the Raster object.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default is 'GTiff'). 
             Name of GDAL driver used to save Raster data.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Optionally specify a numpy compatible data type when saving to
             file. If not specified, a data type is selected based on the data
             types of RasterLayers in the Raster object.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Optionally assign a new nodata value when saving to file. If not
             specified a nodata value based on the minimum permissible value for
             the data types of RasterLayers in the Raster object is used. Note
@@ -588,10 +588,10 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        max_pixels: int (opt). Default is 50000
+        max_pixels: int (default 50000)
             Maximum number of pixels to sample.
 
-        resampling : str (opt). Default is 'nearest'
+        resampling : str (default 'nearest')
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
@@ -648,30 +648,30 @@ class Raster(BaseRaster):
         estimator : estimator object implementing 'fit'
             The object to use to fit the data.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Path to a GeoTiff raster for the prediction results. If not
             specified then the output is written to a temporary file.
 
-        indexes : list of integers (opt)
+        indexes : list of integers (optional, default None)
             List of class indices to export. In some circumstances, only a
             subset of the class probability estimations are desired, for
             instance when performing a binary classification only the
             probabilities for the positive class may be desired.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Optionally specify a numpy compatible data type when saving to
             file. If not specified, a data type is set based on the data type
             of the prediction.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for file export. If not specified then the nodata
             value is derived from the minimum permissible value for the given
             data type.
 
-        progress : bool (opt). Default is False
+        progress : bool (default False)
             Show progress bar for prediction.
 
         Returns
@@ -763,28 +763,28 @@ class Raster(BaseRaster):
         estimator : estimator object implementing 'fit'
             The object to use to fit the data.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Path to a GeoTiff raster for the prediction results. If not
             specified then the output is written to a temporary file.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Optionally specify a numpy compatible data type when saving to file.
             If not specified, a data type is set based on the data types of
             the prediction.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for file export. If not specified then the nodata
             value is derived from the minimum permissible value for the given
             data type.
         
-        n_jobs : int
+        n_jobs : int (default -1)
             Number of processing cores to use for parallel execution. Default
             is n_jobs=1. -1 is all cores; -2 is all cores -1. 
 
-        progress : bool (opt). Default is False
+        progress : bool (default False)
             Show progress bar for prediction.
 
         Returns
@@ -1025,7 +1025,7 @@ class Raster(BaseRaster):
         other : Raster object, or list of Raster objects
             Object to append to the Raster.
         
-        in_place : bool (opt). Default is True
+        in_place : bool (default True)
             Whether to change the Raster object in-place or leave original and
             return a new Raster object.
 
@@ -1071,7 +1071,7 @@ class Raster(BaseRaster):
             Index (int) or layer name to drop. Can be a single integer or
             label, or a list of integers or labels.
         
-        in_place : bool (opt). Default is True
+        in_place : bool (default True)
             Whether to change the Raster object in-place or leave original and
             return a new Raster object.
 
@@ -1120,7 +1120,7 @@ class Raster(BaseRaster):
         names : dict
             dict of old_name : new_name
         
-        in_place : bool (opt). Default is True
+        in_place : bool (default True)
             Whether to change names of the Raster object in-place or leave
             original and return a new Raster object.
 
@@ -1150,42 +1150,45 @@ class Raster(BaseRaster):
                 
             return new_raster
 
-    def plot(self, out_shape=(100, 100), label_fontsize=8, title_fontsize=8,
-             names=None, **kwargs):
+    def plot(self, out_shape=(100, 100), figsize=None, label_fontsize=8,
+             title_fontsize=8, names=None, fig_kwds=None, legend_kwds=None):
         """
         Plot a Raster object as a raster matrix.
 
         Parameters
         ----------
-        out_shape : tuple (opt). Default is (100, 100)
+        out_shape : tuple (default (100, 100))
             Number of rows, cols to read from the raster datasets for plotting.
 
-        label_fontsize : any number (opt). Default is 8
+        label_fontsize : any number (default 8)
             Size in pts of labels.
 
-        title_fontsize : any number (opt). Default is 8
+        title_fontsize : any number (default 8)
             Size in pts of titles.
 
-        names : list (opt)
+        names : list (optional, default None)
             Optionally supply a list of names for each RasterLayer to override
             the default layer names for the titles.
 
-        **kwargs : dict
-            Additional arguments to pass when creating the figure object.
+        fig_kwds : dict (optional, default None)
+            Additional arguments to pass to the matplotlib.pyplot.figure call
+            when creating the figure object.
+
+        legend_kwds : dict (optional, default None)
+            Additional arguments to pass to the matplotlib.pyplot.colorbar call 
+            when creating the colorbar object.
 
         Returns
         -------
-        tuple
-
-        Two items
-            matplotlib.figure.Figure
-            matplotlib.axes.Axes
+        axs : numpy.ndarray
+            array of matplotlib.axes._subplots.AxesSubplot or 
+            single matplotlib.axes._subplots.AxesSubplot if Raster
+            object contains only a single layer.
         """
-
         if self.count == 1:
             fig, ax = self.iloc[0].plot()
-            return fig, ax
-
+            return ax
+        
         # estimate required number of rows and columns in figure
         rows = int(np.sqrt(self.count))
         cols = int(math.ceil(np.sqrt(self.count)))
@@ -1198,7 +1201,7 @@ class Raster(BaseRaster):
         if names is None:
             names = self.names
 
-        fig, axs = plt.subplots(rows, cols, **kwargs)
+        fig, axs = plt.subplots(rows, cols, **fig_kwds)
 
         # axs.flat is an iterator over the row-order flattened axs array
         for ax, n, cmap, name in zip(
@@ -1215,7 +1218,7 @@ class Raster(BaseRaster):
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="10%", pad=0.1)
-            cbar = plt.colorbar(im, cax=cax)
+            cbar = plt.colorbar(im, cax=cax, **legend_kwds)
             cbar.ax.tick_params(labelsize=label_fontsize)
 
             # hide tick labels by default when multiple rows or cols
@@ -1244,7 +1247,7 @@ class Raster(BaseRaster):
 
         plt.subplots_adjust()
 
-        return fig, axs
+        return axs
 
     def _newraster(self, file_path, names=None):
         """
@@ -1255,7 +1258,7 @@ class Raster(BaseRaster):
         file_path : str
             Path to files to create the new Raster object from.
 
-        names : list (opt)
+        names : list (optional, default None)
             List to name the RasterLayer objects in the stack. If not supplied
             then the names will be generated from the file names.
 
@@ -1292,31 +1295,31 @@ class Raster(BaseRaster):
         shapes : geopandas.GeoDataFrame
             GeoDataFrame containing masking features.
 
-        invert : bool (opt). Default is False
+        invert : bool (default False)
             If False then pixels outside shapes will be masked. If True then
             pixels inside shape will be masked.
 
-        crop : bool (opt). Default is True
+        crop : bool (default True)
             Crop the raster to the extent of the shapes.
 
-        pad : bool (opt). Default is False
+        pad : bool (default False)
             If True, the features will be padded in each direction by one half
             of a pixel prior to cropping raster.
 
-        file_path : str (opt). Default is None
+        file_path : str (optional, default None)
             File path to save to resulting Raster. If not supplied then the
             resulting Raster is saved to a temporary file
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then
             the cropped Raster is created using the existing dtype, which uses
             a dtype that can accommodate the data types of all of the
             individual RasterLayers.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for cropped dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this changes the values of the pixels to the
@@ -1388,20 +1391,20 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        file_path : str (opt)
+        file_path : str (optional, default None)
             File path to save to resulting Raster. If not supplied then the
             resulting Raster is saved to a temporary file.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then
             the new intersected Raster is created using the dtype of the
             existing Raster dataset, which uses a dtype that can accommodate
             the data types of all of the individual RasterLayers.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this changes the values of the pixels that
@@ -1461,20 +1464,20 @@ class Raster(BaseRaster):
             A tuple containing the bounding box to clip by in the
             form of (xmin, ymin, xmax, ymax).
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             File path to save to cropped raster. If not supplied then the
             cropped raster is saved to a temporary file.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff'). Default is 'GTiff'
             Named of GDAL-supported driver for file export.
         
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then
             the new intersected Raster is created using the dtype of the
             existing Raster dataset, which uses a dtype that can accommodate
             the data types of all of the individual RasterLayers.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this does not change the pixel nodata values
@@ -1541,7 +1544,7 @@ class Raster(BaseRaster):
         crs : rasterio.transform.CRS object, or dict
             Example: CRS({'init': 'EPSG:4326'})
 
-        resampling : str (opt)
+        resampling : str (default 'nearest')
             Resampling method to use.  One of the following:
             nearest,
             bilinear,
@@ -1556,29 +1559,29 @@ class Raster(BaseRaster):
             q1 (GDAL >= 2.2),
             q3 (GDAL >= 2.2)
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save reprojected Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then the existing
             nodata value of the Raster object is used, which can accommodate
             the dtypes of the individual layers in the Raster.
 
-        n_jobs : int (opt). Default is 1
+        n_jobs : int (default 1)
             The number of warp worker threads.
 
-        warp_mem_lim : int (opt). Default is 0
+        warp_mem_lim : int (default 0)
             The warp operation memory limit in MB. Larger values allow the
             warp operation to be carried out in fewer chunks. The amount of
             memory required to warp a 3-band uint8 2000 row x 2000 col
             raster to a destination of the same size is approximately
             56 MB. The default (0) means 64 MB with GDAL 2.2.
 
-        progress : bool (opt). Default is False
+        progress : bool (default False)
             Optionally show progress of transform operations.
 
         Returns
@@ -1652,26 +1655,26 @@ class Raster(BaseRaster):
         out_shape : tuple
             New shape in (rows, cols).
 
-        resampling : str, optional. Default is 'nearest'
+        resampling : str (default 'nearest')
             Resampling method to use when applying decimated reads when
             out_shape is specified. Supported methods are: 'average',
             'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos',
             'max', 'med', 'min', 'mode', 'q1', 'q3'.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             File path to save to cropped raster. If not supplied then the
             aggregated raster is saved to a temporary file.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
         
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then
             the new intersected Raster is created using the dtype of the
             existing Raster dataset, which uses a dtype that can accommodate
             the data types of all of the individual RasterLayers.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             dtype. Note that this does not change the pixel nodata values of
@@ -1733,29 +1736,29 @@ class Raster(BaseRaster):
         function : function
             Function that takes an numpy array as a single argument.
 
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        dtype : str (opt)
+        dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then
             the new Raster is created using the dtype of the calculation
             result.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this changes the values of the pixels that
             represent nodata pixels.
         
-        n_jobs : int
+        n_jobs : int (default -1)
             Number of processing cores to use for parallel execution. Default
             of -1 is all cores.
 
-        progress : bool (opt). Default is False
+        progress : bool (default False)
             Optionally show progress of transform operations.
 
         Returns
@@ -1871,14 +1874,14 @@ class Raster(BaseRaster):
         dtype : str or np.dtype
             Datatype to coerce Raster object
         
-        file_path : str (opt)
+        file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not
             specified then a tempfile is used.
 
-        driver : str (opt). Default is 'GTiff'
+        driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
 
-        nodata : any number (opt)
+        nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata
             value is set based on the minimum permissible value of the Raster's
             data type. Note that this changes the values of the pixels that
