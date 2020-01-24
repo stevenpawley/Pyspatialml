@@ -69,8 +69,8 @@ import matplotlib.pyplot as plt
 We are going to use a set of Landsat 7 bands contained within the nc_dataset:
 
 ```
-import pyspatialml.datasets.nc_dataset as nc
 
+import pyspatialml.datasets.nc as nc
 predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 ```
 
