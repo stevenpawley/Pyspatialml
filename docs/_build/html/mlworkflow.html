@@ -86,8 +86,8 @@
 <li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">A Machine Learning Example</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#extraction-training-data">Extraction Training Data</a></li>
@@ -165,7 +165,7 @@
 <div class="section" id="extraction-training-data">
 <h2>Extraction Training Data<a class="headerlink" href="#extraction-training-data" title="Permalink to this headline">¶</a></h2>
 <p>Load some training data in the form of polygons, points and labelled pixels in
-geopandas GeoDataFrame objects. We will also generate some line geometries by
+<code class="docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code> objects. We will also generate some line geometries by
 converting the polygon boundaries into linestrings. All of these geometry types
 can be used to spatially query pixel values in a Raster object, however each
 GeoDataFrame must contain only one type of geometry (i.e. either shapely points,

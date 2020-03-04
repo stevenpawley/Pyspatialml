@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Raster Geoprocessing" href="geoprocessing.html" />
-    <link rel="prev" title="Plotting" href="plotting.html" /> 
+    <link rel="next" title="Random Sampling" href="sampling.html" />
+    <link rel="prev" title="Raster Geoprocessing" href="geoprocessing.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,13 +86,13 @@
 <li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing and Feature Engineering</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#raster-math">Raster Math</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#one-hot-encoding">One-Hot Encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#generating-grids-of-spatial-coordinates-information">Generating Grids of Spatial Coordinates Information</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
@@ -206,7 +206,7 @@ This is preferred because a user-defined function can be supplied to the method,
 and multiple calculations can be performed in one step within needing to repeatedly
 write intermediate results to temporary files. The user-defined calculate is memory-safe
 because it is also applied to the Raster object by reading and writing in windows. The
-size of the windows is set by the <code class="docutils literal notranslate"><span class="pre">`Raster_obj.block_shape`</span></code> attribute.</p>
+size of the windows is set by the <code class="docutils literal notranslate"><span class="pre">Raster_obj.block_shape</span></code> attribute.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span><span class="o">.</span><span class="n">block_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
 
 <span class="c1"># user-defined function that outputs a 2d array</span>
@@ -263,7 +263,7 @@ raster into a set of binary raster maps for each category:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The optional <code class="docutils literal notranslate"><span class="pre">`categories`</span></code> parameter allows a list of categories to be
+<p>The optional <code class="docutils literal notranslate"><span class="pre">categories</span></code> parameter allows a list of categories to be
 supplied so that only these categories are encoded.</p>
 </div>
 <div class="section" id="generating-grids-of-spatial-coordinates-information">
@@ -292,7 +292,7 @@ include them as additional predictors along with other raster-based data:</p>
 </pre></div>
 </div>
 <p>Alternatively, distance measures to reference points in the raster can be
-calculated using the <code class="docutils literal notranslate"><span class="pre">`pyspatialml.preprocessing.distance_to_samples`</span></code> function.
+calculated using the <code class="docutils literal notranslate"><span class="pre">pyspatialml.preprocessing.distance_to_samples</span></code> function.
 This function takes an existing RasterLayer to use as a template, and lists of
 row and column indices to calculate distance measures to each row, col pair:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspatialml.preprocessing</span> <span class="kn">import</span> <span class="n">distance_to_samples</span>
@@ -321,10 +321,10 @@ row and column indices to calculate distance measures to each row, col pair:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="geoprocessing.html" class="btn btn-neutral float-right" title="Raster Geoprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="sampling.html" class="btn btn-neutral float-right" title="Random Sampling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="plotting.html" class="btn btn-neutral float-left" title="Plotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="geoprocessing.html" class="btn btn-neutral float-left" title="Raster Geoprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

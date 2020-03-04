@@ -9,7 +9,7 @@ We are going to use a set of Landsat 7 bands contained within the nc example dat
 ::
 
     from pyspatialml import Raster
-    import pyspatialml.datasets.nc_dataset as nc
+    import pyspatialml.datasets.nc as nc
 
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
@@ -56,9 +56,9 @@ Examples of methods to subset a Raster object:
 
     # subset using labels
     single_layer = stack['lsat7_2000_10']  # key
-    single_layer stack.lsat7_2000_10  # attribute
+    single_layer = stack.lsat7_2000_10  # attribute
 
-    new_raster_obj = stack.loc[('lsat7_2000_10', 'lsat7_2000_20')]  # list or tuple of keys
+    new_raster_obj = stack[('lsat7_2000_10', 'lsat7_2000_20')]  # list or tuple of keys
 
 
 Iterate through RasterLayers individually:
@@ -94,7 +94,6 @@ Rename RasterLayers using a dict of old_name : new_name pairs:
     stack.names
     stack.new_name
     stack['new_name']
-    stack.loc['new_name']
 
 Drop a RasterLayer:
 ::
@@ -138,6 +137,8 @@ Saving a Raster to File
 
 Save a Raster:
 ::
+
+    import tempfile
 
     tmp_tif = tempfile.NamedTemporaryFile().name + '.tif'
     newstack = stack.write(file_path=tmp_tif, nodata=-9999)

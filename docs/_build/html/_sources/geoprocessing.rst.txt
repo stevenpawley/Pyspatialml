@@ -9,24 +9,24 @@ Outputs of Raster object methods do not need to passed explicitly
 Cropping a Raster
 #################
 
-Raster.crop method
+``Raster.crop`` method
 
 Masking a Raster
 ################
 
-Raster.mask method
+``Raster.mask`` method
 
 Intersecting Layers in a Raster
 ###############################
 
-Raster.intersect method
+``Raster.intersect`` method
 
 Reprojecting
 ############
 
-Raster.to_crs method
+``Raster.to_crs`` method
 
 Resampling
 ##########
 
-Raster.aggregate
+``Raster.aggregate`` method

@@ -166,12 +166,11 @@
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="initiating-a-raster-object">
 <h2>Initiating a Raster Object<a class="headerlink" href="#initiating-a-raster-object" title="Permalink to this headline">¶</a></h2>
-<p>We are going to use a set of Landsat 7 bands contained within the nc_dataset:</p>
+<p>We are going to use a set of Landsat 7 bands contained within the nc example data:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspatialml</span> <span class="kn">import</span> <span class="n">Raster</span>
-<span class="kn">import</span> <span class="nn">pyspatialml.datasets.nc_dataset</span> <span class="k">as</span> <span class="nn">nc</span>
+<span class="kn">import</span> <span class="nn">pyspatialml.datasets.nc</span> <span class="k">as</span> <span class="nn">nc</span>
 
-<span class="n">predictors</span> <span class="o">=</span> <span class="p">[</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span>
-              <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">]</span>
+<span class="n">predictors</span> <span class="o">=</span> <span class="p">[</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>These raster datasets are aligned in terms of their extent and coordinate
@@ -186,16 +185,16 @@ automatically generated from the file_paths.</p>
 <div class="section" id="subset-and-indexing">
 <h2>Subset and Indexing<a class="headerlink" href="#subset-and-indexing" title="Permalink to this headline">¶</a></h2>
 <p>Indexing of Raster objects is provided by several methods:</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">`Raster[keys]`</span></code> method enables key-based indexing using a name of a RasterLayer, or
+<p>The <code class="docutils literal notranslate"><span class="pre">Raster[keys]</span></code> method enables key-based indexing using a name of a RasterLayer, or
 a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only
 a single label is used, otherwise it always returns a new Raster object containing only the
 selected layers.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">`Raster.iloc[int,</span> <span class="pre">list,</span> <span class="pre">tuple,</span> <span class="pre">slice]`</span></code> method allows a Raster object instance to be
-subset using integer-based indexing or slicing. The iloc method returns a RasterLayer object
+<p>The <code class="docutils literal notranslate"><span class="pre">Raster.iloc[int,</span> <span class="pre">list,</span> <span class="pre">tuple,</span> <span class="pre">slice]</span></code> method allows a Raster object instance to be
+subset using integer-based indexing or slicing. The <code class="docutils literal notranslate"><span class="pre">iloc</span></code> method returns a RasterLayer object
 if only a single index is used, otherwise it always returns a new Raster object containing
 only the selected layers.</p>
 <p>Subsetting of a Raster object instance can also occur by using attribute names in the form of
-<code class="docutils literal notranslate"><span class="pre">`Raster.name_of_layer`</span></code>. Because only a single RasterLayer can be subset at one time using
+<code class="docutils literal notranslate"><span class="pre">Raster.name_of_layer</span></code>. Because only a single RasterLayer can be subset at one time using
 this approach, a RasterLayer object is always returned.</p>
 <p>Examples of methods to subset a Raster object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># subset based on position</span>
@@ -206,9 +205,9 @@ this approach, a RasterLayer object is always returned.</p>
 
 <span class="c1"># subset using labels</span>
 <span class="n">single_layer</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">]</span>  <span class="c1"># key</span>
-<span class="n">single_layer</span> <span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span>  <span class="c1"># attribute</span>
+<span class="n">single_layer</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span>  <span class="c1"># attribute</span>
 
-<span class="n">new_raster_obj</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">,</span> <span class="s1">&#39;lsat7_2000_20&#39;</span><span class="p">)]</span>  <span class="c1"># list or tuple of keys</span>
+<span class="n">new_raster_obj</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[(</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">,</span> <span class="s1">&#39;lsat7_2000_20&#39;</span><span class="p">)]</span>  <span class="c1"># list or tuple of keys</span>
 </pre></div>
 </div>
 <p>Iterate through RasterLayers individually:</p>
@@ -224,7 +223,7 @@ this approach, a RasterLayer object is always returned.</p>
 <div class="section" id="appending-and-dropping-layers">
 <h2>Appending and Dropping Layers<a class="headerlink" href="#appending-and-dropping-layers" title="Permalink to this headline">¶</a></h2>
 <p>Append layers from another Raster to the stack. Note that this occurs in-place by default,
-unless the <code class="docutils literal notranslate"><span class="pre">`in_place</span> <span class="pre">=</span> <span class="pre">False`</span></code> parameter is used. Duplicate names are automatically
+unless the <code class="docutils literal notranslate"><span class="pre">in_place</span> <span class="pre">=</span> <span class="pre">False</span></code> parameter is used. Duplicate names are automatically
 given a suffix:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Raster</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">))</span>
 <span class="n">stack</span><span class="o">.</span><span class="n">names</span>
@@ -236,7 +235,6 @@ given a suffix:</p>
 <span class="n">stack</span><span class="o">.</span><span class="n">names</span>
 <span class="n">stack</span><span class="o">.</span><span class="n">new_name</span>
 <span class="n">stack</span><span class="p">[</span><span class="s1">&#39;new_name&#39;</span><span class="p">]</span>
-<span class="n">stack</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;new_name&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>Drop a RasterLayer:</p>
@@ -248,7 +246,7 @@ given a suffix:</p>
 </div>
 <div class="section" id="integration-with-pandas">
 <h2>Integration with Pandas<a class="headerlink" href="#integration-with-pandas" title="Permalink to this headline">¶</a></h2>
-<p>Data from a Raster object can converted into a <code class="docutils literal notranslate"><span class="pre">`Pandas.DataDrame`</span></code>, with each pixel
+<p>Data from a Raster object can converted into a <code class="docutils literal notranslate"><span class="pre">Pandas.DataDrame</span></code>, with each pixel
 representing by a row, and columns reflecting the x, y coordinates and the
 values of each RasterLayer in the Raster object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -260,7 +258,7 @@ values of each RasterLayer in the Raster object:</p>
 <p>The original raster is up-sampled based on max_pixels and the resampling method,
 which uses all of resampling methods available in the underlying rasterio
 library for decimated reads. The Raster.to_pandas method can be useful for
-plotting datasets, or combining with a library such as <code class="docutils literal notranslate"><span class="pre">`plotnine`</span></code> to create
+plotting datasets, or combining with a library such as <code class="docutils literal notranslate"><span class="pre">plotnine</span></code> to create
 ggplot2-style plots of stacks of RasterLayers:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">plotnine</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -275,7 +273,9 @@ ggplot2-style plots of stacks of RasterLayers:</p>
 <div class="section" id="saving-a-raster-to-file">
 <h2>Saving a Raster to File<a class="headerlink" href="#saving-a-raster-to-file" title="Permalink to this headline">¶</a></h2>
 <p>Save a Raster:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tmp_tif</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="n">tmp_tif</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span>
 <span class="n">newstack</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">tmp_tif</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=-</span><span class="mi">9999</span><span class="p">)</span>
 <span class="n">newstack</span><span class="o">.</span><span class="n">new_name</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="n">newstack</span> <span class="o">=</span> <span class="kc">None</span>
