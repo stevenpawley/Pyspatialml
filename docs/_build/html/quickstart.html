@@ -86,15 +86,15 @@
 <li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#initiating-a-raster-object">Initiating a Raster Object</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#indexing">Indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#subset-and-indexing">Subset and Indexing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#appending-and-dropping-layers">Appending and Dropping Layers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#integration-with-pandas">Integration with Pandas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-a-raster-to-file">Saving a Raster to File</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
@@ -167,7 +167,8 @@
 <div class="section" id="initiating-a-raster-object">
 <h2>Initiating a Raster Object<a class="headerlink" href="#initiating-a-raster-object" title="Permalink to this headline">¶</a></h2>
 <p>We are going to use a set of Landsat 7 bands contained within the nc_dataset:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspatialml.datasets.nc_dataset</span> <span class="k">as</span> <span class="nn">nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspatialml</span> <span class="kn">import</span> <span class="n">Raster</span>
+<span class="kn">import</span> <span class="nn">pyspatialml.datasets.nc_dataset</span> <span class="k">as</span> <span class="nn">nc</span>
 
 <span class="n">predictors</span> <span class="o">=</span> <span class="p">[</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span>
               <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">]</span>
@@ -182,36 +183,37 @@ perform machine learning related operations on the set of rasters:</p>
 <p>Upon ‘stacking’, syntactically-correct names for each RasterLayer are
 automatically generated from the file_paths.</p>
 </div>
-<div class="section" id="indexing">
-<h2>Indexing<a class="headerlink" href="#indexing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="subset-and-indexing">
+<h2>Subset and Indexing<a class="headerlink" href="#subset-and-indexing" title="Permalink to this headline">¶</a></h2>
 <p>Indexing of Raster objects is provided by several methods:</p>
-<ul class="simple">
-<li><p>Raster.loc[key] : provides key-based indexing based on the names of the
-RasterLayers, and always returns a RasterLayer object. Unlike a regular dict,
-a list or tuple of keys can be provided to return multiple layers.</p></li>
-<li><p>Raster.iloc[int, list, tuple, slice] : provides integer-based indexing or
-slicing, and always returns a RasterLayer object, or list of RasterLayers.</p></li>
-<li><p>Raster[key] : provides key-based indexing, but returns a new Raster object
-with the subset layers.</p></li>
-<li><p>Raster.name : attribute names can be used directly, and always returns a
-single RasterLayer object.</p></li>
-</ul>
-<p>RasterLayer indexing which returns a RasterLayer:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># index</span>
-<span class="n">stack</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># slice</span>
-<span class="n">stack</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">]</span>  <span class="c1"># key</span>
-<span class="n">stack</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">,</span> <span class="s1">&#39;lsat7_2000_20&#39;</span><span class="p">)]</span>  <span class="c1"># list or tuple of keys</span>
-<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span>  <span class="c1"># attribute</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">`Raster[keys]`</span></code> method enables key-based indexing using a name of a RasterLayer, or
+a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only
+a single label is used, otherwise it always returns a new Raster object containing only the
+selected layers.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">`Raster.iloc[int,</span> <span class="pre">list,</span> <span class="pre">tuple,</span> <span class="pre">slice]`</span></code> method allows a Raster object instance to be
+subset using integer-based indexing or slicing. The iloc method returns a RasterLayer object
+if only a single index is used, otherwise it always returns a new Raster object containing
+only the selected layers.</p>
+<p>Subsetting of a Raster object instance can also occur by using attribute names in the form of
+<code class="docutils literal notranslate"><span class="pre">`Raster.name_of_layer`</span></code>. Because only a single RasterLayer can be subset at one time using
+this approach, a RasterLayer object is always returned.</p>
+<p>Examples of methods to subset a Raster object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># subset based on position</span>
+<span class="n">single_layer</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># subset using a slice</span>
+<span class="n">new_raster_obj</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># slice</span>
+
+<span class="c1"># subset using labels</span>
+<span class="n">single_layer</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">]</span>  <span class="c1"># key</span>
+<span class="n">single_layer</span> <span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span>  <span class="c1"># attribute</span>
+
+<span class="n">new_raster_obj</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">,</span> <span class="s1">&#39;lsat7_2000_20&#39;</span><span class="p">)]</span>  <span class="c1"># list or tuple of keys</span>
 </pre></div>
 </div>
-<p>Iterate through RasterLayers:</p>
+<p>Iterate through RasterLayers individually:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Subset a Raster object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subset_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[[</span><span class="s1">&#39;lsat7_2000_10&#39;</span><span class="p">,</span> <span class="s1">&#39;lsat7_2000_70&#39;</span><span class="p">]]</span>
-<span class="n">subset_raster</span><span class="o">.</span><span class="n">names</span>
 </pre></div>
 </div>
 <p>Replace a RasterLayer with another:</p>
@@ -221,8 +223,9 @@ single RasterLayer object.</p></li>
 </div>
 <div class="section" id="appending-and-dropping-layers">
 <h2>Appending and Dropping Layers<a class="headerlink" href="#appending-and-dropping-layers" title="Permalink to this headline">¶</a></h2>
-<p>Append layers from another Raster to the stack. Note that this occurs in-place.
-Duplicate names are automatically given a suffix:</p>
+<p>Append layers from another Raster to the stack. Note that this occurs in-place by default,
+unless the <code class="docutils literal notranslate"><span class="pre">`in_place</span> <span class="pre">=</span> <span class="pre">False`</span></code> parameter is used. Duplicate names are automatically
+given a suffix:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Raster</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">))</span>
 <span class="n">stack</span><span class="o">.</span><span class="n">names</span>
 </pre></div>
@@ -245,23 +248,27 @@ Duplicate names are automatically given a suffix:</p>
 </div>
 <div class="section" id="integration-with-pandas">
 <h2>Integration with Pandas<a class="headerlink" href="#integration-with-pandas" title="Permalink to this headline">¶</a></h2>
-<p>Data from a Raster object can converted into a Pandas dataframe, with each pixel
+<p>Data from a Raster object can converted into a <code class="docutils literal notranslate"><span class="pre">`Pandas.DataDrame`</span></code>, with each pixel
 representing by a row, and columns reflecting the x, y coordinates and the
 values of each RasterLayer in the Raster object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">(</span><span class="n">max_pixels</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">(</span><span class="n">max_pixels</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The original raster is up-sampled based on max_pixels and the resampling method,
 which uses all of resampling methods available in the underlying rasterio
 library for decimated reads. The Raster.to_pandas method can be useful for
-plotting datasets, or combining with a library such as plotnine to create
+plotting datasets, or combining with a library such as <code class="docutils literal notranslate"><span class="pre">`plotnine`</span></code> to create
 ggplot2-style plots of stacks of RasterLayers:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">plotnine</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]),</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">))</span> <span class="o">+</span>
+
+<span class="p">(</span>
+ <span class="n">ggplot</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]),</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">))</span> <span class="o">+</span>
  <span class="n">geom_tile</span><span class="p">()</span> <span class="o">+</span>
  <span class="n">facet_wrap</span><span class="p">(</span><span class="s1">&#39;variable&#39;</span><span class="p">)</span>
- <span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
