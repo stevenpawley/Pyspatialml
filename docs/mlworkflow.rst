@@ -5,11 +5,12 @@ Extraction Training Data
 ########################
 
 Load some training data in the form of polygons, points and labelled pixels in
-geopandas GeoDataFrame objects. We will also generate some line geometries by
+``geopandas.GeoDataFrame`` objects. We will also generate some line geometries by
 converting the polygon boundaries into linestrings. All of these geometry types
 can be used to spatially query pixel values in a Raster object, however each
 GeoDataFrame must contain only one type of geometry (i.e. either shapely points,
 polygons or linestrings).
+
 ::
 
     from pyspatialml import Raster
@@ -71,6 +72,7 @@ raster has to be spatially aligned with the Raster object. There is no field
 attribute for this method because the values of the labelled pixels are returned
 along with the queried pixel values, but the name of this column in the
 attribute can be set using the ``value_name`` argument.
+
 ::
 
     # Extract data from rasters at the training point locations:
@@ -116,6 +118,7 @@ groups can represent spatial clusters of training samples, and samples from the
 same group will never occur in both the training and test partitions of a
 cross-validation. An example of creating random spatial clusters from point
 coordinates is provided here:
+
 ::
 
     from sklearn.cluster import KMeans
@@ -146,6 +149,7 @@ a multi-band raster (a band for each class probability). In the latter case,
 ``indexes`` can also be supplied if you only want to output the probabilities
 for a particular class, or list of classes, by supplying the indices of those
 classes:
+
 ::
 
     # prediction

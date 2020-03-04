@@ -4,14 +4,15 @@ Quickstart
 Initiating a Raster Object
 ##########################
 
-We are going to use a set of Landsat 7 bands contained within the nc_dataset:
+We are going to use a set of Landsat 7 bands contained within the nc example data:
+
 ::
 
     from pyspatialml import Raster
     import pyspatialml.datasets.nc_dataset as nc
 
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                  nc.band7]
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+
 
 These raster datasets are aligned in terms of their extent and coordinate
 reference systems. We can 'stack' these into a Raster class so that we can
@@ -29,18 +30,18 @@ Subset and Indexing
 
 Indexing of Raster objects is provided by several methods:
 
-The ```Raster[keys]``` method enables key-based indexing using a name of a RasterLayer, or
+The ``Raster[keys]`` method enables key-based indexing using a name of a RasterLayer, or
 a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only
 a single label is used, otherwise it always returns a new Raster object containing only the
 selected layers.
 
-The ```Raster.iloc[int, list, tuple, slice]``` method allows a Raster object instance to be
-subset using integer-based indexing or slicing. The iloc method returns a RasterLayer object
+The ``Raster.iloc[int, list, tuple, slice]`` method allows a Raster object instance to be
+subset using integer-based indexing or slicing. The ``iloc`` method returns a RasterLayer object
 if only a single index is used, otherwise it always returns a new Raster object containing
 only the selected layers.
 
 Subsetting of a Raster object instance can also occur by using attribute names in the form of
-```Raster.name_of_layer```. Because only a single RasterLayer can be subset at one time using
+``Raster.name_of_layer``. Because only a single RasterLayer can be subset at one time using
 this approach, a RasterLayer object is always returned.
 
 Examples of methods to subset a Raster object:
@@ -76,7 +77,7 @@ Appending and Dropping Layers
 #############################
 
 Append layers from another Raster to the stack. Note that this occurs in-place by default,
-unless the ```in_place = False``` parameter is used. Duplicate names are automatically
+unless the ``in_place = False`` parameter is used. Duplicate names are automatically
 given a suffix:
 
 ::
@@ -105,7 +106,7 @@ Drop a RasterLayer:
 Integration with Pandas
 #######################
 
-Data from a Raster object can converted into a ```Pandas.DataDrame```, with each pixel
+Data from a Raster object can converted into a ``Pandas.DataDrame``, with each pixel
 representing by a row, and columns reflecting the x, y coordinates and the
 values of each RasterLayer in the Raster object:
 
@@ -119,7 +120,7 @@ values of each RasterLayer in the Raster object:
 The original raster is up-sampled based on max_pixels and the resampling method,
 which uses all of resampling methods available in the underlying rasterio
 library for decimated reads. The Raster.to_pandas method can be useful for
-plotting datasets, or combining with a library such as ```plotnine``` to create
+plotting datasets, or combining with a library such as ``plotnine`` to create
 ggplot2-style plots of stacks of RasterLayers:
 
 ::

@@ -58,7 +58,7 @@ This is preferred because a user-defined function can be supplied to the method,
 and multiple calculations can be performed in one step within needing to repeatedly
 write intermediate results to temporary files. The user-defined calculate is memory-safe
 because it is also applied to the Raster object by reading and writing in windows. The
-size of the windows is set by the ```Raster_obj.block_shape``` attribute.
+size of the windows is set by the ``Raster_obj.block_shape`` attribute.
 
 ::
 
@@ -122,7 +122,7 @@ raster into a set of binary raster maps for each category:
         driver='GTiff'
     )
 
-The optional ```categories``` parameter allows a list of categories to be
+The optional ``categories`` parameter allows a list of categories to be
 supplied so that only these categories are encoded.
 
 Generating Grids of Spatial Coordinates Information
@@ -156,7 +156,7 @@ include them as additional predictors along with other raster-based data:
 
 
 Alternatively, distance measures to reference points in the raster can be
-calculated using the ```pyspatialml.preprocessing.distance_to_samples``` function.
+calculated using the ``pyspatialml.preprocessing.distance_to_samples`` function.
 This function takes an existing RasterLayer to use as a template, and lists of
 row and column indices to calculate distance measures to each row, col pair:
 

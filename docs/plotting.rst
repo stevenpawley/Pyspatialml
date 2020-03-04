@@ -3,7 +3,7 @@ Plotting
 
 Basic plotting has been added to as a method to RasterLayer and Raster options.
 More controls on plotting will be added in the future. Currently you can set a
-matplotlib cmap for each RasterLayer using the RasterLayer.cmap attribute.
+matplotlib cmap for each RasterLayer using the ``RasterLayer.cmap`` attribute.
 
 Plot a single RasterLayer:
 ::

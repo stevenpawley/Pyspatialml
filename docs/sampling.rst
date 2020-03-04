@@ -8,6 +8,7 @@ For many spatial models, it is common to take a random sample of the predictors
 to represent a single class (i.e. an environmental background or pseudo-absences
 in a binary classification model). The sample function is supplied in the
 sampling module for this purpose:
+
 ::
 
     # extract training data using a random sample
@@ -23,6 +24,7 @@ categorical raster dataset to the strata argument. The categorical raster should
 spatially overlap with the dataset to be sampled, but it does not need to be of
 the same grid resolution. This raster should be passed as a opened rasterio
 dataset:
+
 ::
 
     with rasterio.open(nc.strata) as strata:
