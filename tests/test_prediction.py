@@ -14,16 +14,16 @@ class TestPrediction(TestCase):
 
         stack = Raster(self.predictors)
         training_pt = gpd.read_file(nc.points)
-        
-        df_points = stack.extract_vector(response=training_pt, columns='id')
+
+        df_points = stack.extract_vector(response=training_pt, columns="id")
 
         clf = RandomForestClassifier(n_estimators=50)
-        X = df_points.drop(columns=['id', 'geometry'])
+        X = df_points.drop(columns=["id", "geometry"])
         y = df_points.id
         clf.fit(X, y)
 
         # classification
-        cla = stack.predict(estimator=clf, dtype='int16', nodata=0)
+        cla = stack.predict(estimator=clf, dtype="int16", nodata=0)
         self.assertIsInstance(cla, Raster)
         self.assertEqual(cla.count, 1)
         self.assertEqual(cla.read(masked=True).count(), 135092)
@@ -39,15 +39,16 @@ class TestPrediction(TestCase):
     def test_regression(self):
 
         stack = Raster(ms.predictors)
-        
+
         training_pt = gpd.read_file(ms.meuse)
         training = stack.extract_vector(
-            response=training_pt, columns=['cadmium', 'copper', 'lead', 'zinc'])
+            response=training_pt, columns=["cadmium", "copper", "lead", "zinc"]
+        )
 
         # single target regression
         regr = RandomForestRegressor(n_estimators=50)
         X = training.loc[:, stack.names]
-        y = training['zinc']
+        y = training["zinc"]
         regr.fit(X, y)
 
         single_regr = stack.predict(regr)
@@ -55,7 +56,7 @@ class TestPrediction(TestCase):
         self.assertEqual(single_regr.count, 1)
 
         # multi-target regression
-        y = training.loc[:, ['zinc', 'cadmium', 'copper', 'lead']]
+        y = training.loc[:, ["zinc", "cadmium", "copper", "lead"]]
         regr.fit(X, y)
         multi_regr = stack.predict(regr)
         self.assertIsInstance(multi_regr, Raster)

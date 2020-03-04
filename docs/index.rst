@@ -28,8 +28,8 @@ Contents
     design
     quickstart
     plotting
-    preprocessing
     geoprocessing
+    preprocessing
     sampling
     mlworkflow
     modules

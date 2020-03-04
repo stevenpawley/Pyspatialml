@@ -16,7 +16,7 @@ class TestMask(TestCase):
     def test_mask_defaults(self):
 
         masked_object = self.stack.mask(self.mask_py)
-            
+
         # check raster object
         self.assertIsInstance(masked_object, Raster)
         self.assertEqual(masked_object.count, self.stack.count)
@@ -29,7 +29,7 @@ class TestMask(TestCase):
     def test_mask_inverted(self):
 
         masked_object = self.stack.mask(self.mask_py, invert=True)
-            
+
         # check raster object
         self.assertIsInstance(masked_object, Raster)
         self.assertEqual(masked_object.count, self.stack.count)
@@ -42,7 +42,7 @@ class TestMask(TestCase):
     def test_mask_custom_dtype(self):
 
         masked_object = self.stack.mask(self.mask_py, dtype=np.int16)
-            
+
         # check raster object
         self.assertIsInstance(masked_object, Raster)
         self.assertEqual(masked_object.count, self.stack.count)
@@ -55,7 +55,7 @@ class TestMask(TestCase):
     def test_mask_custom_nodata(self):
 
         masked_object = self.stack.mask(self.mask_py, nodata=-99999)
-            
+
         # check raster object
         self.assertIsInstance(masked_object, Raster)
         self.assertEqual(masked_object.count, self.stack.count)

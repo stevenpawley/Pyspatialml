@@ -1,27 +1,32 @@
 Raster Geoprocessing
 ====================
 
+Handling of Temporary Files
+###########################
+
+Outputs of Raster object methods do not need to passed explicitly
+
 Cropping a Raster
 #################
 
-crop
+Raster.crop method
 
 Masking a Raster
 ################
 
-mask
+Raster.mask method
 
 Intersecting Layers in a Raster
 ###############################
 
-intersect
+Raster.intersect method
 
 Reprojecting
 ############
 
-to_crs
+Raster.to_crs method
 
 Resampling
 ##########
 
-aggregate
+Raster.aggregate

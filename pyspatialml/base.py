@@ -1,6 +1,7 @@
 import os
 import re
 import tempfile
+from abc import ABC, abstractmethod
 from itertools import chain
 
 import geopandas as gpd
@@ -13,7 +14,7 @@ from shapely.geometry import Point
 import multiprocessing
 
 
-class BaseRaster(object):
+class BaseRaster(ABC):
     """
     Raster base class provides a general structure for Rasterlayer and Raster
     objects, and contains methods that apply both to RasterLayer and

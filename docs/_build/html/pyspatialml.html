@@ -1,36 +1,181 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>pyspatialml package &#8212; Pyspatialml 0.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyspatialml package &mdash; Pyspatialml 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="pyspatialml.datasets package" href="pyspatialml.datasets.html" />
-    <link rel="prev" title="pyspatialml" href="modules.html" />
+    <link rel="prev" title="pyspatialml" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> Pyspatialml
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">pyspatialml</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pyspatialml package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pyspatialml.datasets.html">pyspatialml.datasets package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.base">pyspatialml.base module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.cross_validation">pyspatialml.cross_validation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.indexing">pyspatialml.indexing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.plotting">pyspatialml.plotting module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.preprocessing">pyspatialml.preprocessing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.raster">pyspatialml.raster module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.rasterlayer">pyspatialml.rasterlayer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.utils">pyspatialml.utils module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml.vector">pyspatialml.vector module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyspatialml">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pyspatialml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">pyspatialml</a> &raquo;</li>
+        
+      <li>pyspatialml package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pyspatialml.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="pyspatialml-package">
 <h1>pyspatialml package<a class="headerlink" href="#pyspatialml-package" title="Permalink to this headline">¶</a></h1>
@@ -40,8 +185,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pyspatialml.datasets.html">pyspatialml.datasets package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.meuse_dataset">pyspatialml.datasets.meuse_dataset module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.nc_dataset">pyspatialml.datasets.nc_dataset module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.meuse">pyspatialml.datasets.meuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.nc">pyspatialml.datasets.nc module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets">Module contents</a></li>
 </ul>
 </li>
@@ -55,16 +200,17 @@
 <span id="pyspatialml-base-module"></span><h2>pyspatialml.base module<a class="headerlink" href="#module-pyspatialml.base" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pyspatialml.base.BaseRaster">
-<em class="property">class </em><code class="descclassname">pyspatialml.base.</code><code class="descname">BaseRaster</code><span class="sig-paren">(</span><em>band</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Raster base class that contains methods that apply both to RasterLayer and
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.base.</code><code class="sig-name descname">BaseRaster</code><span class="sig-paren">(</span><em class="sig-param">band</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Raster base class provides a general structure for Rasterlayer and Raster
+objects, and contains methods that apply both to RasterLayer and
 Raster objects.</p>
 <p>Internally comprises a rasterio.Band object consisting of a named tuple of
 the file path, the band index, the dtype and shape an individual band within
 a raster file-based dataset.</p>
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.extract_raster">
-<code class="descname">extract_raster</code><span class="sig-paren">(</span><em>response</em>, <em>value_name='value'</em>, <em>return_array=False</em>, <em>na_rm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_raster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_raster</code><span class="sig-paren">(</span><em class="sig-param">response</em>, <em class="sig-param">value_name='value'</em>, <em class="sig-param">return_array=False</em>, <em class="sig-param">na_rm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_raster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample a Raster object by an aligned raster of labelled pixels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -103,7 +249,7 @@ pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.extract_vector">
-<code class="descname">extract_vector</code><span class="sig-paren">(</span><em>response</em>, <em>columns=None</em>, <em>return_array=False</em>, <em>duplicates='keep'</em>, <em>na_rm=True</em>, <em>low_memory=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_vector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_vector</code><span class="sig-paren">(</span><em class="sig-param">response</em>, <em class="sig-param">columns=None</em>, <em class="sig-param">return_array=False</em>, <em class="sig-param">duplicates='keep'</em>, <em class="sig-param">na_rm=True</em>, <em class="sig-param">low_memory=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_vector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample a Raster/RasterLayer using a geopandas GeoDataframe containing
 points, lines or polygon features.</p>
 <dl class="field-list simple">
@@ -150,7 +296,7 @@ pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.extract_xy">
-<code class="descname">extract_xy</code><span class="sig-paren">(</span><em>xy</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_xy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_xy</code><span class="sig-paren">(</span><em class="sig-param">xy</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_xy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Samples pixel values using an array of xy locations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -168,14 +314,14 @@ at x,y locations.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.head">
-<code class="descname">head</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.head" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">head</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.head" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show the head (first rows, first columns) or tail (last rows, last
 columns) of pixels.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.max">
-<code class="descname">max</code><span class="sig-paren">(</span><em>max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.max" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maximum value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -192,7 +338,7 @@ columns) of pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.mean">
-<code class="descname">mean</code><span class="sig-paren">(</span><em>max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.mean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param">max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mean value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -209,7 +355,7 @@ columns) of pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.median">
-<code class="descname">median</code><span class="sig-paren">(</span><em>max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.median" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">median</code><span class="sig-paren">(</span><em class="sig-param">max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.median" title="Permalink to this definition">¶</a></dt>
 <dd><p>Median value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -226,7 +372,7 @@ columns) of pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.min">
-<code class="descname">min</code><span class="sig-paren">(</span><em>max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.min" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">max_pixels=10000</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.min" title="Permalink to this definition">¶</a></dt>
 <dd><p>Minimum value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -243,7 +389,7 @@ columns) of pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.sample">
-<code class="descname">sample</code><span class="sig-paren">(</span><em>size</em>, <em>strata=None</em>, <em>return_array=False</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">strata=None</em>, <em class="sig-param">return_array=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a random sample of according to size, and samples the pixel
 values.</p>
 <dl class="field-list simple">
@@ -277,10 +423,23 @@ numpy arrays.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.base.BaseRaster.tail">
-<code class="descname">tail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.tail" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.tail" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show the head (first rows, first columns) or tail (last rows, last
 columns) of pixels.</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyspatialml.base.TempRasterLayer">
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.base.</code><code class="sig-name descname">TempRasterLayer</code><a class="headerlink" href="#pyspatialml.base.TempRasterLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Create a NamedTemporaryFile like object on Windows that has a close
+method. Workaround used on Windows which cannot open the file a second time</p>
+<dl class="method">
+<dt id="pyspatialml.base.TempRasterLayer.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.TempRasterLayer.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -289,13 +448,13 @@ columns) of pixels.</p>
 <span id="pyspatialml-cross-validation-module"></span><h2>pyspatialml.cross_validation module<a class="headerlink" href="#module-pyspatialml.cross_validation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pyspatialml.cross_validation.CrossValidateThreshold">
-<em class="property">class </em><code class="descclassname">pyspatialml.cross_validation.</code><code class="descname">CrossValidateThreshold</code><span class="sig-paren">(</span><em>estimator</em>, <em>scoring</em>, <em>cv=3</em>, <em>positive=1</em>, <em>n_jobs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">CrossValidateThreshold</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">scoring</em>, <em class="sig-param">cv=3</em>, <em class="sig-param">positive=1</em>, <em class="sig-param">n_jobs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Perform cross-validation and calculate scores using a cutoff threshold that
 attains a minimum true positive rate</p>
 <dl class="method">
 <dt id="pyspatialml.cross_validation.CrossValidateThreshold.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em>, <em>groups=None</em>, <em>**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em>, <em class="sig-param">groups=None</em>, <em class="sig-param">**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run fit method with all sets of parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -313,7 +472,7 @@ None for unsupervised learning</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.CrossValidateThreshold.score">
-<code class="descname">score</code><span class="sig-paren">(</span><em>tpr_threshold=None</em>, <em>cutoff_threshold=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.score" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param">tpr_threshold=None</em>, <em class="sig-param">cutoff_threshold=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.score" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the scoring metrics using a cutoff threshold that attains a true positive rate
 that is equal or greater than the desired tpr_threshold</p>
 <dl class="field-list simple">
@@ -331,13 +490,13 @@ can be specified to calculate the scoring</p></li>
 
 <dl class="class">
 <dt id="pyspatialml.cross_validation.EnsembleOptRegressor">
-<em class="property">class </em><code class="descclassname">pyspatialml.cross_validation.</code><code class="descname">EnsembleOptRegressor</code><span class="sig-paren">(</span><em>estimator</em>, <em>param_grid=None</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">EnsembleOptRegressor</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">param_grid=None</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.RegressorMixin</span></code></p>
 <p>Metaregressor to fit a tree-based ensemble regressor performing
 hyperparameter using the OOB score</p>
 <dl class="method">
 <dt id="pyspatialml.cross_validation.EnsembleOptRegressor.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em>, <em>**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em>, <em class="sig-param">**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run fit method with all sets of parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -361,7 +520,7 @@ None for unsupervised learning</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.EnsembleOptRegressor.predict">
-<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor.predict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.EnsembleOptRegressor.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overriding the BaseRegressor predict method</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -380,7 +539,7 @@ None for unsupervised learning</p></li>
 
 <dl class="class">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV">
-<em class="property">class </em><code class="descclassname">pyspatialml.cross_validation.</code><code class="descname">ThresholdClassifierCV</code><span class="sig-paren">(</span><em>estimator</em>, <em>thresholds=array([0.1</em>, <em>0.11</em>, <em>0.12</em>, <em>0.13</em>, <em>0.14</em>, <em>0.15</em>, <em>0.16</em>, <em>0.17</em>, <em>0.18</em>, <em>0.19</em>, <em>0.2</em>, <em>0.21</em>, <em>0.22</em>, <em>0.23</em>, <em>0.24</em>, <em>0.25</em>, <em>0.26</em>, <em>0.27</em>, <em>0.28</em>, <em>0.29</em>, <em>0.3</em>, <em>0.31</em>, <em>0.32</em>, <em>0.33</em>, <em>0.34</em>, <em>0.35</em>, <em>0.36</em>, <em>0.37</em>, <em>0.38</em>, <em>0.39</em>, <em>0.4</em>, <em>0.41</em>, <em>0.42</em>, <em>0.43</em>, <em>0.44</em>, <em>0.45</em>, <em>0.46</em>, <em>0.47</em>, <em>0.48</em>, <em>0.49</em>, <em>0.5</em>, <em>0.51</em>, <em>0.52</em>, <em>0.53</em>, <em>0.54</em>, <em>0.55</em>, <em>0.56</em>, <em>0.57</em>, <em>0.58</em>, <em>0.59</em>, <em>0.6</em>, <em>0.61</em>, <em>0.62</em>, <em>0.63</em>, <em>0.64</em>, <em>0.65</em>, <em>0.66</em>, <em>0.67</em>, <em>0.68</em>, <em>0.69</em>, <em>0.7</em>, <em>0.71</em>, <em>0.72</em>, <em>0.73</em>, <em>0.74</em>, <em>0.75</em>, <em>0.76</em>, <em>0.77</em>, <em>0.78</em>, <em>0.79</em>, <em>0.8</em>, <em>0.81</em>, <em>0.82</em>, <em>0.83</em>, <em>0.84</em>, <em>0.85</em>, <em>0.86</em>, <em>0.87</em>, <em>0.88</em>, <em>0.89])</em>, <em>scoring=None</em>, <em>refit=False</em>, <em>cv=3</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">ThresholdClassifierCV</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">thresholds=array([0.1</em>, <em class="sig-param">0.11</em>, <em class="sig-param">0.12</em>, <em class="sig-param">0.13</em>, <em class="sig-param">0.14</em>, <em class="sig-param">0.15</em>, <em class="sig-param">0.16</em>, <em class="sig-param">0.17</em>, <em class="sig-param">0.18</em>, <em class="sig-param">0.19</em>, <em class="sig-param">0.2</em>, <em class="sig-param">0.21</em>, <em class="sig-param">0.22</em>, <em class="sig-param">0.23</em>, <em class="sig-param">0.24</em>, <em class="sig-param">0.25</em>, <em class="sig-param">0.26</em>, <em class="sig-param">0.27</em>, <em class="sig-param">0.28</em>, <em class="sig-param">0.29</em>, <em class="sig-param">0.3</em>, <em class="sig-param">0.31</em>, <em class="sig-param">0.32</em>, <em class="sig-param">0.33</em>, <em class="sig-param">0.34</em>, <em class="sig-param">0.35</em>, <em class="sig-param">0.36</em>, <em class="sig-param">0.37</em>, <em class="sig-param">0.38</em>, <em class="sig-param">0.39</em>, <em class="sig-param">0.4</em>, <em class="sig-param">0.41</em>, <em class="sig-param">0.42</em>, <em class="sig-param">0.43</em>, <em class="sig-param">0.44</em>, <em class="sig-param">0.45</em>, <em class="sig-param">0.46</em>, <em class="sig-param">0.47</em>, <em class="sig-param">0.48</em>, <em class="sig-param">0.49</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.51</em>, <em class="sig-param">0.52</em>, <em class="sig-param">0.53</em>, <em class="sig-param">0.54</em>, <em class="sig-param">0.55</em>, <em class="sig-param">0.56</em>, <em class="sig-param">0.57</em>, <em class="sig-param">0.58</em>, <em class="sig-param">0.59</em>, <em class="sig-param">0.6</em>, <em class="sig-param">0.61</em>, <em class="sig-param">0.62</em>, <em class="sig-param">0.63</em>, <em class="sig-param">0.64</em>, <em class="sig-param">0.65</em>, <em class="sig-param">0.66</em>, <em class="sig-param">0.67</em>, <em class="sig-param">0.68</em>, <em class="sig-param">0.69</em>, <em class="sig-param">0.7</em>, <em class="sig-param">0.71</em>, <em class="sig-param">0.72</em>, <em class="sig-param">0.73</em>, <em class="sig-param">0.74</em>, <em class="sig-param">0.75</em>, <em class="sig-param">0.76</em>, <em class="sig-param">0.77</em>, <em class="sig-param">0.78</em>, <em class="sig-param">0.79</em>, <em class="sig-param">0.8</em>, <em class="sig-param">0.81</em>, <em class="sig-param">0.82</em>, <em class="sig-param">0.83</em>, <em class="sig-param">0.84</em>, <em class="sig-param">0.85</em>, <em class="sig-param">0.86</em>, <em class="sig-param">0.87</em>, <em class="sig-param">0.88</em>, <em class="sig-param">0.89])</em>, <em class="sig-param">scoring=None</em>, <em class="sig-param">refit=False</em>, <em class="sig-param">cv=3</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.ClassifierMixin</span></code></p>
 <p>Metaclassifier to perform cutoff threshold optimization</p>
 <p>This implementation is restricted to binary classification problems</p>
@@ -394,14 +553,14 @@ the mean of the thresholds that maximize the scoring metric</p></li>
 </ul>
 <dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.find_threshold">
-<code class="descname">find_threshold</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.find_threshold" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_threshold</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.find_threshold" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds the optimal cutoff threshold based on maximizing/minimizing the
 scoring method</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em>, <em>groups=None</em>, <em>**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y=None</em>, <em class="sig-param">groups=None</em>, <em class="sig-param">**fit_params</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run fit method with all sets of parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -427,25 +586,25 @@ None for unsupervised learning</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.predict">
-<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.predict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.predict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.predict_proba">
-<code class="descname">predict_proba</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.predict_proba" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.predict_proba" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.score">
-<code class="descname">score</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.score" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.score" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloading of classifier score method
 score method is required for compatibility with GridSearch
 The scoring metric should be one that can be maximized (bigger=better)</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="pyspatialml.cross_validation.ThresholdClassifierCV.scorer_cutoff">
-<em class="property">static </em><code class="descname">scorer_cutoff</code><span class="sig-paren">(</span><em>y</em>, <em>y_pred</em>, <em>scorer</em>, <em>cutoff</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.scorer_cutoff" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">scorer_cutoff</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">y_pred</em>, <em class="sig-param">scorer</em>, <em class="sig-param">cutoff</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.ThresholdClassifierCV.scorer_cutoff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper method to binarize the probability scores based on a cutoff</p>
 </dd></dl>
 
@@ -453,7 +612,7 @@ The scoring metric should be one that can be maximized (bigger=better)</p>
 
 <dl class="function">
 <dt id="pyspatialml.cross_validation.spatial_loocv">
-<code class="descclassname">pyspatialml.cross_validation.</code><code class="descname">spatial_loocv</code><span class="sig-paren">(</span><em>estimator</em>, <em>X</em>, <em>y</em>, <em>coordinates</em>, <em>size</em>, <em>radius</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.spatial_loocv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">spatial_loocv</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">X</em>, <em class="sig-param">y</em>, <em class="sig-param">coordinates</em>, <em class="sig-param">size</em>, <em class="sig-param">radius</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.spatial_loocv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spatially buffered leave-One-out cross-validation
 Uses a circular spatial buffer to separate samples that are used to train
 the estimator, from samples that are used to test the prediction accuracy</p>
@@ -486,7 +645,7 @@ supervised learning</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.cross_validation.specificity_score">
-<code class="descclassname">pyspatialml.cross_validation.</code><code class="descname">specificity_score</code><span class="sig-paren">(</span><em>y_true</em>, <em>y_pred</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.specificity_score" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">specificity_score</code><span class="sig-paren">(</span><em class="sig-param">y_true</em>, <em class="sig-param">y_pred</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.specificity_score" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate specificity score metric for a binary classification</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -509,55 +668,24 @@ classified as the negative label</p>
 </div>
 <div class="section" id="module-pyspatialml.indexing">
 <span id="pyspatialml-indexing-module"></span><h2>pyspatialml.indexing module<a class="headerlink" href="#module-pyspatialml.indexing" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="pyspatialml.indexing.ExtendedDict">
-<em class="property">class </em><code class="descclassname">pyspatialml.indexing.</code><code class="descname">ExtendedDict</code><span class="sig-paren">(</span><em>parent</em>, <em>*args</em>, <em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.indexing.ExtendedDict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Mapping</span></code></p>
-<p>Dict that can return based on multiple keys</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>parent</strong> (<em>Raster object to store RasterLayer indexing</em>) – Requires to parent Raster object in order to setattr when
-changes in the dict, reflecting changes in the RasterLayers occur</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="pyspatialml.indexing.ExtendedDict.pop">
-<code class="descname">pop</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.indexing.ExtendedDict.pop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="pyspatialml.indexing.LinkedList">
-<em class="property">class </em><code class="descclassname">pyspatialml.indexing.</code><code class="descname">LinkedList</code><span class="sig-paren">(</span><em>parent</em>, <em>extended_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.indexing.LinkedList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Provides integer-based indexing of a ExtendedDict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>parent</strong> (<em>Raster object to store RasterLayer indexing</em>) – Requires to parent Raster object in order to setattr when
-changes in the dict, reflecting changes in the RasterLayers occur</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 <div class="section" id="module-pyspatialml.plotting">
 <span id="pyspatialml-plotting-module"></span><h2>pyspatialml.plotting module<a class="headerlink" href="#module-pyspatialml.plotting" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="pyspatialml.plotting.discrete_cmap">
-<code class="descclassname">pyspatialml.plotting.</code><code class="descname">discrete_cmap</code><span class="sig-paren">(</span><em>N</em>, <em>base_cmap=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.discrete_cmap" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.plotting.</code><code class="sig-name descname">discrete_cmap</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">base_cmap=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.discrete_cmap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an N-bin discrete colormap from the specified input map
 <a class="reference external" href="https://gist.github.com/jakevdp/91077b0cae40f8f8244a">https://gist.github.com/jakevdp/91077b0cae40f8f8244a</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyspatialml.plotting.rasterio_normalize">
-<code class="descclassname">pyspatialml.plotting.</code><code class="descname">rasterio_normalize</code><span class="sig-paren">(</span><em>arr</em>, <em>axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.rasterio_normalize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.plotting.</code><code class="sig-name descname">rasterio_normalize</code><span class="sig-paren">(</span><em class="sig-param">arr</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.rasterio_normalize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="pyspatialml.plotting.shiftedColorMap">
-<code class="descclassname">pyspatialml.plotting.</code><code class="descname">shiftedColorMap</code><span class="sig-paren">(</span><em>cmap</em>, <em>start=0</em>, <em>midpoint=0.5</em>, <em>stop=1.0</em>, <em>name='shiftedcmap'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.shiftedColorMap" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.plotting.</code><code class="sig-name descname">shiftedColorMap</code><span class="sig-paren">(</span><em class="sig-param">cmap</em>, <em class="sig-param">start=0</em>, <em class="sig-param">midpoint=0.5</em>, <em class="sig-param">stop=1.0</em>, <em class="sig-param">name='shiftedcmap'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.shiftedColorMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to offset the “center” of a colormap. Useful for
 data with a negative min and positive max and you want the
 middle of the colormap’s dynamic range to be at zero</p>
@@ -588,7 +716,7 @@ should be set to  1 - 5/(5 + 15)) or 0.75</p>
 <span id="pyspatialml-preprocessing-module"></span><h2>pyspatialml.preprocessing module<a class="headerlink" href="#module-pyspatialml.preprocessing" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="pyspatialml.preprocessing.distance_to_corners">
-<code class="descclassname">pyspatialml.preprocessing.</code><code class="descname">distance_to_corners</code><span class="sig-paren">(</span><em>layer</em>, <em>file_path=None</em>, <em>driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_corners" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">distance_to_corners</code><span class="sig-paren">(</span><em class="sig-param">layer</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_corners" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate buffer distances to corner and centre coordinates of raster extent</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -611,7 +739,7 @@ temporary file.</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.preprocessing.distance_to_samples">
-<code class="descclassname">pyspatialml.preprocessing.</code><code class="descname">distance_to_samples</code><span class="sig-paren">(</span><em>layer</em>, <em>rows</em>, <em>cols</em>, <em>file_path=None</em>, <em>driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_samples" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">distance_to_samples</code><span class="sig-paren">(</span><em class="sig-param">layer</em>, <em class="sig-param">rows</em>, <em class="sig-param">cols</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate buffer distances to x,y coordinates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -636,7 +764,7 @@ temporary file.</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.preprocessing.one_hot_encode">
-<code class="descclassname">pyspatialml.preprocessing.</code><code class="descname">one_hot_encode</code><span class="sig-paren">(</span><em>layer</em>, <em>categories=None</em>, <em>file_path=None</em>, <em>driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.one_hot_encode" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">one_hot_encode</code><span class="sig-paren">(</span><em class="sig-param">layer</em>, <em class="sig-param">categories=None</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.one_hot_encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>One-hot encoding of a RasterLayer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -660,7 +788,7 @@ is written to a tempfile</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.preprocessing.rotated_coordinates">
-<code class="descclassname">pyspatialml.preprocessing.</code><code class="descname">rotated_coordinates</code><span class="sig-paren">(</span><em>layer</em>, <em>n_angles=8</em>, <em>file_path=None</em>, <em>driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.rotated_coordinates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">rotated_coordinates</code><span class="sig-paren">(</span><em class="sig-param">layer</em>, <em class="sig-param">n_angles=8</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.rotated_coordinates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate 2d arrays with n_angles rotated coordinates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -684,7 +812,7 @@ temporary file.</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.preprocessing.xy_coordinates">
-<code class="descclassname">pyspatialml.preprocessing.</code><code class="descname">xy_coordinates</code><span class="sig-paren">(</span><em>layer</em>, <em>file_path=None</em>, <em>driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.xy_coordinates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">xy_coordinates</code><span class="sig-paren">(</span><em class="sig-param">layer</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.xy_coordinates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fill 2d arrays with their x,y indices</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -710,7 +838,7 @@ temporary file.</p></li>
 <span id="pyspatialml-raster-module"></span><h2>pyspatialml.raster module<a class="headerlink" href="#module-pyspatialml.raster" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pyspatialml.raster.Raster">
-<em class="property">class </em><code class="descclassname">pyspatialml.raster.</code><code class="descname">Raster</code><span class="sig-paren">(</span><em>src=None</em>, <em>arr=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>nodata=None</em>, <em>mode='r'</em>, <em>file_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.raster.</code><code class="sig-name descname">Raster</code><span class="sig-paren">(</span><em class="sig-param">src=None</em>, <em class="sig-param">arr=None</em>, <em class="sig-param">crs=None</em>, <em class="sig-param">transform=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">mode='r'</em>, <em class="sig-param">file_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pyspatialml.base.BaseRaster" title="pyspatialml.base.BaseRaster"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.base.BaseRaster</span></code></a></p>
 <p>Flexible class that represents a collection of file-based GDAL-supported
 raster datasets which share a common coordinate reference system and
@@ -724,26 +852,28 @@ applied to a stack of raster datasets. In addition, these methods always
 return a new Raster object.</p>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.aggregate">
-<code class="descname">aggregate</code><span class="sig-paren">(</span><em>out_shape</em>, <em>resampling='nearest'</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.aggregate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">aggregate</code><span class="sig-paren">(</span><em class="sig-param">out_shape</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.aggregate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Aggregates a raster to (usually) a coarser grid cell size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>out_shape</strong> (<em>tuple</em>) – New shape in (rows, cols).</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em>, </em><em>optional. Default is 'nearest'</em>) – Resampling method to use when applying decimated reads when
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when
 out_shape is specified. Supported methods are: ‘average’,
 ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘gauss’, ‘lanczos’,
 ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – File path to save to cropped raster. If not supplied then the
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the
 aggregated raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
 the new intersected Raster is created using the dtype of the
 existing Raster dataset, which uses a dtype that can accommodate
 the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
-dtype.</p></li>
+dtype. Note that this does not change the pixel nodata values of
+the raster, it only changes the metadata of what value represents
+a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -757,14 +887,14 @@ dtype.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.append">
-<code class="descname">append</code><span class="sig-paren">(</span><em>other</em>, <em>in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.append" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to add new RasterLayers to a Raster object.</p>
 <p>Note that this modifies the Raster object in-place by default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<em>Raster object</em><em>, or </em><em>list of Raster objects</em>) – Object to append to the Raster.</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Whether to change the Raster object in-place or leave original and
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and
 return a new Raster object.</p></li>
 </ul>
 </dd>
@@ -777,11 +907,37 @@ return a new Raster object.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="pyspatialml.raster.Raster.astype">
+<code class="sig-name descname">astype</code><span class="sig-paren">(</span><em class="sig-param">dtype</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.astype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coerce Raster to a different dtype</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dtype</strong> (<em>str</em><em> or </em><em>np.dtype</em>) – Datatype to coerce Raster object</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
+specified then a tempfile is used.</p></li>
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+value is set based on the minimum permissible value of the Raster’s
+data type. Note that this changes the values of the pixels that
+represent nodata pixels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pyspatialml.Raster</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyspatialml.raster.Raster.block_shape">
-<code class="descname">block_shape</code><a class="headerlink" href="#pyspatialml.raster.Raster.block_shape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the windows size used for raster calculations,
-specified as a tuple (rows, columns).</p>
+<em class="property">property </em><code class="sig-name descname">block_shape</code><a class="headerlink" href="#pyspatialml.raster.Raster.block_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the windows size used for raster calculations, specified as a
+tuple (rows, columns).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Block window shape that is currently set for the Raster as a tuple
@@ -795,7 +951,7 @@ in the format of (n_rows, n_columns) in pixels.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.block_shapes">
-<code class="descname">block_shapes</code><span class="sig-paren">(</span><em>rows</em>, <em>cols</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.block_shapes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">block_shapes</code><span class="sig-paren">(</span><em class="sig-param">rows</em>, <em class="sig-param">cols</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.block_shapes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generator for windows for optimal reading and writing based on the
 raster format Windows are returns as a tuple with xoff, yoff, width,
 height.</p>
@@ -811,22 +967,25 @@ height.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.calc">
-<code class="descname">calc</code><span class="sig-paren">(</span><em>function</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.calc" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calc</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">progress=False</em>, <em class="sig-param">n_jobs=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.calc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply user-supplied function to a Raster object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>function</strong> (<em>function</em>) – Function that takes an numpy array as a single argument.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optional path to save calculated Raster object. If not
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
 specified then a tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
 the new Raster is created using the dtype of the calculation
 result.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
-data type.</p></li>
-<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally show progress of transform operations.</p></li>
+data type. Note that this changes the values of the pixels that
+represent nodata pixels.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default
+of -1 is all cores.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -840,7 +999,7 @@ data type.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close all of the RasterLayer objects in the Raster.</p>
 <p>Note that this will cause any rasters based on temporary files to be
 removed. This is intended as a method of clearing temporary files that
@@ -849,23 +1008,25 @@ may have accumulated during an analysis session.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.crop">
-<code class="descname">crop</code><span class="sig-paren">(</span><em>bounds</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.crop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Crops a Raster object by the supplied bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bounds</strong> (<em>tuple</em>) – A tuple containing the bounding box to clip by in the
-form of (xmin, xmax, ymin, ymax).</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – File path to save to cropped raster. If not supplied then the
+form of (xmin, ymin, xmax, ymax).</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the
 cropped raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
 the new intersected Raster is created using the dtype of the
 existing Raster dataset, which uses a dtype that can accommodate
 the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
-data type.</p></li>
+data type. Note that this does not change the pixel nodata values
+of the raster, it only changes the metadata of what value
+represents a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -879,15 +1040,15 @@ data type.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.drop">
-<code class="descname">drop</code><span class="sig-paren">(</span><em>labels</em>, <em>in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.drop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drop</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.drop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop individual RasterLayers from a Raster object.</p>
 <p>Note that this modifies the Raster object in-place by default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> (<em>single label</em><em> or </em><em>list-like</em>) – Index (int) or layer name to drop. Can be a single integer or label,
-or a list of integers or labels.</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Whether to change the Raster object in-place or leave original and
+<li><p><strong>labels</strong> (<em>single label</em><em> or </em><em>list-like</em>) – Index (int) or layer name to drop. Can be a single integer or
+label, or a list of integers or labels.</p></li>
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and
 return a new Raster object.</p></li>
 </ul>
 </dd>
@@ -902,7 +1063,7 @@ return a new Raster object.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.intersect">
-<code class="descname">intersect</code><span class="sig-paren">(</span><em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.intersect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.intersect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a intersect operation on the Raster object.</p>
 <p>Computes the geometric intersection of the RasterLayers with the
 Raster object. This will cause nodata values in any of the rasters
@@ -910,16 +1071,17 @@ to be propagated through all of the output rasters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the
 resulting Raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
 the new intersected Raster is created using the dtype of the
 existing Raster dataset, which uses a dtype that can accommodate
 the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
-data type.</p></li>
+data type. Note that this changes the values of the pixels that
+represent nodata to the new value.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -934,39 +1096,37 @@ in the suite of RasterLayers.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.mask">
-<code class="descname">mask</code><span class="sig-paren">(</span><em>shapes</em>, <em>invert=False</em>, <em>crop=True</em>, <em>filled=True</em>, <em>pad=False</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.mask" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mask</code><span class="sig-paren">(</span><em class="sig-param">shapes</em>, <em class="sig-param">invert=False</em>, <em class="sig-param">crop=True</em>, <em class="sig-param">pad=False</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mask a Raster object based on the outline of shapes in a
 geopandas.GeoDataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shapes</strong> (<em>geopandas.GeoDataFrame</em>) – GeoDataFrame containing masking features.</p></li>
-<li><p><strong>invert</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – If False then pixels outside shapes will be masked. If True then
+<li><p><strong>invert</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If False then pixels outside shapes will be masked. If True then
 pixels inside shape will be masked.</p></li>
-<li><p><strong>crop</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Crop the raster to the extent of the shapes.</p></li>
-<li><p><strong>filled</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – If True, the pixels outside the features will be set to nodata.
-If False, the output array will contain the original pixel data,
-and only the mask will be based on shapes.</p></li>
-<li><p><strong>pad</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – If True, the features will be padded in each direction by one half
+<li><p><strong>crop</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Crop the raster to the extent of the shapes.</p></li>
+<li><p><strong>pad</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the features will be padded in each direction by one half
 of a pixel prior to cropping raster.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is None</em>) – File path to save to resulting Raster. If not supplied then the
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the
 resulting Raster is saved to a temporary file</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
-the cropped Raster is created using the existing dtype, which uses a
-dtype that can accommodate the data types of all of the individual
-RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for cropped dataset. If not specified then a nodata
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then
+the cropped Raster is created using the existing dtype, which uses
+a dtype that can accommodate the data types of all of the
+individual RasterLayers.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for cropped dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
-data type.</p></li>
+data type. Note that this changes the values of the pixels to the
+new nodata value, and changes the metadata of the raster.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="pyspatialml.raster.Raster.names">
-<code class="descname">names</code><a class="headerlink" href="#pyspatialml.raster.Raster.names" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">names</code><a class="headerlink" href="#pyspatialml.raster.Raster.names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the names of the RasterLayers in the Raster object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -980,33 +1140,36 @@ data type.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.plot">
-<code class="descname">plot</code><span class="sig-paren">(</span><em>out_shape=(100</em>, <em>100)</em>, <em>label_fontsize=8</em>, <em>title_fontsize=8</em>, <em>names=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">out_shape=(100</em>, <em class="sig-param">100)</em>, <em class="sig-param">label_fontsize=8</em>, <em class="sig-param">title_fontsize=8</em>, <em class="sig-param">names=None</em>, <em class="sig-param">fig_kwds=None</em>, <em class="sig-param">legend_kwds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a Raster object as a raster matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em><em> Default is</em><em> (</em><em>100</em><em>, </em><em>100</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
-<li><p><strong>label_fontsize</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em><em> Default is 8</em>) – Size in pts of labels.</p></li>
-<li><p><strong>title_fontsize</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em><em> Default is 8</em>) – Size in pts of titles.</p></li>
-<li><p><strong>names</strong> (<em>list</em><em> (</em><em>opt</em><em>)</em>) – Optionally supply a list of names for each RasterLayer to override
+<li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>default</em><em> (</em><em>100</em><em>, </em><em>100</em><em>)</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of labels.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of titles.</p></li>
+<li><p><strong>names</strong> (<em>list</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally supply a list of names for each RasterLayer to override
 the default layer names for the titles.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional arguments to pass when creating the figure object.</p></li>
+<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call
+when creating the figure object.</p></li>
+<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call
+when creating the colorbar object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>tuple</em></p></li>
-<li><p><em>Two items</em> – matplotlib.figure.Figure
-matplotlib.axes.Axes</p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>axs</strong> – array of matplotlib.axes._subplots.AxesSubplot or
+single matplotlib.axes._subplots.AxesSubplot if Raster
+object contains only a single layer.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.predict">
-<code class="descname">predict</code><span class="sig-paren">(</span><em>estimator</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>progress=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">n_jobs=-1</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply prediction of a scikit learn model to a Raster. The model can
 represent any scikit learn model or compatible api with a <cite>fit</cite> and
 <cite>predict</cite> method. These can consist of classification or regression
@@ -1016,23 +1179,26 @@ also supported.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>estimator</strong> (<em>estimator object implementing 'fit'</em>) – The object to use to fit the data.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not
 specified then the output is written to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file.
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file.
 If not specified, a data type is set based on the data types of
 the prediction.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value
-is derived from the minimum permissible value for the given data
-type.</p></li>
-<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Show progress bar for prediction.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata
+value is derived from the minimum permissible value for the given
+data type.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default
+is n_jobs=1. -1 is all cores; -2 is all cores -1.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Raster object containing prediction results as a RasterLayers.
 For classification and regression models, the Raster will contain a
-single RasterLayer, unless the model is multi-class or multi-target.
-Layers are named automatically as <cite>pred_raw_n</cite> with n = 1, 2, 3 ..n.</p>
+single RasterLayer, unless the model is multi-class or
+multi-target. Layers are named automatically as <cite>pred_raw_n</cite> with
+n = 1, 2, 3 ..n.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pyspatial.Raster</p>
@@ -1042,26 +1208,27 @@ Layers are named automatically as <cite>pred_raw_n</cite> with n = 1, 2, 3 ..n.<
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.predict_proba">
-<code class="descname">predict_proba</code><span class="sig-paren">(</span><em>estimator</em>, <em>file_path=None</em>, <em>indexes=None</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>progress=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply class probability prediction of a scikit learn model to a Raster.</p>
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">indexes=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply class probability prediction of a scikit learn model to a
+Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>estimator</strong> (<em>estimator object implementing 'fit'</em>) – The object to use to fit the data.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not
 specified then the output is written to a temporary file.</p></li>
-<li><p><strong>indexes</strong> (<em>list of integers</em><em> (</em><em>opt</em><em>)</em>) – List of class indices to export. In some circumstances, only a
+<li><p><strong>indexes</strong> (<em>list of integers</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – List of class indices to export. In some circumstances, only a
 subset of the class probability estimations are desired, for
 instance when performing a binary classification only the
 probabilities for the positive class may be desired.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file.
-If not specified, a data type is set based on the data type of
-the prediction.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value
-is derived from the minimum permissible value for the given
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to
+file. If not specified, a data type is set based on the data type
+of the prediction.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata
+value is derived from the minimum permissible value for the given
 data type.</p></li>
-<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Show progress bar for prediction.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1082,22 +1249,26 @@ prob_1, prob_2 and prob_3.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.read">
-<code class="descname">read</code><span class="sig-paren">(</span><em>masked=False</em>, <em>window=None</em>, <em>out_shape=None</em>, <em>resampling='nearest'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">masked=False</em>, <em class="sig-param">window=None</em>, <em class="sig-param">out_shape=None</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">as_df=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads data from the Raster object into a numpy array.</p>
 <p>Overrides read BaseRaster class read method and replaces it with a
 method that reads from multiple RasterLayer objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>masked</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Read data into a masked array.</p></li>
-<li><p><strong>window</strong> (<em>rasterio.window.Window object</em><em> (</em><em>opt</em><em>)</em>) – Tuple of col_off, row_off, width, height of a window of data
+<li><p><strong>masked</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Read data into a masked array.</p></li>
+<li><p><strong>window</strong> (<em>rasterio.window.Window object</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Tuple of col_off, row_off, width, height of a window of data
 to read a chunk of data into a ndarray.</p></li>
-<li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em>) – Shape of shape of array (rows, cols) to read data into using
+<li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Shape of shape of array (rows, cols) to read data into using
 decimated reads.</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'nearest'</em>) – Resampling method to use when applying decimated reads when
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when
 out_shape is specified. Supported methods are: ‘average’,
 ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘gauss’, ‘lanczos’,
 ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
+<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Whether to return the data as a pandas.DataFrame with columns
+named by the RasterLayer names. Can be useful when using
+scikit-learn ColumnTransformer to select columns based on
+names rather than keeping track of indexes.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other arguments to pass to rasterio.DatasetReader.read method</p></li>
 </ul>
 </dd>
@@ -1113,14 +1284,14 @@ out_shape is specified. Supported methods are: ‘average’,
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.rename">
-<code class="descname">rename</code><span class="sig-paren">(</span><em>names</em>, <em>in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.rename" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rename</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.rename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rename a RasterLayer within the Raster object.</p>
 <p>Note that by default this modifies the Raster object in-place.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>names</strong> (<em>dict</em>) – dict of old_name : new_name</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Whether to change names of the Raster object in-place or leave
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change names of the Raster object in-place or leave
 original and return a new Raster object.</p></li>
 </ul>
 </dd>
@@ -1135,38 +1306,38 @@ original and return a new Raster object.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.to_crs">
-<code class="descname">to_crs</code><span class="sig-paren">(</span><em>crs</em>, <em>resampling='nearest'</em>, <em>file_path=None</em>, <em>driver='GTiff'</em>, <em>nodata=None</em>, <em>n_jobs=1</em>, <em>warp_mem_lim=0</em>, <em>progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_crs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_crs</code><span class="sig-paren">(</span><em class="sig-param">crs</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">n_jobs=1</em>, <em class="sig-param">warp_mem_lim=0</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_crs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reprojects a Raster object to a different crs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>crs</strong> (<em>rasterio.transform.CRS object</em><em>, or </em><em>dict</em>) – Example: CRS({‘init’: ‘EPSG:4326’})</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Resampling method to use.  One of the following:
-Resampling.nearest,
-Resampling.bilinear,
-Resampling.cubic,
-Resampling.cubic_spline,
-Resampling.lanczos,
-Resampling.average,
-Resampling.mode,
-Resampling.max (GDAL &gt;= 2.2),
-Resampling.min (GDAL &gt;= 2.2),
-Resampling.med (GDAL &gt;= 2.2),
-Resampling.q1 (GDAL &gt;= 2.2),
-Resampling.q3 (GDAL &gt;= 2.2)</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optional path to save reprojected Raster object. If not
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use.  One of the following:
+nearest,
+bilinear,
+cubic,
+cubic_spline,
+lanczos,
+average,
+mode,
+max (GDAL &gt;= 2.2),
+min (GDAL &gt;= 2.2),
+med (GDAL &gt;= 2.2),
+q1 (GDAL &gt;= 2.2),
+q3 (GDAL &gt;= 2.2)</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save reprojected Raster object. If not
 specified then a tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then the existing
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then the existing
 nodata value of the Raster object is used, which can accommodate
 the dtypes of the individual layers in the Raster.</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>opt</em><em>)</em><em> Default is 1</em>) – The number of warp worker threads.</p></li>
-<li><p><strong>warp_mem_lim</strong> (<em>int</em><em> (</em><em>opt</em><em>)</em><em> Default is 0</em>) – The warp operation memory limit in MB. Larger values allow the
+<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default 1</em><em>)</em>) – The number of warp worker threads.</p></li>
+<li><p><strong>warp_mem_lim</strong> (<em>int</em><em> (</em><em>default 0</em><em>)</em>) – The warp operation memory limit in MB. Larger values allow the
 warp operation to be carried out in fewer chunks. The amount of
 memory required to warp a 3-band uint8 2000 row x 2000 col
 raster to a destination of the same size is approximately
 56 MB. The default (0) means 64 MB with GDAL 2.2.</p></li>
-<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally show progress of transform operations.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1180,13 +1351,13 @@ raster to a destination of the same size is approximately
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.to_pandas">
-<code class="descname">to_pandas</code><span class="sig-paren">(</span><em>max_pixels=50000</em>, <em>resampling='nearest'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_pandas" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_pandas</code><span class="sig-paren">(</span><em class="sig-param">max_pixels=50000</em>, <em class="sig-param">resampling='nearest'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_pandas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Raster to pandas DataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>max_pixels</strong> (<em>int</em><em> (</em><em>opt</em><em>)</em><em> Default is 50000</em>) – Maximum number of pixels to sample.</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'nearest'</em>) – Resampling method to use when applying decimated reads when
+<li><p><strong>max_pixels</strong> (<em>int</em><em> (</em><em>default 50000</em><em>)</em>) – Maximum number of pixels to sample.</p></li>
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when
 out_shape is specified. Supported methods are: ‘average’,
 ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘gauss’, ‘lanczos’,
 ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’/</p></li>
@@ -1204,7 +1375,7 @@ as columns, and pixel values as rows.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>file_path</em>, <em>driver='GTiff'</em>, <em>dtype=None</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the Raster object to a file.</p>
 <p>Overrides the write RasterBase class method, which is a partial
 function of the rasterio.DatasetReader.write method.</p>
@@ -1212,13 +1383,15 @@ function of the rasterio.DatasetReader.write method.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file_path</strong> (<em>str</em>) – File path used to save the Raster object.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Name of GDAL driver used to save Raster data.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file.
-If not specified, a data type is selected based on the data types of
-RasterLayers in the Raster object.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Optionally assign a new nodata value when saving to file. If not
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default is 'GTiff'</em><em>)</em><em></em>) – Name of GDAL driver used to save Raster data.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to
+file. If not specified, a data type is selected based on the data
+types of RasterLayers in the Raster object.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally assign a new nodata value when saving to file. If not
 specified a nodata value based on the minimum permissible value for
-the data types of RasterLayers in the Raster object is used.</p></li>
+the data types of RasterLayers in the Raster object is used. Note
+that this does not change the pixel nodata values of the raster, it
+only changes the metadata of what value represents a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1237,7 +1410,7 @@ the data types of RasterLayers in the Raster object is used.</p></li>
 <span id="pyspatialml-rasterlayer-module"></span><h2>pyspatialml.rasterlayer module<a class="headerlink" href="#module-pyspatialml.rasterlayer" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pyspatialml.rasterlayer.RasterLayer">
-<em class="property">class </em><code class="descclassname">pyspatialml.rasterlayer.</code><code class="descname">RasterLayer</code><span class="sig-paren">(</span><em>band</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.rasterlayer.</code><code class="sig-name descname">RasterLayer</code><span class="sig-paren">(</span><em class="sig-param">band</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pyspatialml.base.BaseRaster" title="pyspatialml.base.BaseRaster"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.base.BaseRaster</span></code></a></p>
 <p>Represents a single raster band derived from a single or multi-band raster
 dataset.</p>
@@ -1249,21 +1422,16 @@ a single band.</p>
 would only be applied to a single-band of a raster, i.e. sieve-clump,
 distance to non-NaN pixels, or arithmetic operations on individual layers.</p>
 <dl class="method">
-<dt id="pyspatialml.rasterlayer.RasterLayer.clump">
-<code class="descname">clump</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.clump" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.distance">
-<code class="descname">distance</code><span class="sig-paren">(</span><em>file_path=None</em>, <em>driver='GTiff'</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.distance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.distance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate euclidean grid distances to non-NaN pixels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Optional path to save calculated Raster object. If not
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
 specified then a tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
 value is set based on the minimum permissible value of the Raster’s
 data type.</p></li>
 </ul>
@@ -1279,23 +1447,77 @@ data type.</p></li>
 
 <dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.fill">
-<code class="descname">fill</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.fill" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.rasterlayer.RasterLayer.focal">
-<code class="descname">focal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.focal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param">mask=None</em>, <em class="sig-param">max_search_distance=100</em>, <em class="sig-param">smoothing_iterations=0</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill nodata gaps in a RasterLayer. Thin wrapper around the
+rasterio.fill.fillnodata method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally provide a numpy array to indice which pixels
+to fill. Pixels designated to fill should have zero values
+in the mask, and values &gt; 0 in the mask indicate pixels
+to use for interpolation.</p></li>
+<li><p><strong>max_search_distance</strong> (<em>float</em><em> (</em><em>default 100</em><em>)</em>) – The maximum number of pixels in all directions to use
+for interpolation.</p></li>
+<li><p><strong>smoothing_iterations</strong> (<em>integer</em><em> (</em><em>default 0</em><em>)</em>) – The number of 3x3 smoothing filter passes to run. The default
+is 0.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
+specified then a tempfile is used.</p></li>
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+value is set based on the minimum permissible value of the Raster’s
+data type.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to
+file. If not specified, a data type is set based on the data type
+of the RasterLayer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Filled RasterLayer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.plot">
-<code class="descname">plot</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">cmap=None</em>, <em class="sig-param">ax=None</em>, <em class="sig-param">cax=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">categorical=None</em>, <em class="sig-param">legend=False</em>, <em class="sig-param">vmin=None</em>, <em class="sig-param">vmax=None</em>, <em class="sig-param">legend_kwds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a RasterLayer using matplotlib.pyplot.imshow</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cmap</strong> (<em>str</em><em> (</em><em>default None</em><em>)</em>) – The name of a colormap recognized by matplotlib.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Artist</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – axes instance on which to draw to plot.</p></li>
+<li><p><strong>cax</strong> (<em>matplotlib.pyplot.Artist</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – axes on which to draw the legend.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple of integers</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Size of the matplotlib.figure.Figure. If the ax
+argument is given explicitly, figsize is ignored.</p></li>
+<li><p><strong>categorical</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default False</em><em>)</em>) – if True then the raster values will be considered to represent
+discrete values, otherwise they are considered to represent
+continuous values. This overrides the  RasterLayer ‘categorical’
+attribute. Setting the argument categorical to True is ignored
+if the RasterLayer.categorical is already True.</p></li>
+<li><p><strong>legend</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default False</em><em>)</em>) – Whether to plot the legend.</p></li>
+<li><p><strong>xmax</strong> (<em>vmin</em><em>,</em>) – vmin and vmax define the data range that the colormap covers.
+By default, the colormap covers the complete value range of the
+supplied data. vmin, vmax are ignored if the norm parameter is
+used.</p></li>
+<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Keyword arguments to pass to matplotlib.pyplot.colorbar().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ax</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib axes instance</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.read">
-<code class="descname">read</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read method for a single RasterLayer.</p>
 <p>Reads the pixel values from a RasterLayer into a ndarray that always
 will have two dimensions in the order of (rows, columns).</p>
@@ -1311,262 +1533,35 @@ will have two dimensions in the order of (rows, columns).</p>
 
 <dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.sieve">
-<code class="descname">sieve</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.sieve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-pyspatialml.spectral">
-<span id="pyspatialml-spectral-module"></span><h2>pyspatialml.spectral module<a class="headerlink" href="#module-pyspatialml.spectral" title="Permalink to this headline">¶</a></h2>
-<p>Created on Tue Feb 27 09:36:06 2018</p>
-<p>&#64;author: Steven Pawley</p>
-<dl class="class">
-<dt id="pyspatialml.spectral.indices">
-<em class="property">class </em><code class="descclassname">pyspatialml.spectral.</code><code class="descname">indices</code><span class="sig-paren">(</span><em>src</em>, <em>blue=None</em>, <em>green=None</em>, <em>red=None</em>, <em>nir=None</em>, <em>swir2=None</em>, <em>swir3=None</em>, <em>memmap=False</em>, <em>output=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Calculate remote sensing spectral indices using Rasterio and Numpy</p>
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ctvi">
-<code class="descname">ctvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ctvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrected transformed vegetation index (CTVI)
-Perry, C. R., Jr. and Lautenschlager, L.F. (1984) Functional
-equivalence of spectral vegetation indices. Remote Sens of Environ
-v.14, 169-182.</p>
-<p>ctvi = ndvi+0.5 / sqrt(abs(ndvi+0.5))</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.dvi">
-<code class="descname">dvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.dvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Difference vegetation index (DVI)
-Richardson, A. J., and Weigand, C. (1977) Distinguishing vegetation
-from soil background information. Photogrammetric Engineering and
-Remote Sensing, p. 43.</p>
-<p>DVI = nir - red</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.evi">
-<code class="descname">evi</code><span class="sig-paren">(</span><em>G</em>, <em>C1</em>, <em>C2</em>, <em>L</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.evi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enhanced vegetation index (EVI)
-A. Huete, K. Didan, T. Miura, E. P. Rodriguez, X. Gao, L. G. Ferreira.
-(2002) Overview of the radiometric and biophysical performance of the
-MODIS vegetation indices. Remote Sensing of Environment v.83 95-213.</p>
+<code class="sig-name descname">sieve</code><span class="sig-paren">(</span><em class="sig-param">size=2</em>, <em class="sig-param">mask=None</em>, <em class="sig-param">connectivity=4</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.sieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace pixels with their largest neighbor. Thin wrapper around the
+rasterio.features.sieve method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>float</em>) – gain factor</p></li>
-<li><p><strong>C2</strong> (<em>C1</em><em>,</em>) – coefficients of the aerosol resistance term, which uses the blue
-band to correct for aerosol influences in the red band. The
-coefficients adopted in the MODIS-EVI algorithm are; L=1, C1 = 6,
-C2 = 7.5, and G (gain factor) = 2.5</p></li>
-<li><p><strong>L</strong> (<em>float</em>) – canopy background adjustment that addresses non-linear,
-differential NIR and red radiant transfer through a canopy</p></li>
+<li><p><strong>size</strong> (<em>integer</em><em> (</em><em>default 2</em><em>)</em>) – Minimum number of contigous pixels to retain</p></li>
+<li><p><strong>mask</strong> (<em>ndarray</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Values of False or 0 will be excluded from the sieving process</p></li>
+<li><p><strong>connectivity</strong> (<em>integer</em><em> (</em><em>default 4</em><em>)</em>) – Use 4 or 8 pixel connectivity for grouping pixels into features.
+Default is 4.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
+specified then a tempfile is used.</p></li>
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata
+value is set based on the minimum permissible value of the Raster’s
+data type.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to
+file. If not specified, a data type is set based on the data type
+of the RasterLayer.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>evi</strong></p>
+<dd class="field-even"><p>Filled RasterLayer</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>2D array-like</p>
+<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.evi2">
-<code class="descname">evi2</code><span class="sig-paren">(</span><em>G</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.evi2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Two-band Enhanced vegetation index (EVI2)
-Jiang, Z., Huete, A.R., Didan, K., and Miura, T. (2008)
-Development of a two-band enhanced vegetation index without a blue band
-Remote Sensing of Environment v.112, 3833–3845.</p>
-<p>evi2 = G * (nir-red) / (nir + (2.4 * red)</p>
-<p class="rubric">Notes</p>
-<p>The Enhanced vegetation index (EVI) minimizes soil and atmospheric
-influences, but requires a blue band. EVI2 represents a modification to
-EVI for sensors that do not contain a blue band, but attempts to
-produce results that are similar to EVI.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>float</em>) – Gain factor, usually 2.5 adapted from MODIS</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>evi2</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>2D array-like</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.gemi">
-<code class="descname">gemi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.gemi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Global environmental monitoring index (GEMI)
-Pinty, B., and Verstraete, M.M. (1992) GEMI: a non-linear index to
-monitor global vegetation from satellites. Vegetatio v.101 15-20.</p>
-<p class="rubric">Notes</p>
-<p>TODO</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.gndvi">
-<code class="descname">gndvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.gndvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Green Normalized diff vegetation index (GNDVI)
-Gitelson, A., and Merzlyak, M. (1998) Remote Sensing of Chlorophyll
-Concentration in Higher Plant Leaves. Advances in Space Research 22,
-689-692.</p>
-<p class="rubric">Notes</p>
-<p>TODO</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.mndwi">
-<code class="descname">mndwi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.mndwi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Modified Normalised Difference Water Index (MNDWI)
-Hu, H. (2006) Modification of normalised difference water index (NDWI)
-to enhance open water features in remotely sensed imagery.
-International Journal of Remote Sensing 27(14), 3025-3033 .</p>
-<p>mndwi = (green-swir2) / (green+swir2)</p>
-<p class="rubric">Notes</p>
-<p>Maximizes the reflectivity of water by using the green band instead of
-NIR as in the original index.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.msavi">
-<code class="descname">msavi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.msavi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Modified soil adjusted vegetation index (MSAVI)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.msavi2">
-<code class="descname">msavi2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.msavi2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Modified soil adjusted vegetation index 2</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.nbri">
-<code class="descname">nbri</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.nbri" title="Permalink to this definition">¶</a></dt>
-<dd><p>normalized burn ratio index</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ndvi">
-<code class="descname">ndvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ndvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normalized difference vegetation index (NDVI)
-Kriegler, F.J., Malila, W.A., Nalepka, R.F., and Richardson, W. (1969)
-Preprocessing transformations and their effects on multispectral
-recognition. Proceedings of the Sixth International Symposium on
-Remote Sensing of Environment, p. 97-131.</p>
-<p>ndvi = (nir-red) / (nir+red)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ndvic">
-<code class="descname">ndvic</code><span class="sig-paren">(</span><em>swir2ccc</em>, <em>swir2cdiff</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ndvic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normalized difference vegetation index</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ndwi">
-<code class="descname">ndwi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ndwi" title="Permalink to this definition">¶</a></dt>
-<dd><p>normalized difference water index
-McFeeters 1996</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ndwi2">
-<code class="descname">ndwi2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ndwi2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gao 1996, Chen 2005</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.pvi">
-<code class="descname">pvi</code><span class="sig-paren">(</span><em>b</em>, <em>theta</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.pvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perpendicular Vegetation Index (PVI)
-Richardson, A. J., and Weigand, C. (1977) Distinguishing vegetation
-from soil background information. Photogrammetric Engineering and
-Remote Sensing, p. 43.</p>
-<p>pvi = np.sqrt(nir - b) * np.cos(a) - red * np.sin(a)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>b</strong> (<em>float</em>) – Intercept of soil line against NIR reflectivity</p></li>
-<li><p><strong>theta</strong> (<em>float</em>) – Angle of soil line between the horizontal axis of red reflectivity,
-and the vertical axis of NIR reflectivity</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>pvi</strong> – 2D numpy array of pvi</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>2D array-like</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The spectral signature of multiple soil samples (same soil type) tends
-to show a linear relationship between red and nir bands, i.e. the soil
-line made from soil_line = a b*x.
-PVI calculates the orthogonal (perpendicular) distance of the
-vegetation signature from the soil line, i.e. it attempts to remove the
-influence of soil from the vegetation index. A limitation is that this
-method assumes the same soil type to underlie the study region.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.rvi">
-<code class="descname">rvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.rvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ratio Vegetation Index
-Jordan, C.F. (1969) Derivation of leaf-area index from quality of light
-on the forest floor. Ecology, v. 50(4), 663–666.</p>
-<p>Based on the principle that leaves absorb more red than infrared light</p>
-<p>rvi = red / nir</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.satvi">
-<code class="descname">satvi</code><span class="sig-paren">(</span><em>L</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.satvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Soil adjusted total vegetation index</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.savi">
-<code class="descname">savi</code><span class="sig-paren">(</span><em>L</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.savi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Soil adjusted vegetation index
-Huete1988</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.slavi">
-<code class="descname">slavi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.slavi" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.sri">
-<code class="descname">sri</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.sri" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple ratio index</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.ttvi">
-<code class="descname">ttvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.ttvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Thiams Transformed Vegetation Index
-Thiam 1997</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.tvi">
-<code class="descname">tvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.tvi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transformed Vegetation Index
-Deering 1975</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyspatialml.spectral.indices.wdvi">
-<code class="descname">wdvi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.spectral.indices.wdvi" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -1575,7 +1570,7 @@ Deering 1975</p>
 <span id="pyspatialml-utils-module"></span><h2>pyspatialml.utils module<a class="headerlink" href="#module-pyspatialml.utils" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="pyspatialml.utils.align_rasters">
-<code class="descclassname">pyspatialml.utils.</code><code class="descname">align_rasters</code><span class="sig-paren">(</span><em>rasters</em>, <em>template</em>, <em>outputdir</em>, <em>method='Resampling.nearest'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.utils.align_rasters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.utils.</code><code class="sig-name descname">align_rasters</code><span class="sig-paren">(</span><em class="sig-param">rasters</em>, <em class="sig-param">template</em>, <em class="sig-param">outputdir</em>, <em class="sig-param">method='Resampling.nearest'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.utils.align_rasters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Aligns a list of rasters (paths to files) to a template raster.
 The rasters to that are to be realigned are assumed to represent
 single band raster files.</p>
@@ -1613,7 +1608,7 @@ Resampling.q3</p>
 
 <dl class="function">
 <dt id="pyspatialml.utils.reclass_nodata">
-<code class="descclassname">pyspatialml.utils.</code><code class="descname">reclass_nodata</code><span class="sig-paren">(</span><em>input</em>, <em>output</em>, <em>src_nodata=None</em>, <em>dst_nodata=-99999</em>, <em>intern=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.utils.reclass_nodata" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.utils.</code><code class="sig-name descname">reclass_nodata</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">src_nodata=None</em>, <em class="sig-param">dst_nodata=-99999</em>, <em class="sig-param">intern=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.utils.reclass_nodata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reclassify raster no data values and save to a new raster</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1643,7 +1638,7 @@ reclassifying pixels with the src_nodata value</p></li>
 <span id="pyspatialml-vector-module"></span><h2>pyspatialml.vector module<a class="headerlink" href="#module-pyspatialml.vector" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="pyspatialml.vector.filter_points">
-<code class="descclassname">pyspatialml.vector.</code><code class="descname">filter_points</code><span class="sig-paren">(</span><em>gdf</em>, <em>min_dist=0</em>, <em>remove='first'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.vector.filter_points" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.vector.</code><code class="sig-name descname">filter_points</code><span class="sig-paren">(</span><em class="sig-param">gdf</em>, <em class="sig-param">min_dist=0</em>, <em class="sig-param">remove='first'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.vector.filter_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter points in geodataframe using a minimum distance buffer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1664,7 +1659,7 @@ reclassifying pixels with the src_nodata value</p></li>
 
 <dl class="function">
 <dt id="pyspatialml.vector.get_random_point_in_polygon">
-<code class="descclassname">pyspatialml.vector.</code><code class="descname">get_random_point_in_polygon</code><span class="sig-paren">(</span><em>poly</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.vector.get_random_point_in_polygon" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyspatialml.vector.</code><code class="sig-name descname">get_random_point_in_polygon</code><span class="sig-paren">(</span><em class="sig-param">poly</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.vector.get_random_point_in_polygon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates random shapely Point geometry objects within a single
 shapely Polygon object</p>
 <dl class="field-list simple">
@@ -1687,79 +1682,52 @@ shapely Polygon object</p>
 </div>
 
 
+           </div>
+           
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Pyspatialml</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">pyspatialml</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">pyspatialml package</a></li>
-</ul>
-</li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">pyspatialml</a><ul>
-      <li>Previous: <a href="modules.html" title="previous chapter">pyspatialml</a></li>
-      <li>Next: <a href="pyspatialml.datasets.html" title="next chapter">pyspatialml.datasets package</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-    </form>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyspatialml.datasets.html" class="btn btn-neutral float-right" title="pyspatialml.datasets package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral float-left" title="pyspatialml" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  
 
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Steven Pawley
 
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-
-
-
+</footer>
 
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Steven Pawley.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/pyspatialml.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

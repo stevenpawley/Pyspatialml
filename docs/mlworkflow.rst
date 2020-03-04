@@ -12,6 +12,14 @@ GeoDataFrame must contain only one type of geometry (i.e. either shapely points,
 polygons or linestrings).
 ::
 
+    from pyspatialml import Raster
+    from copy import deepcopy
+    import os
+    import tempfile
+    import geopandas
+    import rasterio.plot
+    import matplotlib.pyplot as plt
+
     training_py = geopandas.read_file(nc.polygons)
     training_pt = geopandas.read_file(nc.points)
     training_px = rasterio.open(nc.labelled_pixels)
@@ -20,6 +28,9 @@ polygons or linestrings).
 
 Show training data points and a single raster band using numpy and matplotlib:
 ::
+
+    import pyspatialml.datasets.nc as nc
+    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     stack = Raster(predictors)
     plt.imshow(stack.lsat7_2000_70.read(masked=True),
@@ -62,8 +73,7 @@ along with the queried pixel values, but the name of this column in the
 attribute can be set using the ``value_name`` argument.
 ::
 
-    # Create a training dataset by extracting the raster values at the
-    # training point locations:
+    # Extract data from rasters at the training point locations:
     df_points = stack.extract_vector(response=training_pt, columns='id')
     df_polygons = stack.extract_vector(response=training_py, columns='id')
     df_lines = stack.extract_vector(response=training_lines, columns='id')
@@ -76,14 +86,12 @@ Model Training
 Next we can train a logistic regression classifier:
 ::
 
-    # Next we can train a logistic regression classifier:
     from sklearn.linear_model import LogisticRegressionCV
     from sklearn.preprocessing import StandardScaler
     from sklearn.pipeline import Pipeline
     from sklearn.model_selection import cross_validate
 
-    # define the classifier with standardization of the input features
-    # in a pipeline
+    # define the classifier with standardization of the input features in a pipeline
     lr = Pipeline(
         [('scaling', StandardScaler()),
          ('classifier', LogisticRegressionCV(n_jobs=-1))])
@@ -110,11 +118,9 @@ cross-validation. An example of creating random spatial clusters from point
 coordinates is provided here:
 ::
 
-    # spatial cross-validation
     from sklearn.cluster import KMeans
 
-    # create 10 spatial clusters based on clustering of the training
-    # data point x,y coordinates
+    # create 10 spatial clusters based on clustering of the training point x,y coordinates
     clusters = KMeans(n_clusters=34, n_jobs=-1)
     clusters.fit(df_polygons.geometry.bounds.iloc[:, 0:2])
 

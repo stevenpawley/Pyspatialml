@@ -10,25 +10,25 @@ class TestCalc(TestCase):
     stack = Raster(predictors)
 
     def test_calc_with_2d_output(self):
-
         def compute_outputs_2d_array(arr):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
-        
+
         calculation = self.stack.calc(compute_outputs_2d_array, n_jobs=1)
-        
+
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)
         self.assertEqual(calculation.read(masked=True).count(), 183418)
 
     def test_calc_with_2d_output_coerce_dtype(self):
-
         def compute_outputs_2d_array(arr):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
-        
-        calculation = self.stack.calc(compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
-        
+
+        calculation = self.stack.calc(
+            compute_outputs_2d_array, dtype=np.int16, n_jobs=1
+        )
+
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)
         self.assertEqual(calculation.read(masked=True).count(), 183418)
@@ -38,11 +38,10 @@ class TestCalc(TestCase):
         self.assertEqual(calculation.read(masked=True).max(), 510)
 
     def test_calc_with_3d_output(self):
-
         def compute_outputs_3d_array(arr):
-            arr[0, :, :] = arr[0, :, :] + arr[1, : :]
+            arr[0, :, :] = arr[0, :, :] + arr[1, ::]
             return arr
-        
+
         calculation = self.stack.calc(compute_outputs_3d_array, n_jobs=1)
 
         self.assertIsInstance(calculation, Raster)
@@ -50,13 +49,12 @@ class TestCalc(TestCase):
         self.assertEqual(calculation.read(masked=True).count(), 1052182)
 
     def test_calc_with_multiprocessing(self):
-
         def compute_outputs_2d_array(arr):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
-        
+
         calculation = self.stack.calc(compute_outputs_2d_array, n_jobs=-1)
-        
+
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)
         self.assertEqual(calculation.read(masked=True).count(), 183418)

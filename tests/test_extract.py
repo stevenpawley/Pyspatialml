@@ -18,7 +18,8 @@ class TestExtract(TestCase):
         # extract training data from points
         training_pt = geopandas.read_file(nc.points)
         X, y, xy = stack.extract_vector(
-            response=training_pt, columns='id', return_array=True)
+            response=training_pt, columns="id", return_array=True
+        )
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -28,13 +29,12 @@ class TestExtract(TestCase):
 
         # check shapes of extracted pixels
         self.assertTupleEqual(X.shape, (562, 6))
-        self.assertTupleEqual(y.shape, (562, ))
+        self.assertTupleEqual(y.shape, (562,))
         self.assertTupleEqual(xy.shape, (562, 2))
 
         # check summarized values of extracted y values
         self.assertTrue(
-            np.equal(np.bincount(y),
-                     np.asarray([0, 161, 3, 76, 36, 275, 8, 3])).all()
+            np.equal(np.bincount(y), np.asarray([0, 161, 3, 76, 36, 275, 8, 3])).all()
         )
 
         # check extracted X values
@@ -52,7 +52,8 @@ class TestExtract(TestCase):
         # extract training data from polygons
         training_py = geopandas.read_file(nc.polygons)
         X, y, xy = stack.extract_vector(
-            response=training_py, columns='id', return_array=True)
+            response=training_py, columns="id", return_array=True
+        )
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -62,7 +63,7 @@ class TestExtract(TestCase):
 
         # check shapes of extracted pixels
         self.assertTupleEqual(X.shape, (2436, 6))
-        self.assertTupleEqual(y.shape, (2436, ))
+        self.assertTupleEqual(y.shape, (2436,))
         self.assertTupleEqual(xy.shape, (2436, 2))
 
     def test_extract_lines(self):
@@ -72,9 +73,10 @@ class TestExtract(TestCase):
         # extract training data from lines
         training_py = geopandas.read_file(nc.polygons)
         training_lines = deepcopy(training_py)
-        training_lines['geometry'] = training_lines.geometry.boundary
+        training_lines["geometry"] = training_lines.geometry.boundary
         X, y, xy = stack.extract_vector(
-            response=training_lines, columns='id', return_array=True)
+            response=training_lines, columns="id", return_array=True
+        )
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -84,7 +86,7 @@ class TestExtract(TestCase):
 
         # check shapes of extracted pixels
         self.assertTupleEqual(X.shape, (948, 6))
-        self.assertTupleEqual(y.shape, (948, ))
+        self.assertTupleEqual(y.shape, (948,))
         self.assertTupleEqual(xy.shape, (948, 2))
 
     def test_extract_raster(self):
@@ -94,7 +96,8 @@ class TestExtract(TestCase):
         # extract training data from labelled pixels
         training_px = rasterio.open(nc.labelled_pixels)
         X, y, xy = stack.extract_raster(
-            response=training_px, value_name='id', return_array=True)
+            response=training_px, value_name="id", return_array=True
+        )
 
         # remove masked values
         mask2d = X.mask.any(axis=1)
@@ -104,5 +107,5 @@ class TestExtract(TestCase):
 
         # check shapes of extracted pixels
         self.assertTupleEqual(X.shape, (2436, 6))
-        self.assertTupleEqual(y.shape, (2436, ))
+        self.assertTupleEqual(y.shape, (2436,))
         self.assertTupleEqual(xy.shape, (2436, 2))

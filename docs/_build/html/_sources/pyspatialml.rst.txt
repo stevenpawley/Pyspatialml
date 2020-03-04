@@ -19,7 +19,7 @@ pyspatialml.base module
     :undoc-members:
     :show-inheritance:
 
-pyspatialml.cross\_validation module
+pyspatialml.cross_validation module
 ------------------------------------
 
 .. automodule:: pyspatialml.cross_validation
@@ -63,14 +63,6 @@ pyspatialml.rasterlayer module
 ------------------------------
 
 .. automodule:: pyspatialml.rasterlayer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspatialml.spectral module
----------------------------
-
-.. automodule:: pyspatialml.spectral
     :members:
     :undoc-members:
     :show-inheritance:

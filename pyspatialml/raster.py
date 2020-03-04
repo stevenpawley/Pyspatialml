@@ -22,8 +22,103 @@ from tqdm import tqdm
 
 from .base import (BaseRaster, _file_path_tempfile, _get_nodata,
                   _get_num_workers)
-from .indexing import _LocIndexer, _iLocIndexer
+from .indexing import _LocIndexer
 from .rasterlayer import RasterLayer
+
+
+class _iLocIndexer(object):
+    """
+    Access raster maps using integer-based indexing
+
+    Wraps around an instance of a _LocIndexer and provides integer indexing
+    of the items in the OrderedDict
+
+    Parameters
+    ----------
+    parent :  pyspatialml.Raster
+        Requires to parent Raster object in order to setattr when
+        changes in the dict, reflecting changes in the RasterLayers occur.
+
+    loc_indexer : pyspatialml.indexing._LocIndexer
+        An instance of a _LocIndexer.
+    """
+
+    def __init__(self, parent, loc_indexer):
+        self.parent = parent
+        self._index = loc_indexer
+
+    def __setitem__(self, index, value):
+        """
+        Assign a pyspatialml.RasterLayer object to the index using an integer position
+        as an index
+
+        Allows assignment using multiple indexes or slices
+
+        Parameters
+        ----------
+        index : int, list, or slice
+            Index position(s) to assign the new pyspatialml.RasterLayer objects.
+
+        value : pyspatialml.RasterLayer, or list
+            Object(s) to assign to the index positions
+        """
+
+        if isinstance(index, int):
+            key = list(self._index.keys())[index]
+            self._index[key] = value
+            setattr(self.parent, key, value)
+
+        if isinstance(index, slice):
+            index = list(range(index.start, index.stop))
+
+        if isinstance(index, (list, tuple)):
+            for i, v in zip(index, value):
+                key = list(self._index.keys())[i]
+                self._index[key] = v
+                setattr(self.parent, key, v)
+
+    def __getitem__(self, index):
+        """
+        Return items using an integer index position
+
+        For the selection of a single layer, a pyspatialml.RasterLayer is returned
+
+        For multiple layers, a pyspatialml.Raster is returned
+
+        Parameters
+        ----------
+        index : int or slice
+            Index position(s) to return items
+
+        Returns
+        -------
+        pyspatialml.RasterLayer or pyspatialml.Raster if multiple items are selected
+        """
+
+        if isinstance(index, int):
+            key = list(self._index.keys())[index]
+            selected = self._index[key]
+
+        if isinstance(index, slice):
+            start = index.start
+            stop = index.stop
+
+            if start is None:
+                start = 0
+
+            if stop is None:
+                stop = self.parent.count
+
+            index = list(range(start, stop))
+
+        if isinstance(index, (list, tuple)):
+            key = []
+            for i in index:
+                key.append(list(self._index.keys())[i])
+            selected = [self._index[k] for k in key]
+            selected = Raster(selected)
+
+        return selected
 
 
 class Raster(BaseRaster):
@@ -89,8 +184,8 @@ class Raster(BaseRaster):
             object
         """
 
-        self.loc = _LocIndexer(self)
-        self.iloc = _iLocIndexer(self, self.loc)
+        self._loc = _LocIndexer(self)
+        self.iloc = _iLocIndexer(self, self._loc)
         self.files = []
         self.dtypes = []
         self.nodatavals = []
@@ -173,26 +268,28 @@ class Raster(BaseRaster):
             
         Returns
         -------
-        Raster
-            A new Raster object only containing the subset of layers specified
-            in the label argument.
+        pyspatialml.RasterLayer or pyspatialml.Raster
+            Returns a RasterLayer for subsetting of a single layer, else returns a Raster object
+            for multiple layers.
         """
 
+        # return a RasterLayer if a single layer are subset
         if isinstance(key, str):
-            key = [key]
+            selected = self._loc[key]
 
-        subset_layers = []
+        # return a Raster object if multiple layers are subset
+        else:
+            selected = []
 
-        for i in key:
+            for i in key:
+                if i in self.names is False:
+                    raise KeyError('key not present in Raster object')
+                else:
+                    selected.append(self._loc[i])
 
-            if i in self.names is False:
-                raise KeyError('layername not present in Raster object')
-            else:
-                subset_layers.append(self.loc[i])
+            selected = Raster(selected)
 
-        subset_raster = Raster(subset_layers)
-
-        return subset_raster
+        return selected
 
     def __setitem__(self, key, value):
         """
@@ -211,7 +308,7 @@ class Raster(BaseRaster):
         """
 
         if isinstance(value, RasterLayer):
-            self.loc[key] = value
+            self._loc[key] = value
             self.iloc[self.names.index(key)] = value
             setattr(self, key, value)
         else:
@@ -221,7 +318,7 @@ class Raster(BaseRaster):
         """
         Iterate over RasterLayers.
         """
-        return iter(self.loc.items())
+        return iter(self._loc.items())
 
     def close(self):
         """
@@ -358,7 +455,7 @@ class Raster(BaseRaster):
         list
             List of names of RasterLayer objects
         """
-        return list(self.loc.keys())
+        return list(self._loc.keys())
 
     @property
     def _layers(self):
@@ -370,7 +467,7 @@ class Raster(BaseRaster):
         pyspatialml.indexing._LocIndexer
             Returns a dict of key-value pairs of names and RasterLayers.
         """
-        return self.loc
+        return self._loc
 
     @_layers.setter
     def _layers(self, layers):
@@ -402,8 +499,8 @@ class Raster(BaseRaster):
         for name in self.names:
             delattr(self, name)
 
-        self.loc = _LocIndexer(self)
-        self.iloc = _iLocIndexer(self, self.loc)
+        self._loc = _LocIndexer(self)
+        self.iloc = _iLocIndexer(self, self._loc)
         self.files = []
         self.dtypes = []
         self.nodatavals = []
@@ -434,8 +531,8 @@ class Raster(BaseRaster):
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
             layer.names = [name]
-            self.loc[name] = layer
-            setattr(self, name, self.loc[name])
+            self._loc[name] = layer
+            setattr(self, name, self._loc[name])
 
         self.meta = dict(crs=self.crs,
                          transform=self.transform,
@@ -1046,7 +1143,7 @@ class Raster(BaseRaster):
 
             # update layers and names
             combined_layers = (
-                list(self.loc.values()) + list(new_raster.loc.values()))
+                list(self._loc.values()) + list(new_raster._loc.values()))
             
             for layer, name in zip(combined_layers, combined_names):
                 layer.names = [name]
@@ -1089,13 +1186,13 @@ class Raster(BaseRaster):
         if len([i for i in labels if isinstance(i, int)]) == len(labels):
 
             subset_layers = [v for (i, v) in enumerate(
-                list(self.loc.values())) if i not in labels]
+                list(self._loc.values())) if i not in labels]
 
         # str label based subsetting
         elif len([i for i in labels if isinstance(i, str)]) == len(labels):
 
             subset_layers = [v for (i, v) in enumerate(
-                list(self.loc.values())) if self.names[i] not in labels]
+                list(self._loc.values())) if self.names[i] not in labels]
 
         else:
             raise ValueError(
@@ -1133,24 +1230,22 @@ class Raster(BaseRaster):
         if in_place is True:
             for old_name, new_name in names.items():
                 # change internal name of RasterLayer
-                self.loc[old_name].names = [new_name]
+                self._loc[old_name].names = [new_name]
 
                 # change name of layer in stack
-                # self.loc[new_name] = self.loc.pop(old_name)
-                self.loc.rename(old_name, new_name)
+                self._loc.rename(old_name, new_name)
         else:
             new_raster = self._newraster(self.files, self.names)
             for old_name, new_name in names.items():
                 # change internal name of RasterLayer
-                new_raster.loc[old_name].names = [new_name]
+                new_raster._loc[old_name].names = [new_name]
 
                 # change name of layer in stack
-                # new_raster.loc[new_name] = new_raster.loc.pop(old_name)
-                new_raster.loc.rename(old_name, new_name)
+                new_raster._loc.rename(old_name, new_name)
                 
             return new_raster
 
-    def plot(self, out_shape=(100, 100), figsize=None, label_fontsize=8,
+    def plot(self, out_shape=(100, 100), label_fontsize=8,
              title_fontsize=8, names=None, fig_kwds=None, legend_kwds=None):
         """
         Plot a Raster object as a raster matrix.
@@ -1200,6 +1295,12 @@ class Raster(BaseRaster):
 
         if names is None:
             names = self.names
+        
+        if fig_kwds is None:
+            fig_kwds = {}
+        
+        if legend_kwds is None:
+            legend_kwds = {}
 
         fig, axs = plt.subplots(rows, cols, **fig_kwds)
 

@@ -8,77 +8,77 @@ class TestIndexing(TestCase):
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_naming(self):
+        stack = Raster(self.predictors + [nc.multiband])
 
         # check unique naming when stacking multiband raster
-        stack = Raster(self.predictors + [nc.multiband])
         self.assertEqual(stack.count, 11)
         expected_names = [
-            'lsat7_2000_10',
-            'lsat7_2000_20',
-            'lsat7_2000_30',
-            'lsat7_2000_40',
-            'lsat7_2000_50',
-            'lsat7_2000_70',
-            'landsat_multiband_1',
-            'landsat_multiband_2',
-            'landsat_multiband_3',
-            'landsat_multiband_4',
-            'landsat_multiband_5'
+            "lsat7_2000_10",
+            "lsat7_2000_20",
+            "lsat7_2000_30",
+            "lsat7_2000_40",
+            "lsat7_2000_50",
+            "lsat7_2000_70",
+            "landsat_multiband_1",
+            "landsat_multiband_2",
+            "landsat_multiband_3",
+            "landsat_multiband_4",
+            "landsat_multiband_5",
         ]
         self.assertListEqual(stack.names, expected_names)
 
-    def test_subseting(self):
+    def test_subset_single_layer(self):
 
         stack = Raster(self.predictors + [nc.multiband])
 
-        # RasterLayer indexing which returns a RasterLayer
+        # Subset a single layer using an index position - returns a RasterLayer
         self.assertIsInstance(stack.iloc[0], RasterLayer)
-        self.assertIsInstance(stack.loc['lsat7_2000_10'], RasterLayer)
+
+        # Subset a single layer using a label - returns a RasterLayer
+        self.assertIsInstance(stack["lsat7_2000_10"], RasterLayer)
+
+        # Subset a single layer using an attribute - returns a RasterLayer
         self.assertIsInstance(stack.lsat7_2000_10, RasterLayer)
+
+        # Check that the raster values are the same as the original values after subsetting
+        self.assertEqual(
+            stack.lsat7_2000_10.read(masked=True).mean(), 80.56715262406088
+        )
+        self.assertEqual(
+            stack.lsat7_2000_70.read(masked=True).mean(), 59.17773813401238
+        )
+
+    def test_subset_multiple_layers(self):
+
+        stack = Raster(self.predictors + [nc.multiband])
+
+        # Subset multiple layers using a slice of index positions - returns a Raster object
+        self.assertIsInstance(stack.iloc[0:2], Raster)
+
+        # Subset multiple layers using a list of index positions - returns a Raster object
+        self.assertIsInstance(stack.iloc[[0, 1, 2]], Raster)
+
+        # Subset multiple layers using a list of labels
+        subset_raster = stack[["lsat7_2000_10", "lsat7_2000_70"]]
+        self.assertIsInstance(subset_raster, Raster)
+        self.assertListEqual(subset_raster.names, ["lsat7_2000_10", "lsat7_2000_70"])
+
+        # Check that label and integer subset return the same layers
         self.assertListEqual(
-            stack.iloc[0:3],
-            stack.loc[['lsat7_2000_10', 'lsat7_2000_20', 'lsat7_2000_30']])
-
-        # RasterStack subsetting
-        subset_raster = stack[['lsat7_2000_10', 'lsat7_2000_70']]
-        self.assertListEqual(subset_raster.names, ['lsat7_2000_10', 'lsat7_2000_70'])
-        self.assertEqual(subset_raster.lsat7_2000_10.read(masked=True).mean(), 80.56715262406088)
-        self.assertEqual(subset_raster.lsat7_2000_70.read(masked=True).mean(), 59.17773813401238)
-
-        # subsetting after name change
-        stack.rename({'lsat7_2000_10': 'testme'})
-        expected_names = [
-            'testme',
-            'lsat7_2000_20',
-            'lsat7_2000_30',
-            'lsat7_2000_40',
-            'lsat7_2000_50',
-            'lsat7_2000_70',
-            'landsat_multiband_1',
-            'landsat_multiband_2',
-            'landsat_multiband_3',
-            'landsat_multiband_4',
-            'landsat_multiband_5'
-            ]
-            
-        self.assertListEqual(stack.names, expected_names)
-        self.assertListEqual(stack.iloc[0].names, ['testme'])
-        self.assertListEqual(
-            stack[['testme', 'lsat7_2000_20']].names, 
-            ['testme', 'lsat7_2000_20'])
-
-        # check that RasterLayer internal name is carried over to new Raster
-        self.assertListEqual(Raster(stack.iloc[0]).names, ['testme'])
+            stack.iloc[0:3].names,
+            stack[["lsat7_2000_10", "lsat7_2000_20", "lsat7_2000_30"]].names,
+        )
 
     def test_indexing(self):
 
         stack = Raster(self.predictors + [nc.multiband])
 
         # replace band 1 with band 7
-        band7_mean = stack.loc['lsat7_2000_70'].read(masked=True).mean()
+        band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()
 
         stack.iloc[0] = Raster(nc.band7).iloc[0]
+
         self.assertEqual(stack.iloc[0].read(masked=True).mean(), band7_mean)
-        self.assertEqual(stack.loc['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
-        self.assertEqual(stack['lsat7_2000_10'].read(masked=True).mean(), band7_mean)
+        self.assertEqual(stack["lsat7_2000_10"].read(masked=True).mean(), band7_mean)
+        self.assertEqual(stack["lsat7_2000_10"].read(masked=True).mean(), band7_mean)
         self.assertEqual(stack.lsat7_2000_10.read(masked=True).mean(), band7_mean)

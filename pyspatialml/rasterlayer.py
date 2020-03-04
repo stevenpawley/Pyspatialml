@@ -1,4 +1,3 @@
-import tempfile
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -31,7 +30,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
     def __init__(self, band):
 
-        # access inherited methods/attributes overriden by __init__
+        # access inherited methods/attributes overridden by __init__
         super().__init__(band)
 
         # rasterlayer specific attributes
@@ -47,7 +46,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
         self.close = band.ds.close
-
+    
     def _arith(self, function, other=None):
         """
         General method for performing arithmetic operations on RasterLayer
