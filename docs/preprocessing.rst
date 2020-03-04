@@ -32,7 +32,7 @@ Quick arithmetic operations on two layers:
 
 
 
-Overlap operations:
+Overlay operations:
 
 ::
 
@@ -69,7 +69,7 @@ size of the windows is set by the ``Raster_obj.block_shape`` attribute.
         new_arr = arr[0, :, :] + arr[1, :, :]
         return new_arr
 
-     result_2d = stack.calc(
+    result_2d = stack.calc(
         function=compute_outputs_2d_array,
         file_path=None,
         driver='GTiff',
