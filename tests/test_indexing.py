@@ -58,7 +58,7 @@ class TestIndexing(TestCase):
         # Subset multiple layers using a list of index positions - returns a Raster object
         self.assertIsInstance(stack.iloc[[0, 1, 2]], Raster)
 
-        # Subset multiple layers using a list of labels
+        # Subset multiple layers using a list of labels - returns a Raster object
         subset_raster = stack[["lsat7_2000_10", "lsat7_2000_70"]]
         self.assertIsInstance(subset_raster, Raster)
         self.assertListEqual(subset_raster.names, ["lsat7_2000_10", "lsat7_2000_70"])
