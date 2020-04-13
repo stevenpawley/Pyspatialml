@@ -1,5 +1,5 @@
 from .raster import Raster
-from .base import _file_path_tempfile
+from .temporary_files import _file_path_tempfile
 import numpy as np
 import rasterio
 from copy import deepcopy
