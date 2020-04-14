@@ -741,7 +741,7 @@ class Raster(BaseRaster):
                 arr[arr == layer.nodata] = nodata
                 dst.write(arr.astype(dtype), i + 1)
 
-        raster = self._newraster(file_path, self.names)
+        raster = self._new_raster(file_path, self.names)
 
         return raster
 
@@ -846,7 +846,7 @@ class Raster(BaseRaster):
         names = [prefix + str(i) for i in range(len(indexes))]
 
         # create new raster object
-        new_raster = self._newraster(file_path, names)
+        new_raster = self._new_raster(file_path, names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -964,7 +964,7 @@ class Raster(BaseRaster):
         names = [prefix + str(i) for i in range(len(indexes))]
 
         # create new raster object
-        new_raster = self._newraster(file_path, names)
+        new_raster = self._new_raster(file_path, names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1144,7 +1144,7 @@ class Raster(BaseRaster):
             if in_place is True:
                 self._layers = combined_layers
             else:
-                new_raster = self._newraster(self.files, self.names)
+                new_raster = self._new_raster(self.files, self.names)
                 new_raster._layers = combined_layers
 
                 return new_raster
@@ -1198,7 +1198,7 @@ class Raster(BaseRaster):
         if in_place is True:
             self._layers = subset_layers
         else:
-            new_raster = self._newraster(self.files, self.names)
+            new_raster = self._new_raster(self.files, self.names)
             new_raster._layers = subset_layers
 
             return new_raster
@@ -1231,7 +1231,7 @@ class Raster(BaseRaster):
                 # change name of layer in stack
                 self.loc.rename(old_name, new_name)
         else:
-            new_raster = self._newraster(self.files, self.names)
+            new_raster = self._new_raster(self.files, self.names)
             for old_name, new_name in names.items():
                 # change internal name of RasterLayer
                 new_raster.loc[old_name].names = [new_name]
@@ -1355,7 +1355,7 @@ class Raster(BaseRaster):
 
         return axs
 
-    def _newraster(self, file_path, names=None):
+    def _new_raster(self, file_path, names=None):
         """Return a new Raster object
 
         Parameters
@@ -1488,7 +1488,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(masked_ndarrays.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names)
+        new_raster = self._new_raster(file_path, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1554,7 +1554,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(intersected_arr.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names)
+        new_raster = self._new_raster(file_path, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1631,7 +1631,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(cropped_arr.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names)
+        new_raster = self._new_raster(file_path, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1751,7 +1751,7 @@ class Raster(BaseRaster):
                 if progress is True:
                     t.update()
 
-        new_raster = self._newraster(file_path, self.names)
+        new_raster = self._new_raster(file_path, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1839,7 +1839,7 @@ class Raster(BaseRaster):
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(arr.astype(dtype))
 
-        new_raster = self._newraster(file_path, self.names)
+        new_raster = self._new_raster(file_path, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1941,7 +1941,7 @@ class Raster(BaseRaster):
                         result = np.ma.filled(result, fill_value=nodata)
                         dst.write(result.astype(dtype), window=window, indexes=indexes)
 
-        new_raster = self._newraster(file_path)
+        new_raster = self._new_raster(file_path)
 
         if tfile is not None:
             for layer in new_raster.iloc:

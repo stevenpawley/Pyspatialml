@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 import re
-from abc import ABC
+from abc import ABC, abstractmethod
 from itertools import chain
 
 import geopandas as gpd
@@ -24,6 +24,21 @@ class BaseRaster(ABC):
         self.width = band.ds.width
         self.height = band.ds.height
         self.bounds = band.ds.bounds
+
+    @abstractmethod
+    def read(self, **kwargs):
+        """Read method to be defined by subclass"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def write(self):
+        """Write method to be defined by subclass"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def plot(self):
+        """Plot method to be defined by subclass"""
+        raise NotImplementedError()
 
     @staticmethod
     def _make_name(name, existing_names=None):
@@ -708,4 +723,3 @@ class BaseRaster(ABC):
             df.loc[df[col_name] == nodatavals[i], col_name] = np.nan
 
         return df
-
