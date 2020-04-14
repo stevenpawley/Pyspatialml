@@ -1293,6 +1293,7 @@ class Raster(BaseRaster):
             rows += 1
 
         cmaps = [i.cmap for i in self.iloc]
+        norms = [i.norm for i in self.iloc]
 
         if names is None:
             names = self.names
@@ -1306,7 +1307,7 @@ class Raster(BaseRaster):
         fig, axs = plt.subplots(rows, cols, **fig_kwds)
 
         # axs.flat is an iterator over the row-order flattened axs array
-        for ax, n, cmap, name in zip(axs.flat, range(self.count), cmaps, names):
+        for ax, n, cmap, norm, name in zip(axs.flat, range(self.count), cmaps, norms, names):
 
             arr = self.iloc[n].read(masked=True, out_shape=out_shape)
 
@@ -1320,6 +1321,7 @@ class Raster(BaseRaster):
                     self.bounds.top,
                 ],
                 cmap=cmap,
+                norm=norm,
             )
 
             divider = make_axes_locatable(ax)

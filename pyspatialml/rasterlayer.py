@@ -42,6 +42,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.driver = band.ds.meta["driver"]
         self.meta = band.ds.meta
         self.cmap = "viridis"
+        self.norm = None
         self.categorical = False
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
