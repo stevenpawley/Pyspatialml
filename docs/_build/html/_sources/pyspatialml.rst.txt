@@ -19,22 +19,6 @@ pyspatialml.base module
     :undoc-members:
     :show-inheritance:
 
-pyspatialml.cross_validation module
-------------------------------------
-
-.. automodule:: pyspatialml.cross_validation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspatialml.indexing module
----------------------------
-
-.. automodule:: pyspatialml.indexing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspatialml.plotting module
 ---------------------------
 

@@ -3,15 +3,16 @@ from functools import partial
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
-from rasterio.windows import Window
-from rasterio.fill import fillnodata
 from rasterio.features import sieve
+from rasterio.fill import fillnodata
+from rasterio.windows import Window
 from scipy import ndimage
-from .base import _get_nodata
-from .temporary_files import _file_path_tempfile
-from .plotting import discrete_cmap
 
 import pyspatialml.base
+
+from .utils import _get_nodata
+from .plotting import discrete_cmap
+from .temporary_files import _file_path_tempfile
 
 
 class RasterLayer(pyspatialml.base.BaseRaster):

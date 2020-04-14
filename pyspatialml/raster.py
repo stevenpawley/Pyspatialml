@@ -3,9 +3,7 @@ from __future__ import print_function
 import concurrent.futures
 import math
 import tempfile
-from collections import Counter
-from collections import OrderedDict
-from collections import namedtuple
+from collections import Counter, OrderedDict, namedtuple
 from collections.abc import Mapping
 from copy import deepcopy
 from functools import partial
@@ -22,9 +20,10 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
 
-from .base import BaseRaster, _get_nodata, _get_num_workers
-from .temporary_files import _file_path_tempfile
+from .base import BaseRaster
+from .utils import _get_nodata, _get_num_workers
 from .rasterlayer import RasterLayer
+from .temporary_files import _file_path_tempfile
 
 
 class _LocIndexer(Mapping):

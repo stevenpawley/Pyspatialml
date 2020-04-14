@@ -1,35 +1,38 @@
-from .raster import Raster
-from .temporary_files import _file_path_tempfile
+import os
+from copy import deepcopy
+
 import numpy as np
 import rasterio
-from copy import deepcopy
+from rasterio.warp import reproject
 from scipy import ndimage
+
+from .raster import Raster
+from .temporary_files import _file_path_tempfile
 
 
 def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
-    """
-    One-hot encoding of a RasterLayer
+    """One-hot encoding of a RasterLayer.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer
-        Containing categories to perform one-hot encoding on
+        Containing categories to perform one-hot encoding on.
 
     categories : list, ndarray, optional
         Optional list of categories to extract. Default performs one-hot encoding
-        on all categorical values in the input layer
+        on all categorical values in the input layer.
 
     file_path : str, optional. Default is None
         File path to save one-hot encoded raster. If not supplied then data
-        is written to a tempfile
+        is written to a tempfile.
 
     driver : str, options. Default is 'GTiff'
-        GDAL-compatible driver
+        GDAL-compatible driver.
 
     Returns
     -------
     pyspatialml.Raster
-        Each categorical value is encoded as a layer with a Raster object
+        Each categorical value is encoded as a layer with a Raster object.
     """
     arr = layer.read(masked=True)
 
@@ -75,20 +78,19 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
 
 def xy_coordinates(layer, file_path=None, driver='GTiff'):
     """
-    Fill 2d arrays with their x,y indices
+    Fill 2d arrays with their x,y indices.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
-        RasterLayer to use as a template
+        RasterLayer to use as a template.
     
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object.
-        If not supplied then the cropped raster is saved to a
-        temporary file.
+        File path to save to the resulting Raster object. If not supplied then the
+        raster is saved to a temporary file.
     
     driver : str, options. Default is 'GTiff'
-        GDAL driver to use to save raster
+        GDAL driver to use to save raster.
 
     Returns
     -------
@@ -125,28 +127,26 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
 
 
 def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
-    """
-    Generate 2d arrays with n_angles rotated coordinates
+    """Generate 2d arrays with n_angles rotated coordinates.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
-        RasterLayer to use as a template
+        RasterLayer to use as a template.
 
     n_angles : int, optional. Default is 8
-        Number of angles to rotate coordinate system by
+        Number of angles to rotate coordinate system by.
 
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object.
-        If not supplied then the cropped raster is saved to a
-        temporary file.
+        File path to save to the resulting Raster object. If not supplied then the
+        raster is saved to a temporary file.
     
     driver : str, optional. Default is 'GTiff'
-        GDAL driver to use to save raster
+        GDAL driver to use to save raster.
 
     Returns
     -------
-    pyspatialml.Raster object
+    pyspatialml.Raster
     """
 
     # define x and y grid dimensions
@@ -183,20 +183,18 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
 
 
 def distance_to_corners(layer, file_path=None, driver='GTiff'):
-    """
-    Generate buffer distances to corner and centre coordinates of raster extent
+    """Generate buffer distances to corner and centre coordinates of raster extent.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
     
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object.
-        If not supplied then the cropped raster is saved to a
-        temporary file.
+        File path to save to the resulting Raster object. If not supplied then the
+        raster is saved to a temporary file.
     
     driver : str, optional. Default is 'GTiff'
-        GDAL driver to use to save raster
+        GDAL driver to use to save raster.
 
     Returns
     -------
@@ -242,25 +240,24 @@ def distance_to_corners(layer, file_path=None, driver='GTiff'):
 
 
 def _grid_distance(shape, rows, cols):
-    """
-    Generate buffer distances to x,y coordinates
+    """Generate buffer distances to x,y coordinates.
 
     Parameters
     ----------
     shape : tuple
-        shape of numpy array (rows, cols) to create buffer distances within
+        shape of numpy array (rows, cols) to create buffer distances within.
 
     rows : 1d numpy array
-        array of row indexes
+        array of row indexes.
 
     cols : 1d numpy array
-        array of column indexes
+        array of column indexes.
 
     Returns
     -------
     ndarray
         3d numpy array of euclidean grid distances to each x,y coordinate pair
-        [band, row, col]
+        [band, row, col].
     """
 
     # create buffer distances
@@ -281,26 +278,24 @@ def _grid_distance(shape, rows, cols):
 
 
 def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
-    """
-    Generate buffer distances to x,y coordinates
+    """Generate buffer distances to x,y coordinates.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
     
     rows : 1d numpy array
-        array of row indexes
+        array of row indexes.
 
     cols : 1d numpy array
-        array of column indexes
+        array of column indexes.
 
     file_path : str, optional. Default=None
-        File path to save to the resulting Raster object.
-        If not supplied then the cropped raster is saved to a
-        temporary file.
+        File path to save to the resulting Raster object. If not supplied then the
+        raster is saved to a temporary file.
     
     driver : str, default='GTiff'
-        GDAL driver to use to save raster
+        GDAL driver to use to save raster.
 
     Returns
     -------
@@ -340,3 +335,121 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
             layer.close = tfile.close
 
     return new_raster
+
+
+def reclass_nodata(input, output, src_nodata=None, dst_nodata=-99999,
+                   intern=False):
+    """
+    Reclassify raster no data values and save to a new raster
+
+    Args
+    ----
+    input : str
+        File path to raster that is to be reclassified.
+
+    output : str
+        File path to output raster
+
+    src_nodata : int or float, optional
+        The source nodata value. Pixels with this value will be reclassified
+        to the new dst_nodata value. If not set, it will default to the nodata value
+        stored in the source image.
+
+    dst_nodata : int or float, optional. Default is -99999
+        The nodata value that the outout raster will receive after reclassifying
+        pixels with the src_nodata value.
+
+    itern : bool, optional. Default is False
+        Optionally return the reclassified raster as a numpy array.
+
+    Returns
+    -------
+    out: None, or 2D numpy array 
+        Raster with reclassified nodata pixels.
+    """
+
+    r = rasterio.open(input)
+    width, height, transform, crs = r.width, r.height, r.transform, r.crs
+    img_ar = r.read(1)
+    if src_nodata is None:
+        src_nodata = r.nodata
+
+    img_ar[img_ar == src_nodata] = dst_nodata
+    r.close()
+
+    with rasterio.open(path=output, mode='w', driver='GTiff', width=width,
+                       height=height, count=1, transform=transform, crs=crs,
+                       dtype=str(img_ar.dtype), nodata=dst_nodata) as dst:
+        dst.write(img_ar, 1)
+
+    if intern is True:
+        return (img_ar)
+    else:
+        return()
+
+
+def align_rasters(rasters, template, outputdir, method="Resampling.nearest"):
+    """Aligns a list of rasters (paths to files) to a template raster.
+    The rasters to that are to be realigned are assumed to represent
+    single band raster files.
+
+    Nodata values are also reclassified to the template raster's nodata values
+
+    Args
+    ----
+    rasters : list, str
+        List containing file paths to multiple rasters that are to be realigned.
+
+    template : str
+        File path to raster that is to be used as a template to transform the
+        other rasters to.
+
+    outputdir : str
+        Directory to output the realigned rasters. This should not be the
+        existing directory unless it is desired that the existing rasters to be
+        realigned should be overwritten.
+
+    method : str
+        Resampling method to use. One of the following:
+            Resampling.average,
+            Resampling.bilinear,
+            Resampling.cubic,
+            Resampling.cubic_spline,
+            Resampling.gauss,
+            Resampling.lanczos,
+            Resampling.max,
+            Resampling.med,
+            Resampling.min,
+            Resampling.mode,
+            Resampling.nearest,
+            Resampling.q1,
+            Resampling.q3
+    """
+
+    # check resampling methods
+    methods = dir(rasterio.enums.Resampling)
+    methods = [i for i in methods if i.startswith('__') is False]
+    methods = ['Resampling.' + i for i in methods]
+
+    if method not in methods:
+        raise ValueError('Invalid resampling method: ' + method + os.linesep +
+                         'Valid methods are: ' + str(methods))
+
+    # open raster to be used as the template and create numpy array
+    template = rasterio.open(template)
+    kwargs = template.meta.copy()
+
+    for raster in rasters:
+        output = os.path.join(outputdir, os.path.basename(raster))
+
+        with rasterio.open(raster) as src:
+            with rasterio.open(output, 'w', **kwargs) as dst:
+                reproject(source=rasterio.band(src, 1),
+                          destination=rasterio.band(dst, 1),
+                          dst_transform=template.transform,
+                          dst_nodata=template.nodata,
+                          dst_crs=template.nodata)
+
+    template.close()
+
+    return()

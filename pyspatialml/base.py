@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import re
 from abc import ABC
@@ -10,15 +11,10 @@ import rasterio
 from rasterio import features
 from rasterio.windows import Window
 from shapely.geometry import Point
-import multiprocessing
 
 
 class BaseRaster(ABC):
-    """The BaseRaster provides a general structure for Rasterlayer and Raster objects and contains
-    methods that apply both to RasterLayer and Raster objects
-
-    Internally comprises a rasterio.Band object consisting of a named tuple of the file path, the
-    band index, the dtype and shape an individual band within a raster file-based dataset.
+    """Base class for Raster and RasterLayer objects
     """
 
     def __init__(self, band):
@@ -27,11 +23,11 @@ class BaseRaster(ABC):
         self.transform = band.ds.transform
         self.width = band.ds.width
         self.height = band.ds.height
-        self.bounds = band.ds.bounds  # ('left', 'bottom', 'right', 'top')
+        self.bounds = band.ds.bounds
 
     @staticmethod
     def _make_name(name, existing_names=None):
-        """Converts a filename to a valid class attribute name
+        """Converts a filename to a valid class attribute name.
 
         Parameters
         ----------
@@ -39,13 +35,14 @@ class BaseRaster(ABC):
             File name for convert to a valid class attribute name.
 
         existing_names : list (opt)
-            List of existing names to check that the new name will not result in duplicated layer
-            names.
+            List of existing names to check that the new name will not result in 
+            duplicated layer names.
 
         Returns
         -------
         str
-            Syntatically correct name of layer so that it can form a class instance attribute.
+            Syntatically correct name of layer so that it can form a class instance
+            attribute.
         """
 
         # replace spaces and hyphens with underscore
@@ -90,7 +87,7 @@ class BaseRaster(ABC):
         return arr
 
     def min(self, max_pixels=10000):
-        """Minimum value
+        """Minimum value.
         
         Parameters
         ----------
@@ -100,6 +97,7 @@ class BaseRaster(ABC):
         Returns
         -------
         numpy.float32
+            The minimum value of the object
         """
         arr = self._stats(max_pixels)
 
@@ -111,7 +109,7 @@ class BaseRaster(ABC):
         return stats
 
     def max(self, max_pixels=10000):
-        """Maximum value
+        """Maximum value.
         
         Parameters
         ----------
@@ -121,6 +119,7 @@ class BaseRaster(ABC):
         Returns
         -------
         numpy.float32
+            The maximum value of the object's pixels.
         """
         arr = self._stats(max_pixels)
 
@@ -142,6 +141,7 @@ class BaseRaster(ABC):
         Returns
         -------
         numpy.float32
+            The mean value of the object's pixels.
         """
         arr = self._stats(max_pixels)
 
@@ -163,6 +163,7 @@ class BaseRaster(ABC):
         Returns
         -------
         numpy.float32
+            The medium value of the object's pixels.
         """
         arr = self._stats(max_pixels)
 
@@ -174,19 +175,22 @@ class BaseRaster(ABC):
         return stats
 
     def sample(self, size, strata=None, return_array=False, random_state=None):
-        """Generates a random sample of according to size, and samples the pixel values
+        """Generates a random sample of according to size, and samples the pixel
+        values.
 
         Parameters
         ----------
         size : int
-            Number of random samples or number of samples per strata if strategy='stratified'.
+            Number of random samples or number of samples per strata if
+            strategy='stratified'.
 
         strata : rasterio DatasetReader (opt)
-            Whether to use stratified instead of random sampling. Strata can be supplied using an
-            open rasterio DatasetReader object.
+            Whether to use stratified instead of random sampling. Strata can be
+            supplied using an open rasterio DatasetReader object.
 
         return_array : bool (opt). Default is False
-            Optionally return extracted data as separate X, y and xy masked numpy arrays.
+            Optionally return extracted data as separate X, y and xy masked numpy
+            arrays.
 
         na_rm : bool (opt). Default is True
             Optionally remove rows that contain nodata values.
@@ -197,11 +201,9 @@ class BaseRaster(ABC):
         Returns
         -------
         tuple
-            Two elements:
-
+            A tuple containing two elements:
             numpy.ndarray
                 Numpy array of extracted raster values, typically 2d.
-
             numpy.ndarray
                 2D numpy array of xy coordinates of extracted values.
         """
@@ -303,7 +305,7 @@ class BaseRaster(ABC):
             return valid_samples, valid_coordinates
 
     def extract_xy(self, xy):
-        """Samples pixel values using an array of xy locations
+        """Samples pixel values using an array of xy locations.
 
         Parameters
         ----------
@@ -313,7 +315,8 @@ class BaseRaster(ABC):
         Returns
         -------
         numpy.ndarray
-            2d masked array containing sampled raster values (sample, bands) at x,y locations.
+            2d masked array containing sampled raster values (sample, bands) at x,y
+            locations.
         """
 
         # clip coordinates to extent of raster
@@ -351,40 +354,39 @@ class BaseRaster(ABC):
         low_memory=False,
     ):
         """Sample a Raster/RasterLayer using a geopandas GeoDataframe containing
-        points, lines or polygon features
+        points, lines or polygon features.
 
         Parameters
         ----------
         response: geopandas.GeoDataFrame
-            Containing either point, line or polygon geometries. Overlapping geometries will cause
-            the same pixels to be sampled.
+            Containing either point, line or polygon geometries. Overlapping
+            geometries will cause the same pixels to be sampled.
 
         columns : str (opt)
-            Column names of attribute to be used the label the extracted data. Used only if the
-            response feature represents a GeoDataframe.
+            Column names of attribute to be used the label the extracted data. Used
+            only if the response feature represents a GeoDataframe.
 
         return_array : bool (opt). Default is False
-            Optionally return extracted data as separate X, y and xy masked numpy arrays.
+            Optionally return extracted data as separate X, y and xy masked numpy
+            arrays.
         
         duplicates : str (opt). Default is 'keep'
-            Method to deal with duplicates points that fall inside the same pixel. Available
-            options are ['keep', 'mean', min', 'max'].
+            Method to deal with duplicates points that fall inside the same pixel.
+            Available options are ['keep', 'mean', min', 'max'].
 
         na_rm : bool (opt). Default is True
-            Optionally remove rows that contain nodata values if extracted values are returned as
-            a GeoDataFrame.
+            Optionally remove rows that contain nodata values if extracted values are
+            returned as a GeoDataFrame.
 
         low_memory : bool (opt). Default is False
             Optionally extract pixel values in using a slower but memory-safe method.
 
         Returns
         -------
-        If return_array=False:
-            geopandas.GeoDataframe
-                Containing extracted data as point geometries
+        geopandas.GeoDataframe
+            Containing extracted data as point geometries if return_array is False
 
-        If return_array=True:
-            tuple with three items:
+        tuple with three items if return_array is True:
             numpy.ndarray
                 Numpy masked array of extracted raster values, typically 2d.
 
@@ -574,36 +576,31 @@ class BaseRaster(ABC):
     def extract_raster(
         self, response, value_name="value", return_array=False, na_rm=True
     ):
-        """Sample a Raster object by an aligned raster of labelled pixels
+        """Sample a Raster object by an aligned raster of labelled pixels.
 
         Parameters
         ----------
         response: rasterio DatasetReader
-            Single band raster containing labelled pixels as an open rasterio DatasetReader object.
+            Single band raster containing labelled pixels as an open rasterio
+            DatasetReader object.
 
         return_array : bool (opt). Default is False
-            Optionally return extracted data as separate X, y and xy masked numpy arrays.
+            Optionally return extracted data as separate X, y and xy masked numpy
+            arrays.
 
         na_rm : bool (opt). Default is True
             Optionally remove rows that contain nodata values.
 
         Returns
         -------
-        If return_array='False':
+        geopandas.GeoDataFrame
+            Geodataframe containing extracted data as point features if return_array is False
 
-            geopandas.GeoDataFrame
-                Geodataframe containing extracted data as point features
-
-        If return_array='True:
-
-            tuple with three items:
-
+        tuple with three items if return_array is True:
             numpy.ndarray
                 Numpy masked array of extracted raster values, typically 2d.
-
             numpy.ndarray
                 1d numpy masked array of labelled sampled.
-
             numpy.ndarray
                 2d numpy masked array of row and column indexes of training pixels.
         """
@@ -640,7 +637,8 @@ class BaseRaster(ABC):
             return X, y, xy
 
     def head(self):
-        """Show the head (first rows, first columns) or tail (last rows, last columns) of pixels
+        """Show the head (first rows, first columns) or tail (last rows, last columns)
+        of pixels.
         """
 
         window = Window(col_off=0, row_off=0, width=20, height=10)
@@ -648,7 +646,8 @@ class BaseRaster(ABC):
         return self.read(window=window)
 
     def tail(self):
-        """Show the head (first rows, first columns) or tail (last rows, last columns) of pixels
+        """Show the head (first rows, first columns) or tail (last rows, last columns)
+        of pixels.
         """
 
         window = Window(
@@ -658,7 +657,7 @@ class BaseRaster(ABC):
         return self.read(window=window)
 
     def to_pandas(self, max_pixels=50000, resampling="nearest"):
-        """Raster to pandas DataFrame
+        """Raster to pandas DataFrame.
 
         Parameters
         ----------
@@ -666,15 +665,15 @@ class BaseRaster(ABC):
             Maximum number of pixels to sample.
 
         resampling : str (default 'nearest')
-            Resampling method to use when applying decimated reads when out_shape is specified.
-            Supported methods are: 'average', 'bilinear', 'cubic', 'cubic_spline', 'gauss',
-            'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'.
+            Resampling method to use when applying decimated reads when out_shape is
+            specified. Supported methods are: 'average', 'bilinear', 'cubic', 
+            'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'.
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing values of names of RasterLayers in the Raster as columns, and
-            pixel values as rows.
+            DataFrame containing values of names of RasterLayers in the Raster as
+            columns, and pixel values as rows.
         """
 
         # read dataset using decimated reads
@@ -693,12 +692,8 @@ class BaseRaster(ABC):
             nodatavals = [self.nodata]
 
         # x and y grid coordinate arrays
-        x_range = np.linspace(
-            start=self.bounds.left, stop=self.bounds.right, num=cols
-        )
-        y_range = np.linspace(
-            start=self.bounds.top, stop=self.bounds.bottom, num=rows
-        )
+        x_range = np.linspace(start=self.bounds.left, stop=self.bounds.right, num=cols)
+        y_range = np.linspace(start=self.bounds.top, stop=self.bounds.bottom, num=rows)
         xs, ys = np.meshgrid(x_range, y_range)
 
         arr = arr.reshape((bands, rows * cols))
@@ -714,22 +709,3 @@ class BaseRaster(ABC):
 
         return df
 
-
-def _get_nodata(dtype):
-    """Get a nodata value based on the minimum value permissible by dtype
-    """
-    try:
-        nodata = np.iinfo(dtype).min
-    except ValueError:
-        nodata = np.finfo(dtype).min
-
-    return nodata
-
-
-def _get_num_workers(n_jobs):
-    n_cpus = multiprocessing.cpu_count()
-
-    if n_jobs < 0:
-        n_jobs = n_cpus + n_jobs + 1
-
-    return n_jobs

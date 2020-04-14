@@ -4,19 +4,18 @@ from scipy.cluster.hierarchy import linkage, cut_tree
 
 
 def filter_points(gdf, min_dist=0, remove='first'):
-    """
-    Filter points in geodataframe using a minimum distance buffer
+    """Filter points in geodataframe using a minimum distance buffer.
 
     Args
     ----
     gdf : Geopandas GeoDataFrame
-        Containing point geometries
+        Containing point geometries.
 
     min_dist : int or float, optional (default=0)
-        Minimum distance by which to filter out closely spaced points
+        Minimum distance by which to filter out closely spaced points.
 
     remove : str, optional (default='first')
-        Optionally choose to remove 'first' occurrences or 'last' occurrences
+        Optionally choose to remove 'first' occurrences or 'last' occurrences.
 
     Returns
     -------
@@ -39,9 +38,8 @@ def filter_points(gdf, min_dist=0, remove='first'):
 
 
 def get_random_point_in_polygon(poly):
-    """
-    Generates random shapely Point geometry objects within a single
-    shapely Polygon object
+    """Generates random shapely Point geometry objects within a single
+    shapely Polygon object.
 
     Args
     ----

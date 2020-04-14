@@ -15,7 +15,7 @@ typically involves several steps:
    the stack of raster data.
 
 Pyspatialml is designed to make it easy to develop spatial prediction models on stacks of
-2D raster datasets that are held on disk. Unlike using python's ```numpy``` module directly
+2D raster datasets that are held on disk. Unlike using python's ``numpy`` module directly
 where raster datasets need to be held in memory, the majority of functions within pyspatialml
 work with raster datasets that are stored on disk and allow processing operations to be
 performed on datasets that are too large to be loaded into memory.
