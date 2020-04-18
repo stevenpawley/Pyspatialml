@@ -943,6 +943,7 @@ class Raster(BaseRaster):
             n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
             n_samples = rows * cols
             flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+            flat_pixels = flat_pixels.filled(0)
         else:
             flat_pixels = self.read(masked=False, as_df=True)
             flat_pixels = flat_pixels.fillna(0)
@@ -1035,6 +1036,7 @@ class Raster(BaseRaster):
 
             # create mask for NaN values and replace with number
             flat_pixels_mask = flat_pixels.mask.copy()
+            flat_pixels = flat_pixels.filled(0)
         
         else:
             flat_pixels = img
@@ -1083,6 +1085,7 @@ class Raster(BaseRaster):
             mask2d = img.mask.any(axis=0)
             n_samples = rows * cols
             flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+            flat_pixels = flat_pixels.filled(0)
         
         else:
             flat_pixels = img
@@ -1140,6 +1143,7 @@ class Raster(BaseRaster):
             mask2d = img.mask.any(axis=0)
             n_samples = rows * cols
             flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+            flat_pixels = flat_pixels.filled(0)
         
         else:
             flat_pixels = img
