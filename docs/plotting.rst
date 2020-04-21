@@ -12,9 +12,32 @@ Plot a single RasterLayer:
     stack.lsat7_2000_10.cmap = 'plasma'
 
     # plot a single layer
-    stack.lsat7_2000_10.plot()
+    fig, ax = plt.subplots()
+    stack.lsat7_2000_10.plot(ax=ax)
+    plt.show()
+
+
+.. figure:: ../img/nc_band1.png
+    :width: 700px
+    :align: center
+    :height: 400px
+    :alt: nc stack
+    :figclass: align-center
+
+    Raster of stacked nc data
+
 
 Plot all RasterLayers in a Raster object:
 ::
 
     stack.plot()
+
+
+.. figure:: ../img/nc_stack.png
+    :width: 700px
+    :align: center
+    :height: 400px
+    :alt: nc stack
+    :figclass: align-center
+
+    Raster of stacked nc data
