@@ -177,7 +177,14 @@
 reference systems. We can ‘stack’ these into a Raster class so that we can
 perform machine learning related operations on the set of rasters:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">predictors</span><span class="p">)</span>
+
+<span class="n">stack</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fig_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;figsize&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">)})</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
+<div class="align-center figure" id="id1">
+<a class="reference internal image-reference" href="_images/nc_stack.png"><img alt="nc stack" src="_images/nc_stack.png" style="width: 700px; height: 400px;" /></a>
+<p class="caption"><span class="caption-text">Raster of stacked nc data</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 <p>Upon ‘stacking’, syntactically-correct names for each RasterLayer are
 automatically generated from the file_paths.</p>

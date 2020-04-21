@@ -6,8 +6,8 @@ The Raster Object
 
 The main class that facilitates working with multiple raster datasets is the
 ``Raster`` class, which is inspired by the famous  'raster' package in the R
-statistical programming language. The ``Raster`` object takes a list of file
-paths to GDAL-supported raster datasets and 'stacks' them into a single Raster
+statistical programming language. The ``Raster`` object takes a list 
+GDAL-supported raster datasets and 'stacks' them into a single Raster
 object. The underlying file-based raster datasets are not physically-stacked,
 but rather the Raster object internally represents each band within the datasets
 as a ``RasterLayer``. This means that metadata regarding what each raster

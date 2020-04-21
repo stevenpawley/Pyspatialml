@@ -20,6 +20,12 @@ where raster datasets need to be held in memory, the majority of functions withi
 work with raster datasets that are stored on disk and allow processing operations to be
 performed on datasets that are too large to be loaded into memory.
 
+Pyspatialml is designed to make it easy to work with typical raster data stacks consisting of
+multiple 2D grids such as different spectal bands, maps etc. However, it's purpose is not to 
+work with multidimensional datasets, i.e. those that have more than 3 dimensions such as 
+spacetime cubes of multiband data. The [xarray](http://xarray.pydata.org/en/stable/index.html)
+package can provide a structure for this type of data.
+
 
 .. figure:: ../img/Pyspatialml_training.svg
     :width: 700px

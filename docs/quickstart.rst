@@ -22,6 +22,18 @@ perform machine learning related operations on the set of rasters:
 
     stack = Raster(predictors)
 
+    stack.plot(fig_kwds={"figsize": (7, 4)})
+    plt.show()
+
+.. figure:: ../img/nc_stack.png
+    :width: 700px
+    :align: center
+    :height: 400px
+    :alt: nc stack
+    :figclass: align-center
+
+    Raster of stacked nc data
+
 Upon 'stacking', syntactically-correct names for each RasterLayer are
 automatically generated from the file_paths.
 
