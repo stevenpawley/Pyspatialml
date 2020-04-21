@@ -369,6 +369,18 @@ of pixels.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyspatialml.base.BaseRaster.plot">
+<em class="property">abstract </em><code class="sig-name descname">plot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot method to be defined by subclass</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyspatialml.base.BaseRaster.read">
+<em class="property">abstract </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read method to be defined by subclass</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyspatialml.base.BaseRaster.sample">
 <code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">strata=None</em>, <em class="sig-param">return_array=False</em>, <em class="sig-param">random_state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a random sample of according to size, and samples the pixel
@@ -432,6 +444,12 @@ columns, and pixel values as rows.</p>
 <dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyspatialml.base.BaseRaster.write">
+<em class="property">abstract </em><code class="sig-name descname">write</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.base.BaseRaster.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write method to be defined by subclass</p>
 </dd></dl>
 
 </dd></dl>
@@ -701,35 +719,37 @@ raster is saved to a temporary file.</p></li>
 <dt id="pyspatialml.raster.Raster">
 <em class="property">class </em><code class="sig-prename descclassname">pyspatialml.raster.</code><code class="sig-name descname">Raster</code><span class="sig-paren">(</span><em class="sig-param">src=None</em>, <em class="sig-param">arr=None</em>, <em class="sig-param">crs=None</em>, <em class="sig-param">transform=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">mode='r'</em>, <em class="sig-param">file_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pyspatialml.base.BaseRaster" title="pyspatialml.base.BaseRaster"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.base.BaseRaster</span></code></a></p>
-<p>Flexible class that represents a collection of file-based GDAL-supported raster datasets
-which share a common coordinate reference system and geometry.</p>
-<p>Raster objects encapsulate RasterLayer objects, which represent single band raster datasets
-that can physically be represented by either separate single-band raster files, multi-band
-raster files, or any combination of individual bands from multi-band raster and single-band
-raster datasets.</p>
-<p>Methods defined in a Raster class comprise those that would typically applied to a stack of
-raster datasets. In addition, these methods always return a new Raster object.</p>
+<p>Flexible class that represents a collection of file-based GDAL-supported raster
+datasets which share a common coordinate reference system and geometry.</p>
+<p>Raster objects encapsulate RasterLayer objects, which represent single band raster
+datasets that can physically be represented by either separate single-band raster
+files, multi-band raster files, or any combination of individual bands from
+multi-band raster and single-band raster datasets.</p>
+<p>Methods defined in a Raster class comprise those that would typically applied to
+a stack of raster datasets. In addition, these methods always return a new Raster
+object.</p>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.aggregate">
 <code class="sig-name descname">aggregate</code><span class="sig-paren">(</span><em class="sig-param">out_shape</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.aggregate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Aggregates a raster to (usually) a coarser grid cell size</p>
+<dd><p>Aggregates a raster to (usually) a coarser grid cell size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>out_shape</strong> (<em>tuple</em>) – New shape in (rows, cols).</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when out_shape is specified.
-Supported methods are: ‘average’, ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘gauss’,
-‘lanczos’, ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the aggregated raster is
-saved to a temporary file.</p></li>
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when out_shape is
+specified. Supported methods are: ‘average’, ‘bilinear’, ‘cubic’, ‘cubic_spline’,
+‘gauss’, ‘lanczos’, ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the aggregated
+raster is saved to a temporary file.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new intersected
-Raster is created using the dtype of the existing Raster dataset, which uses a dtype
-that can accommodate the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set based on the
-minimum permissible value of the Raster’s dtype. Note that this does not change the
-pixel nodata values of the raster, it only changes the metadata of what value
-represents a nodata pixel.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new
+intersected Raster is created using the dtype of the existing Raster dataset,
+which uses a dtype that can accommodate the data types of all of the
+individual RasterLayers.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
+based on the minimum permissible value of the Raster’s dtype. Note that
+this does not change the pixel nodata values of the raster, it only changes
+the metadata of what value represents a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -744,14 +764,14 @@ represents a nodata pixel.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.append">
 <code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.append" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to add new RasterLayers to a Raster object</p>
+<dd><p>Method to add new RasterLayers to a Raster object.</p>
 <p>Note that this modifies the Raster object in-place by default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<em>Raster object</em><em>, or </em><em>list of Raster objects</em>) – Object to append to the Raster.</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and return a new Raster
-object.</p></li>
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and return
+a new Raster object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -764,19 +784,48 @@ object.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyspatialml.raster.Raster.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">progress=False</em>, <em class="sig-param">n_jobs=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply user-supplied function to a Raster object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>function</em>) – Function that takes an numpy array as a single argument.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a
+tempfile is used.</p></li>
+<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new
+Raster is created using the dtype of the calculation result.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
+based on the minimum permissible value of the Raster’s data type. Note that
+this changes the values of the pixels that represent nodata pixels.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default of -1 is all cores.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Raster containing the calculated result.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pyspatialml.Raster</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyspatialml.raster.Raster.astype">
 <code class="sig-name descname">astype</code><span class="sig-paren">(</span><em class="sig-param">dtype</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.astype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Coerce Raster to a different dtype</p>
+<dd><p>Coerce Raster to a different dtype.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dtype</strong> (<em>str</em><em> or </em><em>np.dtype</em>) – Datatype to coerce Raster object</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a tempfile is
-used.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a
+tempfile is used.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set based on the
-minimum permissible value of the Raster’s data type. Note that this changes the values
-of the pixels that represent nodata pixels.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
+based on the minimum permissible value of the Raster’s data type. Note that
+this changes the values of the pixels that represent nodata pixels.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -792,11 +841,11 @@ of the pixels that represent nodata pixels.</p></li>
 <dt id="pyspatialml.raster.Raster.block_shape">
 <em class="property">property </em><code class="sig-name descname">block_shape</code><a class="headerlink" href="#pyspatialml.raster.Raster.block_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the windows size used for raster calculations, specified as a tuple
-(rows, columns)</p>
+(rows, columns).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Block window shape that is currently set for the Raster as a tuple in the format of
-(n_rows, n_columns) in pixels.</p>
+<dd class="field-odd"><p>Block window shape that is currently set for the Raster as a tuple in the
+format of (n_rows, n_columns) in pixels.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>tuple</p>
@@ -807,8 +856,8 @@ of the pixels that represent nodata pixels.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.block_shapes">
 <code class="sig-name descname">block_shapes</code><span class="sig-paren">(</span><em class="sig-param">rows</em>, <em class="sig-param">cols</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.block_shapes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generator for windows for optimal reading and writing based on the raster format Windows
-are returns as a tuple with xoff, yoff, width, height</p>
+<dd><p>Generator for windows for optimal reading and writing based on the raster
+format Windows are returns as a tuple with xoff, yoff, width, height.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -820,61 +869,34 @@ are returns as a tuple with xoff, yoff, width, height</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyspatialml.raster.Raster.calc">
-<code class="sig-name descname">calc</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">progress=False</em>, <em class="sig-param">n_jobs=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.calc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply user-supplied function to a Raster object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>function</strong> (<em>function</em>) – Function that takes an numpy array as a single argument.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a tempfile is
-used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new Raster is
-created using the dtype of the calculation result.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set based on the
-minimum permissible value of the Raster’s data type. Note that this changes the values
-of the pixels that represent nodata pixels.</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default of -1 is all cores.</p></li>
-<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Raster containing the calculated result.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
 <dt id="pyspatialml.raster.Raster.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close all of the RasterLayer objects in the Raster</p>
-<p>Note that this will cause any rasters based on temporary files to be removed. This is
-intended as a method of clearing temporary files that may have accumulated during an
-analysis session.</p>
+<dd><p>Close all of the RasterLayer objects in the Raster.</p>
+<p>Note that this will cause any rasters based on temporary files to be removed.
+This is intended as a method of clearing temporary files that may have
+accumulated during an analysis session.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.crop">
 <code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">bounds</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.crop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Crops a Raster object by the supplied bounds</p>
+<dd><p>Crops a Raster object by the supplied bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bounds</strong> (<em>tuple</em>) – A tuple containing the bounding box to clip by in the form of (xmin, ymin, xmax, ymax).</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the cropped raster is saved
-to a temporary file.</p></li>
+<li><p><strong>bounds</strong> (<em>tuple</em>) – A tuple containing the bounding box to clip by in the form of
+(xmin, ymin, xmax, ymax).</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to cropped raster. If not supplied then the cropped raster
+is saved to a temporary file.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em><em> Default is 'GTiff'</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new intersected
-Raster is created using the dtype of the existing Raster dataset, which uses a dtype
-that can accommodate the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set based on the
-minimum permissible value of the Raster’s data type. Note that this does not change the
-pixel nodata values of the raster, it only changes the metadata of what value
-represents a nodata pixel.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new
+intersected Raster is created using the dtype of the existing Raster
+dataset, which uses a dtype that can accommodate the data types of all of
+the individual RasterLayers.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
+based on the minimum permissible value of the Raster’s data type. Note that
+this does not change the pixel nodata values of the raster, it only changes
+the metadata of what value represents a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -894,10 +916,10 @@ represents a nodata pixel.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>labels</strong> (<em>single label</em><em> or </em><em>list-like</em>) – Index (int) or layer name to drop. Can be a single integer or label, or a list of
-integers or labels.</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and return a new Raster
-object.</p></li>
+<li><p><strong>labels</strong> (<em>single label</em><em> or </em><em>list-like</em>) – Index (int) or layer name to drop. Can be a single integer or label, or a
+list of integers or labels.</p></li>
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change the Raster object in-place or leave original and return
+a new Raster object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -912,26 +934,29 @@ object.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.intersect">
 <code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.intersect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform a intersect operation on the Raster object</p>
-<p>Computes the geometric intersection of the RasterLayers with the Raster object. This will
-cause nodata values in any of the rasters to be propagated through all of the output
-rasters.</p>
+<dd><p>Perform a intersect operation on the Raster object.</p>
+<p>Computes the geometric intersection of the RasterLayers with the Raster object.
+This will cause nodata values in any of the rasters to be propagated through
+all of the output rasters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the resulting Raster is
-saved to a temporary file.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the resulting
+Raster is saved to a temporary file.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new intersected
-Raster is created using the dtype of the existing Raster dataset, which uses a dtype
-that can accommodate the data types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set based on the
-minimum permissible value of the Raster’s data type. Note that this changes the values
-of the pixels that represent nodata to the new value.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the new
+intersected Raster is created using the dtype of the existing Raster dataset,
+which uses a dtype that can accommodate the data types of all of the
+individual RasterLayers.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
+based on the minimum permissible value of the Raster’s data type. Note that
+this changes the values of the pixels that represent nodata to the new
+value.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Raster with layers that are masked based on a union of all masks in the suite of RasterLayers.</p>
+<dd class="field-even"><p>Raster with layers that are masked based on a union of all masks in the
+suite of RasterLayers.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pyspatialml.Raster</p>
@@ -948,20 +973,21 @@ geopandas.GeoDataFrame</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shapes</strong> (<em>geopandas.GeoDataFrame</em>) – GeoDataFrame containing masking features.</p></li>
-<li><p><strong>invert</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If False then pixels outside shapes will be masked. If True then pixels inside shape
-will be masked.</p></li>
+<li><p><strong>invert</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If False then pixels outside shapes will be masked. If True then pixels
+inside shape will be masked.</p></li>
 <li><p><strong>crop</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Crop the raster to the extent of the shapes.</p></li>
-<li><p><strong>pad</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the features will be padded in each direction by one half of a pixel prior to
-cropping raster.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the resulting Raster is
-saved to a temporary file</p></li>
+<li><p><strong>pad</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the features will be padded in each direction by one half of a
+pixel prior to cropping raster.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – File path to save to resulting Raster. If not supplied then the resulting
+Raster is saved to a temporary file</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the cropped Raster is
-created using the existing dtype, which uses a dtype that can accommodate the data
-types of all of the individual RasterLayers.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for cropped dataset. If not specified then a nodata value is set based on
-the minimum permissible value of the Raster’s data type. Note that this changes the
-values of the pixels to the new nodata value, and changes the metadata of the raster.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Coerce RasterLayers to the specified dtype. If not specified then the
+cropped Raster is created using the existing dtype, which uses a dtype that
+can accommodate the data types of all of the individual RasterLayers.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for cropped dataset. If not specified then a nodata value is
+set based on the minimum permissible value of the Raster’s data type. Note
+that this changes the values of the pixels to the new nodata value, and changes
+the metadata of the raster.</p></li>
 </ul>
 </dd>
 </dl>
@@ -991,17 +1017,18 @@ values of the pixels to the new nodata value, and changes the metadata of the ra
 <li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>default</em><em> (</em><em>100</em><em>, </em><em>100</em><em>)</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
 <li><p><strong>label_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of labels.</p></li>
 <li><p><strong>title_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of titles.</p></li>
-<li><p><strong>names</strong> (<em>list</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally supply a list of names for each RasterLayer to override the default layer
-names for the titles.</p></li>
-<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when creating the
-figure object.</p></li>
-<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when creating the
-colorbar object.</p></li>
+<li><p><strong>names</strong> (<em>list</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally supply a list of names for each RasterLayer to override the
+default layer names for the titles.</p></li>
+<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
+creating the figure object.</p></li>
+<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when
+creating the colorbar object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>axs</strong> – array of matplotlib.axes._subplots.AxesSubplot or a single
-matplotlib.axes._subplots.AxesSubplot if Raster object contains only a single layer.</p>
+matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
+single layer.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
@@ -1011,32 +1038,35 @@ matplotlib.axes._subplots.AxesSubplot if Raster object contains only a single la
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.predict">
-<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">n_jobs=-1</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply prediction of a scikit learn model to a Raster</p>
-<p>The model can represent any scikit learn model or compatible api with a <cite>fit</cite> and <cite>predict</cite>
-method. These can consist of classification or regression models. Multi-class
-classifications and multi-target regressions are also supported.</p>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">as_df=False</em>, <em class="sig-param">n_jobs=-1</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply prediction of a scikit learn model to a Raster.</p>
+<p>The model can represent any scikit learn model or compatible api with a <cite>fit</cite>
+and <cite>predict</cite> method. These can consist of classification or regression models.
+Multi-class classifications and multi-target regressions are also supported.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>estimator</strong> (<em>estimator object implementing 'fit'</em>) – The object to use to fit the data.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not specified then the output
-is written to a temporary file.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not specified then
+the output is written to a temporary file.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not specified,
-a data type is set based on the data types of the prediction.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is derived from
-the minimum permissible value for the given data type.</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default is n_jobs=1. -1 is
-all cores; -2 is all cores -1.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
+specified, a data type is set based on the data types of the prediction.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
+derived from the minimum permissible value for the given data type.</p></li>
+<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default is False</em><em>)</em>) – Whether to read the raster data via pandas before prediction. This can be
+useful if transformers are being used as part of a pipeline and you want
+to refer to column names rather than indices.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default is
+n_jobs=1. -1 is all cores; -2 is all cores -1.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Raster object containing prediction results as a RasterLayers. For classification and
-regression models, the Raster will contain a single RasterLayer, unless the model is
-multi-class or multi-target. Layers are named automatically as <cite>pred_raw_n</cite> with
-n = 1, 2, 3 ..n.</p>
+<dd class="field-even"><p>Raster object containing prediction results as a RasterLayers. For
+classification and regression models, the Raster will contain a single
+RasterLayer, unless the model is multi-class or multi-target. Layers
+are named automatically as <cite>pred_raw_n</cite> with n = 1, 2, 3 ..n.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pyspatial.Raster</p>
@@ -1046,31 +1076,37 @@ n = 1, 2, 3 ..n.</p>
 
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.predict_proba">
-<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">indexes=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply class probability prediction of a scikit learn model to a Raster</p>
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param">estimator</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">indexes=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">as_df=False</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply class probability prediction of a scikit learn model to a Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>estimator</strong> (<em>estimator object implementing 'fit'</em>) – The object to use to fit the data.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not specified then the output
-is written to a temporary file.</p></li>
-<li><p><strong>indexes</strong> (<em>list of integers</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – List of class indices to export. In some circumstances, only a subset of the class
-probability estimations are desired, for instance when performing a binary
-classification only the probabilities for the positive class may be desired.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not specified then
+the output is written to a temporary file.</p></li>
+<li><p><strong>indexes</strong> (<em>list of integers</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – List of class indices to export. In some circumstances, only a subset of
+the class probability estimations are desired, for instance when performing
+a binary classification only the probabilities for the positive class may
+be desired.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not specified,
-a data type is set based on the data type of the prediction.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is derived from
-the minimum permissible value for the given data type.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
+specified, a data type is set based on the data type of the prediction.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
+derived from the minimum permissible value for the given data type.</p></li>
+<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default is False</em><em>)</em>) – Whether to read the raster data via pandas before prediction. This can be
+useful if transformers are being used as part of a pipeline and you want
+to refer to column names rather than indices.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Raster containing predicted class probabilities. Each predicted class is represented by
-a RasterLayer object. The RasterLayers are named <cite>prob_n</cite> for 1,2,3..n, with <cite>n</cite> based
-on the index position of the classes, not the number of the class itself.</p>
-<p>For example, a classification model predicting classes with integer values of 1, 3, and
-5 would result in three RasterLayers named prob_1, prob_2 and prob_3.</p>
+<dd class="field-even"><p><p>Raster containing predicted class probabilities. Each predicted class is
+represented by a RasterLayer object. The RasterLayers are named <cite>prob_n</cite>
+for 1,2,3..n, with <cite>n</cite> based on the index position of the classes, not the
+number of the class itself.</p>
+<p>For example, a classification model predicting classes with integer values
+of 1, 3, and 5 would result in three RasterLayers named prob_1, prob_2 and
+prob_3.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -1082,27 +1118,28 @@ on the index position of the classes, not the number of the class itself.</p>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.read">
 <code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">masked=False</em>, <em class="sig-param">window=None</em>, <em class="sig-param">out_shape=None</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">as_df=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads data from the Raster object into a numpy array</p>
-<p>Overrides read BaseRaster class read method and replaces it with a method that reads from
-multiple RasterLayer objects.</p>
+<dd><p>Reads data from the Raster object into a numpy array.</p>
+<p>Overrides read BaseRaster class read method and replaces it with a method that
+reads from multiple RasterLayer objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>masked</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Read data into a masked array.</p></li>
-<li><p><strong>window</strong> (<em>rasterio.window.Window object</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Tuple of col_off, row_off, width, height of a window of data to read a chunk of data
-into a ndarray.</p></li>
+<li><p><strong>window</strong> (<em>rasterio.window.Window object</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Tuple of col_off, row_off, width, height of a window of data to read a chunk
+of data into a ndarray.</p></li>
 <li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Shape of shape of array (rows, cols) to read data into using decimated reads.</p></li>
-<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when out_shape is specified.
-Supported methods are: ‘average’, ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘gauss’,
-‘lanczos’, ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
-<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Whether to return the data as a pandas.DataFrame with columns named by the RasterLayer
-names. Can be useful when using scikit-learn ColumnTransformer to select columns based
-on names rather than keeping track of indexes.</p></li>
+<li><p><strong>resampling</strong> (<em>str</em><em> (</em><em>default 'nearest'</em><em>)</em>) – Resampling method to use when applying decimated reads when out_shape is
+specified. Supported methods are: ‘average’, ‘bilinear’, ‘cubic’,
+‘cubic_spline’, ‘gauss’, ‘lanczos’, ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
+<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Whether to return the data as a pandas.DataFrame with columns named by the
+RasterLayer names. Can be useful when using scikit-learn ColumnTransformer
+to select columns based on names rather than keeping track of indexes.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other arguments to pass to rasterio.DatasetReader.read method</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Raster values in 3d ndarray  with the dimensions in order of (band, row, and column).</p>
+<dd class="field-even"><p>Raster values in 3d ndarray  with the dimensions in order of (band, row,
+and column).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>ndarray</p>
@@ -1113,14 +1150,14 @@ on names rather than keeping track of indexes.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.rename">
 <code class="sig-name descname">rename</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.rename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rename a RasterLayer within the Raster object</p>
+<dd><p>Rename a RasterLayer within the Raster object.</p>
 <p>Note that by default this modifies the Raster object in-place.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>names</strong> (<em>dict</em>) – dict of old_name : new_name</p></li>
-<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change names of the Raster object in-place or leave original and return a
-new Raster object.</p></li>
+<li><p><strong>in_place</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – Whether to change names of the Raster object in-place or leave original
+and return a new Raster object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1135,7 +1172,7 @@ new Raster object.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.to_crs">
 <code class="sig-name descname">to_crs</code><span class="sig-paren">(</span><em class="sig-param">crs</em>, <em class="sig-param">resampling='nearest'</em>, <em class="sig-param">file_path=None</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">nodata=None</em>, <em class="sig-param">n_jobs=1</em>, <em class="sig-param">warp_mem_lim=0</em>, <em class="sig-param">progress=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_crs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reprojects a Raster object to a different crs</p>
+<dd><p>Reprojects a Raster object to a different crs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1153,17 +1190,17 @@ min (GDAL &gt;= 2.2),
 med (GDAL &gt;= 2.2),
 q1 (GDAL &gt;= 2.2),
 q3 (GDAL &gt;= 2.2)</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save reprojected Raster object. If not specified then a tempfile is
-used.</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save reprojected Raster object. If not specified then a
+tempfile is used.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then the existing nodata value of the
-Raster object is used, which can accommodate the dtypes of the individual layers in the
-Raster.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then the existing nodata
+value of the Raster object is used, which can accommodate the dtypes of the
+individual layers in the Raster.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default 1</em><em>)</em>) – The number of warp worker threads.</p></li>
-<li><p><strong>warp_mem_lim</strong> (<em>int</em><em> (</em><em>default 0</em><em>)</em>) – The warp operation memory limit in MB. Larger values allow the warp operation to be
-carried out in fewer chunks. The amount of memory required to warp a 3-band uint8 2000
-row x 2000 col raster to a destination of the same size is approximately 56 MB. The
-default (0) means 64 MB with GDAL 2.2.</p></li>
+<li><p><strong>warp_mem_lim</strong> (<em>int</em><em> (</em><em>default 0</em><em>)</em>) – The warp operation memory limit in MB. Larger values allow the warp
+operation to be carried out in fewer chunks. The amount of memory required
+to warp a 3-band uint8 2000 row x 2000 col raster to a destination of the
+same size is approximately 56 MB. The default (0) means 64 MB with GDAL 2.2.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
 </ul>
 </dd>
@@ -1179,7 +1216,7 @@ default (0) means 64 MB with GDAL 2.2.</p></li>
 <dl class="method">
 <dt id="pyspatialml.raster.Raster.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the Raster object to a file</p>
+<dd><p>Write the Raster object to a file.</p>
 <p>Overrides the write RasterBase class method, which is a partial function of the
 rasterio.DatasetReader.write method.</p>
 <dl class="field-list simple">
@@ -1187,12 +1224,14 @@ rasterio.DatasetReader.write method.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file_path</strong> (<em>str</em>) – File path used to save the Raster object.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default is 'GTiff'</em><em>)</em><em></em>) – Name of GDAL driver used to save Raster data.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not specified,
-a data type is selected based on the data types of RasterLayers in the Raster object.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>, </em><em>default None</em><em>)</em>) – Optionally assign a new nodata value when saving to file. If not specified a nodata
-value based on the minimum permissible value for the data types of RasterLayers in the
-Raster object is used. Note that this does not change the pixel nodata values of the
-raster, it only changes the metadata of what value represents a nodata pixel.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
+specified, a data type is selected based on the data types of RasterLayers
+in the Raster object.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>, </em><em>default None</em><em>)</em>) – Optionally assign a new nodata value when saving to file. If not specified
+a nodata value based on the minimum permissible value for the data types of
+RasterLayers in the Raster object is used. Note that this does not change
+the pixel nodata values of the raster, it only changes the metadata of what
+value represents a nodata pixel.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1311,7 +1350,7 @@ vmax are ignored if the norm parameter is used.</p></li>
 <dl class="method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.read">
 <code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read method for a single RasterLayer</p>
+<dd><p>Read method for a single RasterLayer.</p>
 <p>Reads the pixel values from a RasterLayer into a ndarray that always
 will have two dimensions in the order of (rows, columns).</p>
 <dl class="field-list simple">
@@ -1347,6 +1386,30 @@ specified, a data type is set based on the data type of the RasterLayer.</p></li
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Filled RasterLayer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyspatialml.rasterlayer.RasterLayer.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">nodata=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write method for a single RasterLayer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – File path to save the dataset.</p></li>
+<li><p><strong>driver</strong> (<em>str</em>) – GDAL-compatible driver used for the file format.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Numpy dtype used for the file. If omitted then the RasterLayer’s dtype is
+used.</p></li>
+<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – A value used to represent the nodata pixels. If omitted then the RasterLayer’s
+nodata value is used (if assigned already).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pyspatialml.RasterLayer</p>

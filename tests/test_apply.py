@@ -14,7 +14,7 @@ class TestCalc(TestCase):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
 
-        calculation = self.stack.calc(compute_outputs_2d_array, n_jobs=1)
+        calculation = self.stack.apply(compute_outputs_2d_array, n_jobs=1)
 
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)
@@ -25,7 +25,7 @@ class TestCalc(TestCase):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
 
-        calculation = self.stack.calc(
+        calculation = self.stack.apply(
             compute_outputs_2d_array, dtype=np.int16, n_jobs=1
         )
 
@@ -42,7 +42,7 @@ class TestCalc(TestCase):
             arr[0, :, :] = arr[0, :, :] + arr[1, ::]
             return arr
 
-        calculation = self.stack.calc(compute_outputs_3d_array, n_jobs=1)
+        calculation = self.stack.apply(compute_outputs_3d_array, n_jobs=1)
 
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 6)
@@ -53,7 +53,7 @@ class TestCalc(TestCase):
             new_arr = arr[0, :, :] + arr[1, :, :]
             return new_arr
 
-        calculation = self.stack.calc(compute_outputs_2d_array, n_jobs=-1)
+        calculation = self.stack.apply(compute_outputs_2d_array, n_jobs=-1)
 
         self.assertIsInstance(calculation, Raster)
         self.assertEqual(calculation.count, 1)

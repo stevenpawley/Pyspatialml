@@ -1923,7 +1923,7 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def calc(
+    def apply(
         self,
         function,
         file_path=None,
