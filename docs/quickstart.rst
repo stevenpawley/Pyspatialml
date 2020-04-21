@@ -25,6 +25,7 @@ perform machine learning related operations on the set of rasters:
     stack.plot(fig_kwds={"figsize": (7, 4)})
     plt.show()
 
+
 .. figure:: ../img/nc_stack.png
     :width: 700px
     :align: center
