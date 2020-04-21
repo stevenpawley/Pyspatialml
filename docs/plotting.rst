@@ -24,7 +24,7 @@ Plot a single RasterLayer:
     :alt: nc stack
     :figclass: align-center
 
-    Raster of stacked nc data
+    A single band
 
 
 Plot all RasterLayers in a Raster object:
