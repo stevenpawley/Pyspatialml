@@ -9,6 +9,7 @@ from copy import deepcopy
 from functools import partial
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import rasterio
@@ -1307,6 +1308,9 @@ class Raster(BaseRaster):
 
     def plot(
         self,
+        cmap=None,
+        norm=None,
+        figsize=None,
         out_shape=(100, 100),
         label_fontsize=8,
         title_fontsize=8,
@@ -1318,6 +1322,17 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
+        cmap : str (opt)
+            Specify a single cmap to apply to all of the RasterLayers.
+            This overides the cmap attribute of each RasterLayer.
+        
+        norm :  matplotlib.colors.Normalize (opt)
+            A matplotlib.colors.Normalize to apply to all of the RasterLayers.
+            This overides the norm attribute of each RasterLayer.
+            
+        figsize : tuple (opt)
+            Size of the resulting matplotlib.figure.Figure.
+
         out_shape : tuple (default (100, 100))
             Number of rows, cols to read from the raster datasets for plotting.
 
@@ -1346,28 +1361,58 @@ class Raster(BaseRaster):
             matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
             single layer.
         """
-        if self.count == 1:
-            fig, ax = self.iloc[0].plot()
-            return ax
 
-        # estimate required number of rows and columns in figure
-        rows = int(np.sqrt(self.count))
-        cols = int(math.ceil(np.sqrt(self.count)))
+        # some checks
+        if norm:
+            if not isinstance(norm, mpl.colors.Normalize):
+                raise AttributeError(
+                    "norm argument should be a matplotlib.colors.Normalize object"
+                )
 
-        if rows * cols < self.count:
-            rows += 1
-
-        cmaps = [i.cmap for i in self.iloc]
-        norms = [i.norm for i in self.iloc]
+        if cmap:
+            cmaps = [cmap for i in self.iloc]
+        else:
+            cmaps = [i.cmap for i in self.iloc]
+        
+        if norm:
+            norms = [norm for i in self.iloc]
+        else:
+            norms = [i.norm for i in self.iloc]
 
         if names is None:
             names = self.names
+        else:
+            if len(names) != self.count:
+                raise AttributeError(
+                    "arguments 'names' needs to be the same length as the number of RasterLayer objects"
+                )
 
         if fig_kwds is None:
             fig_kwds = {}
 
         if legend_kwds is None:
             legend_kwds = {}
+        
+        if figsize:
+            fig_kwds["figsize"] = figsize
+
+        # plot a single layer
+        if self.count == 1:
+            return self.iloc[0].plot(
+                cmap=cmap, 
+                norm=norm, 
+                figsize=figsize, 
+                fig_kwds=fig_kwds,
+                legend_kwds=legend_kwds,
+                legend=True
+            )
+        
+        # estimate required number of rows and columns in figure
+        rows = int(np.sqrt(self.count))
+        cols = int(math.ceil(np.sqrt(self.count)))
+
+        if rows * cols < self.count:
+            rows += 1
 
         fig, axs = plt.subplots(rows, cols, **fig_kwds)
 
@@ -1379,6 +1424,7 @@ class Raster(BaseRaster):
             arr = self.iloc[n].read(masked=True, out_shape=out_shape)
 
             ax.set_title(name, fontsize=title_fontsize, y=1.00)
+
             im = ax.imshow(
                 arr,
                 extent=[
@@ -1392,7 +1438,17 @@ class Raster(BaseRaster):
             )
 
             divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="10%", pad=0.1)
+
+            if "orientation" not in legend_kwds.keys():
+                legend_kwds["orientation"] = "vertical"
+
+            if legend_kwds["orientation"] == "vertical":
+                legend_pos = "right"
+
+            elif legend_kwds["orientation"] == "horizontal":
+                legend_pos = "bottom"
+
+            cax = divider.append_axes(legend_pos, size="10%", pad=0.1)
             cbar = plt.colorbar(im, cax=cax, **legend_kwds)
             cbar.ax.tick_params(labelsize=label_fontsize)
 

@@ -1,6 +1,7 @@
 from functools import partial
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 import rasterio
 from rasterio.features import sieve
@@ -513,6 +514,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     def plot(
         self,
         cmap=None,
+        norm=None,
         ax=None,
         cax=None,
         figsize=None,
@@ -520,6 +522,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         legend=False,
         vmin=None,
         vmax=None,
+        fig_kwds=None,
         legend_kwds=None,
     ):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
@@ -528,6 +531,11 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         ----------
         cmap : str (default None)
             The name of a colormap recognized by matplotlib.
+            Overrides the cmap attribute of the RasterLayer.
+        
+        norm : matplotlib.colors.Normalize (opt)
+            A matplotlib.colors.Normalize to apply to the RasterLayer.
+            This overides the norm attribute of the RasterLayer.
         
         ax : matplotlib.pyplot.Artist (optional, default None)
             axes instance on which to draw to plot.
@@ -554,6 +562,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             the colormap covers the complete value range of the supplied data. vmin,
             vmax are ignored if the norm parameter is used.
         
+        fig_kwds : dict (optional, default None)
+            Additional arguments to pass to the matplotlib.pyplot.figure call when
+            creating the figure object. Ignored if ax is passed to the plot function.
+
         legend_kwds : dict (optional, default None)
             Keyword arguments to pass to matplotlib.pyplot.colorbar().
 
@@ -562,31 +574,45 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         ax : matplotlib axes instance
         """
 
+        # some checks
+        if fig_kwds is None:
+            fig_kwds = {}
+
         if ax is None:
             if cax is not None:
                 raise ValueError("'ax' can not be None if 'cax' is not.")
-            fig, ax = plt.subplots(figsize=figsize)
+            fig, ax = plt.subplots(figsize=figsize, **fig_kwds)
+        
         ax.set_aspect("equal")
 
+        if norm:
+            if not isinstance(norm, mpl.colors.Normalize):
+                raise AttributeError(
+                    "norm argument should be a matplotlib.colors.Normalize object"
+                )
+        
         if cmap is None:
             cmap = self.cmap
+        
+        if norm is None:
+            norm = self.norm
 
         if legend_kwds is None:
             legend_kwds = {}
-
+        
         arr = self.read(masked=True)
 
         if categorical is True:
             if self.categorical is False:
                 N = np.bincount(arr)
                 cmap = discrete_cmap(N, base_cmap=cmap)
-
             vmin, vmax = None, None
 
         im = ax.imshow(
             X=arr,
             extent=rasterio.plot.plotting_extent(self.ds),
             cmap=cmap,
+            norm=norm,
             vmin=vmin,
             vmax=vmax,
         )
