@@ -125,8 +125,8 @@ raster into a set of binary raster maps for each category:
 The optional ``categories`` parameter allows a list of categories to be
 supplied so that only these categories are encoded.
 
-Generating Grids of Spatial Coordinates Information
-###################################################
+Generating Grids of Spatial Coordinates
+#######################################
 
 For certain types of spatial predictions, it is advantageous to include the model
 region's spatial coordinates as predictors. In addition to using x, y coordinates,

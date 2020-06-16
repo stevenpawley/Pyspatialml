@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Pyspatialml'
-copyright = '2019, Steven Pawley'
+copyright = '2020, Steven Pawley'
 author = 'Steven Pawley'
 
 # The full version, including alpha/beta/rc tags
@@ -31,6 +31,10 @@ release = '0.0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -46,15 +50,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pyramid'
 
 # explicitly assign the master document
 master_doc = 'index'
-
-# Add napoleon to the extensions list
-import sphinx_rtd_theme
-extensions = [
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme'
-]

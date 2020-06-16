@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pyspatialml.preprocessing &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pyspatialml.preprocessing</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyspatialml.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+
+<span class="kn">from</span> <span class="nn">.raster</span> <span class="kn">import</span> <span class="n">Raster</span>
+<span class="kn">from</span> <span class="nn">.temporary_files</span> <span class="kn">import</span> <span class="n">_file_path_tempfile</span>
+
+
+<div class="viewcode-block" id="one_hot_encode"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.one_hot_encode">[docs]</a><span class="k">def</span> <span class="nf">one_hot_encode</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;One-hot encoding of a RasterLayer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layer : pyspatialml.RasterLayer</span>
+<span class="sd">        Containing categories to perform one-hot encoding on.</span>
+
+<span class="sd">    categories : list, ndarray, optional</span>
+<span class="sd">        Optional list of categories to extract. Default performs one-hot encoding</span>
+<span class="sd">        on all categorical values in the input layer.</span>
+
+<span class="sd">    file_path : str, optional. Default is None</span>
+<span class="sd">        File path to save one-hot encoded raster. If not supplied then data</span>
+<span class="sd">        is written to a tempfile.</span>
+
+<span class="sd">    driver : str, options. Default is &#39;GTiff&#39;</span>
+<span class="sd">        GDAL-compatible driver.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyspatialml.Raster</span>
+<span class="sd">        Each categorical value is encoded as a layer with a Raster object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">categories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">categories</span><span class="p">[</span><span class="o">~</span><span class="n">categories</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">categories</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+
+    <span class="n">arr_ohe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">),</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">categories</span><span class="p">):</span>
+        <span class="n">enc</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">enc</span><span class="p">[</span><span class="n">enc</span> <span class="o">!=</span> <span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">enc</span><span class="p">[</span><span class="n">enc</span> <span class="o">==</span> <span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">arr_ohe</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">enc</span>
+
+        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">prefix</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="p">)]))</span>
+
+    <span class="c1"># create new stack</span>
+    <span class="n">file_path</span><span class="p">,</span> <span class="n">tfile</span> <span class="o">=</span> <span class="n">_file_path_tempfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">driver</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;nodata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99999</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr_ohe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;int32&#39;</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr_ohe</span><span class="p">)</span>
+
+    <span class="n">new_raster</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">new_raster</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">old</span><span class="p">:</span> <span class="n">new</span> <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_raster</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">names</span><span class="p">)})</span>
+
+    <span class="k">if</span> <span class="n">tfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">new_raster</span><span class="o">.</span><span class="n">iloc</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">tfile</span><span class="o">.</span><span class="n">close</span>
+
+    <span class="k">return</span> <span class="n">new_raster</span></div>
+
+
+<div class="viewcode-block" id="xy_coordinates"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.xy_coordinates">[docs]</a><span class="k">def</span> <span class="nf">xy_coordinates</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fill 2d arrays with their x,y indices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layer : pyspatialml.RasterLayer, or rasterio.DatasetReader</span>
+<span class="sd">        RasterLayer to use as a template.</span>
+<span class="sd">    </span>
+<span class="sd">    file_path : str, optional. Default is None</span>
+<span class="sd">        File path to save to the resulting Raster object. If not supplied then the</span>
+<span class="sd">        raster is saved to a temporary file.</span>
+<span class="sd">    </span>
+<span class="sd">    driver : str, options. Default is &#39;GTiff&#39;</span>
+<span class="sd">        GDAL driver to use to save raster.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyspatialml.Raster object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">xyarrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">xx</span><span class="p">,</span> <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">xyarrays</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">xx</span>
+    <span class="n">xyarrays</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">xy</span>
+
+    <span class="c1"># create new stack</span>
+    <span class="n">file_path</span><span class="p">,</span> <span class="n">tfile</span> <span class="o">=</span> <span class="n">_file_path_tempfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">driver</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyarrays</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">xyarrays</span><span class="p">)</span>
+    
+    <span class="n">new_raster</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x_coordinates&#39;</span><span class="p">,</span> <span class="s1">&#39;y_coordinates&#39;</span><span class="p">]</span>
+    <span class="n">new_raster</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">old</span><span class="p">:</span> <span class="n">new</span> <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_raster</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">names</span><span class="p">)})</span>
+
+    <span class="k">if</span> <span class="n">tfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">new_raster</span><span class="o">.</span><span class="n">iloc</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">tfile</span><span class="o">.</span><span class="n">close</span>
+
+    <span class="k">return</span> <span class="n">new_raster</span></div>
+
+
+<div class="viewcode-block" id="rotated_coordinates"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.rotated_coordinates">[docs]</a><span class="k">def</span> <span class="nf">rotated_coordinates</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">n_angles</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate 2d arrays with n_angles rotated coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layer : pyspatialml.RasterLayer, or rasterio.DatasetReader</span>
+<span class="sd">        RasterLayer to use as a template.</span>
+
+<span class="sd">    n_angles : int, optional. Default is 8</span>
+<span class="sd">        Number of angles to rotate coordinate system by.</span>
+
+<span class="sd">    file_path : str, optional. Default is None</span>
+<span class="sd">        File path to save to the resulting Raster object. If not supplied then the</span>
+<span class="sd">        raster is saved to a temporary file.</span>
+<span class="sd">    </span>
+<span class="sd">    driver : str, optional. Default is &#39;GTiff&#39;</span>
+<span class="sd">        GDAL driver to use to save raster.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyspatialml.Raster</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># define x and y grid dimensions</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">xmin</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">xmax</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">ymin</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">ymax</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="n">X_var</span><span class="p">,</span> <span class="n">Y_var</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">y_range</span><span class="p">,</span> <span class="n">n_angles</span><span class="p">)</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="n">n_angles</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="n">grids_directional</span> <span class="o">=</span> <span class="n">X_var</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span> <span class="o">*</span> <span class="n">Y_var</span>
+
+    <span class="c1"># reorder to band, row, col order</span>
+    <span class="n">grids_directional</span> <span class="o">=</span> <span class="n">grids_directional</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># create new stack</span>
+    <span class="n">file_path</span><span class="p">,</span> <span class="n">tfile</span> <span class="o">=</span> <span class="n">_file_path_tempfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">driver</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_angles</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grids_directional</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">grids_directional</span><span class="p">)</span>
+    
+    <span class="n">new_raster</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;angle_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_angles</span><span class="p">)]</span>
+    <span class="n">new_raster</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">old</span><span class="p">:</span> <span class="n">new</span> <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_raster</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">names</span><span class="p">)})</span>
+
+    <span class="k">if</span> <span class="n">tfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">new_raster</span><span class="o">.</span><span class="n">iloc</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">tfile</span><span class="o">.</span><span class="n">close</span>
+
+    <span class="k">return</span> <span class="n">new_raster</span></div>
+
+
+<div class="viewcode-block" id="distance_to_corners"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.distance_to_corners">[docs]</a><span class="k">def</span> <span class="nf">distance_to_corners</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate buffer distances to corner and centre coordinates of raster extent.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layer : pyspatialml.RasterLayer, or rasterio.DatasetReader</span>
+<span class="sd">    </span>
+<span class="sd">    file_path : str, optional. Default is None</span>
+<span class="sd">        File path to save to the resulting Raster object. If not supplied then the</span>
+<span class="sd">        raster is saved to a temporary file.</span>
+<span class="sd">    </span>
+<span class="sd">    driver : str, optional. Default is &#39;GTiff&#39;</span>
+<span class="sd">        GDAL driver to use to save raster.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyspatialml.Raster object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;top_left&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;top_right&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;bottom_left&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;bottom_right&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;centre_indices&#39;</span>
+    <span class="p">]</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)])</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)])</span>
+
+    <span class="c1"># euclidean distances</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">_grid_distance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="c1"># create new stack</span>
+    <span class="n">file_path</span><span class="p">,</span> <span class="n">tfile</span> <span class="o">=</span> <span class="n">_file_path_tempfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">driver</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        
+    <span class="n">new_raster</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">new_raster</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span>
+        <span class="n">old</span><span class="p">:</span> <span class="n">new</span> <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_raster</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">names</span><span class="p">)})</span>
+
+    <span class="k">if</span> <span class="n">tfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">new_raster</span><span class="o">.</span><span class="n">iloc</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">tfile</span><span class="o">.</span><span class="n">close</span>
+
+    <span class="k">return</span> <span class="n">new_raster</span></div>
+
+
+<span class="k">def</span> <span class="nf">_grid_distance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate buffer distances to x,y coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : tuple</span>
+<span class="sd">        shape of numpy array (rows, cols) to create buffer distances within.</span>
+
+<span class="sd">    rows : 1d numpy array</span>
+<span class="sd">        array of row indexes.</span>
+
+<span class="sd">    cols : 1d numpy array</span>
+<span class="sd">        array of column indexes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        3d numpy array of euclidean grid distances to each x,y coordinate pair</span>
+<span class="sd">        [band, row, col].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># create buffer distances</span>
+    <span class="n">grids_buffers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rows</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)):</span>
+        <span class="c1"># create 2d array (image) with pick indexes set to z</span>
+        <span class="n">point_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">point_arr</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">point_arr</span><span class="p">)</span>
+        <span class="n">grids_buffers</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">buffer</span>
+
+    <span class="c1"># reorder to band, row, column</span>
+    <span class="n">grids_buffers</span> <span class="o">=</span> <span class="n">grids_buffers</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">grids_buffers</span>
+
+
+<div class="viewcode-block" id="distance_to_samples"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.distance_to_samples">[docs]</a><span class="k">def</span> <span class="nf">distance_to_samples</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate buffer distances to x,y coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layer : pyspatialml.RasterLayer, or rasterio.DatasetReader</span>
+<span class="sd">    </span>
+<span class="sd">    rows : 1d numpy array</span>
+<span class="sd">        array of row indexes.</span>
+
+<span class="sd">    cols : 1d numpy array</span>
+<span class="sd">        array of column indexes.</span>
+
+<span class="sd">    file_path : str, optional. Default=None</span>
+<span class="sd">        File path to save to the resulting Raster object. If not supplied then the</span>
+<span class="sd">        raster is saved to a temporary file.</span>
+<span class="sd">    </span>
+<span class="sd">    driver : str, default=&#39;GTiff&#39;</span>
+<span class="sd">        GDAL driver to use to save raster.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyspatialml.Raster object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># some checks</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">cols</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;rows and cols must have same dimensions&#39;</span><span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">_grid_distance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="c1"># create new stack</span>
+    <span class="n">file_path</span><span class="p">,</span> <span class="n">tfile</span> <span class="o">=</span> <span class="n">_file_path_tempfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">driver</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dist_sample&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))]</span>
+    <span class="n">new_raster</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">new_raster</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+        <span class="p">{</span><span class="n">old</span><span class="p">:</span> <span class="n">new</span> <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_raster</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">names</span><span class="p">)})</span>
+
+    <span class="k">if</span> <span class="n">tfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">new_raster</span><span class="o">.</span><span class="n">iloc</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">close</span> <span class="o">=</span> <span class="n">tfile</span><span class="o">.</span><span class="n">close</span>
+
+    <span class="k">return</span> <span class="n">new_raster</span></div>
+
+
+<div class="viewcode-block" id="reclass_nodata"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.reclass_nodata">[docs]</a><span class="k">def</span> <span class="nf">reclass_nodata</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">src_nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_nodata</span><span class="o">=-</span><span class="mi">99999</span><span class="p">,</span>
+                   <span class="n">intern</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reclassify raster no data values and save to a new raster</span>
+
+<span class="sd">    Args</span>
+<span class="sd">    ----</span>
+<span class="sd">    input : str</span>
+<span class="sd">        File path to raster that is to be reclassified.</span>
+
+<span class="sd">    output : str</span>
+<span class="sd">        File path to output raster</span>
+
+<span class="sd">    src_nodata : int or float, optional</span>
+<span class="sd">        The source nodata value. Pixels with this value will be reclassified</span>
+<span class="sd">        to the new dst_nodata value. If not set, it will default to the nodata value</span>
+<span class="sd">        stored in the source image.</span>
+
+<span class="sd">    dst_nodata : int or float, optional. Default is -99999</span>
+<span class="sd">        The nodata value that the outout raster will receive after reclassifying</span>
+<span class="sd">        pixels with the src_nodata value.</span>
+
+<span class="sd">    itern : bool, optional. Default is False</span>
+<span class="sd">        Optionally return the reclassified raster as a numpy array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out: None, or 2D numpy array </span>
+<span class="sd">        Raster with reclassified nodata pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">crs</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">crs</span>
+    <span class="n">img_ar</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">src_nodata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">src_nodata</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">nodata</span>
+
+    <span class="n">img_ar</span><span class="p">[</span><span class="n">img_ar</span> <span class="o">==</span> <span class="n">src_nodata</span><span class="p">]</span> <span class="o">=</span> <span class="n">dst_nodata</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">output</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+                       <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
+                       <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">img_ar</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">nodata</span><span class="o">=</span><span class="n">dst_nodata</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">img_ar</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">intern</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">img_ar</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="align_rasters"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.preprocessing.align_rasters">[docs]</a><span class="k">def</span> <span class="nf">align_rasters</span><span class="p">(</span><span class="n">rasters</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">outputdir</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Resampling.nearest&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Aligns a list of rasters (paths to files) to a template raster.</span>
+<span class="sd">    The rasters to that are to be realigned are assumed to represent</span>
+<span class="sd">    single band raster files.</span>
+
+<span class="sd">    Nodata values are also reclassified to the template raster&#39;s nodata values</span>
+
+<span class="sd">    Args</span>
+<span class="sd">    ----</span>
+<span class="sd">    rasters : list, str</span>
+<span class="sd">        List containing file paths to multiple rasters that are to be realigned.</span>
+
+<span class="sd">    template : str</span>
+<span class="sd">        File path to raster that is to be used as a template to transform the</span>
+<span class="sd">        other rasters to.</span>
+
+<span class="sd">    outputdir : str</span>
+<span class="sd">        Directory to output the realigned rasters. This should not be the</span>
+<span class="sd">        existing directory unless it is desired that the existing rasters to be</span>
+<span class="sd">        realigned should be overwritten.</span>
+
+<span class="sd">    method : str</span>
+<span class="sd">        Resampling method to use. One of the following:</span>
+<span class="sd">            Resampling.average,</span>
+<span class="sd">            Resampling.bilinear,</span>
+<span class="sd">            Resampling.cubic,</span>
+<span class="sd">            Resampling.cubic_spline,</span>
+<span class="sd">            Resampling.gauss,</span>
+<span class="sd">            Resampling.lanczos,</span>
+<span class="sd">            Resampling.max,</span>
+<span class="sd">            Resampling.med,</span>
+<span class="sd">            Resampling.min,</span>
+<span class="sd">            Resampling.mode,</span>
+<span class="sd">            Resampling.nearest,</span>
+<span class="sd">            Resampling.q1,</span>
+<span class="sd">            Resampling.q3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># check resampling methods</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">rasterio</span><span class="o">.</span><span class="n">enums</span><span class="o">.</span><span class="n">Resampling</span><span class="p">)</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">methods</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">]</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Resampling.&#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid resampling method: &#39;</span> <span class="o">+</span> <span class="n">method</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span> <span class="o">+</span>
+                         <span class="s1">&#39;Valid methods are: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">methods</span><span class="p">))</span>
+
+    <span class="c1"># open raster to be used as the template and create numpy array</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">raster</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputdir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">raster</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                <span class="n">reproject</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">band</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                          <span class="n">destination</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">band</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                          <span class="n">dst_transform</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
+                          <span class="n">dst_nodata</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">nodata</span><span class="p">,</span>
+                          <span class="n">dst_crs</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">nodata</span><span class="p">)</span>
+
+    <span class="n">template</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span><span class="p">()</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pyspatialml.preprocessing</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Steven Pawley.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.1.
+    </div>
+  </body>
+</html>

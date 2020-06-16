@@ -27,6 +27,44 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     Methods encapsulated in RasterLayer objects represent those that typically would
     only be applied to a single-band of a raster, i.e. sieve-clump, distance to non-NaN
     pixels, or arithmetic operations on individual layers.
+
+    Attributes
+    ----------
+    bidx : int
+        The band index of the RasterLayer within the file dataset.
+    
+    dtype : str
+        The data type of the RasterLayer.
+    
+    nodata : any number
+        The number that is used to represent nodata pixels in the RasterLayer.
+    
+    file : str
+        The file path to the dataset.
+    
+    ds : rasterio.band
+        The underlying rasterio.band object.
+
+    driver : str
+        The name of the GDAL format driver.
+    
+    meta : dict
+        A python dict storing the RasterLayer metadata.
+    
+    cmap : str
+        The name of matplotlib map, or a custom matplotlib.cm.LinearSegmentedColormap 
+        or ListedColormap object.
+
+    norm : matplotlib.colors.Normalize (opt)
+        A matplotlib.colors.Normalize to apply to the RasterLayer.
+        This overides the norm attribute of the RasterLayer.
+    
+     : int
+        Number of layers; always equal to 1.
+    
+    Methods
+    -------
+    close :
     """
 
     def __init__(self, band):
@@ -47,7 +85,12 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.categorical = False
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
-        self.close = band.ds.close
+        self._close = band.ds.close
+    
+    def close(self):
+        """Close the RasterLayer for reading/writing
+        """
+        self._close
 
     def _arith(self, function, other=None):
         """General method for performing arithmetic operations on RasterLayer objects

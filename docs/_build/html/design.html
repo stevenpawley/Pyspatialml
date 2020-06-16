@@ -1,177 +1,67 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Design &mdash; Pyspatialml 0.0.1 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Quickstart" href="quickstart.html" />
-    <link rel="prev" title="Installation" href="installation.html" /> 
-</head>
+    <link rel="next" title="Plotting" href="plotting.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
 
-<body class="wy-body-for-nav">
+  </head><body>
 
-   
-  <div class="wy-grid-for-nav">
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Design</a></li> 
+      </ul>
+    </div>  
 
-          
-            <a href="index.html" class="icon icon-home"> Pyspatialml
-          
-
-          
-          </a>
-
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Design</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-raster-object">The Raster Object</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#raster-object-initiation">Raster Object Initiation</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Pyspatialml</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Design</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/design.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
             
   <div class="section" id="design">
 <h1>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-raster-object">
-<h2>The Raster Object<a class="headerlink" href="#the-raster-object" title="Permalink to this headline">¶</a></h2>
+<p>Pyspatialml provides access to raster datasets using two main structures, comprising the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Raster</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">RasterLayer</span></code> classes.</p>
+<div class="section" id="raster">
+<h2>Raster<a class="headerlink" href="#raster" title="Permalink to this headline">¶</a></h2>
 <p>The main class that facilitates working with multiple raster datasets is the
-<code class="docutils literal notranslate"><span class="pre">Raster</span></code> class, which is inspired by the famous  ‘raster’ package in the R
-statistical programming language. The <code class="docutils literal notranslate"><span class="pre">Raster</span></code> object takes a list
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Raster</span></code> class. The <code class="xref py py-class docutils literal notranslate"><span class="pre">Raster</span></code> object takes a list
 GDAL-supported raster datasets and ‘stacks’ them into a single Raster
 object. The underlying file-based raster datasets are not physically-stacked,
 but rather the Raster object internally represents each band within the datasets
-as a <code class="docutils literal notranslate"><span class="pre">RasterLayer</span></code>. This means that metadata regarding what each raster
+as a <code class="xref py py-class docutils literal notranslate"><span class="pre">RasterLayer</span></code>. This means that metadata regarding what each raster
 dataset represents (e.g. the dataset’s name) can be retained, and additional
 raster datasets can easily be added or removed from the stack without physical
 on-disk changes.</p>
@@ -179,8 +69,8 @@ on-disk changes.</p>
 extent, resolution and coordinate reference system. If they are not aligned,
 then for convenience the <code class="docutils literal notranslate"><span class="pre">pyspatialml.preprocessing.align_rasters</span></code> function can be
 used to resample a list of raster datasets.</p>
-<div class="section" id="raster-object-initiation">
-<h3>Raster Object Initiation<a class="headerlink" href="#raster-object-initiation" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="creating-a-new-raster-object">
+<h3>Creating a new Raster object<a class="headerlink" href="#creating-a-new-raster-object" title="Permalink to this headline">¶</a></h3>
 <p>There are three methods of creating a new Raster object:</p>
 <p>1. <code class="docutils literal notranslate"><span class="pre">Raster(file_path=[raster1.tif,</span> <span class="pre">raster2.tif,</span> <span class="pre">raster3.tif])</span></code> creates a
 Raster object from existing file-based GDAL-supported datasets.</p>
@@ -200,56 +90,171 @@ access to individual RasterLayer objects, or the underlying rasterio.band
 datasets can be useful if pyspatialml is being used in conjunction with other
 functions and methods in the <code class="docutils literal notranslate"><span class="pre">rasterio</span></code> package.</p>
 </div>
+<div class="section" id="overview-of-attributes-and-methods">
+<h3>Overview of attributes and methods<a class="headerlink" href="#overview-of-attributes-and-methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="attributes">
+<h4>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.loc</span></code>: Access pyspatialml.RasterLayer objects within a Raster using a key, or a list of keys.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.iloc</span></code>: Access pyspatialml.RasterLayer objects using an index position.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.files</span></code>: A list of the on-disk files that the Raster object references.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.dtypes</span></code>: A list of numpy dtypes for each RasterLayer.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.nodatavals</span></code>: A list of the nodata values for each RasterLayer.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.count</span></code>: The number of RasterLayers in the Raster.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.res</span></code>: The resolution in (x, y) dimensions of the Raster.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.meta</span></code>: A dict containing the raster metadata.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.names</span></code>: A list of the RasterLayer names.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">Raster.block_shape</span></code>: The default block_shape in (rows, cols) for reading windows of data in the Raster for out-of-memory processing.</p></li>
+</ul>
+</div>
+<div class="section" id="methods">
+<h4>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">read</span></code>: eads data from the Raster object into a numpy array.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">write</span></code>: Write the Raster object to a file.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">predict_proba</span></code>: Apply class probability prediction of a scikit learn model to a Raster.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">predict</span></code>: Apply prediction of a scikit learn model to a Raster.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">append</span></code>: Method to add new RasterLayers to a Raster object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">drop</span></code>: Drop individual RasterLayers from a Raster object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">rename</span></code>: Rename a RasterLayer within the Raster object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">plot</span></code>: Plot a Raster object as a raster matrix.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mask</span></code>: Mask a Raster object based on the outline of shapes in a <code class="docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">intersect</span></code>: Perform a intersect operation on the Raster object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">crop</span></code>: Crops a Raster object by the supplied bounds.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">to_crs</span></code>: Reprojects a Raster object to a different crs.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">aggregate</span></code>: Aggregates a raster to (usually) a coarser grid cell size.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">apply</span></code>: Apply user-supplied function to a Raster object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">block_shapes</span></code>: Generator for windows for optimal reading and writing based on the raster.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">astype</span></code>: Not currently implemented.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="rasterlayer">
+<h2>RasterLayer<a class="headerlink" href="#rasterlayer" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">RasterLayer</span></code> is an object that represents a single raster band. It is based
+on a <code class="docutils literal notranslate"><span class="pre">rasterio.band</span></code> object with some additional attributes and methods. A RasterLayer
+is used because the <code class="docutils literal notranslate"><span class="pre">rasterio.Band.ds.read</span></code> method reads all bands from a multi-band dataset,
+whereas the RasterLayer read method always refers to a single band.</p>
+<p>A RasterLayer object is generally not intended to be initiated directly, but rather is used
+internally as part of a <code class="xref py py-class docutils literal notranslate"><span class="pre">Raster</span></code> to represent individual bands. However, a RasterLayer
+can be initiated from a <cite>rasterio.band</cite> object.</p>
+<div class="section" id="id1">
+<h3>Overview of attributes and methods<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Methods encapsulated in RasterLayer objects represent those that typically would
+only be applied to a single-band of a raster, i.e. sieve-clump, distance to non-NaN
+pixels, or arithmetic operations on individual layers.</p>
+<div class="section" id="id2">
+<h4>Attributes<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">bidx</span></code>: The band index of the RasterLayer within the file dataset.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dtype</span></code>: The data type of the RasterLayer.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">nodata</span></code>: The number that is used to represent nodata pixels in the RasterLayer.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">file</span></code>: The file path to the dataset.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">ds</span></code>: The underlying rasterio.band object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">driver</span></code>: The name of the GDAL format driver.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">meta</span></code>: A python dict storing the RasterLayer metadata.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">cmap</span></code>: The name of matplotlib map, or a custom matplotlib.cm.LinearSegmentedColormap or ListedColormap object.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">norm</span></code>: A matplotlib.colors.Normalize to apply to the RasterLayer.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">count</span></code>: Number of layers; always equal to 1.</p></li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h4>Methods<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">close()</span></code>: Closes a RasterLayer.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code>: Reads data from the RasterLayer into a numpy array.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code>: Write the RasterLayer to a GDAL-supported raster dataset.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill()</span></code>: Fill nodata gaps in a RasterLayer. Wrapper around the <code class="docutils literal notranslate"><span class="pre">rasterio.fill.fillnodata</span></code> method.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">sieve()</span></code>: Replace pixels with their largest neighbor. Wrapper around the <code class="docutils literal notranslate"><span class="pre">rasterio.features.sieve</span></code> method.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">distance()</span></code>: Calculate euclidean grid distances to non-NaN pixels.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot()</span></code>: Plot a RasterLayer using <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.imshow</span></code>.</p></li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 
 
-           </div>
-           
+            <div class="clearer"></div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Steven Pawley
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
         </div>
       </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Design</a><ul>
+<li><a class="reference internal" href="#raster">Raster</a><ul>
+<li><a class="reference internal" href="#creating-a-new-raster-object">Creating a new Raster object</a></li>
+<li><a class="reference internal" href="#overview-of-attributes-and-methods">Overview of attributes and methods</a><ul>
+<li><a class="reference internal" href="#attributes">Attributes</a></li>
+<li><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rasterlayer">RasterLayer</a><ul>
+<li><a class="reference internal" href="#id1">Overview of attributes and methods</a><ul>
+<li><a class="reference internal" href="#id2">Attributes</a></li>
+<li><a class="reference internal" href="#id3">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="plotting.html"
+                        title="next chapter">Plotting</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/design.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Design</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Steven Pawley.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.1.
+    </div>
+  </body>
 </html>

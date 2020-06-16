@@ -872,7 +872,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1003,7 +1003,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1618,7 +1618,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1687,7 +1687,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1766,7 +1766,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1886,7 +1886,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -1975,7 +1975,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 
@@ -2077,7 +2077,7 @@ class Raster(BaseRaster):
 
         if tfile is not None:
             for layer in new_raster.iloc:
-                layer.close = tfile.close
+                layer._close = tfile.close
 
         return new_raster
 

@@ -1,5 +1,5 @@
-pyspatialml package
-===================
+pyspatialml: machine learning for raster datasets
+=================================================
 
 Subpackages
 -----------
