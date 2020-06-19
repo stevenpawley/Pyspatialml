@@ -4,8 +4,8 @@ Design
 Pyspatialml provides access to raster datasets using two main structures, comprising the
 :class:`Raster` and :class:`RasterLayer` classes.
 
-Raster
-******
+Raster Objects
+**************
 
 The main class that facilitates working with multiple raster datasets is the
 :class:`Raster` class. The :class:`Raster` object takes a list 

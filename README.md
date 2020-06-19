@@ -24,8 +24,6 @@ labelled pixels with integer-encoded values that correspond to known landcover t
 scikit-learn compatible api's for this purpose.
 3. Applying the fitted machine learning model to make predictions on all of the pixels in the stack of raster data.
 
-![example](https://github.com/stevenpawley/Pyspatialml/blob/master/img/Pyspatialml_training.svg)
-
 Pyspatialml is designed to make it easy to develop spatial prediction models on stacks of 2D raster datasets that are
 held on disk. Unlike using python's ```numpy``` module directly where raster datasets need to be held in memory, 
 the majority of functions within pyspatialml work with raster datasets that are stored on disk and allow processing

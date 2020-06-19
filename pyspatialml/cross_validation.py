@@ -1,8 +1,8 @@
 import numpy as np
 import inspect
 from numpy.random import RandomState
-from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier, RegressorMixin
-from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.base import BaseEstimator, ClassifierMixin, is_classifier
+from sklearn.metrics import roc_curve
 from sklearn.model_selection import check_cv, cross_val_predict
 from sklearn.preprocessing import binarize
 from collections import OrderedDict
@@ -11,7 +11,7 @@ from collections import OrderedDict
 class CrossValidateThreshold(object):
     """
     Perform cross-validation and calculate scores using a cutoff threshold that
-    attains a minimum true positive rate
+    attains a minimum true positive rate.
     """
 
     def __init__(self, estimator, scoring, cv=3, positive=1, n_jobs=1):
@@ -144,34 +144,6 @@ class CrossValidateThreshold(object):
                 scores[name] = np.append(scores[name], score_func(y_true, y_pred_opt[:, self.positive]))
 
         return scores
-
-
-def specificity_score(y_true, y_pred):
-    """
-    Calculate specificity score metric for a binary classification
-
-    Args
-    ----
-    y_true : 1d array-like
-        Ground truth (correct) labels
-
-    y_pred : 1d array-like
-        Predicted labels, as returned by the classifier
-
-    Returns
-    -------
-
-    specificity : float
-        Returns the specificity score, or true negative rate, i.e. the
-        proportion of the negative label (label=0) samples that are correctly
-        classified as the negative label
-    """
-
-    cm = confusion_matrix(y_true, y_pred)
-    tn = float(cm[0][0])
-    fp = float(cm[0][1])
-
-    return tn/(tn+fp)
 
 
 def spatial_loocv(estimator, X, y, coordinates, size, radius,

@@ -1353,47 +1353,58 @@
         <span class="n">norm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">figsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">out_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
-        <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
         <span class="n">title_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
         <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">fig_kwds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">legend_kwds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">subplots_kwds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plot a Raster object as a raster matrix</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        cmap : str (opt)</span>
+<span class="sd">        cmap : str (opt), default=None</span>
 <span class="sd">            Specify a single cmap to apply to all of the RasterLayers.</span>
 <span class="sd">            This overides the cmap attribute of each RasterLayer.</span>
 <span class="sd">        </span>
-<span class="sd">        norm :  matplotlib.colors.Normalize (opt)</span>
+<span class="sd">        norm :  matplotlib.colors.Normalize (opt), default=None</span>
 <span class="sd">            A matplotlib.colors.Normalize to apply to all of the RasterLayers.</span>
 <span class="sd">            This overides the norm attribute of each RasterLayer.</span>
 <span class="sd">            </span>
-<span class="sd">        figsize : tuple (opt)</span>
+<span class="sd">        figsize : tuple (opt), default=None</span>
 <span class="sd">            Size of the resulting matplotlib.figure.Figure.</span>
 
-<span class="sd">        out_shape : tuple (default (100, 100))</span>
+<span class="sd">        out_shape : tuple, default=(100, 100)</span>
 <span class="sd">            Number of rows, cols to read from the raster datasets for plotting.</span>
 
-<span class="sd">        label_fontsize : any number (default 8)</span>
-<span class="sd">            Size in pts of labels.</span>
-
-<span class="sd">        title_fontsize : any number (default 8)</span>
+<span class="sd">        title_fontsize : any number, default=8</span>
 <span class="sd">            Size in pts of titles.</span>
 
-<span class="sd">        names : list (optional, default None)</span>
+<span class="sd">        label_fontsize : any number, default=6</span>
+<span class="sd">            Size in pts of axis ticklabels.</span>
+
+<span class="sd">        legend_fontsize : any number, default=6</span>
+<span class="sd">            Size in pts of legend ticklabels.</span>
+
+<span class="sd">        names : list (opt), default=None</span>
 <span class="sd">            Optionally supply a list of names for each RasterLayer to override the</span>
 <span class="sd">            default layer names for the titles.</span>
 
-<span class="sd">        fig_kwds : dict (optional, default None)</span>
+<span class="sd">        fig_kwds : dict (opt), default=None</span>
 <span class="sd">            Additional arguments to pass to the matplotlib.pyplot.figure call when</span>
 <span class="sd">            creating the figure object.</span>
 
-<span class="sd">        legend_kwds : dict (optional, default None)</span>
+<span class="sd">        legend_kwds : dict (opt), default=None</span>
 <span class="sd">            Additional arguments to pass to the matplotlib.pyplot.colorbar call when</span>
 <span class="sd">            creating the colorbar object.</span>
+
+<span class="sd">        subplots_kwds : dict (opt), default=None</span>
+<span class="sd">            Additional arguments to pass to the matplotlib.pyplot.subplots_adjust</span>
+<span class="sd">            function. These are used to control the spacing and position of each</span>
+<span class="sd">            subplot, and can include</span>
+<span class="sd">            {left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1433,6 +1444,9 @@
 
         <span class="k">if</span> <span class="n">legend_kwds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">legend_kwds</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">subplots_kwds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">subplots_kwds</span> <span class="o">=</span> <span class="p">{}</span>
         
         <span class="k">if</span> <span class="n">figsize</span><span class="p">:</span>
             <span class="n">fig_kwds</span><span class="p">[</span><span class="s2">&quot;figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">figsize</span>
@@ -1491,7 +1505,7 @@
 
             <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="n">legend_pos</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;10%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
             <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span> <span class="o">**</span><span class="n">legend_kwds</span><span class="p">)</span>
-            <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="n">label_fontsize</span><span class="p">)</span>
+            <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="n">legend_fontsize</span><span class="p">)</span>
 
             <span class="c1"># hide tick labels by default when multiple rows or cols</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([])</span>
@@ -1517,7 +1531,7 @@
         <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">axs</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="o">**</span><span class="n">subplots_kwds</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">axs</span></div>
 

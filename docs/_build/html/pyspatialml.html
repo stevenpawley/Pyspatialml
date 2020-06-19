@@ -86,7 +86,6 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>src</strong> (<em>rasterio DatasetReader</em>) – Single band raster containing labelled pixels as an open rasterio
 DatasetReader object.</p></li>
-<li><p><strong>value_name</strong> (<em>str</em><em>, </em><em>default=&quot;value&quot;</em>) – The name of the column to use to store the labelled pixel values.</p></li>
 <li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – By default the extracted pixel values are returned as a
 geopandas.GeoDataFrame. If <cite>return_array=True</cite> then the extracted pixel
 values are returned as a tuple of numpy.ndarrays.</p></li>
@@ -273,7 +272,7 @@ values.</p>
 strategy=’stratified’.</p></li>
 <li><p><strong>strata</strong> (<em>rasterio DatasetReader</em><em> (</em><em>opt</em><em>)</em>) – Whether to use stratified instead of random sampling. Strata can be
 supplied using an open rasterio DatasetReader object.</p></li>
-<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally return extracted data as separate X, y and xy masked numpy
+<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – Optionally return extracted data as separate X, y and xy masked numpy
 arrays.</p></li>
 <li><p><strong>random_state</strong> (<em>int</em><em> (</em><em>opt</em><em>)</em>) – integer to use within random.seed.</p></li>
 </ul>
@@ -893,25 +892,30 @@ the metadata of the raster.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_shape</span><span class="o">=</span><span class="default_value">100, 100</span></em>, <em class="sig-param"><span class="n">label_fontsize</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">title_fontsize</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/raster.html#Raster.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.raster.Raster.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_shape</span><span class="o">=</span><span class="default_value">100, 100</span></em>, <em class="sig-param"><span class="n">title_fontsize</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">label_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">legend_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subplots_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/raster.html#Raster.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.raster.Raster.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a Raster object as a raster matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cmap</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Specify a single cmap to apply to all of the RasterLayers.
+<li><p><strong>cmap</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Specify a single cmap to apply to all of the RasterLayers.
 This overides the cmap attribute of each RasterLayer.</p></li>
-<li><p><strong>norm</strong> (<em>matplotlib.colors.Normalize</em><em> (</em><em>opt</em><em>)</em>) – A matplotlib.colors.Normalize to apply to all of the RasterLayers.
+<li><p><strong>norm</strong> (<em>matplotlib.colors.Normalize</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – A matplotlib.colors.Normalize to apply to all of the RasterLayers.
 This overides the norm attribute of each RasterLayer.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em>) – Size of the resulting matplotlib.figure.Figure.</p></li>
-<li><p><strong>out_shape</strong> (<em>tuple</em><em> (</em><em>default</em><em> (</em><em>100</em><em>, </em><em>100</em><em>)</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
-<li><p><strong>label_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of labels.</p></li>
-<li><p><strong>title_fontsize</strong> (<em>any number</em><em> (</em><em>default 8</em><em>)</em>) – Size in pts of titles.</p></li>
-<li><p><strong>names</strong> (<em>list</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally supply a list of names for each RasterLayer to override the
+<li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Size of the resulting matplotlib.figure.Figure.</p></li>
+<li><p><strong>out_shape</strong> (<em>tuple</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>, </em><em>100</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>any number</em><em>, </em><em>default=8</em>) – Size in pts of titles.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of axis ticklabels.</p></li>
+<li><p><strong>legend_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of legend ticklabels.</p></li>
+<li><p><strong>names</strong> (<em>list</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Optionally supply a list of names for each RasterLayer to override the
 default layer names for the titles.</p></li>
-<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
+<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
 creating the figure object.</p></li>
-<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when
+<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when
 creating the colorbar object.</p></li>
+<li><p><strong>subplots_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
+function. These are used to control the spacing and position of each
+subplot, and can include
+{left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

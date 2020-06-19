@@ -252,7 +252,7 @@
 <span class="sd">            Whether to use stratified instead of random sampling. Strata can be</span>
 <span class="sd">            supplied using an open rasterio DatasetReader object.</span>
 
-<span class="sd">        return_array : bool (opt). Default is False</span>
+<span class="sd">        return_array : bool (opt), default=False</span>
 <span class="sd">            Optionally return extracted data as separate X, y and xy masked numpy</span>
 <span class="sd">            arrays.</span>
 
@@ -503,9 +503,6 @@
 <span class="sd">        src: rasterio DatasetReader</span>
 <span class="sd">            Single band raster containing labelled pixels as an open rasterio</span>
 <span class="sd">            DatasetReader object.</span>
-<span class="sd">        </span>
-<span class="sd">        value_name : str, default=&quot;value&quot;</span>
-<span class="sd">            The name of the column to use to store the labelled pixel values.</span>
 
 <span class="sd">        return_array : bool (opt), default=False</span>
 <span class="sd">            By default the extracted pixel values are returned as a </span>

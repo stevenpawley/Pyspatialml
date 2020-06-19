@@ -1307,47 +1307,58 @@ class Raster(BaseRaster):
         norm=None,
         figsize=None,
         out_shape=(100, 100),
-        label_fontsize=8,
         title_fontsize=8,
+        label_fontsize=6,
+        legend_fontsize=6,
         names=None,
         fig_kwds=None,
         legend_kwds=None,
+        subplots_kwds=None,
     ):
         """Plot a Raster object as a raster matrix
 
         Parameters
         ----------
-        cmap : str (opt)
+        cmap : str (opt), default=None
             Specify a single cmap to apply to all of the RasterLayers.
             This overides the cmap attribute of each RasterLayer.
         
-        norm :  matplotlib.colors.Normalize (opt)
+        norm :  matplotlib.colors.Normalize (opt), default=None
             A matplotlib.colors.Normalize to apply to all of the RasterLayers.
             This overides the norm attribute of each RasterLayer.
             
-        figsize : tuple (opt)
+        figsize : tuple (opt), default=None
             Size of the resulting matplotlib.figure.Figure.
 
-        out_shape : tuple (default (100, 100))
+        out_shape : tuple, default=(100, 100)
             Number of rows, cols to read from the raster datasets for plotting.
 
-        label_fontsize : any number (default 8)
-            Size in pts of labels.
-
-        title_fontsize : any number (default 8)
+        title_fontsize : any number, default=8
             Size in pts of titles.
 
-        names : list (optional, default None)
+        label_fontsize : any number, default=6
+            Size in pts of axis ticklabels.
+
+        legend_fontsize : any number, default=6
+            Size in pts of legend ticklabels.
+
+        names : list (opt), default=None
             Optionally supply a list of names for each RasterLayer to override the
             default layer names for the titles.
 
-        fig_kwds : dict (optional, default None)
+        fig_kwds : dict (opt), default=None
             Additional arguments to pass to the matplotlib.pyplot.figure call when
             creating the figure object.
 
-        legend_kwds : dict (optional, default None)
+        legend_kwds : dict (opt), default=None
             Additional arguments to pass to the matplotlib.pyplot.colorbar call when
             creating the colorbar object.
+
+        subplots_kwds : dict (opt), default=None
+            Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
+            function. These are used to control the spacing and position of each
+            subplot, and can include
+            {left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.
 
         Returns
         -------
@@ -1387,6 +1398,9 @@ class Raster(BaseRaster):
 
         if legend_kwds is None:
             legend_kwds = {}
+
+        if subplots_kwds is None:
+            subplots_kwds = {}
         
         if figsize:
             fig_kwds["figsize"] = figsize
@@ -1445,7 +1459,7 @@ class Raster(BaseRaster):
 
             cax = divider.append_axes(legend_pos, size="10%", pad=0.1)
             cbar = plt.colorbar(im, cax=cax, **legend_kwds)
-            cbar.ax.tick_params(labelsize=label_fontsize)
+            cbar.ax.tick_params(labelsize=legend_fontsize)
 
             # hide tick labels by default when multiple rows or cols
             ax.axes.get_xaxis().set_ticklabels([])
@@ -1471,7 +1485,7 @@ class Raster(BaseRaster):
         for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
             ax.set_visible(False)
 
-        plt.subplots_adjust()
+        plt.subplots_adjust(**subplots_kwds)
 
         return axs
 

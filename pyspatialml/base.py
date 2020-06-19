@@ -206,7 +206,7 @@ class BaseRaster(ABC):
             Whether to use stratified instead of random sampling. Strata can be
             supplied using an open rasterio DatasetReader object.
 
-        return_array : bool (opt). Default is False
+        return_array : bool (opt), default=False
             Optionally return extracted data as separate X, y and xy masked numpy
             arrays.
 
@@ -457,9 +457,6 @@ class BaseRaster(ABC):
         src: rasterio DatasetReader
             Single band raster containing labelled pixels as an open rasterio
             DatasetReader object.
-        
-        value_name : str, default="value"
-            The name of the column to use to store the labelled pixel values.
 
         return_array : bool (opt), default=False
             By default the extracted pixel values are returned as a 
