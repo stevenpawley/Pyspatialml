@@ -250,8 +250,7 @@ Pixel values in the Raster object can be spatially queried using the ```extract_
 methods. In addition, the ```extract_xy``` method can be used to query pixel values using a 2d array of x and y
 coordinates.
 
-The ```extract_vector``` method accepts a Geopandas GeoDataFrame as the ```response``` argument. The ```field```
-argument is used to indicate if values in a column in the GeoDataFrame should be extracted with the pixel values. For
+The ```extract_vector``` method accepts a Geopandas GeoDataFrame as the ```gdf``` argument. For
 GeoDataFrames containing shapely point geometries, the closest pixel to each point is sampled. For shapely polygon
 geometries, all pixels whose centres are inside the polygon are sampled. For shapely linestring geometries, every pixel
 touched by the line is sampled. For all geometry types, pixel values are queries for each geometry separately. This
@@ -261,13 +260,12 @@ multiple times.
 By default, the extract functions return a Geopandas GeoDataFrame of point geometries and the DataFrame containing the
 extracted pixels, with the column names set by the names of the raster datasets in the Raster object. The user can also
 use the ```return_array=True``` argument, which instead of returning a DataFrame will return three masked numpy arrays
-(X, y, xy) containing the extracted pixel values, the field attribute, and the spatial coordinates of the sampled
+(id, X, coordinates) containing geodataframe indices, the extracted pixel values, and the spatial coordinates of the sampled
 pixels. These arrays are masked arrays with nodata values in the RasterStack datasets being masked.
 
 The ```extract_raster``` method can also be used to spatially query pixel values from a Raster object using another
-raster containing labelled pixels. This raster has to be spatially aligned with the Raster object. There is no field
-attribute for this method because the values of the labelled pixels are returned along with the queried pixel values,
-but the name of this column in the attibute can be set using the ```value_name``` argument.
+raster containing labelled pixels. This raster has to be spatially aligned with the Raster object. This method also returns
+the values of the labelled pixels are returned along with the queried pixel values.
 
 ```
 # Create a training dataset by extracting the raster values at the training point locations:
@@ -276,6 +274,9 @@ df_polygons = stack.extract_vector(response=training_py, columns='id')
 df_lines = stack.extract_vector(response=training_lines, columns='id')
 df_raster = stack.extract_raster(response=training_px, value_name='id')
 df_points.head()
+
+# join the extracted pixel data back with the training data
+df_points = df_points.merge(training_pt.loc[:, ("id)], left_index=True, right_index=True)
 ```
 
 ### Model Training
