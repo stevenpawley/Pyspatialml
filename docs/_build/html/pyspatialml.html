@@ -79,30 +79,41 @@
 <p>Base class for Raster and RasterLayer objects</p>
 <dl class="py method">
 <dt id="pyspatialml.base.BaseRaster.extract_raster">
-<code class="sig-name descname">extract_raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">response</span></em>, <em class="sig-param"><span class="n">value_name</span><span class="o">=</span><span class="default_value">'value'</span></em>, <em class="sig-param"><span class="n">return_array</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">na_rm</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_raster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_raster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">src</span></em>, <em class="sig-param"><span class="n">return_array</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_raster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_raster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample a Raster object by an aligned raster of labelled pixels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>response</strong> (<em>rasterio DatasetReader</em>) – Single band raster containing labelled pixels as an open rasterio
+<li><p><strong>src</strong> (<em>rasterio DatasetReader</em>) – Single band raster containing labelled pixels as an open rasterio
 DatasetReader object.</p></li>
-<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally return extracted data as separate X, y and xy masked numpy
-arrays.</p></li>
-<li><p><strong>na_rm</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Optionally remove rows that contain nodata values.</p></li>
+<li><p><strong>value_name</strong> (<em>str</em><em>, </em><em>default=&quot;value&quot;</em>) – The name of the column to use to store the labelled pixel values.</p></li>
+<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – By default the extracted pixel values are returned as a
+geopandas.GeoDataFrame. If <cite>return_array=True</cite> then the extracted pixel
+values are returned as a tuple of numpy.ndarrays.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – Show a progress bar for extraction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul>
-<li><p><em>geopandas.GeoDataFrame</em> – Geodataframe containing extracted data as point features if return_array is False</p></li>
-<li><p><em>tuple with three items if return_array is True</em> –</p>
-<dl class="simple">
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>geopandas.GeoDataFrame</em> – Geodataframe containing extracted data as point features if <cite>return_array=False</cite></p></li>
+<li><p>tuple with three items if <a href="#id1"><span class="problematic" id="id2">`</span></a>return_array is True –</p>
+<ul>
+<li><dl class="simple">
 <dt>numpy.ndarray</dt><dd><p>Numpy masked array of extracted raster values, typically 2d.</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>numpy.ndarray</dt><dd><p>1d numpy masked array of labelled sampled.</p>
 </dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>numpy.ndarray</dt><dd><p>2d numpy masked array of row and column indexes of training pixels.</p>
 </dd>
 </dl>
+</li>
+</ul>
 </li>
 </ul>
 </p>
@@ -112,39 +123,26 @@ arrays.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.base.BaseRaster.extract_vector">
-<code class="sig-name descname">extract_vector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">response</span></em>, <em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_array</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">duplicates</span><span class="o">=</span><span class="default_value">'keep'</span></em>, <em class="sig-param"><span class="n">na_rm</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">low_memory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_vector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_vector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gdf</span></em>, <em class="sig-param"><span class="n">return_array</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_vector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample a Raster/RasterLayer using a geopandas GeoDataframe containing
 points, lines or polygon features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>response</strong> (<em>geopandas.GeoDataFrame</em>) – Containing either point, line or polygon geometries. Overlapping
+<li><p><strong>gdf</strong> (<em>geopandas.GeoDataFrame</em>) – Containing either point, line or polygon geometries. Overlapping
 geometries will cause the same pixels to be sampled.</p></li>
-<li><p><strong>columns</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em>) – Column names of attribute to be used the label the extracted data. Used
-only if the response feature represents a GeoDataframe.</p></li>
-<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally return extracted data as separate X, y and xy masked numpy
-arrays.</p></li>
-<li><p><strong>duplicates</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em> Default is 'keep'</em>) – Method to deal with duplicates points that fall inside the same pixel.
-Available options are [‘keep’, ‘mean’, min’, ‘max’].</p></li>
-<li><p><strong>na_rm</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Optionally remove rows that contain nodata values if extracted values are
-returned as a GeoDataFrame.</p></li>
-<li><p><strong>low_memory</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally extract pixel values in using a slower but memory-safe method.</p></li>
+<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – By default the extracted pixel values are returned as a
+geopandas.GeoDataFrame. If <cite>return_array=True</cite> then the extracted pixel
+values are returned as a tuple of numpy.ndarrays.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – Show a progress bar for extraction.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul>
-<li><p><em>geopandas.GeoDataframe</em> – Containing extracted data as point geometries if return_array is False</p></li>
-<li><p><em>tuple with three items if return_array is True</em> –</p>
-<dl class="simple">
-<dt>numpy.ndarray</dt><dd><p>Numpy masked array of extracted raster values, typically 2d.</p>
-</dd>
-<dt>numpy.ndarray</dt><dd><p>1d numpy masked array of labelled sampled.</p>
-</dd>
-<dt>numpy.ndarray</dt><dd><p>2d numpy masked array of row and column indexes of training
-pixels.</p>
-</dd>
-</dl>
-</li>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>geopandas.GeoDataframe</em> – Containing extracted data as point geometries if <cite>return_array=False</cite>.</p></li>
+<li><p><em>tuple</em> – A tuple (geodataframe index, extracted values, coordinates) of the extracted
+raster values as a masked array and the  coordinates of the extracted pixels
+if <cite>as_gdf=False</cite>.</p></li>
 </ul>
 </p>
 </dd>
@@ -153,18 +151,25 @@ pixels.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.base.BaseRaster.extract_xy">
-<code class="sig-name descname">extract_xy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xy</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_xy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extract_xy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xys</span></em>, <em class="sig-param"><span class="n">return_array</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyspatialml/base.html#BaseRaster.extract_xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyspatialml.base.BaseRaster.extract_xy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Samples pixel values using an array of xy locations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>xy</strong> (<em>2d array-like</em>) – x and y coordinates from which to sample the raster (n_samples, xy).</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xys</strong> (<em>2d array-like</em>) – x and y coordinates from which to sample the raster (n_samples, xys).</p></li>
+<li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – By default the extracted pixel values are returned as a
+geopandas.GeoDataFrame. If <cite>return_array=True</cite> then the extracted pixel
+values are returned as a tuple of numpy.ndarrays.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=False</em>) – Show a progress bar for extraction.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>2d masked array containing sampled raster values (sample, bands) at x,y
-locations.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>geopandas.GeoDataframe</em> – Containing extracted data as point geometries if <cite>return_array=False</cite>.</p></li>
+<li><p><em>numpy.ndarray</em> – 2d masked array containing sampled raster values (sample, bands) at the
+x,y locations.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -270,20 +275,23 @@ strategy=’stratified’.</p></li>
 supplied using an open rasterio DatasetReader object.</p></li>
 <li><p><strong>return_array</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is False</em>) – Optionally return extracted data as separate X, y and xy masked numpy
 arrays.</p></li>
-<li><p><strong>na_rm</strong> (<em>bool</em><em> (</em><em>opt</em><em>)</em><em> Default is True</em>) – Optionally remove rows that contain nodata values.</p></li>
 <li><p><strong>random_state</strong> (<em>int</em><em> (</em><em>opt</em><em>)</em>) – integer to use within random.seed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A tuple containing two elements:
-numpy.ndarray</p>
-<blockquote>
-<div><p>Numpy array of extracted raster values, typically 2d.</p>
-</div></blockquote>
-<dl class="simple">
+<dd class="field-even"><p><p>A tuple containing two elements:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Numpy array of extracted raster values, typically 2d.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>numpy.ndarray</dt><dd><p>2D numpy array of xy coordinates of extracted values.</p>
 </dd>
 </dl>
+</li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>

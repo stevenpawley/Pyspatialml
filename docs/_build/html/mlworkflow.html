@@ -93,9 +93,7 @@ polygons or linestrings).</p>
 <code class="docutils literal notranslate"><span class="pre">extract_xy</span></code> method can be used to query pixel values using a 2d array of x
 and y coordinates.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">extract_vector</span></code> method accepts a Geopandas GeoDataFrame as the
-<code class="docutils literal notranslate"><span class="pre">response</span></code> argument. The <code class="docutils literal notranslate"><span class="pre">field</span></code> argument is used to indicate if values in
-a column in the GeoDataFrame should be extracted with the pixel values. For
-GeoDataFrames containing shapely point geometries, the closest pixel to each
+<code class="docutils literal notranslate"><span class="pre">gdf</span></code> argument. For GeoDataFrames containing shapely point geometries, the closest pixel to each
 point is sampled. For shapely polygon geometries, all pixels whose centres are
 inside the polygon are sampled. For shapely linestring geometries, every pixel
 touched by the line is sampled. For all geometry types, pixel values are queries
@@ -106,21 +104,22 @@ times.</p>
 geometries and the DataFrame containing the extracted pixels, with the column
 names set by the names of the raster datasets in the Raster object. The user can
 also use the <code class="docutils literal notranslate"><span class="pre">return_array=True</span></code> argument, which instead of returning a
-DataFrame will return three masked numpy arrays (X, y, xy) containing the
-extracted pixel values, the field attribute, and the spatial coordinates of the
-sampled pixels. These arrays are masked arrays with nodata values in the
-RasterStack datasets being masked.</p>
+DataFrame will return three masked numpy arrays (ids, X, xy) containing the
+geodataframe index positions, extracted pixel values, and the spatial coordinates of the
+sampled pixels. These arrays are masked arrays.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">extract_raster</span></code> method can also be used to spatially query pixel values
 from a Raster object using another raster containing labelled pixels. This
-raster has to be spatially aligned with the Raster object. There is no field
-attribute for this method because the values of the labelled pixels are returned
-along with the queried pixel values, but the name of this column in the
-attribute can be set using the <code class="docutils literal notranslate"><span class="pre">value_name</span></code> argument.</p>
+raster has to be spatially aligned with the Raster object. The values of the labelled pixels are returned
+along with the queried pixel values.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract data from rasters at the training point locations:</span>
-<span class="n">df_points</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_pt</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
-<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_py</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
-<span class="n">df_lines</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_lines</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
-<span class="n">df_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_raster</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_px</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">df_points</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_pt</span><span class="p">)</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_py</span><span class="p">)</span>
+<span class="n">df_lines</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_lines</span><span class="p">)</span>
+<span class="n">df_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_raster</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_px</span><span class="p">)</span>
+
+<span class="c1"># Join the extracted values with other columns from the training data</span>
+<span class="n">df_points</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_pts</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+<span class="n">df_points</span> <span class="o">=</span> <span class="n">df_points</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 <span class="n">df_points</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>

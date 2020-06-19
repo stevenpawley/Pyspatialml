@@ -56,7 +56,10 @@
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">features</span>
 <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">Window</span>
+<span class="kn">from</span> <span class="nn">rasterio.sample</span> <span class="kn">import</span> <span class="n">sample_gen</span>
+
 <span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 
 <div class="viewcode-block" id="BaseRaster"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster">[docs]</a><span class="k">class</span> <span class="nc">BaseRaster</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -253,9 +256,6 @@
 <span class="sd">            Optionally return extracted data as separate X, y and xy masked numpy</span>
 <span class="sd">            arrays.</span>
 
-<span class="sd">        na_rm : bool (opt). Default is True</span>
-<span class="sd">            Optionally remove rows that contain nodata values.</span>
-
 <span class="sd">        random_state : int (opt)</span>
 <span class="sd">            integer to use within random.seed.</span>
 
@@ -263,9 +263,10 @@
 <span class="sd">        -------</span>
 <span class="sd">        tuple</span>
 <span class="sd">            A tuple containing two elements:</span>
-<span class="sd">            numpy.ndarray</span>
+
+<span class="sd">            - numpy.ndarray</span>
 <span class="sd">                Numpy array of extracted raster values, typically 2d.</span>
-<span class="sd">            numpy.ndarray</span>
+<span class="sd">            - numpy.ndarray</span>
 <span class="sd">                2D numpy array of xy coordinates of extracted values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -365,337 +366,199 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">valid_samples</span><span class="p">,</span> <span class="n">valid_coordinates</span></div>
 
-<div class="viewcode-block" id="BaseRaster.extract_xy"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_xy">[docs]</a>    <span class="k">def</span> <span class="nf">extract_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xy</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseRaster.extract_xy"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_xy">[docs]</a>    <span class="k">def</span> <span class="nf">extract_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xys</span><span class="p">,</span> <span class="n">return_array</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Samples pixel values using an array of xy locations.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        xy : 2d array-like</span>
-<span class="sd">            x and y coordinates from which to sample the raster (n_samples, xy).</span>
+<span class="sd">        xys : 2d array-like</span>
+<span class="sd">            x and y coordinates from which to sample the raster (n_samples, xys).</span>
+<span class="sd">        </span>
+<span class="sd">        return_array : bool (opt), default=False</span>
+<span class="sd">            By default the extracted pixel values are returned as a </span>
+<span class="sd">            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel</span>
+<span class="sd">            values are returned as a tuple of numpy.ndarrays. </span>
+
+<span class="sd">        progress : bool (opt), default=False</span>
+<span class="sd">            Show a progress bar for extraction.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
+<span class="sd">        geopandas.GeoDataframe</span>
+<span class="sd">            Containing extracted data as point geometries if `return_array=False`.</span>
+
 <span class="sd">        numpy.ndarray</span>
-<span class="sd">            2d masked array containing sampled raster values (sample, bands) at x,y</span>
-<span class="sd">            locations.</span>
+<span class="sd">            2d masked array containing sampled raster values (sample, bands) at the </span>
+<span class="sd">            x,y locations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># clip coordinates to extent of raster</span>
-        <span class="n">extent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span>
-        <span class="n">valid_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
-            <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
-            <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
-            <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
-        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">xy</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">,</span> <span class="p">:]</span>
-
+        <span class="c1"># extract pixel values</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">find_common_type</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">rowcol</span><span class="p">(</span>
-            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">xs</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ys</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xys</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">progress</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)):</span>
-            <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="n">col_off</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">row_off</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">pbar</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="n">disable_tqdm</span><span class="p">))):</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample_gen</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">ds</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="n">xys</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">bidx</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sampler</span><span class="p">])</span>
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
-            <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
-            <span class="p">)</span>
+        <span class="c1"># return as geopandas array as default (or numpy arrays)</span>
+        <span class="k">if</span> <span class="n">return_array</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xys</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Point</span><span class="p">)</span>
+            <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">gdf</span>
 
-        <span class="k">return</span> <span class="n">values</span></div>
+        <span class="k">return</span> <span class="n">X</span></div>
 
-<div class="viewcode-block" id="BaseRaster.extract_vector"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_vector">[docs]</a>    <span class="k">def</span> <span class="nf">extract_vector</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">response</span><span class="p">,</span>
-        <span class="n">columns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_array</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">duplicates</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">,</span>
-        <span class="n">na_rm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">low_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
+<div class="viewcode-block" id="BaseRaster.extract_vector"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_vector">[docs]</a>    <span class="k">def</span> <span class="nf">extract_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gdf</span><span class="p">,</span> <span class="n">return_array</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sample a Raster/RasterLayer using a geopandas GeoDataframe containing</span>
 <span class="sd">        points, lines or polygon features.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        response: geopandas.GeoDataFrame</span>
+<span class="sd">        gdf: geopandas.GeoDataFrame</span>
 <span class="sd">            Containing either point, line or polygon geometries. Overlapping</span>
 <span class="sd">            geometries will cause the same pixels to be sampled.</span>
 
-<span class="sd">        columns : str (opt)</span>
-<span class="sd">            Column names of attribute to be used the label the extracted data. Used</span>
-<span class="sd">            only if the response feature represents a GeoDataframe.</span>
-
-<span class="sd">        return_array : bool (opt). Default is False</span>
-<span class="sd">            Optionally return extracted data as separate X, y and xy masked numpy</span>
-<span class="sd">            arrays.</span>
+<span class="sd">        return_array : bool (opt), default=False</span>
+<span class="sd">            By default the extracted pixel values are returned as a </span>
+<span class="sd">            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel</span>
+<span class="sd">            values are returned as a tuple of numpy.ndarrays. </span>
 <span class="sd">        </span>
-<span class="sd">        duplicates : str (opt). Default is &#39;keep&#39;</span>
-<span class="sd">            Method to deal with duplicates points that fall inside the same pixel.</span>
-<span class="sd">            Available options are [&#39;keep&#39;, &#39;mean&#39;, min&#39;, &#39;max&#39;].</span>
-
-<span class="sd">        na_rm : bool (opt). Default is True</span>
-<span class="sd">            Optionally remove rows that contain nodata values if extracted values are</span>
-<span class="sd">            returned as a GeoDataFrame.</span>
-
-<span class="sd">        low_memory : bool (opt). Default is False</span>
-<span class="sd">            Optionally extract pixel values in using a slower but memory-safe method.</span>
+<span class="sd">        progress : bool (opt), default=False</span>
+<span class="sd">            Show a progress bar for extraction.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        geopandas.GeoDataframe</span>
-<span class="sd">            Containing extracted data as point geometries if return_array is False</span>
+<span class="sd">            Containing extracted data as point geometries if `return_array=False`.</span>
 
-<span class="sd">        tuple with three items if return_array is True:</span>
-<span class="sd">            numpy.ndarray</span>
-<span class="sd">                Numpy masked array of extracted raster values, typically 2d.</span>
-
-<span class="sd">            numpy.ndarray</span>
-<span class="sd">                1d numpy masked array of labelled sampled.</span>
-
-<span class="sd">            numpy.ndarray</span>
-<span class="sd">                2d numpy masked array of row and column indexes of training</span>
-<span class="sd">                pixels.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            A tuple (geodataframe index, extracted values, coordinates) of the extracted</span>
+<span class="sd">            raster values as a masked array and the  coordinates of the extracted pixels</span>
+<span class="sd">            if `as_gdf=False`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">columns</span><span class="p">]</span>
+        <span class="c1"># rasterize polygon and line geometries</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">gdf</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">gdf</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;LineString&quot;</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">columns</span><span class="p">:</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="n">duplicate_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;keep&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">duplicates</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">duplicate_methods</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;duplicates must be one of &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">duplicate_methods</span><span class="p">))</span>
-
-        <span class="c1"># polygon and line geometries</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="n">response</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;LineString&quot;</span>
-        <span class="p">):</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                    <span class="s2">&quot;Support for extracting values from multiple columns is &quot;</span>
-                    <span class="s2">&quot;only supported for point geometries&quot;</span>
-                <span class="p">)</span>
-
-            <span class="c1"># rasterize</span>
-            <span class="n">rows_all</span><span class="p">,</span> <span class="n">cols_all</span><span class="p">,</span> <span class="n">y_all</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">columns</span><span class="p">:</span>
-                    <span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="n">columns</span><span class="p">])</span>
-
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">))</span>
-                <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99999</span>
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
-                    <span class="n">shapes</span><span class="o">=</span><span class="p">(</span><span class="n">shapes</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
-                    <span class="n">fill</span><span class="o">=-</span><span class="mi">99999</span><span class="p">,</span>
-                    <span class="n">out</span><span class="o">=</span><span class="n">arr</span><span class="p">,</span>
-                    <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
-                    <span class="n">default_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">all_touched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">arr</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">99999</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">columns</span><span class="p">:</span>
-                    <span class="n">y_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">])</span>
-
-                <span class="n">rows_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
-                <span class="n">cols_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
-
-            <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">rows_all</span><span class="p">))</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">cols_all</span><span class="p">))</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">y_all</span><span class="p">))</span>
-
-            <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
-                <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
+            <span class="n">shapes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">geom</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">geom</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gdf</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="n">gdf</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">))</span>
+            <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">99999</span>
+            
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
+                <span class="n">shapes</span><span class="o">=</span><span class="n">shapes</span><span class="p">,</span>
+                <span class="n">fill</span><span class="o">=-</span><span class="mi">99999</span><span class="p">,</span>
+                <span class="n">out</span><span class="o">=</span><span class="n">arr</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
+                <span class="n">all_touched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
+            
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">arr</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">99999</span><span class="p">)]</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">ids</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">arr</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">99999</span><span class="p">)</span>
+            <span class="n">xys</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
+            <span class="n">xys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">xys</span><span class="p">)</span>
 
-        <span class="c1"># point geometries</span>
-        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;Point&quot;</span><span class="p">):</span>
-            <span class="n">xy</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">values</span>
-            <span class="k">if</span> <span class="n">columns</span><span class="p">:</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">gdf</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;Point&quot;</span><span class="p">):</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">xys</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">values</span>
 
-            <span class="c1"># clip points to extent of raster</span>
-            <span class="n">extent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span>
-            <span class="n">valid_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
-                <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
-                <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
-                <span class="o">&amp;</span> <span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">extent</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
-            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
-            <span class="n">xy</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">,</span> <span class="p">:]</span>
-
-            <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
-
-            <span class="c1"># convert to row, col indices</span>
-            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">rowcol</span><span class="p">(</span>
-                <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">xs</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ys</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="p">)</span>
-
-            <span class="c1"># deal with duplicate points that fall inside same pixel</span>
-            <span class="k">if</span> <span class="n">duplicates</span> <span class="o">!=</span> <span class="s2">&quot;keep&quot;</span><span class="p">:</span>
-                <span class="n">rowcol_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-                    <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">y</span><span class="p">)),</span>
-                    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">columns</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="n">rowcol_df</span><span class="p">[</span><span class="s2">&quot;Duplicated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rowcol_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="n">duplicates</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
-                    <span class="n">rowcol_df</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">rowcol_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;Duplicated&quot;</span><span class="p">,</span> <span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                        <span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-                        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-                    <span class="p">)</span>
-
-                <span class="k">elif</span> <span class="n">duplicates</span> <span class="o">==</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span>
-                    <span class="n">rowcol_df</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">rowcol_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;Duplicated&quot;</span><span class="p">,</span> <span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                        <span class="o">.</span><span class="n">min</span><span class="p">()</span>
-                        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-                    <span class="p">)</span>
-
-                <span class="k">elif</span> <span class="n">duplicates</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
-                    <span class="n">rowcol_df</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">rowcol_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;Duplicated&quot;</span><span class="p">,</span> <span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;col&quot;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                        <span class="o">.</span><span class="n">max</span><span class="p">()</span>
-                        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-                    <span class="p">)</span>
-
-                <span class="n">rows</span> <span class="o">=</span> <span class="n">rowcol_df</span><span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
-                <span class="n">cols</span> <span class="o">=</span> <span class="n">rowcol_df</span><span class="p">[</span><span class="s2">&quot;col&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
-
-                <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-                    <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span>
-                        <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span>
-                    <span class="p">),</span>
-                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="n">y</span> <span class="o">=</span> <span class="n">rowcol_df</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="c1"># spatial query of Raster object (loads each band into memory)</span>
-        <span class="k">if</span> <span class="n">low_memory</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_by_indices</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
-
-        <span class="c1"># samples each point separately (much slower)</span>
+        <span class="c1"># extract raster pixels</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">find_common_type</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xys</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">progress</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_xy</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="c1"># apply mask</span>
-        <span class="n">mask_2d</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_2d</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">X_mask_columns</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">X_mask_columns</span> <span class="o">=</span> <span class="n">X_mask_columns</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">X_mask_columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">pbar</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="n">disable_tqdm</span><span class="p">))):</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample_gen</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">ds</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="n">xys</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">bidx</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sampler</span><span class="p">])</span>
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
         <span class="c1"># return as geopandas array as default (or numpy arrays)</span>
         <span class="k">if</span> <span class="n">return_array</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">na_rm</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compress_rows</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-                <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compress_rows</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">ids</span><span class="p">,</span> <span class="n">X</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
+            <span class="n">X</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xys</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="n">X</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Point</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">X</span>
 
-                <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-                    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compress_rows</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ids</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">xys</span></div>
 
-            <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">))</span>
-                <span class="n">column_names</span> <span class="o">=</span> <span class="n">columns</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">X</span>
-                <span class="n">column_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
-
-            <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">column_names</span><span class="p">)</span>
-            <span class="n">df_dtypes</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)}</span>
-            <span class="n">gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">df_dtypes</span><span class="p">)</span>
-            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
-            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Point</span><span class="p">)</span>
-            <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">gdf</span>
-
-        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xy</span></div>
-
-<div class="viewcode-block" id="BaseRaster.extract_raster"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_raster">[docs]</a>    <span class="k">def</span> <span class="nf">extract_raster</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">return_array</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">na_rm</span><span class="o">=</span><span class="kc">True</span>
-    <span class="p">):</span>
+<div class="viewcode-block" id="BaseRaster.extract_raster"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.extract_raster">[docs]</a>    <span class="k">def</span> <span class="nf">extract_raster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">return_array</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sample a Raster object by an aligned raster of labelled pixels.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        response: rasterio DatasetReader</span>
+<span class="sd">        src: rasterio DatasetReader</span>
 <span class="sd">            Single band raster containing labelled pixels as an open rasterio</span>
 <span class="sd">            DatasetReader object.</span>
+<span class="sd">        </span>
+<span class="sd">        value_name : str, default=&quot;value&quot;</span>
+<span class="sd">            The name of the column to use to store the labelled pixel values.</span>
 
-<span class="sd">        return_array : bool (opt). Default is False</span>
-<span class="sd">            Optionally return extracted data as separate X, y and xy masked numpy</span>
-<span class="sd">            arrays.</span>
-
-<span class="sd">        na_rm : bool (opt). Default is True</span>
-<span class="sd">            Optionally remove rows that contain nodata values.</span>
+<span class="sd">        return_array : bool (opt), default=False</span>
+<span class="sd">            By default the extracted pixel values are returned as a </span>
+<span class="sd">            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel</span>
+<span class="sd">            values are returned as a tuple of numpy.ndarrays. </span>
+<span class="sd">        </span>
+<span class="sd">        progress : bool (opt), default=False</span>
+<span class="sd">            Show a progress bar for extraction.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        geopandas.GeoDataFrame</span>
-<span class="sd">            Geodataframe containing extracted data as point features if return_array is False</span>
+<span class="sd">            Geodataframe containing extracted data as point features if `return_array=False`</span>
 
-<span class="sd">        tuple with three items if return_array is True:</span>
-<span class="sd">            numpy.ndarray</span>
+<span class="sd">        tuple with three items if `return_array is True</span>
+<span class="sd">            - numpy.ndarray</span>
 <span class="sd">                Numpy masked array of extracted raster values, typically 2d.</span>
-<span class="sd">            numpy.ndarray</span>
+<span class="sd">            - numpy.ndarray</span>
 <span class="sd">                1d numpy masked array of labelled sampled.</span>
-<span class="sd">            numpy.ndarray</span>
+<span class="sd">            - numpy.ndarray</span>
 <span class="sd">                2d numpy masked array of row and column indexes of training pixels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># open response raster and get labelled pixel indices and values</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="o">~</span><span class="n">arr</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
-        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span>
+        <span class="n">xys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span>
 
         <span class="c1"># extract Raster object values at row, col indices</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_by_indices</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">find_common_type</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xys</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
-        <span class="c1"># summarize data and mask nodatavals in X, y, and xy</span>
-        <span class="n">mask_2d</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask_2d</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">progress</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">disable_tqdm</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">pbar</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iloc</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="n">disable_tqdm</span><span class="p">))):</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample_gen</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">ds</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="n">xys</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">bidx</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sampler</span><span class="p">])</span>
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="c1"># summarize data</span>
         <span class="k">if</span> <span class="n">return_array</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">na_rm</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compress_rows</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compressed</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-                <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">compress_rows</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span>
-
-            <span class="n">column_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">value_name</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
-            <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="n">column_names</span><span class="p">)</span>
-            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="n">column_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
+            <span class="n">gdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">ys</span><span class="p">,</span> <span class="n">X</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="n">column_names</span><span class="p">)</span>
+            <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xys</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
             <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gdf</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Point</span><span class="p">)</span>
             <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">gdf</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
-
             <span class="k">return</span> <span class="n">gdf</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xy</span></div>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">xys</span></div>
 
 <div class="viewcode-block" id="BaseRaster.head"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.head">[docs]</a>    <span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Show the head (first rows, first columns) or tail (last rows, last columns)</span>
@@ -703,7 +566,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="n">col_off</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row_off</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseRaster.tail"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.tail">[docs]</a>    <span class="k">def</span> <span class="nf">tail</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -714,7 +576,6 @@
         <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span>
             <span class="n">col_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">-</span> <span class="mi">20</span><span class="p">,</span> <span class="n">row_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="mi">10</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">10</span>
         <span class="p">)</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseRaster.to_pandas"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.base.BaseRaster.to_pandas">[docs]</a>    <span class="k">def</span> <span class="nf">to_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_pixels</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">):</span>

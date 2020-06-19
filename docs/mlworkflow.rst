@@ -47,9 +47,7 @@ Pixel values in the Raster object can be spatially queried using the
 and y coordinates.
 
 The ``extract_vector`` method accepts a Geopandas GeoDataFrame as the
-``response`` argument. The ``field`` argument is used to indicate if values in
-a column in the GeoDataFrame should be extracted with the pixel values. For
-GeoDataFrames containing shapely point geometries, the closest pixel to each
+``gdf`` argument. For GeoDataFrames containing shapely point geometries, the closest pixel to each
 point is sampled. For shapely polygon geometries, all pixels whose centres are
 inside the polygon are sampled. For shapely linestring geometries, every pixel
 touched by the line is sampled. For all geometry types, pixel values are queries
@@ -61,25 +59,26 @@ By default, the extract functions return a Geopandas GeoDataFrame of point
 geometries and the DataFrame containing the extracted pixels, with the column
 names set by the names of the raster datasets in the Raster object. The user can
 also use the ``return_array=True`` argument, which instead of returning a
-DataFrame will return three masked numpy arrays (X, y, xy) containing the
-extracted pixel values, the field attribute, and the spatial coordinates of the
-sampled pixels. These arrays are masked arrays with nodata values in the
-RasterStack datasets being masked.
+DataFrame will return three masked numpy arrays (ids, X, xy) containing the
+geodataframe index positions, extracted pixel values, and the spatial coordinates of the
+sampled pixels. These arrays are masked arrays.
 
 The ``extract_raster`` method can also be used to spatially query pixel values
 from a Raster object using another raster containing labelled pixels. This
-raster has to be spatially aligned with the Raster object. There is no field
-attribute for this method because the values of the labelled pixels are returned
-along with the queried pixel values, but the name of this column in the
-attribute can be set using the ``value_name`` argument.
+raster has to be spatially aligned with the Raster object. The values of the labelled pixels are returned
+along with the queried pixel values.
 
 ::
 
     # Extract data from rasters at the training point locations:
-    df_points = stack.extract_vector(response=training_pt, columns='id')
-    df_polygons = stack.extract_vector(response=training_py, columns='id')
-    df_lines = stack.extract_vector(response=training_lines, columns='id')
-    df_raster = stack.extract_raster(response=training_px, value_name='id')
+    df_points = stack.extract_vector(response=training_pt)
+    df_polygons = stack.extract_vector(response=training_py)
+    df_lines = stack.extract_vector(response=training_lines)
+    df_raster = stack.extract_raster(response=training_px)
+    
+    # Join the extracted values with other columns from the training data
+    df_points["id"] = training_pts["id"]
+    df_points = df_points.dropna()
     df_points.head()
 
 Model Training

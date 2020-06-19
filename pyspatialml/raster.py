@@ -841,6 +841,11 @@ class Raster(BaseRaster):
 
         if nodata is None:
             nodata = _get_nodata(dtype)
+            
+        if progress is True:
+            disable_tqdm = False
+        else:
+            disable_tqdm = True
 
         # open output file with updated metadata
         meta = deepcopy(self.meta)
@@ -852,16 +857,10 @@ class Raster(BaseRaster):
             # generator gets raster arrays for each window
             data_gen = ((window, self.read(window=window, masked=True, as_df=as_df)) for window in windows)
 
-            if progress is True:
-                for window, arr, pbar in zip(windows, data_gen, tqdm(windows)):
-                    result = predfun(arr, estimator)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result[indexes, :, :].astype(dtype), window=window)
-            else:
-                for window, arr in zip(windows, data_gen):
-                    result = predfun(arr, estimator)
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result[indexes, :, :].astype(dtype), window=window)
+            for window, arr, pbar in zip(windows, data_gen, tqdm(windows, disable=disable_tqdm)):
+                result = predfun(arr, estimator)
+                result = np.ma.filled(result, fill_value=nodata)
+                dst.write(result[indexes, :, :].astype(dtype), window=window)
 
         # generate layer names
         prefix = "prob_"
@@ -969,6 +968,11 @@ class Raster(BaseRaster):
 
         if nodata is None:
             nodata = _get_nodata(dtype)
+        
+        if progress is True:
+            disable_tqdm = False
+        else:
+            disable_tqdm = True
 
         # open output file with updated metadata
         meta = deepcopy(self.meta)
@@ -978,22 +982,13 @@ class Raster(BaseRaster):
             windows = [window for window in self.block_shapes(*self._block_shape)]
 
             # generator gets raster arrays for each window
-            data_gen = (
-                (window, self.read(window=window, masked=True, as_df=as_df)) for window in windows
-            )
+            data_gen = ((window, self.read(window=window, masked=True, as_df=as_df)) for window in windows)
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
-                if progress is True:
-                    for window, result, pbar in zip(
-                        windows, executor.map(predfun, data_gen), tqdm(windows)
-                    ):
-                        result = np.ma.filled(result, fill_value=nodata)
-                        dst.write(result[indexes, :, :].astype(dtype), window=window)
-                else:
-                    for window, result in zip(windows, executor.map(predfun, data_gen)):
-                        result = np.ma.filled(result, fill_value=nodata)
-                        dst.write(result[indexes, :, :].astype(dtype), window=window)
-
+                for window, result, pbar in zip(windows, executor.map(predfun, data_gen), tqdm(windows, disable=disable_tqdm)):
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result[indexes, :, :].astype(dtype), window=window)
+        
         # generate layer names
         prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
@@ -2107,22 +2102,6 @@ class Raster(BaseRaster):
                     num_rows = self.height - j
 
                 yield Window(i, j, num_cols, num_rows)
-
-    def _extract_by_indices(self, rows, cols):
-        """Spatial query of Raster object (by-band)
-
-        Parameters
-        ----------
-        rows, cols : ndarray, list
-            Row and column positions of RasterLayer to extract values from.
-        """
-        X = np.ma.zeros((len(rows), self.count), dtype="float32")
-
-        for i, layer in enumerate(self.iloc):
-            arr = layer.read(masked=True)
-            X[:, i] = arr[rows, cols]
-
-        return X
 
     def astype(self, dtype, file_path=None, driver="GTiff", nodata=None):
         """Coerce Raster to a different dtype.

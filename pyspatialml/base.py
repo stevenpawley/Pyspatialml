@@ -10,7 +10,10 @@ import pandas as pd
 import rasterio
 from rasterio import features
 from rasterio.windows import Window
+from rasterio.sample import sample_gen
+
 from shapely.geometry import Point
+from tqdm import tqdm
 
 
 class BaseRaster(ABC):
@@ -207,9 +210,6 @@ class BaseRaster(ABC):
             Optionally return extracted data as separate X, y and xy masked numpy
             arrays.
 
-        na_rm : bool (opt). Default is True
-            Optionally remove rows that contain nodata values.
-
         random_state : int (opt)
             integer to use within random.seed.
 
@@ -217,9 +217,10 @@ class BaseRaster(ABC):
         -------
         tuple
             A tuple containing two elements:
-            numpy.ndarray
+
+            - numpy.ndarray
                 Numpy array of extracted raster values, typically 2d.
-            numpy.ndarray
+            - numpy.ndarray
                 2D numpy array of xy coordinates of extracted values.
         """
 
@@ -319,337 +320,199 @@ class BaseRaster(ABC):
         else:
             return valid_samples, valid_coordinates
 
-    def extract_xy(self, xy):
+    def extract_xy(self, xys, return_array=False, progress=False):
         """Samples pixel values using an array of xy locations.
 
         Parameters
         ----------
-        xy : 2d array-like
-            x and y coordinates from which to sample the raster (n_samples, xy).
+        xys : 2d array-like
+            x and y coordinates from which to sample the raster (n_samples, xys).
+        
+        return_array : bool (opt), default=False
+            By default the extracted pixel values are returned as a 
+            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
+            values are returned as a tuple of numpy.ndarrays. 
+
+        progress : bool (opt), default=False
+            Show a progress bar for extraction.
 
         Returns
         -------
+        geopandas.GeoDataframe
+            Containing extracted data as point geometries if `return_array=False`.
+
         numpy.ndarray
-            2d masked array containing sampled raster values (sample, bands) at x,y
-            locations.
+            2d masked array containing sampled raster values (sample, bands) at the 
+            x,y locations.
         """
 
-        # clip coordinates to extent of raster
-        extent = self.bounds
-        valid_idx = np.where(
-            (xy[:, 0] > extent.left)
-            & (xy[:, 0] < extent.right)
-            & (xy[:, 1] > extent.bottom)
-            & (xy[:, 1] < extent.top)
-        )[0]
-        xy = xy[valid_idx, :]
-
+        # extract pixel values
         dtype = np.find_common_type([np.float32], self.dtypes)
-        values = np.ma.zeros((xy.shape[0], self.count), dtype=dtype)
-        rows, cols = rasterio.transform.rowcol(
-            transform=self.transform, xs=xy[:, 0], ys=xy[:, 1]
-        )
+        X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
+        
+        if progress is True:
+            disable_tqdm = False
+        else:
+            disable_tqdm = True
 
-        for i, (row, col) in enumerate(zip(rows, cols)):
-            window = Window(col_off=col, row_off=row, width=1, height=1)
+        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+            v = np.ma.asarray([i for i in sampler])
+            X[:, i] = v.flatten()
 
-            values[i, :] = self.read(masked=True, window=window).reshape(
-                (1, self.count)
-            )
+        # return as geopandas array as default (or numpy arrays)
+        if return_array is False:
+            gdf = pd.DataFrame(X, columns=self.names)
+            gdf["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
+            gdf["geometry"] = gdf["geometry"].apply(Point)
+            gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
+            return gdf
 
-        return values
+        return X
 
-    def extract_vector(
-        self,
-        response,
-        columns=None,
-        return_array=False,
-        duplicates="keep",
-        na_rm=True,
-        low_memory=False,
-    ):
+    def extract_vector(self, gdf, return_array=False, progress=False):
         """Sample a Raster/RasterLayer using a geopandas GeoDataframe containing
         points, lines or polygon features.
 
         Parameters
         ----------
-        response: geopandas.GeoDataFrame
+        gdf: geopandas.GeoDataFrame
             Containing either point, line or polygon geometries. Overlapping
             geometries will cause the same pixels to be sampled.
 
-        columns : str (opt)
-            Column names of attribute to be used the label the extracted data. Used
-            only if the response feature represents a GeoDataframe.
-
-        return_array : bool (opt). Default is False
-            Optionally return extracted data as separate X, y and xy masked numpy
-            arrays.
+        return_array : bool (opt), default=False
+            By default the extracted pixel values are returned as a 
+            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
+            values are returned as a tuple of numpy.ndarrays. 
         
-        duplicates : str (opt). Default is 'keep'
-            Method to deal with duplicates points that fall inside the same pixel.
-            Available options are ['keep', 'mean', min', 'max'].
-
-        na_rm : bool (opt). Default is True
-            Optionally remove rows that contain nodata values if extracted values are
-            returned as a GeoDataFrame.
-
-        low_memory : bool (opt). Default is False
-            Optionally extract pixel values in using a slower but memory-safe method.
+        progress : bool (opt), default=False
+            Show a progress bar for extraction.
 
         Returns
         -------
         geopandas.GeoDataframe
-            Containing extracted data as point geometries if return_array is False
+            Containing extracted data as point geometries if `return_array=False`.
 
-        tuple with three items if return_array is True:
-            numpy.ndarray
-                Numpy masked array of extracted raster values, typically 2d.
-
-            numpy.ndarray
-                1d numpy masked array of labelled sampled.
-
-            numpy.ndarray
-                2d numpy masked array of row and column indexes of training
-                pixels.
+        tuple
+            A tuple (geodataframe index, extracted values, coordinates) of the extracted
+            raster values as a masked array and the  coordinates of the extracted pixels
+            if `as_gdf=False`.
         """
 
-        if columns is not None:
-            if isinstance(columns, str):
-                columns = [columns]
+        # rasterize polygon and line geometries
+        if all(gdf.geom_type == "Polygon") or all(gdf.geom_type == "LineString"):
 
-        if not columns:
-            y = None
-
-        duplicate_methods = ["keep", "mean", "min", "max"]
-        if duplicates not in duplicate_methods:
-            raise ValueError("duplicates must be one of " + str(duplicate_methods))
-
-        # polygon and line geometries
-        if all(response.geom_type == "Polygon") or all(
-            response.geom_type == "LineString"
-        ):
-
-            if len(columns) > 1:
-                raise NotImplementedError(
-                    "Support for extracting values from multiple columns is "
-                    "only supported for point geometries"
-                )
-
-            # rasterize
-            rows_all, cols_all, y_all = [], [], []
-
-            for _, shape in response.iterrows():
-                if not columns:
-                    shapes = (shape.geometry, 1)
-                else:
-                    shapes = (shape.geometry, shape[columns])
-
-                arr = np.zeros((self.height, self.width))
-                arr[:] = -99999
-                arr = features.rasterize(
-                    shapes=(shapes for i in range(1)),
-                    fill=-99999,
-                    out=arr,
-                    transform=self.transform,
-                    default_value=1,
-                    all_touched=True,
-                )
-
-                rows, cols = np.nonzero(arr != -99999)
-
-                if columns:
-                    y_all.append(arr[rows, cols])
-
-                rows_all.append(rows)
-                cols_all.append(cols)
-
-            rows = list(chain.from_iterable(rows_all))
-            cols = list(chain.from_iterable(cols_all))
-            y = list(chain.from_iterable(y_all))
-
-            xy = np.transpose(
-                rasterio.transform.xy(transform=self.transform, rows=rows, cols=cols)
+            shapes = [(geom, val) for geom, val in zip(gdf.geometry, gdf.index)]
+            arr = np.ma.zeros((self.height, self.width))
+            arr[:] = -99999
+            
+            arr = features.rasterize(
+                shapes=shapes,
+                fill=-99999,
+                out=arr,
+                transform=self.transform,
+                all_touched=True,
             )
+            
+            ids = arr[np.nonzero(arr != -99999)]
+            ids = ids.astype("int")
+            rows, cols = np.nonzero(arr != -99999)
+            xys = rasterio.transform.xy(transform=self.transform, rows=rows, cols=cols)
+            xys = np.transpose(xys)
 
-        # point geometries
-        elif all(response.geom_type == "Point"):
-            xy = response.bounds.iloc[:, 2:].values
-            if columns:
-                y = response[columns].values
+        elif all(gdf.geom_type == "Point"):
+            ids = gdf.index.values
+            xys = gdf.bounds.iloc[:, 2:].values
 
-            # clip points to extent of raster
-            extent = self.bounds
-            valid_idx = np.where(
-                (xy[:, 0] > extent.left)
-                & (xy[:, 0] < extent.right)
-                & (xy[:, 1] > extent.bottom)
-                & (xy[:, 1] < extent.top)
-            )[0]
-
-            xy = xy[valid_idx, :]
-
-            if y is not None:
-                y = y[valid_idx]
-
-            # convert to row, col indices
-            rows, cols = rasterio.transform.rowcol(
-                transform=self.transform, xs=xy[:, 0], ys=xy[:, 1]
-            )
-
-            # deal with duplicate points that fall inside same pixel
-            if duplicates != "keep":
-                rowcol_df = pd.DataFrame(
-                    data=np.column_stack((rows, cols, y)),
-                    columns=["row", "col"] + columns,
-                )
-
-                rowcol_df["Duplicated"] = rowcol_df.loc[:, ["row", "col"]].duplicated()
-
-                if duplicates == "mean":
-                    rowcol_df = (
-                        rowcol_df.groupby(["Duplicated", "row", "col"], sort=False)
-                        .mean()
-                        .reset_index()
-                    )
-
-                elif duplicates == "min":
-                    rowcol_df = (
-                        rowcol_df.groupby(["Duplicated", "row", "col"], sort=False)
-                        .min()
-                        .reset_index()
-                    )
-
-                elif duplicates == "max":
-                    rowcol_df = (
-                        rowcol_df.groupby(["Duplicated", "row", "col"], sort=False)
-                        .max()
-                        .reset_index()
-                    )
-
-                rows = rowcol_df["row"].values.astype("int")
-                cols = rowcol_df["col"].values.astype("int")
-
-                xy = np.stack(
-                    rasterio.transform.xy(
-                        transform=self.transform, rows=rows, cols=cols
-                    ),
-                    axis=1,
-                )
-
-                y = rowcol_df[columns].values
-
-        # spatial query of Raster object (loads each band into memory)
-        if low_memory is False:
-            X = self._extract_by_indices(rows, cols)
-
-        # samples each point separately (much slower)
+        # extract raster pixels
+        dtype = np.find_common_type([np.float32], self.dtypes)
+        X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
+        
+        if progress is True:
+            disable_tqdm = False
         else:
-            X = self.extract_xy(xy)
+            disable_tqdm = True
 
-        # apply mask
-        mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        xy = np.ma.masked_array(xy, mask=mask_2d)
-
-        if columns is not None:
-            X_mask_columns = X.mask.any(axis=1)
-            X_mask_columns = X_mask_columns.repeat(len(columns))
-            y = np.ma.masked_array(y, mask=X_mask_columns)
+        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+            v = np.ma.asarray([i for i in sampler])
+            X[:, i] = v.flatten()
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
-            if na_rm is True:
-                X = np.ma.compress_rows(X)
-                xy = np.ma.compress_rows(xy)
+            X = pd.DataFrame(np.ma.column_stack((ids, X)), columns=["id"] + self.names)
+            X.id = X.id.astype("int")
+            X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
+            X["geometry"] = X["geometry"].apply(Point)
+            X = gpd.GeoDataFrame(X, geometry="geometry", crs=self.crs)
+            return X
 
-                if columns is not None:
-                    if y.ndim == 1:
-                        y = y[:, np.newaxis]
-                    y = np.ma.compress_rows(y)
+        return ids, X, xys
 
-            if columns is not None:
-                data = np.ma.column_stack((y, X))
-                column_names = columns + self.names
-
-            else:
-                data = X
-                column_names = self.names
-
-            gdf = pd.DataFrame(data, columns=column_names)
-            df_dtypes = {k: v for k, v in zip(self.names, self.dtypes)}
-            gdf = gdf.astype(df_dtypes)
-            gdf["geometry"] = list(zip(xy[:, 0], xy[:, 1]))
-            gdf["geometry"] = gdf["geometry"].apply(Point)
-            gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
-
-            return gdf
-
-        if y is not None:
-            y = y.squeeze()
-
-        return X, y, xy
-
-    def extract_raster(
-        self, response, value_name="value", return_array=False, na_rm=True
-    ):
+    def extract_raster(self, src, return_array=False, progress=False):
         """Sample a Raster object by an aligned raster of labelled pixels.
 
         Parameters
         ----------
-        response: rasterio DatasetReader
+        src: rasterio DatasetReader
             Single band raster containing labelled pixels as an open rasterio
             DatasetReader object.
+        
+        value_name : str, default="value"
+            The name of the column to use to store the labelled pixel values.
 
-        return_array : bool (opt). Default is False
-            Optionally return extracted data as separate X, y and xy masked numpy
-            arrays.
-
-        na_rm : bool (opt). Default is True
-            Optionally remove rows that contain nodata values.
+        return_array : bool (opt), default=False
+            By default the extracted pixel values are returned as a 
+            geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
+            values are returned as a tuple of numpy.ndarrays. 
+        
+        progress : bool (opt), default=False
+            Show a progress bar for extraction.
 
         Returns
         -------
         geopandas.GeoDataFrame
-            Geodataframe containing extracted data as point features if return_array is False
+            Geodataframe containing extracted data as point features if `return_array=False`
 
-        tuple with three items if return_array is True:
-            numpy.ndarray
+        tuple with three items if `return_array is True
+            - numpy.ndarray
                 Numpy masked array of extracted raster values, typically 2d.
-            numpy.ndarray
+            - numpy.ndarray
                 1d numpy masked array of labelled sampled.
-            numpy.ndarray
+            - numpy.ndarray
                 2d numpy masked array of row and column indexes of training pixels.
         """
 
         # open response raster and get labelled pixel indices and values
-        arr = response.read(1, masked=True)
+        arr = src.read(1, masked=True)
         rows, cols = np.nonzero(~arr.mask)
-        xy = np.transpose(rasterio.transform.xy(response.transform, rows, cols))
-        y = arr.data[rows, cols]
+        xys = np.transpose(rasterio.transform.xy(src.transform, rows, cols))
+        ys = arr.data[rows, cols]
 
         # extract Raster object values at row, col indices
-        X = self._extract_by_indices(rows, cols)
+        dtype = np.find_common_type([np.float32], self.dtypes)
+        X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
-        # summarize data and mask nodatavals in X, y, and xy
-        mask_2d = X.mask.any(axis=1).repeat(2).reshape((X.shape[0], 2))
-        y = np.ma.masked_array(y, mask=X.mask.any(axis=1))
-        xy = np.ma.masked_array(xy, mask=mask_2d)
+        if progress is True:
+            disable_tqdm = False
+        else:
+            disable_tqdm = True
 
+        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+            v = np.ma.asarray([i for i in sampler])
+            X[:, i] = v.flatten()
+
+        # summarize data
         if return_array is False:
-            if na_rm is True:
-                X = np.ma.compress_rows(X)
-                y = np.ma.compressed(y)
-                xy = np.ma.compress_rows(xy)
-
-            column_names = [value_name] + self.names
-            gdf = pd.DataFrame(data=np.ma.column_stack((y, X)), columns=column_names)
-            gdf["geometry"] = list(zip(xy[:, 0], xy[:, 1]))
+            column_names = ["value"] + self.names
+            gdf = pd.DataFrame(data=np.ma.column_stack((ys, X)), columns=column_names)
+            gdf["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
             gdf["geometry"] = gdf["geometry"].apply(Point)
             gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
-
             return gdf
 
-        else:
-            return X, y, xy
+        return X, ys, xys
 
     def head(self):
         """Show the head (first rows, first columns) or tail (last rows, last columns)
@@ -657,7 +520,6 @@ class BaseRaster(ABC):
         """
 
         window = Window(col_off=0, row_off=0, width=20, height=10)
-
         return self.read(window=window)
 
     def tail(self):
@@ -668,7 +530,6 @@ class BaseRaster(ABC):
         window = Window(
             col_off=self.width - 20, row_off=self.height - 10, width=20, height=10
         )
-
         return self.read(window=window)
 
     def to_pandas(self, max_pixels=50000, resampling="nearest"):
