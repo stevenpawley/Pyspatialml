@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pyspatialml &#8212; Pyspatialml 0.0.1 documentation</title>
+    <title>Transformers &#8212; Pyspatialml 0.0.1 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -15,8 +15,8 @@
     <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="pyspatialml: machine learning for raster datasets" href="pyspatialml.html" />
-    <link rel="prev" title="Cross-validation" href="cross_validation.html" />
+    <link rel="next" title="Spatial Estimators" href="estimators.html" />
+    <link rel="prev" title="Random Sampling" href="sampling.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <!--[if lte IE 6]>
@@ -35,13 +35,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pyspatialml.html" title="pyspatialml: machine learning for raster datasets"
+          <a href="estimators.html" title="Spatial Estimators"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="cross_validation.html" title="Cross-validation"
+          <a href="sampling.html" title="Random Sampling"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">pyspatialml</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Transformers</a></li> 
       </ul>
     </div>  
 
@@ -50,33 +50,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="pyspatialml">
-<h1>pyspatialml<a class="headerlink" href="#pyspatialml" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="pyspatialml.html">pyspatialml: machine learning for raster datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pyspatialml.datasets.html">pyspatialml.datasets package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyspatialml.datasets.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.meuse">pyspatialml.datasets.meuse module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets.nc">pyspatialml.datasets.nc module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyspatialml.datasets.html#module-pyspatialml.datasets">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.base">pyspatialml.base module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.plotting">pyspatialml.plotting module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.preprocessing">pyspatialml.preprocessing module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.raster">pyspatialml.raster module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.rasterlayer">pyspatialml.rasterlayer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.utils">pyspatialml.utils module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml.vector">pyspatialml.vector module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyspatialml.html#module-pyspatialml">Module contents</a></li>
-</ul>
-</li>
-</ul>
+  <div class="section" id="transformers">
+<h1>Transformers<a class="headerlink" href="#transformers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="geodisttransformer">
+<h2>GeoDistTransformer<a class="headerlink" href="#geodisttransformer" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -87,16 +64,24 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Transformers</a><ul>
+<li><a class="reference internal" href="#geodisttransformer">GeoDistTransformer</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="cross_validation.html"
-                        title="previous chapter">Cross-validation</a></p>
+  <p class="topless"><a href="sampling.html"
+                        title="previous chapter">Random Sampling</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="pyspatialml.html"
-                        title="next chapter">pyspatialml: machine learning for raster datasets</a></p>
+  <p class="topless"><a href="estimators.html"
+                        title="next chapter">Spatial Estimators</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/modules.rst.txt"
+      <li><a href="_sources/transformers.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -124,13 +109,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pyspatialml.html" title="pyspatialml: machine learning for raster datasets"
+          <a href="estimators.html" title="Spatial Estimators"
              >next</a> |</li>
         <li class="right" >
-          <a href="cross_validation.html" title="Cross-validation"
+          <a href="sampling.html" title="Random Sampling"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">pyspatialml</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Transformers</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

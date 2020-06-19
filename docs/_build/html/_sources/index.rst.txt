@@ -48,6 +48,9 @@ User Guide
     geoprocessing
     preprocessing
     sampling
+    transformers
+    estimators
+    cross_validation
 
 
 Reference Guide
