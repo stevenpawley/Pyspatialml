@@ -14,6 +14,7 @@ polygons or linestrings).
 ::
 
     from pyspatialml import Raster
+    from pyspatialml.datasets import nc
     from copy import deepcopy
     import os
     import tempfile
@@ -30,16 +31,21 @@ polygons or linestrings).
 Show training data points and a single raster band using numpy and matplotlib:
 ::
 
-    import pyspatialml.datasets.nc as nc
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
-
     stack = Raster(predictors)
-    plt.imshow(stack.lsat7_2000_70.read(masked=True),
-               extent=rasterio.plot.plotting_extent(stack.lsat7_2000_70))
-    plt.scatter(x=training_pt.bounds.iloc[:, 0],
-                y=training_pt.bounds.iloc[:, 1],
-                s=2, color='black')
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+    stack.lsat7_2000_70.plot(ax=ax)
+    training_py.plot(column="label", ax=ax, legend=True)
     plt.show()
+
+.. figure:: ../img/training_data.png
+    :width: 600px
+    :align: center
+    :height: 600px
+    :alt: Training data
+    :figclass: align-center
+
 
 Pixel values in the Raster object can be spatially queried using the
 ``extract_vector`` and ``extract_raster`` methods. In addition, the
@@ -71,15 +77,33 @@ along with the queried pixel values.
 ::
 
     # Extract data from rasters at the training point locations:
-    df_points = stack.extract_vector(response=training_pt)
-    df_polygons = stack.extract_vector(response=training_py)
-    df_lines = stack.extract_vector(response=training_lines)
-    df_raster = stack.extract_raster(response=training_px)
-    
+    df_points = stack.extract_vector(training_pt)
+    df_polygons = stack.extract_vector(training_py)
+    df_lines = stack.extract_vector(training_lines)
+
+For any vector features, a GeoDataFrame is returned containing the extracted pixel
+values, an "id" column that provides the GeoDataFrame index of each vector feature,
+and the pixel coordinates as `shapely.geometry.Point` objects.
+These will need to be joined back with the columns of the vector features to get
+the labelled classes. Here we will join the extracted pixels using the "id" column
+and the GeoDataFrame index of the vector features:
+
+::
+
     # Join the extracted values with other columns from the training data
     df_points["id"] = training_pts["id"]
     df_points = df_points.dropna()
     df_points.head()
+
+    df_polygons = df_polygons.merge(training_py.loc[:, "id"], left_on="id", right_index=True)
+    df_polygons = df_polygons.rename(columns={"id_y": "class"})
+
+If the training data is from labelled pixels in a raster, then the extracted data
+will contain a "value" column that contains the pixel labels:
+
+::
+
+    df_raster = stack.extract_raster(training_px)
 
 Model Training
 ==============
@@ -97,9 +121,12 @@ Next we can train a logistic regression classifier:
         [('scaling', StandardScaler()),
          ('classifier', LogisticRegressionCV(n_jobs=-1))])
 
+    # remove NaNs from training data
+    df_polygons = df_polygons.dropna()
+
     # fit the classifier
-    X = df_polygons.drop(columns=['id', 'geometry'])
-    y = df_polygons.id
+    X = df_polygons.drop(columns=["id", "id_x", "class", "geometry"])
+    y = df_polygons["class"]
     lr.fit(X, y)
 
 After defining a classifier, a typical step consists of performing a
@@ -115,20 +142,13 @@ samples in the test dataset / cross-validation partition.
 In this case, performing cross-validation using groups is useful, because these
 groups can represent spatial clusters of training samples, and samples from the
 same group will never occur in both the training and test partitions of a
-cross-validation. An example of creating random spatial clusters from point
-coordinates is provided here:
+cross-validation. Here we can use the polygon indices as the groups, i.e. pixels
+within the same polygon will not be split into training and test partitions:
 
 ::
 
-    from sklearn.cluster import KMeans
-
-    # create 10 spatial clusters based on clustering of the training point x,y coordinates
-    clusters = KMeans(n_clusters=34, n_jobs=-1)
-    clusters.fit(df_polygons.geometry.bounds.iloc[:, 0:2])
-
-    # cross validate
     scores = cross_validate(
-      lr, X, y, groups=clusters.labels_,
+      lr, X, y, groups=df_polygons.id,
       scoring='accuracy',
       cv=3,  n_jobs=1)
     scores['test_score'].mean()
@@ -142,13 +162,6 @@ Prediction on the Raster object is performed using the ```predict``` method. The
 not specified then the result is automatically written to a temporary file. The
 predict method returns an rasterio.io.DatasetReader object which is open.
 
-Other arguments consist of ``predict_type`` can be either 'raw' to output a
-classification or regression result, or 'prob' to output class probabilities as
-a multi-band raster (a band for each class probability). In the latter case,
-``indexes`` can also be supplied if you only want to output the probabilities
-for a particular class, or list of classes, by supplying the indices of those
-classes:
-
 ::
 
     # prediction
@@ -156,9 +169,33 @@ classes:
     result_probs = stack.predict_proba(estimator=lr)
 
     # plot classification result
+    result.iloc[0].cmap = "Dark2"
+    result.iloc[0].categorical = True
     result.plot()
     plt.show()
+
+.. figure:: ../img/classification.png
+    :width: 650px
+    :align: center
+    :height: 500px
+    :alt: Classification result
+    :figclass: align-center
+
+The `predict_proba` method can be used to output class probabilities as
+a multi-band raster (a band for each class probability). In the latter case,
+``indexes`` can also be supplied if you only want to output the probabilities
+for a particular class, or list of classes, by supplying the indices of those
+classes:
+
+::
 
     # plot class probabilities
     result_probs.plot()
     plt.show()
+
+.. figure:: ../img/probabilities.png
+    :width: 700px
+    :align: center
+    :height: 500px
+    :alt: Class probabilities
+    :figclass: align-center

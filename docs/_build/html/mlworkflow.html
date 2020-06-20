@@ -181,6 +181,7 @@ can be used to spatially query pixel values in a Raster object, however each
 GeoDataFrame must contain only one type of geometry (i.e. either shapely points,
 polygons or linestrings).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspatialml</span> <span class="kn">import</span> <span class="n">Raster</span>
+<span class="kn">from</span> <span class="nn">pyspatialml.datasets</span> <span class="kn">import</span> <span class="n">nc</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
@@ -196,17 +197,17 @@ polygons or linestrings).</p>
 </pre></div>
 </div>
 <p>Show training data points and a single raster band using numpy and matplotlib:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspatialml.datasets.nc</span> <span class="k">as</span> <span class="nn">nc</span>
-<span class="n">predictors</span> <span class="o">=</span> <span class="p">[</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">]</span>
-
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">predictors</span> <span class="o">=</span> <span class="p">[</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">]</span>
 <span class="n">stack</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">(</span><span class="n">predictors</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-           <span class="n">extent</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plotting_extent</span><span class="p">(</span><span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">training_pt</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">training_pt</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
-            <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">training_py</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
+<div class="align-center figure">
+<a class="reference internal image-reference" href="_images/training_data.png"><img alt="Training data" src="_images/training_data.png" style="width: 600px; height: 600px;" /></a>
 </div>
 <p>Pixel values in the Raster object can be spatially queried using the
 <code class="docutils literal notranslate"><span class="pre">extract_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">extract_raster</span></code> methods. In addition, the
@@ -232,15 +233,29 @@ from a Raster object using another raster containing labelled pixels. This
 raster has to be spatially aligned with the Raster object. The values of the labelled pixels are returned
 along with the queried pixel values.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract data from rasters at the training point locations:</span>
-<span class="n">df_points</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_pt</span><span class="p">)</span>
-<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_py</span><span class="p">)</span>
-<span class="n">df_lines</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_lines</span><span class="p">)</span>
-<span class="n">df_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_raster</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">training_px</span><span class="p">)</span>
-
-<span class="c1"># Join the extracted values with other columns from the training data</span>
+<span class="n">df_points</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">training_pt</span><span class="p">)</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">training_py</span><span class="p">)</span>
+<span class="n">df_lines</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_vector</span><span class="p">(</span><span class="n">training_lines</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For any vector features, a GeoDataFrame is returned containing the extracted pixel
+values, an “id” column that provides the GeoDataFrame index of each vector feature,
+and the pixel coordinates as <cite>shapely.geometry.Point</cite> objects.
+These will need to be joined back with the columns of the vector features to get
+the labelled classes. Here we will join the extracted pixels using the “id” column
+and the GeoDataFrame index of the vector features:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Join the extracted values with other columns from the training data</span>
 <span class="n">df_points</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_pts</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
 <span class="n">df_points</span> <span class="o">=</span> <span class="n">df_points</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 <span class="n">df_points</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">training_py</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id_y&quot;</span><span class="p">:</span> <span class="s2">&quot;class&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If the training data is from labelled pixels in a raster, then the extracted data
+will contain a “value” column that contains the pixel labels:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">df_raster</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">extract_raster</span><span class="p">(</span><span class="n">training_px</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -257,9 +272,12 @@ along with the queried pixel values.</p>
     <span class="p">[(</span><span class="s1">&#39;scaling&#39;</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">()),</span>
      <span class="p">(</span><span class="s1">&#39;classifier&#39;</span><span class="p">,</span> <span class="n">LogisticRegressionCV</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">))])</span>
 
+<span class="c1"># remove NaNs from training data</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
 <span class="c1"># fit the classifier</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;geometry&#39;</span><span class="p">])</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">id</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;id_x&quot;</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
 <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -275,17 +293,10 @@ samples in the test dataset / cross-validation partition.</p>
 <p>In this case, performing cross-validation using groups is useful, because these
 groups can represent spatial clusters of training samples, and samples from the
 same group will never occur in both the training and test partitions of a
-cross-validation. An example of creating random spatial clusters from point
-coordinates is provided here:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
-
-<span class="c1"># create 10 spatial clusters based on clustering of the training point x,y coordinates</span>
-<span class="n">clusters</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">clusters</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df_polygons</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
-
-<span class="c1"># cross validate</span>
-<span class="n">scores</span> <span class="o">=</span> <span class="n">cross_validate</span><span class="p">(</span>
-  <span class="n">lr</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">clusters</span><span class="o">.</span><span class="n">labels_</span><span class="p">,</span>
+cross-validation. Here we can use the polygon indices as the groups, i.e. pixels
+within the same polygon will not be split into training and test partitions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="n">cross_validate</span><span class="p">(</span>
+  <span class="n">lr</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">df_polygons</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
   <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span>
   <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;test_score&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -298,24 +309,32 @@ coordinates is provided here:</p>
 <code class="docutils literal notranslate"><span class="pre">estimator</span></code> is the only required argument. If the <code class="docutils literal notranslate"><span class="pre">file_path</span></code> argument is
 not specified then the result is automatically written to a temporary file. The
 predict method returns an rasterio.io.DatasetReader object which is open.</p>
-<p>Other arguments consist of <code class="docutils literal notranslate"><span class="pre">predict_type</span></code> can be either ‘raw’ to output a
-classification or regression result, or ‘prob’ to output class probabilities as
-a multi-band raster (a band for each class probability). In the latter case,
-<code class="docutils literal notranslate"><span class="pre">indexes</span></code> can also be supplied if you only want to output the probabilities
-for a particular class, or list of classes, by supplying the indices of those
-classes:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># prediction</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">result_probs</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
 
 <span class="c1"># plot classification result</span>
+<span class="n">result</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;Dark2&quot;</span>
+<span class="n">result</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">categorical</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="c1"># plot class probabilities</span>
+</pre></div>
+</div>
+<div class="align-center figure">
+<a class="reference internal image-reference" href="_images/classification.png"><img alt="Classification result" src="_images/classification.png" style="width: 650px; height: 500px;" /></a>
+</div>
+<p>The <cite>predict_proba</cite> method can be used to output class probabilities as
+a multi-band raster (a band for each class probability). In the latter case,
+<code class="docutils literal notranslate"><span class="pre">indexes</span></code> can also be supplied if you only want to output the probabilities
+for a particular class, or list of classes, by supplying the indices of those
+classes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># plot class probabilities</span>
 <span class="n">result_probs</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
+</div>
+<div class="align-center figure">
+<a class="reference internal image-reference" href="_images/probabilities.png"><img alt="Class probabilities" src="_images/probabilities.png" style="width: 700px; height: 500px;" /></a>
 </div>
 </div>
 </div>

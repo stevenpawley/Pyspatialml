@@ -28,7 +28,7 @@ To plot a single RasterLayer:
 
 
 .. figure:: ../img/nc_band1.png
-    :width: 700px
+    :width: 550px
     :align: center
     :height: 400px
     :alt: nc stack
