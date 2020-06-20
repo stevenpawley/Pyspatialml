@@ -272,7 +272,7 @@ class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
         neighbor_weights = self.weight(neighbor_dist)
         new_X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
     
-    def _validate_final_estimator(self):
+    def _validate_base_estimator(self):
         if not is_regressor(self.base_estimator):
             raise ValueError(
                 "'base_estimator' parameter should be a regressor. Got {}"
@@ -296,7 +296,7 @@ class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
         neighbor_weights = self.weight(neighbor_dist)
         new_X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
 
-    def _validate_final_estimator(self):
+    def _validate_base_estimator(self):
         if not is_classifier(self.base_estimator):
             raise ValueError(
                 "'base_estimator' parameter should be a classifier. Got {}"
