@@ -1,20 +1,36 @@
 pyspatialml: machine learning for raster datasets
-=================================================
+*************************************************
 
 Subpackages
------------
+===========
 
 .. toctree::
 
     pyspatialml.datasets
 
 Submodules
-----------
+==========
 
-pyspatialml.base module
------------------------
+pyspatialml.cross_validation module
+-------------------------
 
-.. automodule:: pyspatialml.base
+.. automodule:: pyspatialml.cross_validation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyspatialml.estimators module
+------------------------------
+
+.. automodule:: pyspatialml.estimators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyspatialml.metrics module
+------------------------------
+
+.. automodule:: pyspatialml.metrics
     :members:
     :undoc-members:
     :show-inheritance:
@@ -51,6 +67,14 @@ pyspatialml.rasterlayer module
     :undoc-members:
     :show-inheritance:
 
+pyspatialml.transformers module
+----------------------------------
+
+.. automodule:: pyspatialml.transformers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyspatialml.utils module
 ------------------------
 
@@ -63,15 +87,6 @@ pyspatialml.vector module
 -------------------------
 
 .. automodule:: pyspatialml.vector
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyspatialml
     :members:
     :undoc-members:
     :show-inheritance:

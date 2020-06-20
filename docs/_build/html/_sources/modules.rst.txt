@@ -1,5 +1,5 @@
 pyspatialml
-===========
+***********
 
 .. toctree::
    :maxdepth: 4

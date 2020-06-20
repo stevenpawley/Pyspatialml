@@ -1,5 +1,5 @@
 Introduction
-============
+************
 
 A supervised machine-learning workflow as applied to spatial raster data
 typically involves several steps:

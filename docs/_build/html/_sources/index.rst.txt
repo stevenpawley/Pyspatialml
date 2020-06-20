@@ -1,5 +1,5 @@
 pyspatialml: machine learning for raster datasets
-=================================================
+*************************************************
 
 Pyspatialml is a Python package for applying scikit-learn machine learning
 models to raster-based datasets. It is inspired by the famous 

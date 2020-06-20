@@ -1,11 +1,11 @@
 Design
-######
+******
 
 Pyspatialml provides access to raster datasets using two main structures, comprising the
 :class:`Raster` and :class:`RasterLayer` classes.
 
 Raster Objects
-**************
+==============
 
 The main class that facilitates working with multiple raster datasets is the
 :class:`Raster` class. The :class:`Raster` object takes a list 
@@ -52,7 +52,7 @@ Overview of attributes and methods
 ----------------------------------
 
 Attributes
-__________
+++++++++++
 
 - :attr:`Raster.loc`: Access pyspatialml.RasterLayer objects within a Raster using a key, or a list of keys.
 - :attr:`Raster.iloc`: Access pyspatialml.RasterLayer objects using an index position.
@@ -66,7 +66,7 @@ __________
 - :attr:`Raster.block_shape`: The default block_shape in (rows, cols) for reading windows of data in the Raster for out-of-memory processing.
 
 Methods
-_______
++++++++
 
 - :attr:`~Raster.read`: eads data from the Raster object into a numpy array.
 - :attr:`~Raster.write`: Write the Raster object to a file.
@@ -86,7 +86,7 @@ _______
 - :attr:`~Raster.astype`: Not currently implemented.
 
 RasterLayer
-***********
+===========
 
 A :class:`RasterLayer` is an object that represents a single raster band. It is based
 on a ``rasterio.band`` object with some additional attributes and methods. A RasterLayer
@@ -105,7 +105,7 @@ only be applied to a single-band of a raster, i.e. sieve-clump, distance to non-
 pixels, or arithmetic operations on individual layers.
 
 Attributes
-__________
+++++++++++
 
 - :attr:`~RasterLayer.bidx`: The band index of the RasterLayer within the file dataset.
 - :attr:`~RasterLayer.dtype`: The data type of the RasterLayer.
@@ -119,7 +119,7 @@ __________
 - :attr:`~RasterLayer.count`: Number of layers; always equal to 1.
 
 Methods
-_______
++++++++
 
 - :meth:`~RasterLayer.close`: Closes a RasterLayer.
 - :meth:`~RasterLayer.read`: Reads data from the RasterLayer into a numpy array.

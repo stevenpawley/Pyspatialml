@@ -1,8 +1,8 @@
-Spatial Estimators
-==================
+Estimators
+**********
 
 Spatial Lag Estimators
-----------------------
+======================
 
 A meta-estimator to perform spatial lag regression/classification by using a
 weighted mean/mode of the values of the K-neighboring observations to augment
@@ -93,7 +93,7 @@ Methods
         Prediction method for new data X.
 
 ThresholdClassifierCV
----------------------
+=====================
 
 A meta-classifier to perform cutoff threshold optimization for binary 
 classification models.

@@ -1,5 +1,5 @@
 Plotting
-========
+********
 
 Both `Raster` and `RasterLayer` objects include basic plotting methods. The plot method
 for a `RasterLayer` object produces a single raster plot using the

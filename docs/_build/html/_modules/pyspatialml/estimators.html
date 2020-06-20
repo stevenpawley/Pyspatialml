@@ -1,0 +1,620 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pyspatialml.estimators &#8212; Pyspatialml 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pyspatialml.estimators</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyspatialml.estimators</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">clone</span><span class="p">,</span> <span class="n">is_classifier</span><span class="p">,</span> <span class="n">is_regressor</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.extmath</span> <span class="kn">import</span> <span class="n">weighted_mode</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">mode</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">NearestNeighbors</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+
+<div class="viewcode-block" id="SpatialLagBase"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.SpatialLagBase">[docs]</a><span class="k">class</span> <span class="nc">SpatialLagBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for spatial lag estimators.</span>
+
+<span class="sd">    A spatial lag estimator uses a weighted mean/mode of the values of the K-neighboring</span>
+<span class="sd">    observations to augment the base_estimator. The weighted mean/mode of the</span>
+<span class="sd">    surrounding observations are appended as a new feature to the right-most column in</span>
+<span class="sd">    the training data.</span>
+
+<span class="sd">    The K-neighboring observations are determined using the distance metric specified in</span>
+<span class="sd">    the `metric` argument. The default metric is minkowski, and with p=2 is equivalent</span>
+<span class="sd">    to the standard Euclidean metric.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    base_estimator : estimator object.</span>
+<span class="sd">        This is assumed to implement the scikit-learn estimator interface. Either estimator</span>
+<span class="sd">        needs to provide a score function, or scoring must be passed.</span>
+
+<span class="sd">    n_neighbors : int, default = 7</span>
+<span class="sd">        Number of neighbors to use by default for kneighbors queries.</span>
+<span class="sd">    </span>
+<span class="sd">    weights : {‘uniform’, ‘distance’} or callable, default=’distance’</span>
+<span class="sd">        Weight function used in prediction. Possible values:</span>
+
+<span class="sd">            - ‘uniform’ : uniform weights. All points in each neighborhood are weighted equally.</span>
+<span class="sd">            - ‘distance’ : weight points by the inverse of their distance. in this case,</span>
+<span class="sd">              closer neighbors of a query point will have a greater influence than</span>
+<span class="sd">              neighbors which are further away.</span>
+<span class="sd">            - [callable] : a user-defined function which accepts an array of distances,</span>
+<span class="sd">              and returns an array of the same shape containing the weights.</span>
+
+<span class="sd">    radius : float, default=1.0</span>
+<span class="sd">        Range of parameter space to use by default for radius_neighbors queries.</span>
+
+<span class="sd">    algorithm: {‘auto’, ‘ball_tree’, ‘kd_tree’, ‘brute’}, default=’auto’</span>
+<span class="sd">        Algorithm used to compute the nearest neighbors:</span>
+
+<span class="sd">            - ‘ball_tree’ will use BallTree</span>
+<span class="sd">            - ‘kd_tree’ will use KDTree</span>
+<span class="sd">            - ‘brute’ will use a brute-force search.</span>
+<span class="sd">            - ‘auto’ will attempt to decide the most appropriate algorithm based on the</span>
+<span class="sd">              values passed to fit method.</span>
+<span class="sd">            - Note: fitting on sparse input will override the setting of this parameter,</span>
+<span class="sd">              using brute force.</span>
+
+<span class="sd">    leaf_size : int, default=30</span>
+<span class="sd">        Leaf size passed to BallTree or KDTree. This can affect the speed of the construction</span>
+<span class="sd">        and query, as well as the memory required to store the tree. The optimal value depends</span>
+<span class="sd">        on the nature of the problem.</span>
+<span class="sd">    </span>
+<span class="sd">    metric : str or callable, default=’minkowski’</span>
+<span class="sd">        The distance metric to use for the tree. The default metric is minkowski, and</span>
+<span class="sd">        with p=2 is equivalent to the standard Euclidean metric. See the documentation</span>
+<span class="sd">        of DistanceMetric for a list of available metrics. If metric is “precomputed”,</span>
+<span class="sd">        X is assumed to be a distance matrix and must be square during fit. X may be a</span>
+<span class="sd">        sparse graph, in which case only “nonzero” elements may be considered neighbors.</span>
+
+<span class="sd">    p : int, default=2</span>
+<span class="sd">        Parameter for the Minkowski metric from sklearn.metrics.pairwise.pairwise_distances.</span>
+<span class="sd">        When p = 1, this is equivalent to using manhattan_distance (l1), and</span>
+<span class="sd">        euclidean_distance (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.</span>
+<span class="sd">    </span>
+<span class="sd">    metric_params : dict, default=None</span>
+<span class="sd">        Additional keyword arguments for the metric function.</span>
+<span class="sd">    </span>
+<span class="sd">    feature_indices : list, default=None</span>
+<span class="sd">        By default, the nearest neighbors are determined from the distance metric calculated</span>
+<span class="sd">        using all of the features. If `feature_indices` are supplied then the distance</span>
+<span class="sd">        calculation is restricted to the specific column indices. For spatial data, these</span>
+<span class="sd">        might represent the x,y coordinates for example.</span>
+
+<span class="sd">    n_jobs : int, default=None</span>
+<span class="sd">        The number of parallel jobs to run for neighbors search. None means 1 unless in a</span>
+<span class="sd">        joblib.parallel_backend context. -1 means using all processors. See Glossary</span>
+<span class="sd">        for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">base_estimator</span><span class="p">,</span>
+        <span class="n">n_neighbors</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+        <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;distance&quot;</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+        <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;minkowski&quot;</span><span class="p">,</span>
+        <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">metric_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span> <span class="o">=</span> <span class="n">base_estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbors</span> <span class="o">=</span> <span class="n">n_neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leaf_size</span> <span class="o">=</span> <span class="n">leaf_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_params</span> <span class="o">=</span> <span class="n">metric_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span> <span class="o">=</span> <span class="n">feature_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">knn</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span>
+            <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbors</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span>
+            <span class="n">leaf_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">leaf_size</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">metric_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_params</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
+        <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_distance_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+        <span class="k">pass</span>        
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_uniform_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">):</span>
+        <span class="k">pass</span>
+    
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_custom_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_base_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+    
+<div class="viewcode-block" id="SpatialLagBase.fit"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.SpatialLagBase.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit the base_estimator with features from X {n_samples, n_features} and with an</span>
+<span class="sd">        additional spatially lagged variable added to the right-most column of the </span>
+<span class="sd">        training data. </span>
+
+<span class="sd">        During fitting, the k-neighbors to each training point are used to</span>
+<span class="sd">        estimate the spatial lag component. The training point is not included in the</span>
+<span class="sd">        calculation, i.e. the training point is not considered its own neighbor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of sample {n_samples, n_features} using for model fitting</span>
+<span class="sd">            The training input samples</span>
+<span class="sd">        </span>
+<span class="sd">        y : array-like of shape (n_samples,)</span>
+<span class="sd">            The target values (class labels in classification, real numbers in regression).</span>
+<span class="sd">        </span>
+<span class="sd">        sample_weight : array-like of shape (n_samples,), default=None</span>
+<span class="sd">            Sample weights. If None, then samples are equally weighted. Note that this is</span>
+<span class="sd">            supported only if the `base_estimator` supports sample weights.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># some checks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_base_estimator</span><span class="p">()</span>
+
+        <span class="c1"># reshape data</span>
+        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">distance_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        
+        <span class="c1"># use only selected columns in the data for the distances</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">distance_data</span> <span class="o">=</span> <span class="n">distance_data</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+
+        <span class="c1"># fit knn and get values of neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">distance_data</span><span class="p">)</span>
+        <span class="n">neighbor_dist</span><span class="p">,</span> <span class="n">neighbor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">()</span>
+
+        <span class="c1"># mask any zero distances</span>
+        <span class="n">neighbor_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">neighbor_dist</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># get y values of neighbouring points</span>
+        <span class="n">neighbor_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">neighbor_ids</span><span class="p">])</span>
+        <span class="n">neighbor_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">neighbor_dist</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+                
+        <span class="c1"># calculated weighted means</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;distance&quot;</span><span class="p">:</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">)</span>
+        
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniform_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">)</span>
+        
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">):</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_custom_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">)</span>
+        
+        <span class="c1"># fit base estimator on augmented data</span>
+        <span class="k">if</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">new_X</span><span class="p">)),</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;unexpected keyword argument &#39;sample_weight&#39;&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Underlying estimator </span><span class="si">{}</span><span class="s2"> does not support sample weights.&quot;</span><span class="o">.</span>
+                            <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">new_X</span><span class="p">)),</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SpatialLagBase.predict"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.SpatialLagBase.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Predict method for spatial lag models.</span>
+
+<span class="sd">        Augments new osbservations with a spatial lag variable created from a weighted</span>
+<span class="sd">        mean/mode (regression/classification) of k-neighboring observations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of sample {n_samples, n_features}</span>
+<span class="sd">            New samples for the prediction.</span>
+
+<span class="sd">        y : None</span>
+<span class="sd">            Not used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">distance_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># use only selected columns in the data for the distances</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">distance_data</span> <span class="o">=</span> <span class="n">distance_data</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="p">]</span>
+
+        <span class="c1"># get distances from training points to new data</span>
+        <span class="n">neighbor_dist</span><span class="p">,</span> <span class="n">neighbor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">distance_data</span><span class="p">)</span>
+        
+        <span class="c1"># mask zero distances</span>
+        <span class="n">neighbor_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">neighbor_dist</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># get values of closest training points to new data</span>
+        <span class="n">neighbor_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">y_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">neighbor_ids</span><span class="p">])</span>
+        <span class="n">neighbor_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">neighbor_dist</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="c1"># calculated weighted means</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;distance&quot;</span><span class="p">:</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniform_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">)</span>
+        
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">):</span>
+            <span class="n">new_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_custom_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">)</span>
+        
+        <span class="c1"># fit base estimator on augmented data</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">new_X</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">preds</span></div></div>
+
+
+<div class="viewcode-block" id="SpatialLagRegressor"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.SpatialLagRegressor">[docs]</a><span class="k">class</span> <span class="nc">SpatialLagRegressor</span><span class="p">(</span><span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">SpatialLagBase</span><span class="p">):</span>    
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_distance_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+            <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">neighbor_dist</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">neighbor_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">X</span>
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_uniform_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">_custom_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+        <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">(</span><span class="n">neighbor_dist</span><span class="p">)</span>
+        <span class="n">new_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">neighbor_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_validate_final_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_regressor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;base_estimator&#39; parameter should be a regressor. Got </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpatialLagClassifier"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.SpatialLagClassifier">[docs]</a><span class="k">class</span> <span class="nc">SpatialLagClassifier</span><span class="p">(</span><span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">SpatialLagBase</span><span class="p">):</span>    
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_distance_weighting</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+            <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">neighbor_dist</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">weighted_mode</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">X</span>
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_uniform_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">mode</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">_custom_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_dist</span><span class="p">):</span>
+        <span class="n">neighbor_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">(</span><span class="n">neighbor_dist</span><span class="p">)</span>
+        <span class="n">new_X</span> <span class="o">=</span> <span class="n">weighted_mode</span><span class="p">(</span><span class="n">neighbor_vals</span><span class="p">,</span> <span class="n">neighbor_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_final_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_classifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;base_estimator&#39; parameter should be a classifier. Got </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_estimator</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThresholdClassifierCV"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.ThresholdClassifierCV">[docs]</a><span class="k">class</span> <span class="nc">ThresholdClassifierCV</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metaclassifier to perform cutoff threshold optimization</span>
+
+<span class="sd">    This implementation is restricted to binary classification problems</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    - The training data are partitioned in k-1, and k sets</span>
+<span class="sd">    - The metaclassifier trains the BaseEstimator on the k-1 partitions</span>
+<span class="sd">    - The Kth paritions are used to determine the optimal cutoff taking</span>
+<span class="sd">      the mean of the thresholds that maximize the scoring metric</span>
+<span class="sd">    - The optimal cutoff is applied to all classifier predictions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">thresholds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">),</span>
+                 <span class="n">scoring</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Initialize a ThresholdClassifierCV instance</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        estimator : estimator object implementing &#39;fit&#39;</span>
+<span class="sd">            The object to use to fit the data.</span>
+
+<span class="sd">        thresholds : threshold values to search for optimal cutoff, for</span>
+<span class="sd">            example a list or array of cutoff thresholds to use for scoring</span>
+
+<span class="sd">        scoring : callable, dict</span>
+<span class="sd">            A callable or dict of key : callable pairs of scoring metrics to</span>
+<span class="sd">            evaluate at the cutoff thresholds</span>
+
+<span class="sd">        refit : string, or None</span>
+<span class="sd">            String specifying the key name of the metric to use to determine</span>
+<span class="sd">            the optimal cutoff threshold. Only required when multiple scoring</span>
+<span class="sd">            metrics are used</span>
+
+<span class="sd">        cv : int, cross-validation generator or an iterable, optional</span>
+<span class="sd">            Determines the cross-validation splitting strategy.</span>
+
+<span class="sd">            Possible inputs for cv are:</span>
+<span class="sd">            - None, to use the default 3-fold cross validation,</span>
+<span class="sd">            - integer, to specify the number of folds in a `(Stratified)KFold`,</span>
+<span class="sd">            - An object to be used as a cross-validation generator.</span>
+<span class="sd">            - An iterable yielding train, test splits.</span>
+
+<span class="sd">            For integer/None inputs, if the estimator is a classifier and ``y`` is</span>
+<span class="sd">            either binary or multiclass, :class:`StratifiedKFold` is used. In all</span>
+<span class="sd">            other cases, :class:`KFold` is used.</span>
+<span class="sd">            Refer :ref:`User Guide &lt;cross_validation&gt;` for the various</span>
+<span class="sd">            cross-validation strategies that can be used here.</span>
+
+<span class="sd">        random_state : int, RandomState instance or None, optional (default=0)</span>
+<span class="sd">            If int, random_state is the seed used by the random number generator;</span>
+<span class="sd">            If RandomState instance, random_state is the random number generator;</span>
+<span class="sd">            If None, the random number generator is the RandomState instance used</span>
+<span class="sd">            by `np.random`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Rules for creating a custom scikit-learn estimator</span>
+<span class="sd">        - All arguments of __init__must have default value, so it&#39;s possible to initialize</span>
+<span class="sd">           the classifier just by typing MyClassifier()</span>
+<span class="sd">        - No confirmation of input parameters should be in __init__ method</span>
+<span class="sd">           That belongs to fit method.</span>
+<span class="sd">        - All arguments of __init__ method should have the same name as they will have as the</span>
+<span class="sd">           attributes of created object</span>
+<span class="sd">        - Do not take data as argument here! It should be in fit method</span>
+
+<span class="sd">        TODO</span>
+<span class="sd">        ----</span>
+<span class="sd">        Parallelize the cross validation loop used to find the optimal threshold</span>
+<span class="sd">        in the fit method</span>
+
+<span class="sd">        Change the behaviour of the scoring parameters so that it accepts arguments</span>
+<span class="sd">        in the same manner as scikit learn functions such as GridSearchCV, i.e. it</span>
+<span class="sd">        accepts string, callable, list/tuple, or dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get dict of arguments from function call</span>
+        <span class="n">args</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargvalues</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">())</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;self&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_find_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the optimal cutoff threshold based on maximizing/minimizing the</span>
+<span class="sd">        scoring method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">estimator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span>
+        <span class="n">thresholds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span>
+        <span class="n">scorers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers_</span>
+        <span class="n">refit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refit</span>
+
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">dct</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">thresholds</span><span class="p">))))</span> <span class="k">for</span> <span class="n">dct</span> <span class="ow">in</span> <span class="n">scorers</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cutoff</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">thresholds</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scorer</span> <span class="ow">in</span> <span class="n">scorers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">scores</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scorer_cutoff</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">scorer</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">)</span>
+
+        <span class="n">top_score</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">refit</span><span class="p">][</span><span class="n">scores</span><span class="p">[</span><span class="n">refit</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span>
+        <span class="n">top_threshold</span> <span class="o">=</span> <span class="n">thresholds</span><span class="p">[</span><span class="n">scores</span><span class="p">[</span><span class="n">refit</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">top_threshold</span><span class="p">,</span> <span class="n">top_score</span><span class="p">,</span> <span class="n">scores</span>
+
+<div class="viewcode-block" id="ThresholdClassifierCV.score"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.ThresholdClassifierCV.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overloading of classifier score method</span>
+<span class="sd">        score method is required for compatibility with GridSearch</span>
+<span class="sd">        The scoring metric should be one that can be maximized (bigger=better)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_threshold</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">_threshold_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_threshold</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">score</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_scorer_cutoff</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">scorer</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method to binarize the probability scores based on a cutoff</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_pred</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scorer</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ThresholdClassifierCV.fit"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.ThresholdClassifierCV.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run fit method with all sets of parameters</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----</span>
+<span class="sd">        X : array-like, shape = [n_samples, n_features]</span>
+<span class="sd">            Training vector, where n_samples is the number of samples and</span>
+<span class="sd">            n_features is the number of features</span>
+
+<span class="sd">        y : array-like, shape = [n_samples] or [n_samples, n_output], optional</span>
+<span class="sd">            Target relative to X for classification or regression;</span>
+<span class="sd">            None for unsupervised learning</span>
+
+<span class="sd">        groups : array-like, shape = [n_samples], optional</span>
+<span class="sd">            Training vector groups for cross-validation</span>
+
+<span class="sd">        **fit_params : dict of string -&gt; object</span>
+<span class="sd">            Parameters passed to the ``fit`` method of the estimator</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+
+<span class="sd">        Rules</span>
+
+<span class="sd">        - Parameters are checked during the fit method</span>
+<span class="sd">        - New attributes created during fitting should end in _, i.e. fitted_</span>
+<span class="sd">        - Fit method needs to return self for compatibility reasons with sklearn</span>
+<span class="sd">        - The response vector, i.e. y, should be initiated with None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check estimator and cv methods are valid</span>
+        <span class="n">estimator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="n">check_cv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cv</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">classifier</span><span class="o">=</span><span class="n">is_classifier</span><span class="p">(</span><span class="n">estimator</span><span class="p">))</span>
+
+        <span class="c1"># check for binary response</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only a binary response vector is currently supported&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check that scoring metric has been specified</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No score function is defined&#39;</span><span class="p">)</span>
+
+        <span class="c1"># convert scoring callables to dict of key: scorer pairs</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scorers_</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refit</span> <span class="o">=</span> <span class="s1">&#39;score&#39;</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scoring</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scorers_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoring</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refit</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;For multi-metric scoring, the parameter &quot;</span>
+                                 <span class="s2">&quot;refit must be set to a scorer key &quot;</span>
+                                 <span class="s2">&quot;to determine which scoring method &quot;</span>
+                                 <span class="s2">&quot;is used to optimize the classifiers &quot;</span>
+                                 <span class="s2">&quot;cutoff threshold&quot;</span><span class="p">)</span>
+
+        <span class="c1"># cross-validate the probability threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_threshold_</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">))))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorers_</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">train</span><span class="p">,</span> <span class="n">cal</span> <span class="ow">in</span> <span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+            <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_cal</span><span class="p">,</span> <span class="n">y_cal</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="n">cal</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">cal</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">groups_train</span><span class="p">,</span> <span class="n">groups_cal</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">groups</span><span class="p">[</span><span class="n">cal</span><span class="p">]</span>
+                <span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">groups_train</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">)</span>
+
+            <span class="c1"># find cutoff threshold on calibration set</span>
+            <span class="c1"># unless a single cutoff threshold is specified, which sets the classifier to this</span>
+            <span class="c1"># threshold</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)):</span>
+                <span class="n">best_threshold</span><span class="p">,</span> <span class="n">_score</span><span class="p">,</span> <span class="n">threshold_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_threshold</span><span class="p">(</span><span class="n">X_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">)</span>
+
+                <span class="c1"># sum the scores</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_threshold_</span> <span class="o">+=</span> <span class="n">best_threshold</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+</span> <span class="n">threshold_scores</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span><span class="p">}</span>
+
+                <span class="c1"># average the scores per cross validation fold</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_threshold_</span> <span class="o">/=</span> <span class="n">cv</span><span class="o">.</span><span class="n">get_n_splits</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">/</span> <span class="n">cv</span><span class="o">.</span><span class="n">get_n_splits</span><span class="p">())</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold_scores_</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_threshold_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">classes_</span></div>
+
+<div class="viewcode-block" id="ThresholdClassifierCV.predict"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.ThresholdClassifierCV.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_score</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_threshold_</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ThresholdClassifierCV.predict_proba"><a class="viewcode-back" href="../../pyspatialml.html#pyspatialml.estimators.ThresholdClassifierCV.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Pyspatialml 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">pyspatialml.estimators</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Steven Pawley.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.1.
+    </div>
+  </body>
+</html>

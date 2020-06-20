@@ -1,8 +1,8 @@
 Random Sampling
-===============
+***************
 
 Random Uniform Sampling
-#######################
+=======================
 
 For many spatial models, it is common to take a random sample of the predictors
 to represent a single class (i.e. an environmental background or pseudo-absences
@@ -17,7 +17,7 @@ sampling module for this purpose:
 
 
 Stratified Random Sampling
-##########################
+==========================
 
 The sample function also enables stratified random sampling based on passing a
 categorical raster dataset to the strata argument. The categorical raster should

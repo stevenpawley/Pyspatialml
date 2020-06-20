@@ -1,8 +1,8 @@
 A Machine Learning Example
-==========================
+**************************
 
 Extraction Training Data
-########################
+========================
 
 Load some training data in the form of polygons, points and labelled pixels in
 ``geopandas.GeoDataFrame`` objects. We will also generate some line geometries by
@@ -82,7 +82,7 @@ along with the queried pixel values.
     df_points.head()
 
 Model Training
-##############
+==============
 
 Next we can train a logistic regression classifier:
 ::
@@ -135,7 +135,7 @@ coordinates is provided here:
 
 
 Raster Prediction
-#################
+=================
 
 Prediction on the Raster object is performed using the ```predict``` method. The
 ``estimator`` is the only required argument. If the ``file_path`` argument is

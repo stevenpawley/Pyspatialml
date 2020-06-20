@@ -1,8 +1,8 @@
 Quickstart
-==========
+**********
 
 Initiating a Raster Object
-##########################
+==========================
 
 We are going to use a set of Landsat 7 bands contained within the nc example data:
 
@@ -10,6 +10,7 @@ We are going to use a set of Landsat 7 bands contained within the nc example dat
 
     from pyspatialml import Raster
     import pyspatialml.datasets.nc as nc
+    import matplotlib.pyplot as plt
 
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
@@ -22,7 +23,21 @@ perform machine learning related operations on the set of rasters:
 
     stack = Raster(predictors)
 
-    stack.plot(fig_kwds={"figsize": (7, 4)})
+    stack.lsat7_2000_10.cmap = "Blues"
+    stack.lsat7_2000_20.cmap = "Greens"
+    stack.lsat7_2000_30.cmap = "Reds"
+    stack.lsat7_2000_40.cmap = "RdPu"
+    stack.lsat7_2000_50.cmap = "autumn"
+    stack.lsat7_2000_70.cmap = "hot"
+
+    stack.plot(
+        title_fontsize=8,
+        label_fontsize=6,
+        legend_fontsize=6,
+        names=["B1", "B2", "B3", "B4", "B5", "B7"],
+        fig_kwds={"figsize": (8, 4)},
+        subplots_kwds={"wspace": 0.3}
+    )
     plt.show()
 
 
@@ -39,7 +54,7 @@ Upon 'stacking', syntactically-correct names for each RasterLayer are
 automatically generated from the file_paths.
 
 Subset and Indexing
-###################
+===================
 
 Indexing of Raster objects is provided by several methods:
 
@@ -87,7 +102,7 @@ Replace a RasterLayer with another:
     stack.iloc[0] = Raster(nc.band7).iloc[0]
 
 Appending and Dropping Layers
-#############################
+=============================
 
 Append layers from another Raster to the stack. Note that this occurs in-place by default,
 unless the ``in_place = False`` parameter is used. Duplicate names are automatically
@@ -116,7 +131,7 @@ Drop a RasterLayer:
     stack.names
 
 Integration with Pandas
-#######################
+=======================
 
 Data from a Raster object can converted into a ``Pandas.DataDrame``, with each pixel
 representing by a row, and columns reflecting the x, y coordinates and the
@@ -139,14 +154,12 @@ ggplot2-style plots of stacks of RasterLayers:
 
     from plotnine import *
 
-    (
-     ggplot(df.melt(id_vars=['x', 'y']), aes(x='x', y='y', fill='value')) +
+    (ggplot(df.melt(id_vars=['x', 'y']), aes(x='x', y='y', fill='value')) +
      geom_tile() +
-     facet_wrap('variable')
-    )
+     facet_wrap('variable'))
 
 Saving a Raster to File
-#######################
+=======================
 
 Save a Raster:
 ::

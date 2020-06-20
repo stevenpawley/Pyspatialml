@@ -1,11 +1,11 @@
 pyspatialml.datasets package
-============================
+****************************
 
 Submodules
-----------
+==========
 
 pyspatialml.datasets.meuse module
-------------------------------------------
+---------------------------------
 
 .. automodule:: pyspatialml.datasets.meuse
     :members:
@@ -13,7 +13,7 @@ pyspatialml.datasets.meuse module
     :show-inheritance:
 
 pyspatialml.datasets.nc module
----------------------------------------
+-------------------------------
 
 .. automodule:: pyspatialml.datasets.nc
     :members:

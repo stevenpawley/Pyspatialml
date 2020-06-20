@@ -1,8 +1,8 @@
 Preprocessing and Feature Engineering
-=====================================
+*************************************
 
 Raster Math
-###########
+===========
 
 Simple raster arithmetic operations can be performed on RasterLayer
 objects directly. These operations occur using on disk processing by
@@ -99,7 +99,7 @@ The user-defined needs to produce either a 2d numpy array with [rows, cols] or a
     )
 
 One-Hot Encoding
-################
+================
 
 Although scikit-learn offers different one-hot encoding methods to deal with
 categorical datasets, these can be inefficient when repeatedly applying models
@@ -126,7 +126,7 @@ The optional ``categories`` parameter allows a list of categories to be
 supplied so that only these categories are encoded.
 
 Generating Grids of Spatial Coordinates
-#######################################
+=======================================
 
 For certain types of spatial predictions, it is advantageous to include the model
 region's spatial coordinates as predictors. In addition to using x, y coordinates,

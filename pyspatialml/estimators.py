@@ -165,7 +165,7 @@ class SpatialLagBase(ABC, BaseEstimator):
         self._validate_base_estimator()
 
         # reshape data
-         if y.ndim == 1:
+        if y.ndim == 1:
             y = np.reshape(y, (-1, 1))
 
         self.y_ = deepcopy(y)
@@ -202,11 +202,9 @@ class SpatialLagBase(ABC, BaseEstimator):
                 self.base_estimator.fit(np.column_stack((X, new_X)), y, sample_weight=sample_weight)
             except TypeError as exc:
                 if "unexpected keyword argument 'sample_weight'" in str(exc):
-                raise TypeError(
-                    "Underlying estimator {} does not support sample weights."
-                    .format(self.base_estimator.__class__.__name__)
-                ) from exc
-            raise
+                    raise TypeError(
+                        "Underlying estimator {} does not support sample weights.".
+                            format(self.base_estimator.__class__.__name__)) from exc
         else:
             self.base_estimator.fit(np.column_stack((X, new_X)), y)
 
