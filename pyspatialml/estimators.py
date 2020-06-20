@@ -160,10 +160,6 @@ class SpatialLagBase(ABC, BaseEstimator):
         self.base_estimator = clone(self.base_estimator)
         self._validate_base_estimator()
 
-        # reshape data
-        if y.ndim == 1:
-            y = np.reshape(y, (-1, 1))
-
         self.y_ = deepcopy(y)
         distance_data = deepcopy(X)
         
@@ -246,9 +242,9 @@ class SpatialLagBase(ABC, BaseEstimator):
 class SpatialLagRegressor(RegressorMixin, SpatialLagBase):    
     @staticmethod
     def _distance_weighting(neighbor_vals, neighbor_dist):
-            neighbor_weights = 1 / neighbor_dist
-            X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
-            return X
+        neighbor_weights = 1 / neighbor_dist
+        X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
+        return X
         
     @staticmethod
     def _uniform_weighting(self, neighbor_vals):
@@ -256,8 +252,9 @@ class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
         return X
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = self.weight(neighbor_dist)
+        neighbor_weights = self.weights(neighbor_dist)
         new_X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
+        return new_X
     
     def _validate_base_estimator(self):
         if not is_regressor(self.base_estimator):
@@ -270,9 +267,9 @@ class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
 class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):    
     @staticmethod
     def _distance_weighting(neighbor_vals, neighbor_dist):
-            neighbor_weights = 1 / neighbor_dist
-            X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
-            return X
+        neighbor_weights = 1 / neighbor_dist
+        X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
+        return X
         
     @staticmethod
     def _uniform_weighting(self, neighbor_vals):
@@ -280,8 +277,9 @@ class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
         return X
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = self.weight(neighbor_dist)
+        neighbor_weights = self.weights(neighbor_dist)
         new_X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
+        return new_X
 
     def _validate_base_estimator(self):
         if not is_classifier(self.base_estimator):
