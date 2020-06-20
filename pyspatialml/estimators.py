@@ -139,7 +139,7 @@ class SpatialLagBase(ABC, BaseEstimator):
     def _validate_base_estimator(self):
         pass
     
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y):
         """Fit the base_estimator with features from X {n_samples, n_features} and with an
         additional spatially lagged variable added to the right-most column of the 
         training data. 
@@ -155,10 +155,6 @@ class SpatialLagBase(ABC, BaseEstimator):
         
         y : array-like of shape (n_samples,)
             The target values (class labels in classification, real numbers in regression).
-        
-        sample_weight : array-like of shape (n_samples,), default=None
-            Sample weights. If None, then samples are equally weighted. Note that this is
-            supported only if the `base_estimator` supports sample weights.
         """
         # some checks
         self.base_estimator = clone(self.base_estimator)
@@ -197,13 +193,7 @@ class SpatialLagBase(ABC, BaseEstimator):
             new_X = self._custom_weighting(neighbor_vals, neighbor_dist)
         
         # fit base estimator on augmented data
-        if sample_weight is not None:
-            try:
-                self.base_estimator.fit(np.column_stack((X, new_X)), y, sample_weight=sample_weight)
-            except TypeError:
-                raise TypeError("Underlying estimator {} does not support sample weights.")
-        else:
-            self.base_estimator.fit(np.column_stack((X, new_X)), y)
+        self.base_estimator.fit(np.column_stack((X, new_X)), y)
 
         return self
 
