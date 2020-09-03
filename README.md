@@ -332,7 +332,7 @@ Prediction on the Raster object is performed using the ```predict``` method. The
 argument. If the ```file_path``` argument is not specified then the result is automatically written to a temporary file.
 The predict method returns an rasterio.io.DatasetReader object which is open.
 
-Other arguments consist of ```predict_type``` can be either 'raw' to output a classification or regression result, or
+Other arguments consist of ```predict_type``` which can be either 'raw' to output a classification or regression result, or
 'prob' to output class probabilities as a multi-band raster (a band for each class probability). In the latter case,
 ```indexes``` can also be supplied if you only want to output the probabilities for a particular class, or list of
 classes, by supplying the indices of those classes:
