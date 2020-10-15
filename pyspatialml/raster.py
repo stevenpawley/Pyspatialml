@@ -1191,6 +1191,9 @@ class Raster(BaseRaster):
 
         for new_raster in other:
 
+            if not isinstance(new_raster, Raster):
+                raise AttributeError(new_raster + " is not a pyspatialml.Raster object")
+
             # check that other raster does not result in duplicated names
             combined_names = self.names + new_raster.names
             combined_names = self._fix_names(combined_names)

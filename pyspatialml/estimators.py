@@ -27,7 +27,7 @@ class SpatialLagBase(ABC, BaseEstimator):
 
     n_neighbors : int, default = 7
         Number of neighbors to use by default for kneighbors queries.
-    
+
     weights : {‘uniform’, ‘distance’} or callable, default=’distance’
         Weight function used in prediction. Possible values:
 
@@ -56,7 +56,7 @@ class SpatialLagBase(ABC, BaseEstimator):
         Leaf size passed to BallTree or KDTree. This can affect the speed of the construction
         and query, as well as the memory required to store the tree. The optimal value depends
         on the nature of the problem.
-    
+
     metric : str or callable, default=’minkowski’
         The distance metric to use for the tree. The default metric is minkowski, and
         with p=2 is equivalent to the standard Euclidean metric. See the documentation
@@ -68,10 +68,13 @@ class SpatialLagBase(ABC, BaseEstimator):
         Parameter for the Minkowski metric from sklearn.metrics.pairwise.pairwise_distances.
         When p = 1, this is equivalent to using manhattan_distance (l1), and
         euclidean_distance (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.
-    
+
     metric_params : dict, default=None
         Additional keyword arguments for the metric function.
-    
+
+    kernel_params : dict, default=None
+        Additional keyword arguments to pass to a custom kernel function.
+
     feature_indices : list, default=None
         By default, the nearest neighbors are determined from the distance metric calculated
         using all of the features. If `feature_indices` are supplied then the distance
@@ -83,19 +86,21 @@ class SpatialLagBase(ABC, BaseEstimator):
         joblib.parallel_backend context. -1 means using all processors. See Glossary
         for more details.
     """
+
     def __init__(
-        self,
-        base_estimator,
-        n_neighbors=7,
-        weights="distance",
-        radius=1.0,
-        algorithm="auto",
-        leaf_size=30,
-        metric="minkowski",
-        p=2,
-        metric_params=None,
-        feature_indices=None,
-        n_jobs=1,
+            self,
+            base_estimator,
+            n_neighbors=7,
+            weights="distance",
+            radius=1.0,
+            algorithm="auto",
+            leaf_size=30,
+            metric="minkowski",
+            p=2,
+            metric_params=None,
+            kernel_params=None,
+            feature_indices=None,
+            n_jobs=1,
     ):
 
         self.base_estimator = base_estimator
@@ -107,6 +112,7 @@ class SpatialLagBase(ABC, BaseEstimator):
         self.metric = metric
         self.p = p
         self.metric_params = metric_params
+        self.kernel_params = kernel_params
         self.feature_indices = feature_indices
         self.n_jobs = n_jobs
 
@@ -120,17 +126,17 @@ class SpatialLagBase(ABC, BaseEstimator):
             metric_params=self.metric_params,
             n_jobs=self.n_jobs,
         )
-        
+
         self.y_ = None
 
     @abstractmethod
     def _distance_weighting(self, neighbor_vals, neighbor_dist):
-        pass        
+        pass
 
     @abstractmethod
     def _uniform_weighting(self, neighbor_vals):
         pass
-    
+
     @abstractmethod
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
         pass
@@ -138,11 +144,11 @@ class SpatialLagBase(ABC, BaseEstimator):
     @abstractmethod
     def _validate_base_estimator(self):
         pass
-    
+
     def fit(self, X, y):
         """Fit the base_estimator with features from X {n_samples, n_features} and with an
-        additional spatially lagged variable added to the right-most column of the 
-        training data. 
+        additional spatially lagged variable added to the right-most column of the
+        training data.
 
         During fitting, the k-neighbors to each training point are used to
         estimate the spatial lag component. The training point is not included in the
@@ -152,7 +158,7 @@ class SpatialLagBase(ABC, BaseEstimator):
         ----------
         X : array-like of sample {n_samples, n_features} using for model fitting
             The training input samples
-        
+
         y : array-like of shape (n_samples,)
             The target values (class labels in classification, real numbers in regression).
         """
@@ -162,7 +168,7 @@ class SpatialLagBase(ABC, BaseEstimator):
 
         self.y_ = deepcopy(y)
         distance_data = deepcopy(X)
-        
+
         # use only selected columns in the data for the distances
         if self.feature_indices is not None:
             distance_data = distance_data[:, self.feature_indices]
@@ -173,21 +179,21 @@ class SpatialLagBase(ABC, BaseEstimator):
 
         # mask any zero distances
         neighbor_dist = np.ma.masked_equal(neighbor_dist, 0)
-        
+
         # get y values of neighbouring points
         neighbor_vals = np.array([y[i] for i in neighbor_ids])
         neighbor_vals = np.ma.masked_array(neighbor_vals, mask=neighbor_dist.mask)
-                
+
         # calculated weighted means
         if self.weights == "distance":
             new_X = self._distance_weighting(neighbor_vals, neighbor_dist)
-        
+
         elif self.weights == "uniform":
             new_X = self._uniform_weighting(neighbor_vals)
-        
+
         elif callable(self.weights):
             new_X = self._custom_weighting(neighbor_vals, neighbor_dist)
-        
+
         # fit base estimator on augmented data
         self.base_estimator.fit(np.column_stack((X, new_X)), y)
 
@@ -215,10 +221,10 @@ class SpatialLagBase(ABC, BaseEstimator):
 
         # get distances from training points to new data
         neighbor_dist, neighbor_ids = self.knn.kneighbors(X=distance_data)
-        
+
         # mask zero distances
         neighbor_dist = np.ma.masked_equal(neighbor_dist, 0)
-        
+
         # get values of closest training points to new data
         neighbor_vals = np.array([self.y_[i] for i in neighbor_ids])
         neighbor_vals = np.ma.masked_array(neighbor_vals, mask=neighbor_dist.mask)
@@ -226,58 +232,58 @@ class SpatialLagBase(ABC, BaseEstimator):
         # calculated weighted means
         if self.weights == "distance":
             new_X = self._distance_weighting(neighbor_vals, neighbor_dist)
-        
-        if self.weights == "uniform":
+
+        elif self.weights == "uniform":
             new_X = self._uniform_weighting(neighbor_vals)
-        
+
         elif callable(self.weights):
             new_X = self._custom_weighting(neighbor_vals, neighbor_dist)
-        
+
         # fit base estimator on augmented data
         preds = self.base_estimator.predict(np.column_stack((X, new_X)))
 
         return preds
 
 
-class SpatialLagRegressor(RegressorMixin, SpatialLagBase):    
+class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
     @staticmethod
     def _distance_weighting(neighbor_vals, neighbor_dist):
         neighbor_weights = 1 / neighbor_dist
         X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
         return X
-        
+
     @staticmethod
-    def _uniform_weighting(self, neighbor_vals):
+    def _uniform_weighting(neighbor_vals):
         X = np.ma.average(neighbor_vals, axis=1)
         return X
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = self.weights(neighbor_dist)
+        neighbor_weights = self.weights(neighbor_dist, **self.kernel_params)
         new_X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
         return new_X
-    
+
     def _validate_base_estimator(self):
         if not is_regressor(self.base_estimator):
             raise ValueError(
                 "'base_estimator' parameter should be a regressor. Got {}"
-                .format(self.base_estimator)
+                    .format(self.base_estimator)
             )
 
 
-class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):    
+class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
     @staticmethod
     def _distance_weighting(neighbor_vals, neighbor_dist):
         neighbor_weights = 1 / neighbor_dist
         X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
         return X
-        
+
     @staticmethod
-    def _uniform_weighting(self, neighbor_vals):
+    def _uniform_weighting(neighbor_vals):
         X = mode(neighbor_vals, axis=1)
         return X
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = self.weights(neighbor_dist)
+        neighbor_weights = self.weights(neighbor_dist, **self.kernel_params)
         new_X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
         return new_X
 
@@ -285,7 +291,7 @@ class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
         if not is_classifier(self.base_estimator):
             raise ValueError(
                 "'base_estimator' parameter should be a classifier. Got {}"
-                .format(self.base_estimator)
+                    .format(self.base_estimator)
             )
 
 
