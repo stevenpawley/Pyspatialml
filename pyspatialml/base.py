@@ -377,8 +377,8 @@ class BaseRaster(ABC):
         Parameters
         ----------
         gdf: geopandas.GeoDataFrame
-            Containing either point, line or polygon geometries. Overlapping
-            geometries will cause the same pixels to be sampled.
+            Containing either point, line or polygon geometries. Overlapping geometries
+            will cause the same pixels to be sampled.
 
         return_array : bool (opt), default=False
             By default the extracted pixel values are returned as a 
@@ -391,7 +391,28 @@ class BaseRaster(ABC):
         Returns
         -------
         geopandas.GeoDataframe
-            Containing extracted data as point geometries if `return_array=False`.
+            Containing extracted data as point geometries (one point per pixel) if 
+            `return_array=False`. The resulting GeoDataFrame is indexed using a 
+            named pandas.MultiIndex, with `pixel_idx` index referring to the index of each
+            pixel that was sampled, and the `geometry_idx` index referring to the index
+            of the each geometry in the supplied `gdf`. This makes it possible to keep track
+            of how sampled pixel relates to the original geometries, i.e. multiple pixels 
+            being extracted within the area of a single polygon that can be referred to using
+            the `geometry_idx`. 
+            
+            The extracted data can subsequently be joined with the attribute table of
+            the supplied `gdf` using:
+
+            training_py = geopandas.read_file(nc.polygons)
+            df = self.stack.extract_vector(gdf=training_py)
+            df = df.dropna()
+
+            df = df.merge(
+                right=training_py.loc[:, ("id", "label")],
+                left_on="polygon_idx", 
+                right_on="id",
+                right_index=True
+            ) 
 
         tuple
             A tuple (geodataframe index, extracted values, coordinates) of the extracted
@@ -440,8 +461,12 @@ class BaseRaster(ABC):
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
-            X = pd.DataFrame(np.ma.column_stack((ids, X)), columns=["id"] + self.names)
-            X.id = X.id.astype("int")
+            X = pd.DataFrame(
+                data=X,
+                columns=self.names,
+                index=[pd.RangeIndex(0, X.shape[0]), ids]
+            )
+            X.index.set_names(["pixel_idx", "geometry_idx"], inplace=True)
             X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
             X["geometry"] = X["geometry"].apply(Point)
             X = gpd.GeoDataFrame(X, geometry="geometry", crs=self.crs)

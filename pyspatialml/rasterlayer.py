@@ -343,7 +343,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         return self.ds.read(indexes=self.bidx, **kwargs)
 
-    def _write(self, arr, file_path=None, driver="GTiff", dtype=None, nodata=None):
+    def _write(self, arr, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Internal function to write processed results to a file, usually a tempfile
         """
 
@@ -360,6 +360,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         meta["driver"] = driver
         meta["nodata"] = nodata
         meta["dtype"] = dtype
+        meta.update(kwargs)
 
         # mask any nodata values
         arr = np.ma.masked_equal(arr, self.nodata)
@@ -381,7 +382,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         return layer
 
-    def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
+    def write(self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Write method for a single RasterLayer.
 
         Parameters
@@ -400,13 +401,16 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             A value used to represent the nodata pixels. If omitted then the RasterLayer's 
             nodata value is used (if assigned already).
         
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
+
         Returns
         -------
         pyspatialml.RasterLayer
         """
-
         arr = self.read()
-        layer = self._write(arr, file_path, driver, dtype, nodata)
+        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
         return layer
 
     def fill(
@@ -418,6 +422,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         driver="GTiff",
         dtype=None,
         nodata=None,
+        **kwargs
     ):
         """Fill nodata gaps in a RasterLayer
 
@@ -451,6 +456,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             Optionally specify a numpy compatible data type when saving to file. If not
             specified, a data type is set based on the data type of the RasterLayer.
 
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
+
         Returns
         -------
         pyspatialml.RasterLayer
@@ -464,7 +473,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             smoothing_iterations=smoothing_iterations,
         )
 
-        layer = self._write(arr, file_path, driver, dtype, nodata)
+        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
 
         return layer
 
@@ -477,6 +486,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         driver="GTiff",
         nodata=None,
         dtype=None,
+        **kwargs,
     ):
         """Replace pixels with their largest neighbor
 
@@ -509,6 +519,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             Optionally specify a numpy compatible data type when saving to file. If not
             specified, a data type is set based on the data type of the RasterLayer.
 
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
+
         Returns
         -------
         pyspatialml.RasterLayer
@@ -521,11 +535,11 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             connectivity=connectivity,
         )
 
-        layer = self._write(arr, file_path, driver, dtype, nodata)
+        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
 
         return layer
 
-    def distance(self, file_path=None, driver="GTiff", nodata=None):
+    def distance(self, file_path=None, driver="GTiff", nodata=None, **kwargs):
         """Calculate euclidean grid distances to non-NaN pixels
 
         Parameters
@@ -540,6 +554,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         nodata : any number (optional, default None)
             Nodata value for new dataset. If not specified then a nodata value is set
             based on the minimum permissible value of the Raster's data type.
+        
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -550,7 +568,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         arr = ndimage.distance_transform_edt(1 - arr)
         dtype = arr.dtype
 
-        layer = self._write(arr, file_path, driver, dtype, nodata)
+        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
 
         return layer
 

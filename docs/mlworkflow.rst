@@ -28,6 +28,7 @@ polygons or linestrings).
     training_lines = deepcopy(training_py)
     training_lines['geometry'] = training_lines.geometry.boundary
 
+
 Show training data points and a single raster band using numpy and matplotlib:
 ::
 
@@ -82,8 +83,10 @@ along with the queried pixel values.
     df_lines = stack.extract_vector(training_lines)
 
 For any vector features, a GeoDataFrame is returned containing the extracted pixel
-values, an "id" column that provides the GeoDataFrame index of each vector feature,
-and the pixel coordinates as `shapely.geometry.Point` objects.
+values. A pandas.MultiIndex is used to relate the pixels back to the original 
+geometries, with the `pixel_idx` index referring to the index of each pixel, and
+the `geometry_idx` referring to the index of the original geometry in the supplied
+GeoDataFrame. The pixel values themselves are represented as `shapely.geometry.Point` objects.
 These will need to be joined back with the columns of the vector features to get
 the labelled classes. Here we will join the extracted pixels using the "id" column
 and the GeoDataFrame index of the vector features:
@@ -91,12 +94,16 @@ and the GeoDataFrame index of the vector features:
 ::
 
     # Join the extracted values with other columns from the training data
-    df_points["id"] = training_pts["id"]
+    df_points["id"] = training_pt["id"].values
     df_points = df_points.dropna()
     df_points.head()
 
-    df_polygons = df_polygons.merge(training_py.loc[:, "id"], left_on="id", right_index=True)
-    df_polygons = df_polygons.rename(columns={"id_y": "class"})
+    df_polygons = df_polygons.merge(
+        right=training_py.loc[:, ["label", "id"]], 
+        left_on="geometry_idx", 
+        right_on="index",
+        right_index=True
+    )
 
 If the training data is from labelled pixels in a raster, then the extracted data
 will contain a "value" column that contains the pixel labels:
@@ -125,9 +132,10 @@ Next we can train a logistic regression classifier:
     df_polygons = df_polygons.dropna()
 
     # fit the classifier
-    X = df_polygons.drop(columns=["id", "id_x", "class", "geometry"])
-    y = df_polygons["class"]
+    X = df_polygons.drop(columns=["id", "label", "geometry"]).values
+    y = df_polygons["id"].values
     lr.fit(X, y)
+
 
 After defining a classifier, a typical step consists of performing a
 cross-validation to evaluate the performance of the model. Scikit-learn provides
@@ -148,9 +156,14 @@ within the same polygon will not be split into training and test partitions:
 ::
 
     scores = cross_validate(
-      lr, X, y, groups=df_polygons.id,
-      scoring='accuracy',
-      cv=3,  n_jobs=1)
+        estimator=lr,
+        X=X,
+        y=y,
+        groups=df_polygons.index.droplevel("pixel_idx"),
+        scoring="accuracy",
+        cv=3,
+        n_jobs=1,
+    )
     scores['test_score'].mean()
 
 

@@ -702,7 +702,7 @@ class Raster(BaseRaster):
 
         return arr
 
-    def write(self, file_path, driver="GTiff", dtype=None, nodata=None):
+    def write(self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Write the Raster object to a file.
 
         Overrides the write RasterBase class method, which is a partial function of the
@@ -727,6 +727,10 @@ class Raster(BaseRaster):
             RasterLayers in the Raster object is used. Note that this does not change
             the pixel nodata values of the raster, it only changes the metadata of what
             value represents a nodata pixel.
+        
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -743,6 +747,7 @@ class Raster(BaseRaster):
         meta["driver"] = driver
         meta["nodata"] = nodata
         meta["dtype"] = dtype
+        meta.update(kwargs)
 
         with rasterio.open(file_path, mode="w", **meta) as dst:
 
@@ -765,6 +770,7 @@ class Raster(BaseRaster):
         nodata=None,
         as_df=False,
         progress=False,
+        **kwargs,
     ):
         """Apply class probability prediction of a scikit learn model to a Raster.
 
@@ -801,6 +807,10 @@ class Raster(BaseRaster):
 
         progress : bool (default False)
             Show progress bar for prediction.
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -850,6 +860,7 @@ class Raster(BaseRaster):
         # open output file with updated metadata
         meta = deepcopy(self.meta)
         meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
+        meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
             windows = [window for ij, window in dst.block_windows()]
@@ -885,6 +896,7 @@ class Raster(BaseRaster):
         as_df=False,
         n_jobs=-1,
         progress=False,
+        **kwargs,
     ):
         """Apply prediction of a scikit learn model to a Raster.
         
@@ -923,6 +935,10 @@ class Raster(BaseRaster):
 
         progress : bool (default False)
             Show progress bar for prediction.
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -977,6 +993,7 @@ class Raster(BaseRaster):
         # open output file with updated metadata
         meta = deepcopy(self.meta)
         meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
+        meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
             windows = [window for window in self.block_shapes(*self._block_shape)]
@@ -1536,6 +1553,7 @@ class Raster(BaseRaster):
         driver="GTiff",
         dtype=None,
         nodata=None,
+        **kwargs,
     ):
         """Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
@@ -1573,6 +1591,10 @@ class Raster(BaseRaster):
             set based on the minimum permissible value of the Raster's data type. Note
             that this changes the values of the pixels to the new nodata value, and changes
             the metadata of the raster.
+        
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
         """
 
         # some checks
@@ -1620,6 +1642,7 @@ class Raster(BaseRaster):
         meta["nodata"] = nodata
         meta["height"] = masked_ndarrays.shape[1]
         meta["width"] = masked_ndarrays.shape[2]
+        meta.update(kwargs)
 
         masked_ndarrays = masked_ndarrays.filled(fill_value=nodata)
 
@@ -1634,7 +1657,7 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def intersect(self, file_path=None, driver="GTiff", dtype=None, nodata=None):
+    def intersect(self, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Perform a intersect operation on the Raster object.
 
         Computes the geometric intersection of the RasterLayers with the Raster object.
@@ -1661,6 +1684,10 @@ class Raster(BaseRaster):
             based on the minimum permissible value of the Raster's data type. Note that
             this changes the values of the pixels that represent nodata to the new
             value.
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -1691,6 +1718,7 @@ class Raster(BaseRaster):
         meta["driver"] = driver
         meta["nodata"] = nodata
         meta["dtype"] = dtype
+        meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(intersected_arr.astype(dtype))
@@ -1703,7 +1731,7 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def crop(self, bounds, file_path=None, driver="GTiff", dtype=None, nodata=None):
+    def crop(self, bounds, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Crops a Raster object by the supplied bounds.
 
         Parameters
@@ -1730,6 +1758,10 @@ class Raster(BaseRaster):
             based on the minimum permissible value of the Raster's data type. Note that
             this does not change the pixel nodata values of the raster, it only changes
             the metadata of what value represents a nodata pixel.
+        
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -1768,6 +1800,7 @@ class Raster(BaseRaster):
         meta["driver"] = driver
         meta["nodata"] = nodata
         meta["dtype"] = dtype
+        meta.update(kwargs)
 
         cropped_arr = cropped_arr.filled(fill_value=nodata)
 
@@ -1792,6 +1825,7 @@ class Raster(BaseRaster):
         n_jobs=1,
         warp_mem_lim=0,
         progress=False,
+        **kwargs,
     ):
         """Reprojects a Raster object to a different crs.
 
@@ -1839,6 +1873,10 @@ class Raster(BaseRaster):
         progress : bool (default False)
             Optionally show progress of transform operations.
 
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
+
         Returns
         -------
         pyspatialml.Raster
@@ -1876,6 +1914,7 @@ class Raster(BaseRaster):
         meta["height"] = dst_height
         meta["transform"] = dst_transform
         meta["crs"] = crs
+        meta.update(kwargs)
 
         if progress is True:
             t = tqdm(total=self.count)
@@ -1910,6 +1949,7 @@ class Raster(BaseRaster):
         driver="GTiff",
         dtype=None,
         nodata=None,
+        **kwargs,
     ):
         """Aggregates a raster to (usually) a coarser grid cell size.
 
@@ -1941,6 +1981,10 @@ class Raster(BaseRaster):
             based on the minimum permissible value of the Raster's dtype. Note that
             this does not change the pixel nodata values of the raster, it only changes
             the metadata of what value represents a nodata pixel.
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -1979,6 +2023,7 @@ class Raster(BaseRaster):
             width=cols,
             height=rows,
         )
+        meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
             dst.write(arr.astype(dtype))
@@ -2000,6 +2045,7 @@ class Raster(BaseRaster):
         nodata=None,
         progress=False,
         n_jobs=-1,
+        **kwargs,
     ):
         """Apply user-supplied function to a Raster object.
 
@@ -2029,6 +2075,10 @@ class Raster(BaseRaster):
 
         progress : bool (default False)
             Optionally show progress of transform operations.
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example can be
+            `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -2060,6 +2110,7 @@ class Raster(BaseRaster):
         # open output file with updated metadata
         meta = deepcopy(self.meta)
         meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
+        meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
 
@@ -2120,7 +2171,7 @@ class Raster(BaseRaster):
 
                 yield Window(i, j, num_cols, num_rows)
 
-    def astype(self, dtype, file_path=None, driver="GTiff", nodata=None):
+    def astype(self, dtype, file_path=None, driver="GTiff", nodata=None, **kwargs):
         """Coerce Raster to a different dtype.
         
         Parameters

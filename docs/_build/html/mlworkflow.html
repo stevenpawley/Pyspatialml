@@ -239,18 +239,24 @@ along with the queried pixel values.</p>
 </pre></div>
 </div>
 <p>For any vector features, a GeoDataFrame is returned containing the extracted pixel
-values, an “id” column that provides the GeoDataFrame index of each vector feature,
-and the pixel coordinates as <cite>shapely.geometry.Point</cite> objects.
+values. A pandas.MultiIndex is used to relate the pixels back to the original
+geometries, with the <cite>pixel_idx</cite> index referring to the index of each pixel, and
+the <cite>geometry_idx</cite> referring to the index of the original geometry in the supplied
+GeoDataFrame. The pixel values themselves are represented as <cite>shapely.geometry.Point</cite> objects.
 These will need to be joined back with the columns of the vector features to get
 the labelled classes. Here we will join the extracted pixels using the “id” column
 and the GeoDataFrame index of the vector features:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Join the extracted values with other columns from the training data</span>
-<span class="n">df_points</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_pts</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+<span class="n">df_points</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_pt</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 <span class="n">df_points</span> <span class="o">=</span> <span class="n">df_points</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 <span class="n">df_points</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 
-<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">training_py</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id_y&quot;</span><span class="p">:</span> <span class="s2">&quot;class&quot;</span><span class="p">})</span>
+<span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+    <span class="n">right</span><span class="o">=</span><span class="n">training_py</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">]],</span>
+    <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;geometry_idx&quot;</span><span class="p">,</span>
+    <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">,</span>
+    <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>If the training data is from labelled pixels in a raster, then the extracted data
@@ -276,8 +282,8 @@ will contain a “value” column that contains the pixel labels:</p>
 <span class="n">df_polygons</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 
 <span class="c1"># fit the classifier</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;id_x&quot;</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">values</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">df_polygons</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 <span class="n">lr</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -296,9 +302,14 @@ same group will never occur in both the training and test partitions of a
 cross-validation. Here we can use the polygon indices as the groups, i.e. pixels
 within the same polygon will not be split into training and test partitions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="n">cross_validate</span><span class="p">(</span>
-  <span class="n">lr</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">df_polygons</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-  <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span>
-  <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span>
+    <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">groups</span><span class="o">=</span><span class="n">df_polygons</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;pixel_idx&quot;</span><span class="p">),</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+    <span class="n">cv</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">scores</span><span class="p">[</span><span class="s1">&#39;test_score&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
 </div>

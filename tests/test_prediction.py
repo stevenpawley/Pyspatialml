@@ -14,14 +14,13 @@ class TestPrediction(TestCase):
 
     def test_classification(self):
         training_pt = gpd.read_file(nc.points)
-
         df_points = self.stack_nc.extract_vector(gdf=training_pt)
-        df_points["class_id"] = training_pt["id"]
+        df_points["class_id"] = training_pt["id"].values
         df_points = df_points.dropna()
 
         clf = RandomForestClassifier(n_estimators=50)
-        X = df_points.drop(columns=["id", "class_id", "geometry"])
-        y = df_points.class_id
+        X = df_points.drop(columns=["class_id", "geometry"]).values
+        y = df_points.class_id.values
         clf.fit(X, y)
 
         # classification
@@ -41,16 +40,16 @@ class TestPrediction(TestCase):
     def test_regression(self):
         training_pt = gpd.read_file(ms.meuse)
         training = self.stack_meuse.extract_vector(gdf=training_pt)
-        training["zinc"] = training_pt["zinc"]
-        training["cadmium"] = training_pt["cadmium"]
-        training["copper"] = training_pt["copper"]
-        training["lead"] = training_pt["lead"]
+        training["zinc"] = training_pt["zinc"].values
+        training["cadmium"] = training_pt["cadmium"].values
+        training["copper"] = training_pt["copper"].values
+        training["lead"] = training_pt["lead"].values
         training = training.dropna()
 
         # single target regression
         regr = RandomForestRegressor(n_estimators=50)
-        X = training.loc[:, self.stack_meuse.names]
-        y = training["zinc"]
+        X = training.loc[:, self.stack_meuse.names].values
+        y = training["zinc"].values
         regr.fit(X, y)
 
         single_regr = self.stack_meuse.predict(regr)

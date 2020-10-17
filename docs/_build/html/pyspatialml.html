@@ -291,7 +291,7 @@ supervised learning</p></li>
 <span id="pyspatialml-estimators-module"></span><h3>pyspatialml.estimators module<a class="headerlink" href="#module-pyspatialml.estimators" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="pyspatialml.estimators.SpatialLagBase">
-<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code></p>
 <p>Base class for spatial lag estimators.</p>
 <p>A spatial lag estimator uses a weighted mean/mode of the values of the K-neighboring
@@ -345,6 +345,7 @@ sparse graph, in which case only “nonzero” elements may be considered neighb
 When p = 1, this is equivalent to using manhattan_distance (l1), and
 euclidean_distance (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.</p></li>
 <li><p><strong>metric_params</strong> (<em>dict</em><em>, </em><em>default=None</em>) – Additional keyword arguments for the metric function.</p></li>
+<li><p><strong>kernel_params</strong> (<em>dict</em><em>, </em><em>default=None</em>) – Additional keyword arguments to pass to a custom kernel function.</p></li>
 <li><p><strong>feature_indices</strong> (<em>list</em><em>, </em><em>default=None</em>) – By default, the nearest neighbors are determined from the distance metric calculated
 using all of the features. If <cite>feature_indices</cite> are supplied then the distance
 calculation is restricted to the specific column indices. For spatial data, these
@@ -357,7 +358,7 @@ for more details.</p></li>
 </dl>
 <dl class="py method">
 <dt id="pyspatialml.estimators.SpatialLagBase.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagBase.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagBase.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the base_estimator with features from X {n_samples, n_features} and with an
 additional spatially lagged variable added to the right-most column of the
 training data.</p>
@@ -369,8 +370,6 @@ calculation, i.e. the training point is not considered its own neighbor.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>array-like of sample {n_samples</em><em>, </em><em>n_features} using for model fitting</em>) – The training input samples</p></li>
 <li><p><strong>y</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em>) – The target values (class labels in classification, real numbers in regression).</p></li>
-<li><p><strong>sample_weight</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em><em>, </em><em>default=None</em>) – Sample weights. If None, then samples are equally weighted. Note that this is
-supported only if the <cite>base_estimator</cite> supports sample weights.</p></li>
 </ul>
 </dd>
 </dl>
@@ -396,13 +395,13 @@ mean/mode (regression/classification) of k-neighboring observations.</p>
 
 <dl class="py class">
 <dt id="pyspatialml.estimators.SpatialLagClassifier">
-<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagClassifier" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagClassifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.ClassifierMixin</span></code>, <a class="reference internal" href="#pyspatialml.estimators.SpatialLagBase" title="pyspatialml.estimators.SpatialLagBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.estimators.SpatialLagBase</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt id="pyspatialml.estimators.SpatialLagRegressor">
-<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagRegressor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagRegressor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.estimators.</code><code class="sig-name descname">SpatialLagRegressor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_estimator</span></em>, <em class="sig-param"><span class="n">n_neighbors</span><span class="o">=</span><span class="default_value">7</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">'distance'</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">leaf_size</span><span class="o">=</span><span class="default_value">30</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'minkowski'</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">metric_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kernel_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.estimators.SpatialLagRegressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.RegressorMixin</span></code>, <a class="reference internal" href="#pyspatialml.estimators.SpatialLagBase" title="pyspatialml.estimators.SpatialLagBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.estimators.SpatialLagBase</span></code></a></p>
 </dd></dl>
 
@@ -767,7 +766,7 @@ a stack of raster datasets. In addition, these methods always return a new Raste
 object.</p>
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.aggregate">
-<code class="sig-name descname">aggregate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_shape</span></em>, <em class="sig-param"><span class="n">resampling</span><span class="o">=</span><span class="default_value">'nearest'</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.aggregate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">aggregate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">out_shape</span></em>, <em class="sig-param"><span class="n">resampling</span><span class="o">=</span><span class="default_value">'nearest'</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.aggregate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Aggregates a raster to (usually) a coarser grid cell size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -787,6 +786,8 @@ individual RasterLayers.</p></li>
 based on the minimum permissible value of the Raster’s dtype. Note that
 this does not change the pixel nodata values of the raster, it only changes
 the metadata of what value represents a nodata pixel.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -822,7 +823,7 @@ a new Raster object.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.apply">
-<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.apply" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply user-supplied function to a Raster object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -838,6 +839,8 @@ based on the minimum permissible value of the Raster’s data type. Note that
 this changes the values of the pixels that represent nodata pixels.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default of -1 is all cores.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -851,7 +854,7 @@ this changes the values of the pixels that represent nodata pixels.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.astype">
-<code class="sig-name descname">astype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.astype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">astype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.astype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Coerce Raster to a different dtype.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -916,7 +919,7 @@ accumulated during an analysis session.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.crop">
-<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bounds</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.crop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bounds</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Crops a Raster object by the supplied bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -934,6 +937,8 @@ the individual RasterLayers.</p></li>
 based on the minimum permissible value of the Raster’s data type. Note that
 this does not change the pixel nodata values of the raster, it only changes
 the metadata of what value represents a nodata pixel.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -970,7 +975,7 @@ a new Raster object.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.intersect">
-<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.intersect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.intersect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a intersect operation on the Raster object.</p>
 <p>Computes the geometric intersection of the RasterLayers with the Raster object.
 This will cause nodata values in any of the rasters to be propagated through
@@ -989,6 +994,8 @@ individual RasterLayers.</p></li>
 based on the minimum permissible value of the Raster’s data type. Note that
 this changes the values of the pixels that represent nodata to the new
 value.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1003,7 +1010,7 @@ suite of RasterLayers.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.mask">
-<code class="sig-name descname">mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shapes</span></em>, <em class="sig-param"><span class="n">invert</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">crop</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pad</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.mask" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shapes</span></em>, <em class="sig-param"><span class="n">invert</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">crop</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pad</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mask a Raster object based on the outline of shapes in a
 geopandas.GeoDataFrame</p>
 <dl class="field-list simple">
@@ -1025,6 +1032,8 @@ can accommodate the data types of all of the individual RasterLayers.</p></li>
 set based on the minimum permissible value of the Raster’s data type. Note
 that this changes the values of the pixels to the new nodata value, and changes
 the metadata of the raster.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1085,7 +1094,7 @@ single layer.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.predict">
-<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply prediction of a scikit learn model to a Raster.</p>
 <p>The model can represent any scikit learn model or compatible api with a <cite>fit</cite>
 and <cite>predict</cite> method. These can consist of classification or regression models.
@@ -1107,6 +1116,8 @@ to refer to column names rather than indices.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default is
 n_jobs=1. -1 is all cores; -2 is all cores -1.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1123,7 +1134,7 @@ are named automatically as <cite>pred_raw_n</cite> with n = 1, 2, 3 ..n.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.predict_proba">
-<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">indexes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">indexes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply class probability prediction of a scikit learn model to a Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1144,6 +1155,8 @@ derived from the minimum permissible value for the given data type.</p></li>
 useful if transformers are being used as part of a pipeline and you want
 to refer to column names rather than indices.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1218,7 +1231,7 @@ and return a new Raster object.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.to_crs">
-<code class="sig-name descname">to_crs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">crs</span></em>, <em class="sig-param"><span class="n">resampling</span><span class="o">=</span><span class="default_value">'nearest'</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">warp_mem_lim</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_crs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_crs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">crs</span></em>, <em class="sig-param"><span class="n">resampling</span><span class="o">=</span><span class="default_value">'nearest'</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">warp_mem_lim</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.to_crs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reprojects a Raster object to a different crs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1249,6 +1262,8 @@ operation to be carried out in fewer chunks. The amount of memory required
 to warp a 3-band uint8 2000 row x 2000 col raster to a destination of the
 same size is approximately 56 MB. The default (0) means 64 MB with GDAL 2.2.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Optionally show progress of transform operations.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1262,7 +1277,7 @@ same size is approximately 56 MB. The default (0) means 64 MB with GDAL 2.2.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the Raster object to a file.</p>
 <p>Overrides the write RasterBase class method, which is a partial function of the
 rasterio.DatasetReader.write method.</p>
@@ -1279,6 +1294,8 @@ a nodata value based on the minimum permissible value for the data types of
 RasterLayers in the Raster object is used. Note that this does not change
 the pixel nodata values of the raster, it only changes the metadata of what
 value represents a nodata pixel.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1427,7 +1444,7 @@ This overides the norm attribute of the RasterLayer.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.distance">
-<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.distance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.distance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate euclidean grid distances to non-NaN pixels</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1437,6 +1454,8 @@ tempfile is used.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
 based on the minimum permissible value of the Raster’s data type.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1450,7 +1469,7 @@ based on the minimum permissible value of the Raster’s data type.</p></li>
 
 <dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.fill">
-<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_search_distance</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">smoothing_iterations</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.fill" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_search_distance</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">smoothing_iterations</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.fill" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fill nodata gaps in a RasterLayer</p>
 <p>Thin wrapper around the rasterio.fill.fillnodata method.</p>
 <dl class="field-list simple">
@@ -1468,6 +1487,8 @@ tempfile is used.</p></li>
 based on the minimum permissible value of the Raster’s data type.</p></li>
 <li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
 specified, a data type is set based on the data type of the RasterLayer.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1500,7 +1521,10 @@ overrides the  RasterLayer ‘categorical’ attribute. Setting the argument
 categorical to True is ignored if the RasterLayer.categorical is already
 True.</p></li>
 <li><p><strong>legend</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default False</em><em>)</em>) – Whether to plot the legend.</p></li>
-<li><p><strong>xmax</strong> (<em>vmin</em><em>,</em>) – vmin and vmax define the data range that the colormap covers. By default,
+<li><p><strong>vmin</strong> (<em>scale</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – vmin and vmax define the data range that the colormap covers. By default,
+the colormap covers the complete value range of the supplied data. vmin,
+vmax are ignored if the norm parameter is used.</p></li>
+<li><p><strong>xmax</strong> (<em>scale</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – vmin and vmax define the data range that the colormap covers. By default,
 the colormap covers the complete value range of the supplied data. vmin,
 vmax are ignored if the norm parameter is used.</p></li>
 <li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
@@ -1535,7 +1559,7 @@ will have two dimensions in the order of (rows, columns).</p>
 
 <dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.sieve">
-<code class="sig-name descname">sieve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">connectivity</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.sieve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sieve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">connectivity</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.sieve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replace pixels with their largest neighbor</p>
 <p>Thin wrapper around the rasterio.features.sieve method.</p>
 <dl class="field-list simple">
@@ -1552,6 +1576,8 @@ specified then a tempfile is used.</p></li>
 based on the minimum permissible value of the Raster’s data type.</p></li>
 <li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
 specified, a data type is set based on the data type of the RasterLayer.</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1565,7 +1591,7 @@ specified, a data type is set based on the data type of the RasterLayer.</p></li
 
 <dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write method for a single RasterLayer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1576,6 +1602,8 @@ specified, a data type is set based on the data type of the RasterLayer.</p></li
 used.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>opt</em><em>)</em>) – A value used to represent the nodata pixels. If omitted then the RasterLayer’s
 nodata value is used (if assigned already).</p></li>
+<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
+<cite>compress=”deflate”</cite> to add compression.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
