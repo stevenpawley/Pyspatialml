@@ -739,6 +739,11 @@ class Raster(BaseRaster):
         """
         if dtype is None:
             dtype = self.meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -793,7 +798,7 @@ class Raster(BaseRaster):
             Named of GDAL-supported driver for file export.
 
         dtype : str (optional, default None)
-            Optionally specify a numpy compatible data type when saving to file. If not
+            Optionally specify a GDAL compatible data type when saving to file. If not
             specified, a data type is set based on the data type of the prediction.
 
         nodata : any number (optional, default None)
@@ -824,7 +829,6 @@ class Raster(BaseRaster):
             of 1, 3, and 5 would result in three RasterLayers named prob_1, prob_2 and
             prob_3.
         """
-
         file_path, tfile = _file_path_tempfile(file_path)
         predfun = self._probfun
 
@@ -847,7 +851,12 @@ class Raster(BaseRaster):
             indexes = np.arange(0, result.shape[1])
 
         if dtype is None:
-            dtype = result.dtype
+            dtype = rasterio.dtypes.get_minimum_dtype(result)
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -917,7 +926,7 @@ class Raster(BaseRaster):
             Named of GDAL-supported driver for file export
 
         dtype : str (optional, default None)
-            Optionally specify a numpy compatible data type when saving to file. If not
+            Optionally specify a GDAL compatible data type when saving to file. If not
             specified, a data type is set based on the data types of the prediction.
 
         nodata : any number (optional, default None)
@@ -980,8 +989,13 @@ class Raster(BaseRaster):
             predfun = partial(self._predfun_multioutput, estimator=estimator)
 
         if dtype is None:
-            dtype = result.dtype
-
+            dtype = rasterio.dtypes.get_minimum_dtype(result)
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
+                
         if nodata is None:
             nodata = _get_nodata(dtype)
         
@@ -1606,6 +1620,11 @@ class Raster(BaseRaster):
 
         if dtype is None:
             dtype = meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -1695,12 +1714,16 @@ class Raster(BaseRaster):
             Raster with layers that are masked based on a union of all masks in the
             suite of RasterLayers.
         """
-
         file_path, tfile = _file_path_tempfile(file_path)
         meta = deepcopy(self.meta)
 
         if dtype is None:
             dtype = meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -1790,6 +1813,11 @@ class Raster(BaseRaster):
 
         if dtype is None:
             dtype = meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -1887,8 +1915,6 @@ class Raster(BaseRaster):
 
         if nodata is None:
             nodata = _get_nodata(self.meta["dtype"])
-
-        dtype = self.meta["dtype"]
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
@@ -2002,6 +2028,11 @@ class Raster(BaseRaster):
 
         if dtype is None:
             dtype = meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -2103,6 +2134,11 @@ class Raster(BaseRaster):
 
         if dtype is None:
             dtype = arr.dtype
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
