@@ -8,8 +8,8 @@ from collections.abc import Mapping
 from copy import deepcopy
 from functools import partial
 
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
@@ -22,9 +22,9 @@ from rasterio.windows import Window
 from tqdm import tqdm
 
 from .base import BaseRaster
-from .utils import _get_nodata, _get_num_workers
 from .rasterlayer import RasterLayer
 from .temporary_files import _file_path_tempfile
+from .utils import _get_nodata, _get_num_workers
 
 
 class _LocIndexer(Mapping):
@@ -170,26 +170,26 @@ class Raster(BaseRaster):
 
         Parameters
         ----------
-        src : file path, RasterLayer, or rasterio dataset (opt, default None)
+        src : file path, RasterLayer, or rasterio dataset (opt, default is None)
             Initiate a Raster object from any combination of a file path or list of
             file paths to GDAL-supported raster datasets, RasterLayer objects, or
             directly from a rasterio dataset or band object that is opened in 'r' or
             'rw' mode.
 
-        arr : numpy.ndarray (optional, default None)
+        arr : numpy.ndarray (optional, default is None)
             Whether to initiate a Raster object from a numpy.ndarray. Additional
             arguments `crs` and `transform` should also be provided to supply spatial
             coordinate information. Parameters `arr` and `src` are mutually-exclusive.
 
-        crs : rasterio.crs.CRS object (optional, default None)
+        crs : rasterio.crs.CRS object (optional, default is None)
             CRS object containing projection information for data if provided by the
             associated `arr` parameter.
 
-        transform : affine.Affine object (optional, default None)
+        transform : affine.Affine object (optional, default is None)
             Affine object containing transform information for data if provided by the
             associated `arr` parameter.
 
-        nodata : any number (optional, default None)
+        nodata : any number (optional, default is None)
             Assign a nodata value to the Raster dataset when `arr` is used for
             initiation. If a nodata value is not specified then it is determined based
             on the minimum permissible value for the array's data type.
@@ -203,7 +203,7 @@ class Raster(BaseRaster):
         Attributes
         ----------
         loc : _LocIndexer object
-            Access pyspatialml.RasterLayer objects within a Raster using a key, or a
+            Access pyspatialml.RasterLayer objects within a Raster using a key or a
             list of keys.
         
         iloc : _ILocIndexer object
@@ -253,7 +253,8 @@ class Raster(BaseRaster):
             Raster object containing the src layers stacked into a single
             object
         """
-
+        
+        # class attributes
         self.loc = _LocIndexer(self)
         self.iloc = _iLocIndexer(self, self.loc)
         self.files = []
@@ -366,8 +367,7 @@ class Raster(BaseRaster):
         return selected
 
     def __setitem__(self, key, value):
-        """Replace a RasterLayer within the Raster object with a new 
-        RasterLayer.
+        """Replace a RasterLayer within the Raster object with a new RasterLayer.
         
         Note that this modifies the Raster object in place.
         
@@ -388,8 +388,7 @@ class Raster(BaseRaster):
             raise ValueError("value is not a RasterLayer object")
 
     def __iter__(self):
-        """
-        Iterate over RasterLayers.
+        """Iterate over RasterLayers.
         """
         return iter(self.loc.items())
 
@@ -612,6 +611,16 @@ class Raster(BaseRaster):
             count=self.count,
             dtype=np.find_common_type(self.dtypes, []),
         )
+    
+    def _check_supported_dtype(self, dtype):
+        if dtype is None:
+            dtype = self.meta["dtype"]
+        else:
+            if rasterio.dtypes.check_dtype(dtype) is False:
+                raise AttributeError(
+                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+                )
+        return dtype
 
     def read(
         self,
@@ -737,14 +746,7 @@ class Raster(BaseRaster):
         Raster
             New Raster object from saved file.
         """
-        if dtype is None:
-            dtype = self.meta["dtype"]
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
-
+        dtype = self._check_supported_dtype(dtype)
         if nodata is None:
             nodata = _get_nodata(dtype)
 
@@ -1618,14 +1620,7 @@ class Raster(BaseRaster):
         file_path, tfile = _file_path_tempfile(file_path)
         meta = deepcopy(self.meta)
 
-        if dtype is None:
-            dtype = meta["dtype"]
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
-
+        dtype = self._check_supported_dtype(dtype)
         if nodata is None:
             nodata = _get_nodata(dtype)
 
@@ -1717,13 +1712,7 @@ class Raster(BaseRaster):
         file_path, tfile = _file_path_tempfile(file_path)
         meta = deepcopy(self.meta)
 
-        if dtype is None:
-            dtype = meta["dtype"]
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
+        dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -1811,14 +1800,7 @@ class Raster(BaseRaster):
         meta = deepcopy(self.meta)
         aff = self.transform
 
-        if dtype is None:
-            dtype = meta["dtype"]
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
-
+        dtype = self._check_supported_dtype(dtype)
         if nodata is None:
             nodata = _get_nodata(dtype)
 
@@ -2026,14 +2008,7 @@ class Raster(BaseRaster):
 
         meta = deepcopy(self.meta)
 
-        if dtype is None:
-            dtype = meta["dtype"]
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
-
+        dtype = self._check_supported_dtype(dtype)
         if nodata is None:
             nodata = _get_nodata(dtype)
 
@@ -2132,14 +2107,7 @@ class Raster(BaseRaster):
             indexes = 1
             count = 1
 
-        if dtype is None:
-            dtype = arr.dtype
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
-
+        dtype = self._check_supported_dtype(dtype)
         if nodata is None:
             nodata = _get_nodata(dtype)
 
