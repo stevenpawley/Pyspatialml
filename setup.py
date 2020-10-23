@@ -28,7 +28,7 @@ setup(
         'shapely>=1.6',
         'geopandas>=0.3',
         'matplotlib>=2.2.4',
-        'sklearn'],
+        'scikit-learn>=0.22'],
     python_requires='>=3.5',
 
     # testing
