@@ -1782,34 +1782,45 @@ class Raster(BaseRaster):
         """
 
         file_path, tfile = _file_path_tempfile(file_path)
+        dtype = self._check_supported_dtype(dtype)
+        if nodata is None:
+            nodata = _get_nodata(dtype)
 
+        # get row, col positions for bounds
         xmin, ymin, xmax, ymax = bounds
-
         rows, cols = rasterio.transform.rowcol(
             transform=self.transform, xs=(xmin, xmax), ys=(ymin, ymax)
         )
 
+        # create window covering the min/max rows and cols
         window = Window(
             col_off=min(cols),
             row_off=min(rows),
             width=max(cols) - min(cols),
             height=max(rows) - min(rows),
         )
-
         cropped_arr = self.read(masked=True, window=window)
-        meta = deepcopy(self.meta)
-        aff = self.transform
 
-        dtype = self._check_supported_dtype(dtype)
-        if nodata is None:
-            nodata = _get_nodata(dtype)
+        # calculate the new transform
+        new_transform = rasterio.transform.from_bounds(
+            west=xmin, 
+            south=ymin, 
+            east=xmax, 
+            north=ymax, 
+            width=cropped_arr.shape[2], 
+            height=cropped_arr.shape[1]
+        )
 
-        meta["width"] = max(cols) - min(cols)
-        meta["height"] = max(rows) - min(rows)
-        meta["transform"] = Affine(aff.a, aff.b, xmin, aff.d, aff.e, ymin)
-        meta["driver"] = driver
-        meta["nodata"] = nodata
-        meta["dtype"] = dtype
+        # update the destination meta
+        meta = self.meta.copy()
+        meta.update(
+            transform=new_transform,
+            width=cropped_arr.shape[2], 
+            height=cropped_arr.shape[1],
+            driver=driver,
+            nodata=nodata,
+            dtype=dtype
+        )
         meta.update(kwargs)
 
         cropped_arr = cropped_arr.filled(fill_value=nodata)
