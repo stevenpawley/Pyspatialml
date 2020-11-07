@@ -1,9 +1,7 @@
-import os
 from copy import deepcopy
 
 import numpy as np
 import rasterio
-from rasterio.warp import reproject
 from scipy import ndimage
 
 from .raster import Raster
