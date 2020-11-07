@@ -839,26 +839,15 @@ class Raster(BaseRaster):
             indexes = range(indexes, indexes + 1)
 
         elif indexes is None:
-            if as_df is False:
-                window = Window(0, 0, self.width, 1)
-                img = self.read(masked=True, window=window)
-                n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-                n_samples = rows * cols
-                flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-            else:
-                flat_pixels = self.read(masked=False, as_df=True)
-                flat_pixels = flat_pixels.fillna(0)
-            
-            result = estimator.predict_proba(flat_pixels)
-            indexes = np.arange(0, result.shape[1])
+            indexes = np.arange(0, estimator.n_classes_)
 
         if dtype is None:
-            dtype = rasterio.dtypes.get_minimum_dtype(result)
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
+            dtype = np.float32
+        
+        if rasterio.dtypes.check_dtype(dtype) is False:
+            raise AttributeError(
+                "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+            )
 
         if nodata is None:
             nodata = _get_nodata(dtype)
@@ -929,7 +918,7 @@ class Raster(BaseRaster):
 
         dtype : str (optional, default None)
             Optionally specify a GDAL compatible data type when saving to file. If not
-            specified, a data type is set based on the data types of the prediction.
+            specified, np.float32 is assumed.
 
         nodata : any number (optional, default None)
             Nodata value for file export. If not specified then the nodata value is
@@ -963,26 +952,7 @@ class Raster(BaseRaster):
         n_jobs = _get_num_workers(n_jobs)
 
         # determine output count for multi output cases
-        window = Window(0, 0, self.width, 1)
-
-        if as_df is False:
-            img = self.read(masked=True, window=window)
-            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-            n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-            flat_pixels = flat_pixels.filled(0)
-        else:
-            flat_pixels = self.read(masked=False, as_df=True)
-            flat_pixels = flat_pixels.fillna(0)
-
-        result = estimator.predict(flat_pixels)
-
-        if result.ndim > 1:
-            n_outputs = result.shape[result.ndim - 1]
-        else:
-            n_outputs = 1
-
-        indexes = np.arange(0, n_outputs)
+        indexes = np.arange(0, estimator.n_outputs_)
 
         # chose prediction function
         if len(indexes) == 1:
@@ -991,12 +961,12 @@ class Raster(BaseRaster):
             predfun = partial(self._predfun_multioutput, estimator=estimator)
 
         if dtype is None:
-            dtype = rasterio.dtypes.get_minimum_dtype(result)
-        else:
-            if rasterio.dtypes.check_dtype(dtype) is False:
-                raise AttributeError(
-                    "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-                )
+            dtype = np.float32
+
+        if rasterio.dtypes.check_dtype(dtype) is False:
+            raise AttributeError(
+                "{dtype} is not a support GDAL dtype".format(dtype=dtype)
+            )
                 
         if nodata is None:
             nodata = _get_nodata(dtype)
