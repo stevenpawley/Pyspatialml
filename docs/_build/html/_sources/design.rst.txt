@@ -18,9 +18,7 @@ raster datasets can easily be added or removed from the stack without physical
 on-disk changes.
 
 Note these raster datasets need to be spatially aligned in terms of their
-extent, resolution and coordinate reference system. If they are not aligned,
-then for convenience the ``pyspatialml.preprocessing.align_rasters`` function can be
-used to resample a list of raster datasets.
+extent, resolution and coordinate reference system.
 
 Creating a new Raster object
 ----------------------------

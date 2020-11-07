@@ -570,44 +570,6 @@ offset).</p></li>
 <div class="section" id="module-pyspatialml.preprocessing">
 <span id="pyspatialml-preprocessing-module"></span><h3>pyspatialml.preprocessing module<a class="headerlink" href="#module-pyspatialml.preprocessing" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
-<dt id="pyspatialml.preprocessing.align_rasters">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">align_rasters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rasters</span></em>, <em class="sig-param"><span class="n">template</span></em>, <em class="sig-param"><span class="n">outputdir</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'Resampling.nearest'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.align_rasters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Aligns a list of rasters (paths to files) to a template raster.
-The rasters to that are to be realigned are assumed to represent
-single band raster files.</p>
-<p>Nodata values are also reclassified to the template raster’s nodata values</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>rasters</strong> (<em>list</em><em>, </em><em>str</em>) – List containing file paths to multiple rasters that are to be realigned.</p></li>
-<li><p><strong>template</strong> (<em>str</em>) – File path to raster that is to be used as a template to transform the
-other rasters to.</p></li>
-<li><p><strong>outputdir</strong> (<em>str</em>) – Directory to output the realigned rasters. This should not be the
-existing directory unless it is desired that the existing rasters to be
-realigned should be overwritten.</p></li>
-<li><p><strong>method</strong> (<em>str</em>) – <dl class="simple">
-<dt>Resampling method to use. One of the following:</dt><dd><p>Resampling.average,
-Resampling.bilinear,
-Resampling.cubic,
-Resampling.cubic_spline,
-Resampling.gauss,
-Resampling.lanczos,
-Resampling.max,
-Resampling.med,
-Resampling.min,
-Resampling.mode,
-Resampling.nearest,
-Resampling.q1,
-Resampling.q3</p>
-</dd>
-</dl>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt id="pyspatialml.preprocessing.distance_to_corners">
 <code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">distance_to_corners</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_corners" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate buffer distances to corner and centre coordinates of raster extent.</p>
@@ -673,32 +635,6 @@ is written to a tempfile.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pyspatialml.Raster</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.reclass_nodata">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">reclass_nodata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">output</span></em>, <em class="sig-param"><span class="n">src_nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_nodata</span><span class="o">=</span><span class="default_value">- 99999</span></em>, <em class="sig-param"><span class="n">intern</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.reclass_nodata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reclassify raster no data values and save to a new raster</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<em>str</em>) – File path to raster that is to be reclassified.</p></li>
-<li><p><strong>output</strong> (<em>str</em>) – File path to output raster</p></li>
-<li><p><strong>src_nodata</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – The source nodata value. Pixels with this value will be reclassified
-to the new dst_nodata value. If not set, it will default to the nodata value
-stored in the source image.</p></li>
-<li><p><strong>dst_nodata</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional. Default is -99999</em>) – The nodata value that the outout raster will receive after reclassifying
-pixels with the src_nodata value.</p></li>
-<li><p><strong>itern</strong> (<em>bool</em><em>, </em><em>optional. Default is False</em>) – Optionally return the reclassified raster as a numpy array.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – Raster with reclassified nodata pixels.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None, or 2D numpy array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1106,8 +1042,8 @@ Multi-class classifications and multi-target regressions are also supported.</p>
 <li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Path to a GeoTiff raster for the prediction results. If not specified then
 the output is written to a temporary file.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
-specified, a data type is set based on the data types of the prediction.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a GDAL compatible data type when saving to file. If not
+specified, np.float32 is assumed.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
 derived from the minimum permissible value for the given data type.</p></li>
 <li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default is False</em><em>)</em>) – Whether to read the raster data via pandas before prediction. This can be
@@ -1147,7 +1083,7 @@ the class probability estimations are desired, for instance when performing
 a binary classification only the probabilities for the positive class may
 be desired.</p></li>
 <li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
+<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a GDAL compatible data type when saving to file. If not
 specified, a data type is set based on the data type of the prediction.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
 derived from the minimum permissible value for the given data type.</p></li>
