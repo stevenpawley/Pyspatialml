@@ -1,4 +1,11 @@
+import pathlib
 from setuptools import setup, find_packages
+
+# The directory containing this file
+HERE = pathlib.Path(__file__).parent
+
+# The text of the README file
+README = (HERE / "README.md").read_text()
 
 setup(
     # package metadata
@@ -7,6 +14,8 @@ setup(
     author="Steven Pawley",
     author_email="steven.pawley@gmail.com",
     description=("Machine learning for GIS spatial modelling"),
+    long_description=README,
+    long_description_content_type="text/markdown",
     license="GNU",
     keywords="GIS",
     url="https://github.com/stevenpawley/pyspatialml",
