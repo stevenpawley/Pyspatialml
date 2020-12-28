@@ -224,6 +224,7 @@ class RasterPlot(object):
                 cmap=cmap,
                 norm=norm,
                 figsize=figsize,
+                out_shape=out_shape,
                 fig_kwds=fig_kwds,
                 legend_kwds=legend_kwds,
                 legend=True,

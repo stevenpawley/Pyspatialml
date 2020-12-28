@@ -11,14 +11,6 @@ Subpackages
 Submodules
 ==========
 
-pyspatialml.cross_validation module
--------------------------
-
-.. automodule:: pyspatialml.cross_validation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspatialml.estimators module
 ------------------------------
 
@@ -27,26 +19,10 @@ pyspatialml.estimators module
     :undoc-members:
     :show-inheritance:
 
-pyspatialml.metrics module
-------------------------------
-
-.. automodule:: pyspatialml.metrics
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspatialml.plotting module
 ---------------------------
 
 .. automodule:: pyspatialml.plotting
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspatialml.preprocessing module
---------------------------------
-
-.. automodule:: pyspatialml.preprocessing
     :members:
     :undoc-members:
     :show-inheritance:
@@ -71,14 +47,6 @@ pyspatialml.transformers module
 ----------------------------------
 
 .. automodule:: pyspatialml.transformers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspatialml.utils module
-------------------------
-
-.. automodule:: pyspatialml.utils
     :members:
     :undoc-members:
     :show-inheritance:

@@ -103,15 +103,11 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-cross-validation-module">pyspatialml.cross_validation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.estimators">pyspatialml.estimators module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-metrics-module">pyspatialml.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.plotting">pyspatialml.plotting module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-preprocessing-module">pyspatialml.preprocessing module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.raster">pyspatialml.raster module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.rasterlayer">pyspatialml.rasterlayer module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.transformers">pyspatialml.transformers module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-utils-module">pyspatialml.utils module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.vector">pyspatialml.vector module</a></li>
 </ul>
 </li>
@@ -206,9 +202,6 @@
 </div>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="pyspatialml-cross-validation-module">
-<h3>pyspatialml.cross_validation module<a class="headerlink" href="#pyspatialml-cross-validation-module" title="Permalink to this headline">¶</a></h3>
-</div>
 <div class="section" id="module-pyspatialml.estimators">
 <span id="pyspatialml-estimators-module"></span><h3>pyspatialml.estimators module<a class="headerlink" href="#module-pyspatialml.estimators" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
@@ -388,9 +381,6 @@ The scoring metric should be one that can be maximized (bigger=better)</p>
 </dd></dl>
 
 </div>
-<div class="section" id="pyspatialml-metrics-module">
-<h3>pyspatialml.metrics module<a class="headerlink" href="#pyspatialml-metrics-module" title="Permalink to this headline">¶</a></h3>
-</div>
 <div class="section" id="module-pyspatialml.plotting">
 <span id="pyspatialml-plotting-module"></span><h3>pyspatialml.plotting module<a class="headerlink" href="#module-pyspatialml.plotting" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
@@ -511,9 +501,6 @@ offset).</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="pyspatialml-preprocessing-module">
-<h3>pyspatialml.preprocessing module<a class="headerlink" href="#pyspatialml-preprocessing-module" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-pyspatialml.raster">
 <span id="pyspatialml-raster-module"></span><h3>pyspatialml.raster module<a class="headerlink" href="#module-pyspatialml.raster" title="Permalink to this headline">¶</a></h3>
@@ -1164,7 +1151,7 @@ This overides the norm attribute of the RasterLayer.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">categorical</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_shape</span><span class="o">=</span><span class="default_value">(100, 100)</span></em>, <em class="sig-param"><span class="n">categorical</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a RasterLayer using matplotlib.pyplot.imshow</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1177,6 +1164,7 @@ This overides the norm attribute of the RasterLayer.</p></li>
 <li><p><strong>cax</strong> (<em>matplotlib.pyplot.Artist</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – axes on which to draw the legend.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple of integers</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Size of the matplotlib.figure.Figure. If the ax argument is given
 explicitly, figsize is ignored.</p></li>
+<li><p><strong>out_shape</strong> (<em>tuple</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>, </em><em>100</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
 <li><p><strong>categorical</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default False</em><em>)</em>) – if True then the raster values will be considered to represent discrete
 values, otherwise they are considered to represent continuous values. This
 overrides the  RasterLayer ‘categorical’ attribute. Setting the argument
@@ -1284,9 +1272,6 @@ appended to the right-most columns of the array.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="pyspatialml-utils-module">
-<h3>pyspatialml.utils module<a class="headerlink" href="#pyspatialml-utils-module" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-pyspatialml.vector">
 <span id="pyspatialml-vector-module"></span><h3>pyspatialml.vector module<a class="headerlink" href="#module-pyspatialml.vector" title="Permalink to this headline">¶</a></h3>

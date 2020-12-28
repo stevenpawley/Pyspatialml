@@ -411,6 +411,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         ax=None,
         cax=None,
         figsize=None,
+        out_shape=(100, 100),
         categorical=None,
         legend=False,
         vmin=None,
@@ -439,6 +440,9 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         figsize : tuple of integers (optional, default None)
             Size of the matplotlib.figure.Figure. If the ax argument is given
             explicitly, figsize is ignored.
+
+        out_shape : tuple, default=(100, 100)
+            Number of rows, cols to read from the raster datasets for plotting.
 
         categorical : bool (optional, default False)
             if True then the raster values will be considered to represent discrete
@@ -493,7 +497,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         if legend_kwds is None:
             legend_kwds = {}
 
-        arr = self.read(masked=True)
+        arr = self.read(masked=True, out_shape=out_shape)
 
         if categorical is True:
             if self.categorical is False:
