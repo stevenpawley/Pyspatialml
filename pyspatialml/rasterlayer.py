@@ -1,17 +1,14 @@
 from functools import partial
 
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
-from rasterio.features import sieve
-from rasterio.fill import fillnodata
 from rasterio.windows import Window
-from scipy import ndimage
 
 import pyspatialml.base
 
-from .utils import _get_nodata
+from .base import _get_nodata
 from .plotting import discrete_cmap
 from .temporary_files import _file_path_tempfile
 
@@ -32,36 +29,36 @@ class RasterLayer(pyspatialml.base.BaseRaster):
     ----------
     bidx : int
         The band index of the RasterLayer within the file dataset.
-    
+
     dtype : str
         The data type of the RasterLayer.
-    
+
     nodata : any number
         The number that is used to represent nodata pixels in the RasterLayer.
-    
+
     file : str
         The file path to the dataset.
-    
+
     ds : rasterio.band
         The underlying rasterio.band object.
 
     driver : str
         The name of the GDAL format driver.
-    
+
     meta : dict
         A python dict storing the RasterLayer metadata.
-    
+
     cmap : str
-        The name of matplotlib map, or a custom matplotlib.cm.LinearSegmentedColormap 
+        The name of matplotlib map, or a custom matplotlib.cm.LinearSegmentedColormap
         or ListedColormap object.
 
     norm : matplotlib.colors.Normalize (opt)
         A matplotlib.colors.Normalize to apply to the RasterLayer.
         This overides the norm attribute of the RasterLayer.
-    
+
      : int
         Number of layers; always equal to 1.
-    
+
     Methods
     -------
     close :
@@ -86,10 +83,9 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         self.names = [self._make_name(band.ds.files[0])]
         self.count = 1
         self._close = band.ds.close
-    
+
     def close(self):
-        """Close the RasterLayer for reading/writing
-        """
+        """Close the RasterLayer for reading/writing"""
         self._close
 
     def _arith(self, function, other=None):
@@ -254,8 +250,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func, other)
 
     def __round__(self, ndigits):
-        """Behaviour for round() function, i.e. round(layer)
-        """
+        """Behaviour for round() function, i.e. round(layer)"""
 
         def func(arr, ndigits):
             return np.round(arr, ndigits)
@@ -265,8 +260,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def __floor__(self):
-        """Rounding down to the nearest integer using math.floor(), i.e. math.floor(layer)
-        """
+        """Rounding down to the nearest integer using math.floor(), i.e. math.floor(layer)"""
 
         def func(arr):
             return np.floor(arr)
@@ -274,8 +268,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def __ceil__(self):
-        """Rounding up to the nearest integer using math.ceil(), i.e. math.ceil(layer)
-        """
+        """Rounding up to the nearest integer using math.ceil(), i.e. math.ceil(layer)"""
 
         def func(arr):
             return np.ceil(arr)
@@ -283,8 +276,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def __trunc__(self):
-        """Truncating to an integral using math.trunc(), i.e. math.trunc(layer)
-        """
+        """Truncating to an integral using math.trunc(), i.e. math.trunc(layer)"""
 
         def func(arr):
             return np.trunc(arr)
@@ -292,8 +284,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def __abs__(self):
-        """abs() function as applied to a RasterLayer, i.e. abs(layer)
-        """
+        """abs() function as applied to a RasterLayer, i.e. abs(layer)"""
 
         def func(arr):
             return np.abs(arr)
@@ -301,8 +292,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return self._arith(func)
 
     def __pos__(self):
-        """Unary positive, i.e. +layer1
-        """
+        """Unary positive, i.e. +layer1"""
 
         def func(arr):
             return np.positive(arr)
@@ -343,9 +333,10 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         return self.ds.read(indexes=self.bidx, **kwargs)
 
-    def _write(self, arr, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
-        """Internal function to write processed results to a file, usually a tempfile
-        """
+    def _write(
+        self, arr, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs
+    ):
+        """Internal function to write processed results to a file, usually a tempfile"""
 
         # generate a file path to a temporary file is file_path is None
         file_path, tfile = _file_path_tempfile(file_path)
@@ -364,7 +355,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
 
         # mask any nodata values
         arr = np.ma.masked_equal(arr, self.nodata)
-        
+
         # replace masked values with the user-specified nodata value
         arr = arr.filled(fill_value=nodata)
 
@@ -389,18 +380,18 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         ----------
         file_path : str (opt)
             File path to save the dataset.
-        
+
         driver : str
             GDAL-compatible driver used for the file format.
-        
+
         dtype : str (opt)
             Numpy dtype used for the file. If omitted then the RasterLayer's dtype is
             used.
-        
+
         nodata : any number (opt)
-            A value used to represent the nodata pixels. If omitted then the RasterLayer's 
+            A value used to represent the nodata pixels. If omitted then the RasterLayer's
             nodata value is used (if assigned already).
-        
+
         kwargs : opt
             Optional named arguments to pass to the format drivers. For example can be
             `compress="deflate"` to add compression.
@@ -411,165 +402,6 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         """
         arr = self.read()
         layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
-        return layer
-
-    def fill(
-        self,
-        mask=None,
-        max_search_distance=100,
-        smoothing_iterations=0,
-        file_path=None,
-        driver="GTiff",
-        dtype=None,
-        nodata=None,
-        **kwargs
-    ):
-        """Fill nodata gaps in a RasterLayer
-
-        Thin wrapper around the rasterio.fill.fillnodata method.
-
-        Parameters
-        ----------
-        mask : numpy.ndarray (optional, default None)
-            Optionally provide a numpy array to indice which pixels to fill. Pixels
-            designated to fill should have zero values in the mask, and values > 0 in
-            the mask indicate pixels to use for interpolation.
-        
-        max_search_distance : float (default 100)
-            The maximum number of pixels in all directions to use for interpolation.
-        
-        smoothing_iterations : integer (default 0)
-            The number of 3x3 smoothing filter passes to run. The default is 0.
-        
-        file_path : str (optional, default None)
-            Optional path to save calculated Raster object. If not specified then a
-            tempfile is used.
-
-        driver : str (default 'GTiff')
-            Named of GDAL-supported driver for file export.
-
-        nodata : any number (optional, default None)
-            Nodata value for new dataset. If not specified then a nodata value is set
-            based on the minimum permissible value of the Raster's data type.
-
-        dtype : str (optional, default None)
-            Optionally specify a numpy compatible data type when saving to file. If not
-            specified, a data type is set based on the data type of the RasterLayer.
-
-        kwargs : opt
-            Optional named arguments to pass to the format drivers. For example can be
-            `compress="deflate"` to add compression.
-
-        Returns
-        -------
-        pyspatialml.RasterLayer
-            Filled RasterLayer
-        """
-
-        arr = rasterio.fill.fillnodata(
-            image=self.read(masked=True),
-            mask=mask,
-            max_search_distance=max_search_distance,
-            smoothing_iterations=smoothing_iterations,
-        )
-
-        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
-
-        return layer
-
-    def sieve(
-        self,
-        size=2,
-        mask=None,
-        connectivity=4,
-        file_path=None,
-        driver="GTiff",
-        nodata=None,
-        dtype=None,
-        **kwargs,
-    ):
-        """Replace pixels with their largest neighbor
-
-        Thin wrapper around the rasterio.features.sieve method.
-
-        Parameters
-        ----------
-        size : integer (default 2)
-            Minimum number of contigous pixels to retain
-        
-        mask : ndarray (optional, default None)
-            Values of False or 0 will be excluded from the sieving process
-        
-        connectivity : integer (default 4)
-            Use 4 or 8 pixel connectivity for grouping pixels into features.
-            Default is 4.
-
-        file_path : str (optional, default None)
-            Optional path to save calculated Raster object. If not
-            specified then a tempfile is used.
-
-        driver : str (default 'GTiff')
-            Named of GDAL-supported driver for file export.
-
-        nodata : any number (optional, default None)
-            Nodata value for new dataset. If not specified then a nodata value is set
-            based on the minimum permissible value of the Raster's data type.
-
-        dtype : str (optional, default None)
-            Optionally specify a numpy compatible data type when saving to file. If not
-            specified, a data type is set based on the data type of the RasterLayer.
-
-        kwargs : opt
-            Optional named arguments to pass to the format drivers. For example can be
-            `compress="deflate"` to add compression.
-
-        Returns
-        -------
-        pyspatialml.RasterLayer
-            Filled RasterLayer
-        """
-        arr = sieve(
-            source=self.read(masked=True),
-            size=size,
-            mask=mask,
-            connectivity=connectivity,
-        )
-
-        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
-
-        return layer
-
-    def distance(self, file_path=None, driver="GTiff", nodata=None, **kwargs):
-        """Calculate euclidean grid distances to non-NaN pixels
-
-        Parameters
-        ----------
-        file_path : str (optional, default None)
-            Optional path to save calculated Raster object. If not specified then a
-            tempfile is used.
-
-        driver : str (default 'GTiff')
-            Named of GDAL-supported driver for file export.
-
-        nodata : any number (optional, default None)
-            Nodata value for new dataset. If not specified then a nodata value is set
-            based on the minimum permissible value of the Raster's data type.
-        
-        kwargs : opt
-            Optional named arguments to pass to the format drivers. For example can be
-            `compress="deflate"` to add compression.
-
-        Returns
-        -------
-        pyspatialml.RasterLayer
-            Grid distance raster
-        """
-        arr = self.read(masked=True)
-        arr = ndimage.distance_transform_edt(1 - arr)
-        dtype = arr.dtype
-
-        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
-
         return layer
 
     def plot(
@@ -593,28 +425,28 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         cmap : str (default None)
             The name of a colormap recognized by matplotlib.
             Overrides the cmap attribute of the RasterLayer.
-        
+
         norm : matplotlib.colors.Normalize (opt)
             A matplotlib.colors.Normalize to apply to the RasterLayer.
             This overides the norm attribute of the RasterLayer.
-        
+
         ax : matplotlib.pyplot.Artist (optional, default None)
             axes instance on which to draw to plot.
-        
+
         cax : matplotlib.pyplot.Artist (optional, default None)
             axes on which to draw the legend.
-        
+
         figsize : tuple of integers (optional, default None)
             Size of the matplotlib.figure.Figure. If the ax argument is given
             explicitly, figsize is ignored.
-                
+
         categorical : bool (optional, default False)
             if True then the raster values will be considered to represent discrete
             values, otherwise they are considered to represent continuous values. This
             overrides the  RasterLayer 'categorical' attribute. Setting the argument
             categorical to True is ignored if the RasterLayer.categorical is already
             True.
-        
+
         legend : bool (optional, default False)
             Whether to plot the legend.
 
@@ -622,7 +454,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             vmin and vmax define the data range that the colormap covers. By default,
             the colormap covers the complete value range of the supplied data. vmin,
             vmax are ignored if the norm parameter is used.
-        
+
         fig_kwds : dict (optional, default None)
             Additional arguments to pass to the matplotlib.pyplot.figure call when
             creating the figure object. Ignored if ax is passed to the plot function.
@@ -643,7 +475,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
             if cax is not None:
                 raise ValueError("'ax' can not be None if 'cax' is not.")
             fig, ax = plt.subplots(figsize=figsize, **fig_kwds)
-        
+
         ax.set_aspect("equal")
 
         if norm:
@@ -651,16 +483,16 @@ class RasterLayer(pyspatialml.base.BaseRaster):
                 raise AttributeError(
                     "norm argument should be a matplotlib.colors.Normalize object"
                 )
-        
+
         if cmap is None:
             cmap = self.cmap
-        
+
         if norm is None:
             norm = self.norm
 
         if legend_kwds is None:
             legend_kwds = {}
-        
+
         arr = self.read(masked=True)
 
         if categorical is True:
@@ -684,8 +516,7 @@ class RasterLayer(pyspatialml.base.BaseRaster):
         return ax
 
     def _extract_by_indices(self, rows, cols):
-        """Spatial query of Raster object (by-band)
-        """
+        """Spatial query of Raster object (by-band)"""
 
         X = np.ma.zeros((len(rows), self.count), dtype="float32")
         arr = self.read(masked=True)

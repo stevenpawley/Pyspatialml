@@ -1,5 +1,6 @@
-import tempfile
 import os
+import tempfile
+
 
 class TempRasterLayer:
     """Create a NamedTemporaryFile like object on Windows that has a close
@@ -17,8 +18,7 @@ class TempRasterLayer:
 
 
 def _file_path_tempfile(file_path):
-    """Returns a TemporaryFileWrapper and file path if a file_path parameter is None
-    """
+    """Returns a TemporaryFileWrapper and file path if a file_path parameter is None"""
     if file_path is None:
         if os.name != "nt":
             tfile = tempfile.NamedTemporaryFile()

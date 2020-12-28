@@ -2,7 +2,6 @@ from unittest import TestCase
 from pyspatialml import Raster
 import pyspatialml.datasets.nc as nc
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 
 

@@ -1,30 +1,25 @@
 from __future__ import print_function
 
 import concurrent.futures
-import math
 import tempfile
 from collections import Counter, OrderedDict, namedtuple
 from collections.abc import Mapping
 from copy import deepcopy
 from functools import partial
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
 import rasterio.mask
 import rasterio.plot
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from rasterio.transform import Affine
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
 
-from .base import BaseRaster
+from .base import BaseRaster, _get_nodata, _get_num_workers
+from .plotting import RasterPlot
 from .rasterlayer import RasterLayer
 from .temporary_files import _file_path_tempfile
-from .utils import _get_nodata, _get_num_workers
 
 
 class _LocIndexer(Mapping):
@@ -142,7 +137,7 @@ class _iLocIndexer(object):
         return selected
 
 
-class Raster(BaseRaster):
+class Raster(RasterPlot, BaseRaster):
     """Flexible class that represents a collection of file-based GDAL-supported raster
     datasets which share a common coordinate reference system and geometry.
 
@@ -199,13 +194,13 @@ class Raster(BaseRaster):
 
         file_path : str (optional, default None)
             Path to save new Raster object if created from `arr`.
-        
+
         Attributes
         ----------
         loc : _LocIndexer object
             Access pyspatialml.RasterLayer objects within a Raster using a key or a
             list of keys.
-        
+
         iloc : _ILocIndexer object
             Access pyspatialml.RasterLayer objects using an index position. A wrapper
             around _LocIndexer to enable integer-based indexing of the items in the
@@ -216,19 +211,19 @@ class Raster(BaseRaster):
             A list of the raster dataset files that are used in the Raster. This does
             not have to be the same length as the number of RasterLayers because some
             files may have multiple bands.
-        
+
         dtypes : list
             A list of numpy dtypes for each RasterLayer.
-        
+
         nodatavals : list
             A list of the nodata values for each RasterLayer.
-        
+
         count : int
             The number of RasterLayers in the Raster.
-        
+
         res : tuple
             The resolution in (x, y) dimensions of the Raster.
-        
+
         meta : dict
             A dict containing the raster metadata. The dict contains the following
             keys/values:
@@ -237,23 +232,23 @@ class Raster(BaseRaster):
             width : width of the Raster in pixels
             height : height of the Raster in pixels
             count : number of RasterLayers within the Raster
-            dtype : the numpy datatype that represents lowest common denominator of the 
+            dtype : the numpy datatype that represents lowest common denominator of the
             different dtypes for all of the layers in the Raster.
-        
+
         names : list
             A list of the RasterLayer names.
 
         block_shape : tuple
             The default block_shape in (rows, cols) for reading windows of data in the
             Raster for out-of-memory processing.
-        
+
         Returns
         -------
         pyspatialml.Raster
             Raster object containing the src layers stacked into a single
             object
         """
-        
+
         # class attributes
         self.loc = _LocIndexer(self)
         self.iloc = _iLocIndexer(self, self.loc)
@@ -335,12 +330,12 @@ class Raster(BaseRaster):
 
     def __getitem__(self, key):
         """Subset the Raster object using a label or list of labels.
-        
+
         Parameters
         ----------
         key : str, or list of str
             Key-based indexing of RasterLayer objects within the Raster.
-            
+
         Returns
         -------
         pyspatialml.RasterLayer or pyspatialml.Raster
@@ -368,14 +363,14 @@ class Raster(BaseRaster):
 
     def __setitem__(self, key, value):
         """Replace a RasterLayer within the Raster object with a new RasterLayer.
-        
+
         Note that this modifies the Raster object in place.
-        
+
         Parameters
         ----------
         key : str
             Key-based index of layer to be replaced.
-        
+
         value : pyspatialml.RasterLayer
             RasterLayer object to use for replacement.
         """
@@ -388,8 +383,7 @@ class Raster(BaseRaster):
             raise ValueError("value is not a RasterLayer object")
 
     def __iter__(self):
-        """Iterate over RasterLayers.
-        """
+        """Iterate over RasterLayers."""
         return iter(self.loc.items())
 
     def close(self):
@@ -445,7 +439,7 @@ class Raster(BaseRaster):
     def _fix_names(combined_names):
         """Adjusts the names of pyspatialml.RasterLayer objects within the Raster when
         appending new layers.
-        
+
         This avoids the Raster object containing duplicated names in the case that
         multiple RasterLayer's are appended with the same name.
 
@@ -611,7 +605,7 @@ class Raster(BaseRaster):
             count=self.count,
             dtype=np.find_common_type(self.dtypes, []),
         )
-    
+
     def _check_supported_dtype(self, dtype):
         if dtype is None:
             dtype = self.meta["dtype"]
@@ -629,7 +623,7 @@ class Raster(BaseRaster):
         out_shape=None,
         resampling="nearest",
         as_df=False,
-        **kwargs
+        **kwargs,
     ):
         """Reads data from the Raster object into a numpy array.
 
@@ -652,11 +646,10 @@ class Raster(BaseRaster):
             Resampling method to use when applying decimated reads when out_shape is
             specified. Supported methods are: 'average', 'bilinear', 'cubic',
             'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'.
-        
+
         as_df : bool (default False)
             Whether to return the data as a pandas.DataFrame with columns named by the
-            RasterLayer names. Can be useful when using scikit-learn ColumnTransformer
-            to select columns based on names rather than keeping track of indexes.
+            RasterLayer names.
 
         **kwargs : dict
             Other arguments to pass to rasterio.DatasetReader.read method
@@ -694,7 +687,7 @@ class Raster(BaseRaster):
                 window=window,
                 out_shape=out_shape,
                 resampling=resampling,
-                **kwargs
+                **kwargs,
             )
 
             if masked is True:
@@ -703,7 +696,7 @@ class Raster(BaseRaster):
                 )
 
         if as_df is True:
-            arr = arr.transpose(1, 2, 0) # rehape to rows, cols, bands
+            arr = arr.transpose(1, 2, 0)  # rehape to rows, cols, bands
             arr_flat = arr.reshape((arr.shape[0] * arr.shape[1], arr.shape[2]))
             df = pd.DataFrame(data=arr_flat, columns=self.names)
 
@@ -722,7 +715,7 @@ class Raster(BaseRaster):
         file_path : str
             File path used to save the Raster object.
 
-        driver : str (default is 'GTiff'). 
+        driver : str (default is 'GTiff').
             Name of GDAL driver used to save Raster data.
 
         dtype : str (opt, default None)
@@ -736,7 +729,7 @@ class Raster(BaseRaster):
             RasterLayers in the Raster object is used. Note that this does not change
             the pixel nodata values of the raster, it only changes the metadata of what
             value represents a nodata pixel.
-        
+
         kwargs : opt
             Optional named arguments to pass to the format drivers. For example can be
             `compress="deflate"` to add compression.
@@ -775,7 +768,6 @@ class Raster(BaseRaster):
         driver="GTiff",
         dtype=None,
         nodata=None,
-        as_df=False,
         progress=False,
         **kwargs,
     ):
@@ -806,11 +798,6 @@ class Raster(BaseRaster):
         nodata : any number (optional, default None)
             Nodata value for file export. If not specified then the nodata value is
             derived from the minimum permissible value for the given data type.
-    
-        as_df : bool (default is False)
-            Whether to read the raster data via pandas before prediction. This can be
-            useful if transformers are being used as part of a pipeline and you want
-            to refer to column names rather than indices.
 
         progress : bool (default False)
             Show progress bar for prediction.
@@ -843,7 +830,7 @@ class Raster(BaseRaster):
 
         if dtype is None:
             dtype = np.float32
-        
+
         if rasterio.dtypes.check_dtype(dtype) is False:
             raise AttributeError(
                 "{dtype} is not a support GDAL dtype".format(dtype=dtype)
@@ -851,11 +838,6 @@ class Raster(BaseRaster):
 
         if nodata is None:
             nodata = _get_nodata(dtype)
-            
-        if progress is True:
-            disable_tqdm = False
-        else:
-            disable_tqdm = True
 
         # open output file with updated metadata
         meta = deepcopy(self.meta)
@@ -863,12 +845,15 @@ class Raster(BaseRaster):
         meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
-            windows = [window for ij, window in dst.block_windows()]
+            # define windows
+            windows = [window for window in self.block_shapes(*self.block_shape)]
+            data_gen = (
+                (window, self.read(window=window, masked=True)) for window in windows
+            )
 
-            # generator gets raster arrays for each window
-            data_gen = ((window, self.read(window=window, masked=True, as_df=as_df)) for window in windows)
-
-            for window, arr, pbar in zip(windows, data_gen, tqdm(windows, disable=disable_tqdm)):
+            for window, arr, pbar in zip(
+                windows, data_gen, tqdm(windows, disable=not progress)
+            ):
                 result = predfun(arr, estimator)
                 result = np.ma.filled(result, fill_value=nodata)
                 dst.write(result[indexes, :, :].astype(dtype), window=window)
@@ -899,7 +884,7 @@ class Raster(BaseRaster):
         **kwargs,
     ):
         """Apply prediction of a scikit learn model to a Raster.
-        
+
         The model can represent any scikit learn model or compatible api with a `fit`
         and `predict` method. These can consist of classification or regression models.
         Multi-class classifications and multi-target regressions are also supported.
@@ -923,15 +908,10 @@ class Raster(BaseRaster):
         nodata : any number (optional, default None)
             Nodata value for file export. If not specified then the nodata value is
             derived from the minimum permissible value for the given data type.
-        
-        as_df : bool (default is False)
-            Whether to read the raster data via pandas before prediction. This can be
-            useful if transformers are being used as part of a pipeline and you want
-            to refer to column names rather than indices.
-        
+
         n_jobs : int (default -1)
             Number of processing cores to use for parallel execution. Default is
-            n_jobs=1. -1 is all cores; -2 is all cores -1. 
+            n_jobs=1. -1 is all cores; -2 is all cores -1.
 
         progress : bool (default False)
             Show progress bar for prediction.
@@ -967,14 +947,9 @@ class Raster(BaseRaster):
             raise AttributeError(
                 "{dtype} is not a support GDAL dtype".format(dtype=dtype)
             )
-                
+
         if nodata is None:
             nodata = _get_nodata(dtype)
-        
-        if progress is True:
-            disable_tqdm = False
-        else:
-            disable_tqdm = True
 
         # open output file with updated metadata
         meta = deepcopy(self.meta)
@@ -982,16 +957,21 @@ class Raster(BaseRaster):
         meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
-            windows = [window for window in self.block_shapes(*self._block_shape)]
-
-            # generator gets raster arrays for each window
-            data_gen = ((window, self.read(window=window, masked=True, as_df=as_df)) for window in windows)
+            # define windows
+            windows = [window for window in self.block_shapes(*self.block_shape)]
+            data_gen = (
+                (window, self.read(window=window, masked=True)) for window in windows
+            )
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
-                for window, result, pbar in zip(windows, executor.map(predfun, data_gen), tqdm(windows, disable=disable_tqdm)):
+                for window, result, pbar in zip(
+                    windows,
+                    executor.map(predfun, data_gen),
+                    tqdm(windows, disable=not progress),
+                ):
                     result = np.ma.filled(result, fill_value=nodata)
                     dst.write(result[indexes, :, :].astype(dtype), window=window)
-        
+
         # generate layer names
         prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
@@ -1025,23 +1005,16 @@ class Raster(BaseRaster):
         """
         window, img = img
 
-        if not isinstance(img, pd.DataFrame):
-            # reshape each image block matrix into a 2D matrix
-            # first reorder into rows, cols, bands(transpose)
-            # then resample into 2D array (rows=sample_n, cols=band_values)
-            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-            n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+        # reorder into rows, cols, bands(transpose)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
 
-            # create mask for NaN values and replace with number
-            flat_pixels_mask = flat_pixels.mask.copy()
-            flat_pixels = flat_pixels.filled(0)
-        
-        else:
-            flat_pixels = img
-            flat_pixels_mask = pd.isna(flat_pixels).values
-            flat_pixels = flat_pixels.fillna(0)
-            flat_pixels = flat_pixels.values
+        # reshape into 2D array (rows=sample_n, cols=band_values)
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+
+        # create mask for NaN values and replace with number
+        flat_pixels_mask = flat_pixels.mask.copy()
+        flat_pixels = flat_pixels.filled(0)
 
         # predict and replace mask
         result_cla = estimator.predict(flat_pixels)
@@ -1076,29 +1049,22 @@ class Raster(BaseRaster):
         """
         window, img = img
 
-        if not isinstance(img, pd.DataFrame):
-            # reshape each image block matrix into a 2D matrix
-            # first reorder into rows, cols, bands (transpose)
-            # then resample into 2D array (rows=sample_n, cols=band_values)
-            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-            mask2d = img.mask.any(axis=0)
-            n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-            flat_pixels = flat_pixels.filled(0)
-        
-        else:
-            flat_pixels = img
-            mask2d = pd.isna(flat_pixels).values
-            mask2d = mask2d.reshape((window.height, window.width, flat_pixels.shape[1]))
-            mask2d = mask2d.any(axis=2)
-            flat_pixels = flat_pixels.fillna(0)
-            flat_pixels = flat_pixels.values
+        # reorder into rows, cols, bands (transpose)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        mask2d = img.mask.any(axis=0)
+
+        # then resample into 2D array (rows=sample_n, cols=band_values)
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+        flat_pixels = flat_pixels.filled(0)
 
         # predict probabilities
         result_proba = estimator.predict_proba(flat_pixels)
 
-        # reshape class probabilities back to 3D image [iclass, rows, cols]
-        result_proba = result_proba.reshape((window.height, window.width, result_proba.shape[1]))
+        # reshape class probabilities back to 3D array [class, rows, cols]
+        result_proba = result_proba.reshape(
+            (window.height, window.width, result_proba.shape[1])
+        )
 
         # reshape band into rasterio format [band, row, col]
         result_proba = result_proba.transpose(2, 0, 1)
@@ -1134,28 +1100,19 @@ class Raster(BaseRaster):
         """
         window, img = img
 
-        if not isinstance(img, pd.DataFrame):
-            # reshape each image block matrix into a 2D matrix
-            # first reorder into rows, cols, bands(transpose)
-            # then resample into 2D array (rows=sample_n, cols=band_values)
-            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-            mask2d = img.mask.any(axis=0)
-            n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-            flat_pixels = flat_pixels.filled(0)
-        
-        else:
-            flat_pixels = img
-            mask2d = pd.isna(flat_pixels).values
-            mask2d = mask2d.reshape((window.height, window.width, flat_pixels.shape[1]))
-            mask2d = mask2d.any(axis=2)
-            flat_pixels = flat_pixels.fillna(0)
-            flat_pixels = flat_pixels.values
+        # reorder into rows, cols, bands(transpose)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        mask2d = img.mask.any(axis=0)
+
+        # reshape into 2D array (rows=sample_n, cols=band_values)
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+        flat_pixels = flat_pixels.filled(0)
 
         # predict probabilities
         result = estimator.predict(flat_pixels)
 
-        # reshape class probabilities back to 3D image [iclass, rows, cols]
+        # reshape class probabilities back to 3D array [class, rows, cols]
         result = result.reshape((window.height, window.width, result.shape[1]))
 
         # reshape band into rasterio format [band, row, col]
@@ -1171,14 +1128,14 @@ class Raster(BaseRaster):
 
     def append(self, other, in_place=True):
         """Method to add new RasterLayers to a Raster object.
-        
+
         Note that this modifies the Raster object in-place by default.
 
         Parameters
         ----------
         other : Raster object, or list of Raster objects
             Object to append to the Raster.
-        
+
         in_place : bool (default True)
             Whether to change the Raster object in-place or leave original and return
             a new Raster object.
@@ -1217,15 +1174,15 @@ class Raster(BaseRaster):
 
     def drop(self, labels, in_place=True):
         """Drop individual RasterLayers from a Raster object
-        
+
         Note that this modifies the Raster object in-place by default.
-        
+
         Parameters
         ---------
         labels : single label or list-like
             Index (int) or layer name to drop. Can be a single integer or label, or a
             list of integers or labels.
-        
+
         in_place : bool (default True)
             Whether to change the Raster object in-place or leave original and return
             a new Raster object.
@@ -1271,14 +1228,14 @@ class Raster(BaseRaster):
 
     def rename(self, names, in_place=True):
         """Rename a RasterLayer within the Raster object.
-        
+
         Note that by default this modifies the Raster object in-place.
 
         Parameters
         ----------
         names : dict
             dict of old_name : new_name
-        
+
         in_place : bool (default True)
             Whether to change names of the Raster object in-place or leave original
             and return a new Raster object.
@@ -1306,194 +1263,6 @@ class Raster(BaseRaster):
                 new_raster.loc.rename(old_name, new_name)
 
             return new_raster
-
-    def plot(
-        self,
-        cmap=None,
-        norm=None,
-        figsize=None,
-        out_shape=(100, 100),
-        title_fontsize=8,
-        label_fontsize=6,
-        legend_fontsize=6,
-        names=None,
-        fig_kwds=None,
-        legend_kwds=None,
-        subplots_kwds=None,
-    ):
-        """Plot a Raster object as a raster matrix
-
-        Parameters
-        ----------
-        cmap : str (opt), default=None
-            Specify a single cmap to apply to all of the RasterLayers.
-            This overides the cmap attribute of each RasterLayer.
-        
-        norm :  matplotlib.colors.Normalize (opt), default=None
-            A matplotlib.colors.Normalize to apply to all of the RasterLayers.
-            This overides the norm attribute of each RasterLayer.
-            
-        figsize : tuple (opt), default=None
-            Size of the resulting matplotlib.figure.Figure.
-
-        out_shape : tuple, default=(100, 100)
-            Number of rows, cols to read from the raster datasets for plotting.
-
-        title_fontsize : any number, default=8
-            Size in pts of titles.
-
-        label_fontsize : any number, default=6
-            Size in pts of axis ticklabels.
-
-        legend_fontsize : any number, default=6
-            Size in pts of legend ticklabels.
-
-        names : list (opt), default=None
-            Optionally supply a list of names for each RasterLayer to override the
-            default layer names for the titles.
-
-        fig_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.figure call when
-            creating the figure object.
-
-        legend_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.colorbar call when
-            creating the colorbar object.
-
-        subplots_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
-            function. These are used to control the spacing and position of each
-            subplot, and can include
-            {left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.
-
-        Returns
-        -------
-        axs : numpy.ndarray
-            array of matplotlib.axes._subplots.AxesSubplot or a single
-            matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
-            single layer.
-        """
-
-        # some checks
-        if norm:
-            if not isinstance(norm, mpl.colors.Normalize):
-                raise AttributeError(
-                    "norm argument should be a matplotlib.colors.Normalize object"
-                )
-
-        if cmap:
-            cmaps = [cmap for i in self.iloc]
-        else:
-            cmaps = [i.cmap for i in self.iloc]
-        
-        if norm:
-            norms = [norm for i in self.iloc]
-        else:
-            norms = [i.norm for i in self.iloc]
-
-        if names is None:
-            names = self.names
-        else:
-            if len(names) != self.count:
-                raise AttributeError(
-                    "arguments 'names' needs to be the same length as the number of RasterLayer objects"
-                )
-
-        if fig_kwds is None:
-            fig_kwds = {}
-
-        if legend_kwds is None:
-            legend_kwds = {}
-
-        if subplots_kwds is None:
-            subplots_kwds = {}
-        
-        if figsize:
-            fig_kwds["figsize"] = figsize
-
-        # plot a single layer
-        if self.count == 1:
-            return self.iloc[0].plot(
-                cmap=cmap, 
-                norm=norm, 
-                figsize=figsize, 
-                fig_kwds=fig_kwds,
-                legend_kwds=legend_kwds,
-                legend=True
-            )
-        
-        # estimate required number of rows and columns in figure
-        rows = int(np.sqrt(self.count))
-        cols = int(math.ceil(np.sqrt(self.count)))
-
-        if rows * cols < self.count:
-            rows += 1
-
-        fig, axs = plt.subplots(rows, cols, **fig_kwds)
-
-        # axs.flat is an iterator over the row-order flattened axs array
-        for ax, n, cmap, norm, name in zip(
-            axs.flat, range(self.count), cmaps, norms, names
-        ):
-
-            arr = self.iloc[n].read(masked=True, out_shape=out_shape)
-
-            ax.set_title(name, fontsize=title_fontsize, y=1.00)
-
-            im = ax.imshow(
-                arr,
-                extent=[
-                    self.bounds.left,
-                    self.bounds.right,
-                    self.bounds.bottom,
-                    self.bounds.top,
-                ],
-                cmap=cmap,
-                norm=norm,
-            )
-
-            divider = make_axes_locatable(ax)
-
-            if "orientation" not in legend_kwds.keys():
-                legend_kwds["orientation"] = "vertical"
-
-            if legend_kwds["orientation"] == "vertical":
-                legend_pos = "right"
-
-            elif legend_kwds["orientation"] == "horizontal":
-                legend_pos = "bottom"
-
-            cax = divider.append_axes(legend_pos, size="10%", pad=0.1)
-            cbar = plt.colorbar(im, cax=cax, **legend_kwds)
-            cbar.ax.tick_params(labelsize=legend_fontsize)
-
-            # hide tick labels by default when multiple rows or cols
-            ax.axes.get_xaxis().set_ticklabels([])
-            ax.axes.get_yaxis().set_ticklabels([])
-
-            # show y-axis tick labels on first subplot
-            if n == 0 and rows > 1:
-                ax.set_yticklabels(
-                    ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-            if n == 0 and rows == 1:
-                ax.set_xticklabels(
-                    ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-                ax.set_yticklabels(
-                    ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-            if rows > 1 and n == (rows * cols) - cols:
-                ax.set_xticklabels(
-                    ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-
-        for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
-            ax.set_visible(False)
-
-        plt.subplots_adjust(**subplots_kwds)
-
-        return axs
 
     def _new_raster(self, file_path, names=None):
         """Return a new Raster object
@@ -1577,7 +1346,7 @@ class Raster(BaseRaster):
             set based on the minimum permissible value of the Raster's data type. Note
             that this changes the values of the pixels to the new nodata value, and changes
             the metadata of the raster.
-        
+
         kwargs : opt
             Optional named arguments to pass to the format drivers. For example can be
             `compress="deflate"` to add compression.
@@ -1641,7 +1410,9 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def intersect(self, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
+    def intersect(
+        self, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs
+    ):
         """Perform a intersect operation on the Raster object.
 
         Computes the geometric intersection of the RasterLayers with the Raster object.
@@ -1713,7 +1484,9 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def crop(self, bounds, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs):
+    def crop(
+        self, bounds, file_path=None, driver="GTiff", dtype=None, nodata=None, **kwargs
+    ):
         """Crops a Raster object by the supplied bounds.
 
         Parameters
@@ -1728,7 +1501,7 @@ class Raster(BaseRaster):
 
         driver : str (default 'GTiff'). Default is 'GTiff'
             Named of GDAL-supported driver for file export.
-        
+
         dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then the new
             intersected Raster is created using the dtype of the existing Raster
@@ -1740,7 +1513,7 @@ class Raster(BaseRaster):
             based on the minimum permissible value of the Raster's data type. Note that
             this does not change the pixel nodata values of the raster, it only changes
             the metadata of what value represents a nodata pixel.
-        
+
         kwargs : opt
             Optional named arguments to pass to the format drivers. For example can be
             `compress="deflate"` to add compression.
@@ -1773,23 +1546,23 @@ class Raster(BaseRaster):
 
         # calculate the new transform
         new_transform = rasterio.transform.from_bounds(
-            west=xmin, 
-            south=ymin, 
-            east=xmax, 
-            north=ymax, 
-            width=cropped_arr.shape[2], 
-            height=cropped_arr.shape[1]
+            west=xmin,
+            south=ymin,
+            east=xmax,
+            north=ymax,
+            width=cropped_arr.shape[2],
+            height=cropped_arr.shape[1],
         )
 
         # update the destination meta
         meta = self.meta.copy()
         meta.update(
             transform=new_transform,
-            width=cropped_arr.shape[2], 
+            width=cropped_arr.shape[2],
             height=cropped_arr.shape[1],
             driver=driver,
             nodata=nodata,
-            dtype=dtype
+            dtype=dtype,
         )
         meta.update(kwargs)
 
@@ -1958,7 +1731,7 @@ class Raster(BaseRaster):
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
-        
+
         dtype : str (optional, default None)
             Coerce RasterLayers to the specified dtype. If not specified then the new
             intersected Raster is created using the dtype of the existing Raster dataset,
@@ -2056,7 +1829,7 @@ class Raster(BaseRaster):
             Nodata value for new dataset. If not specified then a nodata value is set
             based on the minimum permissible value of the Raster's data type. Note that
             this changes the values of the pixels that represent nodata pixels.
-        
+
         n_jobs : int (default -1)
             Number of processing cores to use for parallel execution. Default of -1 is all cores.
 
@@ -2077,7 +1850,7 @@ class Raster(BaseRaster):
         n_jobs = _get_num_workers(n_jobs)
 
         # perform test calculation determine dimensions, dtype, nodata
-        window = Window(0, 0, self.width, 1)
+        window = next(self.block_shapes(*self.block_shape))
         img = self.read(masked=True, window=window)
         arr = function(img)
 
@@ -2098,28 +1871,17 @@ class Raster(BaseRaster):
         meta.update(kwargs)
 
         with rasterio.open(file_path, "w", **meta) as dst:
-
-            # define windows
-            windows = [window for ij, window in dst.block_windows()]
-
-            # generator gets raster arrays for each window
+            windows = [window for window in self.block_shapes(*self.block_shape)]
             data_gen = (self.read(window=window, masked=True) for window in windows)
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
-                if progress is True:
-                    for window, result, pbar in zip(
-                        windows, executor.map(function, data_gen), tqdm(windows)
-                    ):
-
-                        result = np.ma.filled(result, fill_value=nodata)
-                        dst.write(result.astype(dtype), window=window, indexes=indexes)
-                else:
-                    for window, result in zip(
-                        windows, executor.map(function, data_gen)
-                    ):
-
-                        result = np.ma.filled(result, fill_value=nodata)
-                        dst.write(result.astype(dtype), window=window, indexes=indexes)
+                for window, result, pbar in zip(
+                    windows,
+                    executor.map(function, data_gen),
+                    tqdm(windows, disable=not progress),
+                ):
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result.astype(dtype), window=window, indexes=indexes)
 
         new_raster = self._new_raster(file_path)
 
@@ -2129,7 +1891,7 @@ class Raster(BaseRaster):
 
         return new_raster
 
-    def block_shapes(self, rows, cols):
+    def block_shapes(self, rows, cols, min_rows=5, min_cols=5, overlap=0):
         """Generator for windows for optimal reading and writing based on the raster
         format Windows are returns as a tuple with xoff, yoff, width, height.
 
@@ -2142,28 +1904,42 @@ class Raster(BaseRaster):
             Width of window in columns.
         """
 
-        for i in range(0, self.width, rows):
-            if i + rows < self.width:
-                num_cols = rows
-            else:
-                num_cols = self.width - i
+        for i, col in enumerate(range(0, self.width, cols)):
+            if i > 0:
+                col = col - overlap
 
-            for j in range(0, self.height, cols):
-                if j + cols < self.height:
+            if col + cols < self.width:
+                num_cols = cols
+            else:
+                num_cols = self.width - col
+                if num_cols < min_cols:
+                    diff = min_cols - num_cols
+                    col = col - diff
+                    num_cols = min_cols
+
+            for j, row in enumerate(range(0, self.height, rows)):
+                if j > 0:
+                    row = row - overlap
+
+                if row + rows < self.height:
                     num_rows = rows
                 else:
-                    num_rows = self.height - j
+                    num_rows = self.height - row
+                    if num_rows < min_rows:
+                        diff = min_rows - num_rows
+                        row = row - diff
+                        num_rows = min_rows
 
-                yield Window(i, j, num_cols, num_rows)
+                yield Window(col, row, num_cols, num_rows)
 
     def astype(self, dtype, file_path=None, driver="GTiff", nodata=None, **kwargs):
         """Coerce Raster to a different dtype.
-        
+
         Parameters
         ----------
         dtype : str or np.dtype
             Datatype to coerce Raster object
-        
+
         file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not specified then a
             tempfile is used.
@@ -2175,7 +1951,7 @@ class Raster(BaseRaster):
             Nodata value for new dataset. If not specified then a nodata value is set
             based on the minimum permissible value of the Raster's data type. Note that
             this changes the values of the pixels that represent nodata pixels.
-        
+
         Returns
         -------
         pyspatialml.Raster

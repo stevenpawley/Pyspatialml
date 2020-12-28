@@ -4,4 +4,7 @@
 .vscode/
 .pytest_cache/
 *__pycache__/
+build/
 *egg*
+*whl
+*.tar.gz

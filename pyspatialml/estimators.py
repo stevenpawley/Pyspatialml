@@ -1,10 +1,18 @@
-from sklearn.base import (BaseEstimator, RegressorMixin, ClassifierMixin, clone, is_classifier, is_regressor)
-from sklearn.utils.extmath import weighted_mode
-from scipy.stats import mode
-from sklearn.neighbors import NearestNeighbors
 from abc import ABC, abstractmethod
-import numpy as np
 from copy import deepcopy
+
+import numpy as np
+from scipy.stats import mode
+from sklearn.base import (
+    BaseEstimator,
+    ClassifierMixin,
+    RegressorMixin,
+    clone,
+    is_classifier,
+    is_regressor,
+)
+from sklearn.neighbors import NearestNeighbors
+from sklearn.utils.extmath import weighted_mode
 
 
 class SpatialLagBase(ABC, BaseEstimator):
@@ -88,19 +96,19 @@ class SpatialLagBase(ABC, BaseEstimator):
     """
 
     def __init__(
-            self,
-            base_estimator,
-            n_neighbors=7,
-            weights="distance",
-            radius=1.0,
-            algorithm="auto",
-            leaf_size=30,
-            metric="minkowski",
-            p=2,
-            metric_params=None,
-            kernel_params=None,
-            feature_indices=None,
-            n_jobs=1,
+        self,
+        base_estimator,
+        n_neighbors=7,
+        weights="distance",
+        radius=1.0,
+        algorithm="auto",
+        leaf_size=30,
+        metric="minkowski",
+        p=2,
+        metric_params=None,
+        kernel_params=None,
+        feature_indices=None,
+        n_jobs=1,
     ):
 
         self.base_estimator = base_estimator
@@ -265,8 +273,9 @@ class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
     def _validate_base_estimator(self):
         if not is_regressor(self.base_estimator):
             raise ValueError(
-                "'base_estimator' parameter should be a regressor. Got {}"
-                    .format(self.base_estimator)
+                "'base_estimator' parameter should be a regressor. Got {}".format(
+                    self.base_estimator
+                )
             )
 
 
@@ -290,8 +299,9 @@ class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
     def _validate_base_estimator(self):
         if not is_classifier(self.base_estimator):
             raise ValueError(
-                "'base_estimator' parameter should be a classifier. Got {}"
-                    .format(self.base_estimator)
+                "'base_estimator' parameter should be a classifier. Got {}".format(
+                    self.base_estimator
+                )
             )
 
 
@@ -311,8 +321,15 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
     - The optimal cutoff is applied to all classifier predictions
     """
 
-    def __init__(self, estimator, thresholds=np.arange(0.1, 0.9, 0.01),
-                 scoring=None, refit=False, cv=3, random_state=None):
+    def __init__(
+        self,
+        estimator,
+        thresholds=np.arange(0.1, 0.9, 0.01),
+        scoring=None,
+        refit=False,
+        cv=3,
+        random_state=None,
+    ):
 
         """Initialize a ThresholdClassifierCV instance
 
@@ -461,30 +478,34 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
         # check for binary response
         if len(np.unique(y)) > 2:
-            raise ValueError('Only a binary response vector is currently supported')
+            raise ValueError("Only a binary response vector is currently supported")
 
         # check that scoring metric has been specified
         if self.scoring is None:
-            raise ValueError('No score function is defined')
+            raise ValueError("No score function is defined")
 
         # convert scoring callables to dict of key: scorer pairs
         if callable(self.scoring):
-            self.scorers_ = {'score': self.scoring}
-            self.refit = 'score'
+            self.scorers_ = {"score": self.scoring}
+            self.refit = "score"
 
         elif isinstance(self.scoring, dict):
             self.scorers_ = self.scoring
 
             if self.refit is False:
-                raise ValueError("For multi-metric scoring, the parameter "
-                                 "refit must be set to a scorer key "
-                                 "to determine which scoring method "
-                                 "is used to optimize the classifiers "
-                                 "cutoff threshold")
+                raise ValueError(
+                    "For multi-metric scoring, the parameter "
+                    "refit must be set to a scorer key "
+                    "to determine which scoring method "
+                    "is used to optimize the classifiers "
+                    "cutoff threshold"
+                )
 
         # cross-validate the probability threshold
         self.best_threshold_ = 0
-        self.threshold_scores_ = dict([(k, np.zeros((len(self.thresholds)))) for k in self.scorers_])
+        self.threshold_scores_ = dict(
+            [(k, np.zeros((len(self.thresholds)))) for k in self.scorers_]
+        )
 
         for train, cal in cv.split(X, y, groups):
             X_train, y_train, X_cal, y_cal = X[train], y[train], X[cal], y[cal]
@@ -499,16 +520,25 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
             # unless a single cutoff threshold is specified, which sets the classifier to this
             # threshold
             if isinstance(self.thresholds, (list, np.array)):
-                best_threshold, _score, threshold_scores = self._find_threshold(X_cal, y_cal)
+                best_threshold, _score, threshold_scores = self._find_threshold(
+                    X_cal, y_cal
+                )
 
                 # sum the scores
                 self.best_threshold_ += best_threshold
                 self.threshold_scores_ = {
-                    key: (self.threshold_scores_[key] + threshold_scores[key]) for key in self.threshold_scores_}
+                    key: (self.threshold_scores_[key] + threshold_scores[key])
+                    for key in self.threshold_scores_
+                }
 
                 # average the scores per cross validation fold
                 self.best_threshold_ /= cv.get_n_splits()
-                self.threshold_scores_ = dict([(k, v / cv.get_n_splits()) for (k, v) in self.threshold_scores_.items()])
+                self.threshold_scores_ = dict(
+                    [
+                        (k, v / cv.get_n_splits())
+                        for (k, v) in self.threshold_scores_.items()
+                    ]
+                )
 
             else:
                 self.best_threshold_ = self.threshold
@@ -517,7 +547,7 @@ class ThresholdClassifierCV(BaseEstimator, ClassifierMixin):
 
     def predict(self, X, y=None):
         y_score = self.estimator.predict_proba(X)
-        return np.array(y_score[:,1] >= self.best_threshold_)
+        return np.array(y_score[:, 1] >= self.best_threshold_)
 
     def predict_proba(self, X):
         return self.estimator.predict_proba(X)

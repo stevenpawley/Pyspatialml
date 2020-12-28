@@ -1,9 +1,10 @@
 import random
+
+from scipy.cluster.hierarchy import cut_tree, linkage
 from shapely.geometry import Point
-from scipy.cluster.hierarchy import linkage, cut_tree
 
 
-def filter_points(gdf, min_dist=0, remove='first'):
+def filter_points(gdf, min_dist=0, remove="first"):
     """Filter points in geodataframe using a minimum distance buffer.
 
     Args
@@ -24,15 +25,15 @@ def filter_points(gdf, min_dist=0, remove='first'):
     """
     xy = gdf.geometry.bounds.iloc[:, 0:2]
 
-    Z = linkage(xy, 'complete')
+    Z = linkage(xy, "complete")
     tree_thres = cut_tree(Z, height=min_dist)
-    gdf['tree_thres'] = tree_thres
+    gdf["tree_thres"] = tree_thres
 
-    if remove == 'first':
-        gdf = gdf.groupby(by='tree_thres').first()
+    if remove == "first":
+        gdf = gdf.groupby(by="tree_thres").first()
 
-    elif remove == 'last':
-        gdf = gdf.groupby(by='tree_thres').last()
+    elif remove == "last":
+        gdf = gdf.groupby(by="tree_thres").last()
 
     return gdf
 

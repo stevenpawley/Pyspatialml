@@ -2,23 +2,20 @@ import multiprocessing
 import os
 import re
 from abc import ABC, abstractmethod
-from itertools import chain
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
 from rasterio import features
-from rasterio.windows import Window
 from rasterio.sample import sample_gen
-
+from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
 
 
 class BaseRaster(ABC):
-    """Base class for Raster and RasterLayer objects
-    """
+    """Base class for Raster and RasterLayer objects"""
 
     def __init__(self, band):
         self.shape = band.shape
@@ -53,7 +50,7 @@ class BaseRaster(ABC):
             File name for convert to a valid class attribute name.
 
         existing_names : list (opt)
-            List of existing names to check that the new name will not result in 
+            List of existing names to check that the new name will not result in
             duplicated layer names.
 
         Returns
@@ -87,8 +84,7 @@ class BaseRaster(ABC):
         return valid_name
 
     def _stats(self, max_pixels):
-        """Take a sample of pixels from which to derive per-band statistics.
-        """
+        """Take a sample of pixels from which to derive per-band statistics."""
         n_pixels = self.shape[0] * self.shape[1]
         scaling = max_pixels / n_pixels
 
@@ -106,12 +102,12 @@ class BaseRaster(ABC):
 
     def min(self, max_pixels=10000):
         """Minimum value.
-        
+
         Parameters
         ----------
         max_pixels : int
             Number of pixels used to inform statistical estimate.
-        
+
         Returns
         -------
         numpy.float32
@@ -128,12 +124,12 @@ class BaseRaster(ABC):
 
     def max(self, max_pixels=10000):
         """Maximum value.
-        
+
         Parameters
         ----------
         max_pixels : int
             Number of pixels used to inform statistical estimate.
-        
+
         Returns
         -------
         numpy.float32
@@ -150,12 +146,12 @@ class BaseRaster(ABC):
 
     def mean(self, max_pixels=10000):
         """Mean value
-        
+
         Parameters
         ----------
         max_pixels : int
             Number of pixels used to inform statistical estimate.
-        
+
         Returns
         -------
         numpy.float32
@@ -172,12 +168,12 @@ class BaseRaster(ABC):
 
     def median(self, max_pixels=10000):
         """Median value
-        
+
         Parameters
         ----------
         max_pixels : int
             Number of pixels used to inform statistical estimate.
-        
+
         Returns
         -------
         numpy.float32
@@ -327,11 +323,11 @@ class BaseRaster(ABC):
         ----------
         xys : 2d array-like
             x and y coordinates from which to sample the raster (n_samples, xys).
-        
+
         return_array : bool (opt), default=False
-            By default the extracted pixel values are returned as a 
+            By default the extracted pixel values are returned as a
             geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
-            values are returned as a tuple of numpy.ndarrays. 
+            values are returned as a tuple of numpy.ndarrays.
 
         progress : bool (opt), default=False
             Show a progress bar for extraction.
@@ -342,21 +338,25 @@ class BaseRaster(ABC):
             Containing extracted data as point geometries if `return_array=False`.
 
         numpy.ndarray
-            2d masked array containing sampled raster values (sample, bands) at the 
+            2d masked array containing sampled raster values (sample, bands) at the
             x,y locations.
         """
 
         # extract pixel values
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
-        
+
         if progress is True:
             disable_tqdm = False
         else:
             disable_tqdm = True
 
-        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+        for i, (layer, pbar) in enumerate(
+            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))
+        ):
+            sampler = sample_gen(
+                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
+            )
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
@@ -381,25 +381,25 @@ class BaseRaster(ABC):
             will cause the same pixels to be sampled.
 
         return_array : bool (opt), default=False
-            By default the extracted pixel values are returned as a 
+            By default the extracted pixel values are returned as a
             geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
-            values are returned as a tuple of numpy.ndarrays. 
-        
+            values are returned as a tuple of numpy.ndarrays.
+
         progress : bool (opt), default=False
             Show a progress bar for extraction.
 
         Returns
         -------
         geopandas.GeoDataframe
-            Containing extracted data as point geometries (one point per pixel) if 
-            `return_array=False`. The resulting GeoDataFrame is indexed using a 
+            Containing extracted data as point geometries (one point per pixel) if
+            `return_array=False`. The resulting GeoDataFrame is indexed using a
             named pandas.MultiIndex, with `pixel_idx` index referring to the index of each
             pixel that was sampled, and the `geometry_idx` index referring to the index
             of the each geometry in the supplied `gdf`. This makes it possible to keep track
-            of how sampled pixel relates to the original geometries, i.e. multiple pixels 
+            of how sampled pixel relates to the original geometries, i.e. multiple pixels
             being extracted within the area of a single polygon that can be referred to using
-            the `geometry_idx`. 
-            
+            the `geometry_idx`.
+
             The extracted data can subsequently be joined with the attribute table of
             the supplied `gdf` using:
 
@@ -409,10 +409,10 @@ class BaseRaster(ABC):
 
             df = df.merge(
                 right=training_py.loc[:, ("id", "label")],
-                left_on="polygon_idx", 
+                left_on="polygon_idx",
                 right_on="id",
                 right_index=True
-            ) 
+            )
 
         tuple
             A tuple (geodataframe index, extracted values, coordinates) of the extracted
@@ -426,7 +426,7 @@ class BaseRaster(ABC):
             shapes = [(geom, val) for geom, val in zip(gdf.geometry, gdf.index)]
             arr = np.ma.zeros((self.height, self.width))
             arr[:] = -99999
-            
+
             arr = features.rasterize(
                 shapes=shapes,
                 fill=-99999,
@@ -434,7 +434,7 @@ class BaseRaster(ABC):
                 transform=self.transform,
                 all_touched=True,
             )
-            
+
             ids = arr[np.nonzero(arr != -99999)]
             ids = ids.astype("int")
             rows, cols = np.nonzero(arr != -99999)
@@ -448,23 +448,25 @@ class BaseRaster(ABC):
         # extract raster pixels
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
-        
+
         if progress is True:
             disable_tqdm = False
         else:
             disable_tqdm = True
 
-        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+        for i, (layer, pbar) in enumerate(
+            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))
+        ):
+            sampler = sample_gen(
+                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
+            )
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
             X = pd.DataFrame(
-                data=X,
-                columns=self.names,
-                index=[pd.RangeIndex(0, X.shape[0]), ids]
+                data=X, columns=self.names, index=[pd.RangeIndex(0, X.shape[0]), ids]
             )
             X.index.set_names(["pixel_idx", "geometry_idx"], inplace=True)
             X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
@@ -484,10 +486,10 @@ class BaseRaster(ABC):
             DatasetReader object.
 
         return_array : bool (opt), default=False
-            By default the extracted pixel values are returned as a 
+            By default the extracted pixel values are returned as a
             geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
-            values are returned as a tuple of numpy.ndarrays. 
-        
+            values are returned as a tuple of numpy.ndarrays.
+
         progress : bool (opt), default=False
             Show a progress bar for extraction.
 
@@ -520,8 +522,12 @@ class BaseRaster(ABC):
         else:
             disable_tqdm = True
 
-        for i, (layer, pbar) in enumerate(zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+        for i, (layer, pbar) in enumerate(
+            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))
+        ):
+            sampler = sample_gen(
+                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
+            )
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
@@ -564,7 +570,7 @@ class BaseRaster(ABC):
 
         resampling : str (default 'nearest')
             Resampling method to use when applying decimated reads when out_shape is
-            specified. Supported methods are: 'average', 'bilinear', 'cubic', 
+            specified. Supported methods are: 'average', 'bilinear', 'cubic',
             'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'.
 
         Returns
@@ -606,3 +612,22 @@ class BaseRaster(ABC):
             df.loc[df[col_name] == nodatavals[i], col_name] = np.nan
 
         return df
+
+
+def _get_nodata(dtype):
+    """Get a nodata value based on the minimum value permissible by dtype."""
+    try:
+        nodata = np.iinfo(dtype).min
+    except ValueError:
+        nodata = np.finfo(dtype).min
+
+    return nodata
+
+
+def _get_num_workers(n_jobs):
+    n_cpus = multiprocessing.cpu_count()
+
+    if n_jobs < 0:
+        n_jobs = n_cpus + n_jobs + 1
+
+    return n_jobs
