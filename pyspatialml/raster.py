@@ -1805,6 +1805,7 @@ class Raster(RasterPlot, BaseRaster):
         nodata=None,
         progress=False,
         n_jobs=-1,
+        function_args={},
         **kwargs,
     ):
         """Apply user-supplied function to a Raster object.
@@ -1835,6 +1836,9 @@ class Raster(RasterPlot, BaseRaster):
 
         progress : bool (default False)
             Optionally show progress of transform operations.
+        
+        function_args : dict (optional)
+            Optionally pass arguments to the `function` as a dict or keyword arguments.
 
         kwargs : opt
             Optional named arguments to pass to the format drivers. For example can be
@@ -1849,10 +1853,12 @@ class Raster(RasterPlot, BaseRaster):
         file_path, tfile = _file_path_tempfile(file_path)
         n_jobs = _get_num_workers(n_jobs)
 
+        function = partial(function, **function_args)
+
         # perform test calculation determine dimensions, dtype, nodata
         window = next(self.block_shapes(*self.block_shape))
         img = self.read(masked=True, window=window)
-        arr = function(img)
+        arr = function(img, **function_args)
 
         if np.ndim(arr) > 2:
             indexes = np.arange(1, arr.shape[0] + 1)
@@ -1931,30 +1937,3 @@ class Raster(RasterPlot, BaseRaster):
                         num_rows = min_rows
 
                 yield Window(col, row, num_cols, num_rows)
-
-    def astype(self, dtype, file_path=None, driver="GTiff", nodata=None, **kwargs):
-        """Coerce Raster to a different dtype.
-
-        Parameters
-        ----------
-        dtype : str or np.dtype
-            Datatype to coerce Raster object
-
-        file_path : str (optional, default None)
-            Optional path to save calculated Raster object. If not specified then a
-            tempfile is used.
-
-        driver : str (default 'GTiff')
-            Named of GDAL-supported driver for file export.
-
-        nodata : any number (optional, default None)
-            Nodata value for new dataset. If not specified then a nodata value is set
-            based on the minimum permissible value of the Raster's data type. Note that
-            this changes the values of the pixels that represent nodata pixels.
-
-        Returns
-        -------
-        pyspatialml.Raster
-        """
-
-        raise NotImplementedError
