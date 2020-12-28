@@ -29,7 +29,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -92,11 +91,9 @@
 <li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing and Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transformers.html">Transformers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="estimators.html">Estimators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cross_validation.html">Cross-validation</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">pyspatialml</a><ul class="current">
@@ -108,13 +105,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#pyspatialml-cross-validation-module">pyspatialml.cross_validation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.estimators">pyspatialml.estimators module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.metrics">pyspatialml.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-metrics-module">pyspatialml.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.plotting">pyspatialml.plotting module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.preprocessing">pyspatialml.preprocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-preprocessing-module">pyspatialml.preprocessing module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.raster">pyspatialml.raster module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.rasterlayer">pyspatialml.rasterlayer module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.transformers">pyspatialml.transformers module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.utils">pyspatialml.utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyspatialml-utils-module">pyspatialml.utils module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyspatialml.vector">pyspatialml.vector module</a></li>
 </ul>
 </li>
@@ -211,81 +208,6 @@
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="pyspatialml-cross-validation-module">
 <h3>pyspatialml.cross_validation module<a class="headerlink" href="#pyspatialml-cross-validation-module" title="Permalink to this headline">¶</a></h3>
-<span class="target" id="module-pyspatialml.cross_validation"></span><dl class="py class">
-<dt id="pyspatialml.cross_validation.CrossValidateThreshold">
-<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">CrossValidateThreshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">scoring</span></em>, <em class="sig-param"><span class="n">cv</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">positive</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Perform cross-validation and calculate scores using a cutoff threshold that
-attains a minimum true positive rate.</p>
-<dl class="py method">
-<dt id="pyspatialml.cross_validation.CrossValidateThreshold.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">fit_params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run fit method with all sets of parameters</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>array-like</em><em>, </em><em>shape =</em><em> [</em><em>n_samples</em><em>, </em><em>n_features</em><em>]</em>) – Training vector, where n_samples is the number of samples and
-n_features is the number of features</p></li>
-<li><p><strong>y</strong> (<em>array-like</em><em>, </em><em>shape =</em><em> [</em><em>n_samples</em><em>] or </em><em>[</em><em>n_samples</em><em>, </em><em>n_output</em><em>]</em><em>, </em><em>optional</em>) – Target relative to X for classification or regression;
-None for unsupervised learning</p></li>
-<li><p><strong>groups</strong> (<em>array-like</em><em>, </em><em>shape =</em><em> [</em><em>n_samples</em><em>]</em><em>, </em><em>optional</em>) – Training vector groups for cross-validation</p></li>
-<li><p><strong>**fit_params</strong> (<em>dict of string -&gt; object</em>) – Parameters passed to the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method of the estimator</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="pyspatialml.cross_validation.CrossValidateThreshold.score">
-<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tpr_threshold</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cutoff_threshold</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.CrossValidateThreshold.score" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the scoring metrics using a cutoff threshold that attains a true positive rate
-that is equal or greater than the desired tpr_threshold</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tpr_threshold</strong> (<em>float</em>) – Minimum true positive rate to achieve</p></li>
-<li><p><strong>cutoff_threshold</strong> (<em>float</em>) – As an alternative to using a minimum true positive, a probability cutoff threshold
-can be specified to calculate the scoring</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.cross_validation.spatial_loocv">
-<code class="sig-prename descclassname">pyspatialml.cross_validation.</code><code class="sig-name descname">spatial_loocv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">size</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.cross_validation.spatial_loocv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spatially buffered leave-One-out cross-validation
-Uses a circular spatial buffer to separate samples that are used to train
-the estimator, from samples that are used to test the prediction accuracy</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>estimator</strong> (<em>estimator object implementing 'fit'</em>) – The object to use to fit the data</p></li>
-<li><p><strong>X</strong> (<em>array-like</em>) – The data to fit. Can be for example a list, or an array.</p></li>
-<li><p><strong>y</strong> (<em>array-like</em><em>, </em><em>optional</em><em>, </em><em>default: None</em>) – The target variable to try to predict in the case of
-supervised learning</p></li>
-<li><p><strong>coordinates</strong> (<em>2d-array like</em>) – Spatial coordinates, usually as xy, that correspond to each sample in X</p></li>
-<li><p><strong>size</strong> (<em>int</em>) – Sample size to process (number of leave-one-out runs)</p></li>
-<li><p><strong>radius</strong> (<em>int</em><em> or </em><em>float</em>) – Radius for the spatial buffer around test point</p></li>
-<li><p><strong>random_state</strong> (<em>int</em>) – random_state is the seed used by the random number generator</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>y_test</strong> (<em>1d array-like</em>) – Response variable values in the test partitions</p></li>
-<li><p><strong>y_pred</strong> (<em>1d array-like</em>) – Predicted response values by the estimator</p></li>
-<li><p><strong>y_prob</strong> (<em>array-like</em>) – Predicted probabilities by the estimator</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>This python function was adapted from R code
-<a class="reference external" href="https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/">https://davidrroberts.wordpress.com/2016/03/11/spatial-leave-one-out-sloo-cross-validation/</a></p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-pyspatialml.estimators">
 <span id="pyspatialml-estimators-module"></span><h3>pyspatialml.estimators module<a class="headerlink" href="#module-pyspatialml.estimators" title="Permalink to this headline">¶</a></h3>
@@ -466,33 +388,56 @@ The scoring metric should be one that can be maximized (bigger=better)</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-pyspatialml.metrics">
-<span id="pyspatialml-metrics-module"></span><h3>pyspatialml.metrics module<a class="headerlink" href="#module-pyspatialml.metrics" title="Permalink to this headline">¶</a></h3>
-<dl class="py function">
-<dt id="pyspatialml.metrics.specificity_score">
-<code class="sig-prename descclassname">pyspatialml.metrics.</code><code class="sig-name descname">specificity_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y_true</span></em>, <em class="sig-param"><span class="n">y_pred</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.metrics.specificity_score" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate specificity score metric for a binary classification</p>
+<div class="section" id="pyspatialml-metrics-module">
+<h3>pyspatialml.metrics module<a class="headerlink" href="#pyspatialml-metrics-module" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="module-pyspatialml.plotting">
+<span id="pyspatialml-plotting-module"></span><h3>pyspatialml.plotting module<a class="headerlink" href="#module-pyspatialml.plotting" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="pyspatialml.plotting.RasterPlot">
+<em class="property">class </em><code class="sig-prename descclassname">pyspatialml.plotting.</code><code class="sig-name descname">RasterPlot</code><a class="headerlink" href="#pyspatialml.plotting.RasterPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="pyspatialml.plotting.RasterPlot.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_shape</span><span class="o">=</span><span class="default_value">(100, 100)</span></em>, <em class="sig-param"><span class="n">title_fontsize</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">label_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">legend_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subplots_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.RasterPlot.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a Raster object as a raster matrix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>y_true</strong> (<em>1d array-like</em>) – Ground truth (correct) labels</p></li>
-<li><p><strong>y_pred</strong> (<em>1d array-like</em>) – Predicted labels, as returned by the classifier</p></li>
+<li><p><strong>cmap</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Specify a single cmap to apply to all of the RasterLayers.
+This overides the cmap attribute of each RasterLayer.</p></li>
+<li><p><strong>norm</strong> (<em>matplotlib.colors.Normalize</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – A matplotlib.colors.Normalize to apply to all of the RasterLayers.
+This overides the norm attribute of each RasterLayer.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Size of the resulting matplotlib.figure.Figure.</p></li>
+<li><p><strong>out_shape</strong> (<em>tuple</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>, </em><em>100</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>any number</em><em>, </em><em>default=8</em>) – Size in pts of titles.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of axis ticklabels.</p></li>
+<li><p><strong>legend_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of legend ticklabels.</p></li>
+<li><p><strong>names</strong> (<em>list</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Optionally supply a list of names for each RasterLayer to override the
+default layer names for the titles.</p></li>
+<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
+creating the figure object.</p></li>
+<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when
+creating the colorbar object.</p></li>
+<li><p><strong>subplots_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
+function. These are used to control the spacing and position of each
+subplot, and can include
+{left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>specificity</strong> – Returns the specificity score, or true negative rate, i.e. the
-proportion of the negative label (label=0) samples that are correctly
-classified as the negative label</p>
+<dd class="field-even"><p><strong>axs</strong> – array of matplotlib.axes._subplots.AxesSubplot or a single
+matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
+single layer.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-pyspatialml.plotting">
-<span id="pyspatialml-plotting-module"></span><h3>pyspatialml.plotting module<a class="headerlink" href="#module-pyspatialml.plotting" title="Permalink to this headline">¶</a></h3>
+</dd></dl>
+
 <dl class="py function">
 <dt id="pyspatialml.plotting.discrete_cmap">
 <code class="sig-prename descclassname">pyspatialml.plotting.</code><code class="sig-name descname">discrete_cmap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N</span></em>, <em class="sig-param"><span class="n">base_cmap</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.plotting.discrete_cmap" title="Permalink to this definition">¶</a></dt>
@@ -567,130 +512,15 @@ offset).</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-pyspatialml.preprocessing">
-<span id="pyspatialml-preprocessing-module"></span><h3>pyspatialml.preprocessing module<a class="headerlink" href="#module-pyspatialml.preprocessing" title="Permalink to this headline">¶</a></h3>
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.distance_to_corners">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">distance_to_corners</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_corners" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate buffer distances to corner and centre coordinates of raster extent.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layer</strong> (<em>pyspatialml.RasterLayer</em><em>, or </em><em>rasterio.DatasetReader</em>) – </p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>optional. Default is None</em>) – File path to save to the resulting Raster object. If not supplied then the
-raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em>, </em><em>optional. Default is 'GTiff'</em>) – GDAL driver to use to save raster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.distance_to_samples">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">distance_to_samples</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.distance_to_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate buffer distances to x,y coordinates.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layer</strong> (<em>pyspatialml.RasterLayer</em><em>, or </em><em>rasterio.DatasetReader</em>) – </p></li>
-<li><p><strong>rows</strong> (<em>1d numpy array</em>) – array of row indexes.</p></li>
-<li><p><strong>cols</strong> (<em>1d numpy array</em>) – array of column indexes.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>optional. Default=None</em>) – File path to save to the resulting Raster object. If not supplied then the
-raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em>, </em><em>default='GTiff'</em>) – GDAL driver to use to save raster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.one_hot_encode">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">one_hot_encode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">categories</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.one_hot_encode" title="Permalink to this definition">¶</a></dt>
-<dd><p>One-hot encoding of a RasterLayer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layer</strong> (<em>pyspatialml.RasterLayer</em>) – Containing categories to perform one-hot encoding on.</p></li>
-<li><p><strong>categories</strong> (<em>list</em><em>, </em><em>ndarray</em><em>, </em><em>optional</em>) – Optional list of categories to extract. Default performs one-hot encoding
-on all categorical values in the input layer.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>optional. Default is None</em>) – File path to save one-hot encoded raster. If not supplied then data
-is written to a tempfile.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em>, </em><em>options. Default is 'GTiff'</em>) – GDAL-compatible driver.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Each categorical value is encoded as a layer with a Raster object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.rotated_coordinates">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">rotated_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">n_angles</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.rotated_coordinates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate 2d arrays with n_angles rotated coordinates.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layer</strong> (<em>pyspatialml.RasterLayer</em><em>, or </em><em>rasterio.DatasetReader</em>) – RasterLayer to use as a template.</p></li>
-<li><p><strong>n_angles</strong> (<em>int</em><em>, </em><em>optional. Default is 8</em>) – Number of angles to rotate coordinate system by.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>optional. Default is None</em>) – File path to save to the resulting Raster object. If not supplied then the
-raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em>, </em><em>optional. Default is 'GTiff'</em>) – GDAL driver to use to save raster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyspatialml.preprocessing.xy_coordinates">
-<code class="sig-prename descclassname">pyspatialml.preprocessing.</code><code class="sig-name descname">xy_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.preprocessing.xy_coordinates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fill 2d arrays with their x,y indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>layer</strong> (<em>pyspatialml.RasterLayer</em><em>, or </em><em>rasterio.DatasetReader</em>) – RasterLayer to use as a template.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>optional. Default is None</em>) – File path to save to the resulting Raster object. If not supplied then the
-raster is saved to a temporary file.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em>, </em><em>options. Default is 'GTiff'</em>) – GDAL driver to use to save raster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.Raster object</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="pyspatialml-preprocessing-module">
+<h3>pyspatialml.preprocessing module<a class="headerlink" href="#pyspatialml-preprocessing-module" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-pyspatialml.raster">
 <span id="pyspatialml-raster-module"></span><h3>pyspatialml.raster module<a class="headerlink" href="#module-pyspatialml.raster" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="pyspatialml.raster.Raster">
 <em class="property">class </em><code class="sig-prename descclassname">pyspatialml.raster.</code><code class="sig-name descname">Raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">src</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">arr</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">crs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">transform</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.base.BaseRaster</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#pyspatialml.plotting.RasterPlot" title="pyspatialml.plotting.RasterPlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.plotting.RasterPlot</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">pyspatialml.base.BaseRaster</span></code></p>
 <p>Flexible class that represents a collection of file-based GDAL-supported raster
 datasets which share a common coordinate reference system and geometry.</p>
 <p>Raster objects encapsulate RasterLayer objects, which represent single band raster
@@ -831,7 +661,7 @@ format of (n_rows, n_columns) in pixels.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.block_shapes">
-<code class="sig-name descname">block_shapes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.block_shapes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">block_shapes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em>, <em class="sig-param"><span class="n">min_rows</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">min_cols</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">overlap</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.block_shapes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generator for windows for optimal reading and writing based on the raster
 format Windows are returns as a tuple with xoff, yoff, width, height.</p>
 <dl class="field-list simple">
@@ -990,45 +820,6 @@ the metadata of the raster.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pyspatialml.raster.Raster.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">out_shape</span><span class="o">=</span><span class="default_value">100, 100</span></em>, <em class="sig-param"><span class="n">title_fontsize</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">label_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">legend_fontsize</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subplots_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a Raster object as a raster matrix</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cmap</strong> (<em>str</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Specify a single cmap to apply to all of the RasterLayers.
-This overides the cmap attribute of each RasterLayer.</p></li>
-<li><p><strong>norm</strong> (<em>matplotlib.colors.Normalize</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – A matplotlib.colors.Normalize to apply to all of the RasterLayers.
-This overides the norm attribute of each RasterLayer.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Size of the resulting matplotlib.figure.Figure.</p></li>
-<li><p><strong>out_shape</strong> (<em>tuple</em><em>, </em><em>default=</em><em>(</em><em>100</em><em>, </em><em>100</em><em>)</em>) – Number of rows, cols to read from the raster datasets for plotting.</p></li>
-<li><p><strong>title_fontsize</strong> (<em>any number</em><em>, </em><em>default=8</em>) – Size in pts of titles.</p></li>
-<li><p><strong>label_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of axis ticklabels.</p></li>
-<li><p><strong>legend_fontsize</strong> (<em>any number</em><em>, </em><em>default=6</em>) – Size in pts of legend ticklabels.</p></li>
-<li><p><strong>names</strong> (<em>list</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Optionally supply a list of names for each RasterLayer to override the
-default layer names for the titles.</p></li>
-<li><p><strong>fig_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.figure call when
-creating the figure object.</p></li>
-<li><p><strong>legend_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.colorbar call when
-creating the colorbar object.</p></li>
-<li><p><strong>subplots_kwds</strong> (<em>dict</em><em> (</em><em>opt</em><em>)</em><em>, </em><em>default=None</em>) – Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
-function. These are used to control the spacing and position of each
-subplot, and can include
-{left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>axs</strong> – array of matplotlib.axes._subplots.AxesSubplot or a single
-matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
-single layer.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="pyspatialml.raster.Raster.predict">
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply prediction of a scikit learn model to a Raster.</p>
@@ -1046,9 +837,6 @@ the output is written to a temporary file.</p></li>
 specified, np.float32 is assumed.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
 derived from the minimum permissible value for the given data type.</p></li>
-<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default is False</em><em>)</em>) – Whether to read the raster data via pandas before prediction. This can be
-useful if transformers are being used as part of a pipeline and you want
-to refer to column names rather than indices.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em> (</em><em>default -1</em><em>)</em>) – Number of processing cores to use for parallel execution. Default is
 n_jobs=1. -1 is all cores; -2 is all cores -1.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
@@ -1070,7 +858,7 @@ are named automatically as <cite>pred_raw_n</cite> with n = 1, 2, 3 ..n.</p>
 
 <dl class="py method">
 <dt id="pyspatialml.raster.Raster.predict_proba">
-<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">indexes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_df</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">indexes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.raster.Raster.predict_proba" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply class probability prediction of a scikit learn model to a Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1087,9 +875,6 @@ be desired.</p></li>
 specified, a data type is set based on the data type of the prediction.</p></li>
 <li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for file export. If not specified then the nodata value is
 derived from the minimum permissible value for the given data type.</p></li>
-<li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default is False</em><em>)</em>) – Whether to read the raster data via pandas before prediction. This can be
-useful if transformers are being used as part of a pipeline and you want
-to refer to column names rather than indices.</p></li>
 <li><p><strong>progress</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Show progress bar for prediction.</p></li>
 <li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
 <cite>compress=”deflate”</cite> to add compression.</p></li>
@@ -1128,8 +913,7 @@ of data into a ndarray.</p></li>
 specified. Supported methods are: ‘average’, ‘bilinear’, ‘cubic’,
 ‘cubic_spline’, ‘gauss’, ‘lanczos’, ‘max’, ‘med’, ‘min’, ‘mode’, ‘q1’, ‘q3’.</p></li>
 <li><p><strong>as_df</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Whether to return the data as a pandas.DataFrame with columns named by the
-RasterLayer names. Can be useful when using scikit-learn ColumnTransformer
-to select columns based on names rather than keeping track of indexes.</p></li>
+RasterLayer names.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other arguments to pass to rasterio.DatasetReader.read method</p></li>
 </ul>
 </dd>
@@ -1379,64 +1163,6 @@ This overides the norm attribute of the RasterLayer.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pyspatialml.rasterlayer.RasterLayer.distance">
-<code class="sig-name descname">distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate euclidean grid distances to non-NaN pixels</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a
-tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
-based on the minimum permissible value of the Raster’s data type.</p></li>
-<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
-<cite>compress=”deflate”</cite> to add compression.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Grid distance raster</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="pyspatialml.rasterlayer.RasterLayer.fill">
-<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_search_distance</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">smoothing_iterations</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.fill" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fill nodata gaps in a RasterLayer</p>
-<p>Thin wrapper around the rasterio.fill.fillnodata method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally provide a numpy array to indice which pixels to fill. Pixels
-designated to fill should have zero values in the mask, and values &gt; 0 in
-the mask indicate pixels to use for interpolation.</p></li>
-<li><p><strong>max_search_distance</strong> (<em>float</em><em> (</em><em>default 100</em><em>)</em>) – The maximum number of pixels in all directions to use for interpolation.</p></li>
-<li><p><strong>smoothing_iterations</strong> (<em>integer</em><em> (</em><em>default 0</em><em>)</em>) – The number of 3x3 smoothing filter passes to run. The default is 0.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not specified then a
-tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
-based on the minimum permissible value of the Raster’s data type.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
-specified, a data type is set based on the data type of the RasterLayer.</p></li>
-<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
-<cite>compress=”deflate”</cite> to add compression.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Filled RasterLayer</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="pyspatialml.rasterlayer.RasterLayer.plot">
 <code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">categorical</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_kwds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kwds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a RasterLayer using matplotlib.pyplot.imshow</p>
@@ -1489,38 +1215,6 @@ will have two dimensions in the order of (rows, columns).</p>
 <li><p><strong>**kwargs</strong> (<em>named arguments that can be passed to the the</em>) – </p></li>
 <li><p><strong>method.</strong> (<em>rasterio.DatasetReader.read</em>) – </p></li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="pyspatialml.rasterlayer.RasterLayer.sieve">
-<code class="sig-name descname">sieve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">connectivity</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">driver</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyspatialml.rasterlayer.RasterLayer.sieve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace pixels with their largest neighbor</p>
-<p>Thin wrapper around the rasterio.features.sieve method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>size</strong> (<em>integer</em><em> (</em><em>default 2</em><em>)</em>) – Minimum number of contigous pixels to retain</p></li>
-<li><p><strong>mask</strong> (<em>ndarray</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Values of False or 0 will be excluded from the sieving process</p></li>
-<li><p><strong>connectivity</strong> (<em>integer</em><em> (</em><em>default 4</em><em>)</em>) – Use 4 or 8 pixel connectivity for grouping pixels into features.
-Default is 4.</p></li>
-<li><p><strong>file_path</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optional path to save calculated Raster object. If not
-specified then a tempfile is used.</p></li>
-<li><p><strong>driver</strong> (<em>str</em><em> (</em><em>default 'GTiff'</em><em>)</em>) – Named of GDAL-supported driver for file export.</p></li>
-<li><p><strong>nodata</strong> (<em>any number</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Nodata value for new dataset. If not specified then a nodata value is set
-based on the minimum permissible value of the Raster’s data type.</p></li>
-<li><p><strong>dtype</strong> (<em>str</em><em> (</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – Optionally specify a numpy compatible data type when saving to file. If not
-specified, a data type is set based on the data type of the RasterLayer.</p></li>
-<li><p><strong>kwargs</strong> (<em>opt</em>) – Optional named arguments to pass to the format drivers. For example can be
-<cite>compress=”deflate”</cite> to add compression.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Filled RasterLayer</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pyspatialml.RasterLayer</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1591,8 +1285,8 @@ appended to the right-most columns of the array.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-pyspatialml.utils">
-<span id="pyspatialml-utils-module"></span><h3>pyspatialml.utils module<a class="headerlink" href="#module-pyspatialml.utils" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="pyspatialml-utils-module">
+<h3>pyspatialml.utils module<a class="headerlink" href="#pyspatialml-utils-module" title="Permalink to this headline">¶</a></h3>
 </div>
 <div class="section" id="module-pyspatialml.vector">
 <span id="pyspatialml-vector-module"></span><h3>pyspatialml.vector module<a class="headerlink" href="#module-pyspatialml.vector" title="Permalink to this headline">¶</a></h3>
