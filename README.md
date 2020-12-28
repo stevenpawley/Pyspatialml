@@ -41,8 +41,7 @@ a ```RasterLayer```. This means that metadata regarding what each raster dataset
 can be retained, and additional raster datasets can be added or removed from the stack without physical on disk changes.
 
 Note these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference
-system. If they are not aligned, then for convenience the ```pyspatialml.preprocessing.align_rasters``` function can be used to
-resample a list of raster datasets. 
+system.
 
 ### Usage
 
