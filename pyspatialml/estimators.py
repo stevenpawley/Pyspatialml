@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+import inspect
 
 import numpy as np
 from scipy.stats import mode
@@ -13,6 +14,7 @@ from sklearn.base import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.extmath import weighted_mode
+from sklearn.model_selection import check_cv
 
 
 class SpatialLagBase(ABC, BaseEstimator):
