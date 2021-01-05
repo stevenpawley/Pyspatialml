@@ -218,18 +218,6 @@ class RasterPlot(object):
         if figsize:
             fig_kwds["figsize"] = figsize
 
-        # plot a single layer
-        if self.count == 1:
-            return self.iloc[0].plot(
-                cmap=cmap,
-                norm=norm,
-                figsize=figsize,
-                out_shape=out_shape,
-                fig_kwds=fig_kwds,
-                legend_kwds=legend_kwds,
-                legend=True,
-            )
-
         # estimate required number of rows and columns in figure
         rows = int(np.sqrt(self.count))
         cols = int(math.ceil(np.sqrt(self.count)))
@@ -240,15 +228,73 @@ class RasterPlot(object):
         fig, axs = plt.subplots(rows, cols, **fig_kwds)
 
         # axs.flat is an iterator over the row-order flattened axs array
-        for ax, n, cmap, norm, name in zip(
-            axs.flat, range(self.count), cmaps, norms, names
-        ):
+        if isinstance(axs, np.ndarray):
+            for ax, n, cmap, norm, name in zip(
+                axs.flat, range(self.count), cmaps, norms, names
+            ):
 
-            arr = self.iloc[n].read(masked=True, out_shape=out_shape)
+                arr = self.iloc[n].read(masked=True, out_shape=out_shape)
+                ax.set_title(name, fontsize=title_fontsize, y=1.00)
 
-            ax.set_title(name, fontsize=title_fontsize, y=1.00)
+                im = ax.imshow(
+                    arr,
+                    extent=[
+                        self.bounds.left,
+                        self.bounds.right,
+                        self.bounds.bottom,
+                        self.bounds.top,
+                    ],
+                    cmap=cmap,
+                    norm=norm,
+                )
 
-            im = ax.imshow(
+                divider = make_axes_locatable(ax)
+
+                if "orientation" not in legend_kwds.keys():
+                    legend_kwds["orientation"] = "vertical"
+
+                if legend_kwds["orientation"] == "vertical":
+                    legend_pos = "right"
+
+                elif legend_kwds["orientation"] == "horizontal":
+                    legend_pos = "bottom"
+
+                cax = divider.append_axes(legend_pos, size="10%", pad=0.1)
+                cbar = plt.colorbar(im, cax=cax, **legend_kwds)
+                cbar.ax.tick_params(labelsize=legend_fontsize)
+
+                # hide tick labels by default when multiple rows or cols
+                ax.axes.get_xaxis().set_ticklabels([])
+                ax.axes.get_yaxis().set_ticklabels([])
+
+                # show y-axis tick labels on first subplot
+                if n == 0 and rows > 1:
+                    ax.set_yticklabels(
+                        ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
+                    )
+                if n == 0 and rows == 1:
+                    ax.set_xticklabels(
+                        ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
+                    )
+                    ax.set_yticklabels(
+                        ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
+                    )
+                if rows > 1 and n == (rows * cols) - cols:
+                    ax.set_xticklabels(
+                        ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
+                    )
+
+            for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
+                ax.set_visible(False)
+
+            plt.subplots_adjust(**subplots_kwds)
+        
+        else:
+            arr = self.iloc[0].read(masked=True, out_shape=out_shape)
+            cmap = cmaps[0]
+            norm = norms[0]
+            axs.set_title(names[0], fontsize=title_fontsize, y=1.00)            
+            im = axs.imshow(
                 arr,
                 extent=[
                     self.bounds.left,
@@ -260,7 +306,7 @@ class RasterPlot(object):
                 norm=norm,
             )
 
-            divider = make_axes_locatable(ax)
+            divider = make_axes_locatable(axs)
 
             if "orientation" not in legend_kwds.keys():
                 legend_kwds["orientation"] = "vertical"
@@ -274,31 +320,5 @@ class RasterPlot(object):
             cax = divider.append_axes(legend_pos, size="10%", pad=0.1)
             cbar = plt.colorbar(im, cax=cax, **legend_kwds)
             cbar.ax.tick_params(labelsize=legend_fontsize)
-
-            # hide tick labels by default when multiple rows or cols
-            ax.axes.get_xaxis().set_ticklabels([])
-            ax.axes.get_yaxis().set_ticklabels([])
-
-            # show y-axis tick labels on first subplot
-            if n == 0 and rows > 1:
-                ax.set_yticklabels(
-                    ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-            if n == 0 and rows == 1:
-                ax.set_xticklabels(
-                    ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-                ax.set_yticklabels(
-                    ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-            if rows > 1 and n == (rows * cols) - cols:
-                ax.set_xticklabels(
-                    ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                )
-
-        for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
-            ax.set_visible(False)
-
-        plt.subplots_adjust(**subplots_kwds)
 
         return axs

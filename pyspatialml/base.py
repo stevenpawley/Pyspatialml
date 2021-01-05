@@ -35,11 +35,6 @@ class BaseRaster(ABC):
         """Write method to be defined by subclass"""
         raise NotImplementedError()
 
-    @abstractmethod
-    def plot(self):
-        """Plot method to be defined by subclass"""
-        raise NotImplementedError()
-
     @staticmethod
     def _make_name(name, existing_names=None):
         """Converts a filename to a valid class attribute name.

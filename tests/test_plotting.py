@@ -28,11 +28,6 @@ class TestPlotting(TestCase):
         )
         self.assertIsInstance(p, np.ndarray)
 
-    def test_plotting_rasterlayer(self):
-        stack = Raster(self.predictors)
-        p = stack.iloc[0].plot(figsize=(10, 10), legend=True)
-        self.assertIsInstance(p, mpl.axes.Subplot)
-
     def test_plotting_single(self):
         stack = Raster(self.predictors[0])
         p = stack.plot(legend_kwds={"orientation": "horizontal", "fraction": 0.04})
