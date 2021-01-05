@@ -15,6 +15,7 @@ import rasterio.plot
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
+from sklearn.pipeline import Pipeline
 
 from .base import BaseRaster, _get_nodata, _get_num_workers
 from .plotting import RasterPlot
@@ -759,6 +760,15 @@ class Raster(RasterPlot, BaseRaster):
         raster = self._new_raster(file_path, self.names)
 
         return raster
+    
+    @staticmethod
+    def _extract_estimator(estimator):
+        if not isinstance(estimator, Pipeline):
+            model = estimator
+        else:
+            model = estimator.named_steps[list(estimator.named_steps.keys())[-1]]
+        
+        return model
 
     def predict_proba(
         self,
@@ -826,7 +836,8 @@ class Raster(RasterPlot, BaseRaster):
             indexes = range(indexes, indexes + 1)
 
         elif indexes is None:
-            indexes = np.arange(0, estimator.n_classes_)
+            model = self._extract_estimator(estimator)
+            indexes = np.arange(0, model.n_classes_)
 
         if dtype is None:
             dtype = np.float32
@@ -878,7 +889,6 @@ class Raster(RasterPlot, BaseRaster):
         driver="GTiff",
         dtype=None,
         nodata=None,
-        as_df=False,
         n_jobs=-1,
         progress=False,
         **kwargs,
@@ -932,7 +942,8 @@ class Raster(RasterPlot, BaseRaster):
         n_jobs = _get_num_workers(n_jobs)
 
         # determine output count for multi output cases
-        indexes = np.arange(0, estimator.n_outputs_)
+        model = self._extract_estimator(estimator)
+        indexes = np.arange(0, model.n_outputs_)
 
         # chose prediction function
         if len(indexes) == 1:
