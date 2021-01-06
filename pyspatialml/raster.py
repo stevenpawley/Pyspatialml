@@ -833,10 +833,9 @@ class Raster(RasterPlot, BaseRaster):
             n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
             n_samples = rows * cols
             flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-            flat_pixels = flat_pixels.filled(0)
-            result = estimator.predict(flat_pixels)
+            result = estimator.predict_proba(flat_pixels)
             indexes = np.arange(0, result.shape[1])
-
+            
         if dtype is None:
             dtype = np.float32
 
