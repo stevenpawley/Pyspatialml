@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.ticker as mticker
 
 
 def rasterio_normalize(arr, axis=None):
@@ -269,20 +270,23 @@ class RasterPlot(object):
 
                 # show y-axis tick labels on first subplot
                 if n == 0 and rows > 1:
-                    ax.set_yticklabels(
-                        ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                    )
+                    ticks_loc = ax.get_yticks().tolist()
+                    ax.yaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+                    ax.set_yticklabels(ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
+                
                 if n == 0 and rows == 1:
-                    ax.set_xticklabels(
-                        ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                    )
-                    ax.set_yticklabels(
-                        ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                    )
+                    ticks_loc = ax.get_xticks().tolist()
+                    ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+                    ax.set_xticklabels(ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
+
+                    ticks_loc = ax.get_yticks().tolist()
+                    ax.yaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+                    ax.set_yticklabels(ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
+                
                 if rows > 1 and n == (rows * cols) - cols:
-                    ax.set_xticklabels(
-                        ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize
-                    )
+                    ticks_loc = ax.get_xticks().tolist()
+                    ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+                    ax.set_xticklabels(ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
 
             for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
                 ax.set_visible(False)
