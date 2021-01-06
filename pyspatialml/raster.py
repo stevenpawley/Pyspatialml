@@ -15,7 +15,6 @@ import rasterio.plot
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from tqdm import tqdm
-from sklearn.pipeline import Pipeline
 
 from .base import BaseRaster, _get_nodata, _get_num_workers
 from .plotting import RasterPlot

@@ -3,7 +3,6 @@ from copy import deepcopy
 import inspect
 
 import numpy as np
-from scipy.stats import mode
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
