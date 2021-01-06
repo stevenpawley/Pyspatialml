@@ -152,6 +152,10 @@ class SpatialLagBase(ABC, BaseEstimator):
         pass
 
     @abstractmethod
+    def _apply_weights(neighbor_vals, neighbor_weights):
+        pass
+
+    @abstractmethod
     def _validate_base_estimator(self):
         pass
 
@@ -176,9 +180,17 @@ class SpatialLagBase(ABC, BaseEstimator):
         self.base_estimator = clone(self.base_estimator)
         self._validate_base_estimator()
 
-        self.y_ = deepcopy(y)
-        distance_data = deepcopy(X)
+        if self.kernel_params is None:
+            self.kernel_params = {}
 
+        self.y_ = y.copy()
+        distance_data = X.copy()
+        
+        if y.ndim == 1:
+            self.n_outputs_ = 1
+        else:
+            self.n_outputs_ = y.shape[1]
+        
         # use only selected columns in the data for the distances
         if self.feature_indices is not None:
             distance_data = distance_data[:, self.feature_indices]
@@ -237,7 +249,20 @@ class SpatialLagBase(ABC, BaseEstimator):
 
         # get values of closest training points to new data
         neighbor_vals = np.array([self.y_[i] for i in neighbor_ids])
-        neighbor_vals = np.ma.masked_array(neighbor_vals, mask=neighbor_dist.mask)
+
+        # mask neighbor values with zero distances
+        mask = neighbor_dist.mask
+
+        if mask.all() == False:
+            mask = np.zeros((neighbor_dist.shape), dtype=np.bool)
+            mask[:] = False
+
+        if neighbor_vals.ndim == 2:
+            neighbor_vals = np.ma.masked_array(neighbor_vals, mask) 
+        else:
+            n_outputs = neighbor_vals.shape[2]
+            mask = np.repeat(mask[:, :, np.newaxis], n_outputs, axis=2)
+            neighbor_vals = np.ma.masked_array(neighbor_vals, mask=mask) 
 
         # calculated weighted means
         if self.weights == "distance":
@@ -257,20 +282,31 @@ class SpatialLagBase(ABC, BaseEstimator):
 
 class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
     @staticmethod
-    def _distance_weighting(neighbor_vals, neighbor_dist):
-        neighbor_weights = 1 / neighbor_dist
-        X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
+    def _apply_weights(neighbor_vals, neighbor_weights):
+        # weighted mean of neighbors for a single regression target
+        if neighbor_vals.ndim == 2:
+            X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
+        
+        # weighted mean of neighbors for a multi-target regression
+        # neighbor_vals = (n_samples, n_neighbors, n_targets)
+        else:
+            X = np.zeros((neighbor_vals.shape[0], neighbor_vals.shape[2]))
+            for i in range(neighbor_vals.shape[-1]):
+                X[:, i] = np.ma.average(neighbor_vals[:, :, i], weights=neighbor_weights, axis=1)
+        
         return X
 
-    @staticmethod
-    def _uniform_weighting(neighbor_vals):
-        X = np.ma.average(neighbor_vals, axis=1)
-        return X
+    def _distance_weighting(self, neighbor_vals, neighbor_dist):
+        neighbor_weights = 1 / neighbor_dist
+        return self._apply_weights(neighbor_vals, neighbor_weights)
+
+    def _uniform_weighting(self, neighbor_vals):
+        weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
+        return self._apply_weights(neighbor_vals, weights)
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
         neighbor_weights = self.weights(neighbor_dist, **self.kernel_params)
-        new_X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
-        return new_X
+        return self._apply_weights(neighbor_vals, neighbor_weights)
 
     def _validate_base_estimator(self):
         if not is_regressor(self.base_estimator):
@@ -282,21 +318,31 @@ class SpatialLagRegressor(RegressorMixin, SpatialLagBase):
 
 
 class SpatialLagClassifier(ClassifierMixin, SpatialLagBase):
-    @staticmethod
-    def _distance_weighting(neighbor_vals, neighbor_dist):
-        neighbor_weights = 1 / neighbor_dist
-        X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
+    def _apply_weights(neighbor_vals, neighbor_weights):
+        # weighted mode of neighbors for a single regression target
+        if neighbor_vals.ndim == 2:
+            X = weighted_mode(neighbor_vals, weights=neighbor_weights, axis=1)
+        
+        # weighted mode of neighbors for a multi-target regression
+        # neighbor_vals = (n_samples, n_neighbors, n_targets)
+        else:
+            X = np.zeros((neighbor_vals.shape[0], neighbor_vals.shape[2]))
+            for i in range(neighbor_vals.shape[-1]):
+                X[:, i] = weighted_mode(neighbor_vals[:, :, i], weights=neighbor_weights, axis=1)
+        
         return X
 
-    @staticmethod
-    def _uniform_weighting(neighbor_vals):
-        X = mode(neighbor_vals, axis=1)
-        return X
+    def _distance_weighting(self, neighbor_vals, neighbor_dist):
+        neighbor_weights = 1 / neighbor_dist
+        return self._apply_weights(neighbor_vals, neighbor_weights)
+
+    def _uniform_weighting(self, neighbor_vals):
+        weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
+        return self._apply_weights(neighbor_vals, weights)
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
         neighbor_weights = self.weights(neighbor_dist, **self.kernel_params)
-        new_X = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
-        return new_X
+        return self._apply_weights(neighbor_vals, neighbor_weights)
 
     def _validate_base_estimator(self):
         if not is_classifier(self.base_estimator):

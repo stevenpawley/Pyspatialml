@@ -761,15 +761,6 @@ class Raster(RasterPlot, BaseRaster):
 
         return raster
     
-    @staticmethod
-    def _extract_estimator(estimator):
-        if not isinstance(estimator, Pipeline):
-            model = estimator
-        else:
-            model = estimator.named_steps[list(estimator.named_steps.keys())[-1]]
-        
-        return model
-
     def predict_proba(
         self,
         estimator,
@@ -831,13 +822,21 @@ class Raster(RasterPlot, BaseRaster):
         file_path, tfile = _file_path_tempfile(file_path)
         predfun = self._probfun
 
-        # determine output count
+        # determine output count for multi-class prediction
         if isinstance(indexes, int):
             indexes = range(indexes, indexes + 1)
 
         elif indexes is None:
-            model = self._extract_estimator(estimator)
-            indexes = np.arange(0, model.n_classes_)
+            # perform test prediction - easier than using estimator.n_outputs_
+            # because the estimator may be wrapped inside other pipelines etc.
+            window = next(self.block_shapes(*self.block_shape))
+            img = self.read(masked=True, window=window)
+            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+            n_samples = rows * cols
+            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+            flat_pixels = flat_pixels.filled(0)
+            result = estimator.predict(flat_pixels)
+            indexes = np.arange(0, result.shape[1])
 
         if dtype is None:
             dtype = np.float32
@@ -941,9 +940,20 @@ class Raster(RasterPlot, BaseRaster):
         file_path, tfile = _file_path_tempfile(file_path)
         n_jobs = _get_num_workers(n_jobs)
 
-        # determine output count for multi output cases
-        model = self._extract_estimator(estimator)
-        indexes = np.arange(0, model.n_outputs_)
+        # determine output count for multi-class or multi-target cases
+        window = next(self.block_shapes(*self.block_shape))
+        img = self.read(masked=True, window=window)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+        flat_pixels = flat_pixels.filled(0)
+        result = estimator.predict(flat_pixels)
+
+        if result.ndim > 1:
+            n_outputs = result.shape[result.ndim - 1]
+        else:
+            n_outputs = 1
+        indexes = np.arange(0, n_outputs)
 
         # chose prediction function
         if len(indexes) == 1:
