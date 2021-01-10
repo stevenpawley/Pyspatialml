@@ -1916,7 +1916,7 @@ class Raster(RasterPlot, BaseRaster):
 
         return new_raster
 
-    def block_shapes(self, rows, cols, min_rows=5, min_cols=5, overlap=0):
+    def block_shapes(self, rows, cols):
         """Generator for windows for optimal reading and writing based on the raster
         format Windows are returns as a tuple with xoff, yoff, width, height.
 
@@ -1930,29 +1930,15 @@ class Raster(RasterPlot, BaseRaster):
         """
 
         for i, col in enumerate(range(0, self.width, cols)):
-            if i > 0:
-                col = col - overlap
-
             if col + cols < self.width:
                 num_cols = cols
             else:
                 num_cols = self.width - col
-                if num_cols < min_cols:
-                    diff = min_cols - num_cols
-                    col = col - diff
-                    num_cols = min_cols
 
             for j, row in enumerate(range(0, self.height, rows)):
-                if j > 0:
-                    row = row - overlap
-
                 if row + rows < self.height:
                     num_rows = rows
                 else:
                     num_rows = self.height - row
-                    if num_rows < min_rows:
-                        diff = min_rows - num_rows
-                        row = row - diff
-                        num_rows = min_rows
 
                 yield Window(col, row, num_cols, num_rows)
