@@ -245,7 +245,7 @@ class BaseRaster(ABC):
                 xy = np.transpose(rasterio.transform.xy(self.transform, rows, cols))
 
                 # sample at random point locations
-                samples = self.extract_xy(xy)
+                samples = self.extract_xy(xy, return_array=True)
 
                 # append only non-masked data to each row of X_random
                 samples = samples.astype("float32").filled(np.nan)
