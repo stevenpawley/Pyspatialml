@@ -444,13 +444,8 @@ class BaseRaster(ABC):
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
-        if progress is True:
-            disable_tqdm = False
-        else:
-            disable_tqdm = True
-
         for i, (layer, pbar) in enumerate(
-            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=disable_tqdm))
+            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=not progress))
         ):
             sampler = sample_gen(
                 dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
