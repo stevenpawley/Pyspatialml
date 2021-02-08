@@ -1,7 +1,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyspatialml/badge/?version=latest)](https://pyspatialml.readthedocs.io/en/latest/?badge=latest)
 
 # Pyspatialml
-Machine learning classification and regresssion modelling for spatial raster data.
+Machine learning classification and regression modelling for spatial raster data.
 
 Note - this package is still under development and breaking changes are possible.
 
