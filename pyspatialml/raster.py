@@ -743,7 +743,7 @@ class Raster(RasterPlot, BaseRaster):
         if nodata is None:
             nodata = _get_nodata(dtype)
 
-        meta = self.meta
+        meta = self.meta.copy()
         meta["driver"] = driver
         meta["nodata"] = nodata
         meta["dtype"] = dtype
@@ -848,7 +848,7 @@ class Raster(RasterPlot, BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
         meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
@@ -971,7 +971,7 @@ class Raster(RasterPlot, BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
         meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
@@ -1376,7 +1376,7 @@ class Raster(RasterPlot, BaseRaster):
             crop = False
 
         file_path, tfile = _file_path_tempfile(file_path)
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
 
         dtype = self._check_supported_dtype(dtype)
         if nodata is None:
@@ -1470,7 +1470,7 @@ class Raster(RasterPlot, BaseRaster):
             suite of RasterLayers.
         """
         file_path, tfile = _file_path_tempfile(file_path)
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
 
         dtype = self._check_supported_dtype(dtype)
 
@@ -1689,7 +1689,7 @@ class Raster(RasterPlot, BaseRaster):
             top=self.bounds.top,
         )
 
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
         meta["nodata"] = nodata
         meta["width"] = dst_width
         meta["height"] = dst_height
@@ -1779,7 +1779,7 @@ class Raster(RasterPlot, BaseRaster):
 
         arr = self.read(masked=True, out_shape=out_shape, resampling=resampling)
 
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
 
         dtype = self._check_supported_dtype(dtype)
         if nodata is None:
@@ -1891,7 +1891,7 @@ class Raster(RasterPlot, BaseRaster):
             nodata = _get_nodata(dtype)
 
         # open output file with updated metadata
-        meta = deepcopy(self.meta)
+        meta = self.meta.copy()
         meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
