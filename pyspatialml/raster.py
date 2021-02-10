@@ -1004,6 +1004,7 @@ class Raster(RasterPlot, BaseRaster):
 
         return new_raster
 
+
     def _predfun(self, img, estimator):
         """Prediction function for classification or regression response.
 
@@ -1045,6 +1046,189 @@ class Raster(RasterPlot, BaseRaster):
         result_cla = result_cla.reshape((1, window.height, window.width))
 
         return result_cla
+
+#################### Hack for use with NGBoost
+### eg. result2dist = stack.predict_dist(estimator=ngb_unpickled, dtype='float32', nodata=-9999, file_path = r'F:\Depth Modelling\NGBOOST-RESULTS\CrystallineBasementTestDist.tif')
+### https://github.com/stanfordmlgroup/ngboost
+
+    def predict_dist(
+        self,
+        estimator,
+        file_path=None,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        as_df=False,
+        n_jobs=-1,
+        progress=False,
+    ):
+        """Apply prediction of a scikit learn model to a Raster.
+        
+        The model can represent any scikit learn model or compatible api with a `fit`
+        and `predict` method. These can consist of classification or regression models.
+        Multi-class classifications and multi-target regressions are also supported.
+
+        Parameters
+        ----------
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
+
+        file_path : str (optional, default None)
+            Path to a GeoTiff raster for the prediction results. If not specified then
+            the output is written to a temporary file.
+
+        driver : str (default 'GTiff')
+            Named of GDAL-supported driver for file export
+
+        dtype : str (optional, default None)
+            Optionally specify a numpy compatible data type when saving to file. If not
+            specified, a data type is set based on the data types of the prediction.
+
+        nodata : any number (optional, default None)
+            Nodata value for file export. If not specified then the nodata value is
+            derived from the minimum permissible value for the given data type.
+        
+        as_df : bool (default is False)
+            Whether to read the raster data via pandas before prediction. This can be
+            useful if transformers are being used as part of a pipeline and you want
+            to refer to column names rather than indices.
+        
+        n_jobs : int (default -1)
+            Number of processing cores to use for parallel execution. Default is
+            n_jobs=1. -1 is all cores; -2 is all cores -1. 
+
+        progress : bool (default False)
+            Show progress bar for prediction.
+
+        Returns
+        -------
+        pyspatial.Raster
+            Raster object containing prediction results as a RasterLayers. For
+            classification and regression models, the Raster will contain a single
+            RasterLayer, unless the model is multi-class or multi-target. Layers
+            are named automatically as `pred_raw_n` with n = 1, 2, 3 ..n.
+        """
+        file_path, tfile = _file_path_tempfile(file_path)
+        n_jobs = _get_num_workers(n_jobs)
+
+        # determine output count for multi output cases
+        window = Window(0, 0, self.width, 1)
+
+        if as_df is False:
+            img = self.read(masked=True, window=window)
+            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+            n_samples = rows * cols
+            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+            flat_pixels = flat_pixels.filled(0)
+        else:
+            flat_pixels = self.read(masked=False, as_df=True)
+            flat_pixels = flat_pixels.fillna(0)
+
+        result = estimator.predict(flat_pixels)
+
+        if result.ndim > 1:
+            n_outputs = result.shape[result.ndim - 1]
+        else:
+            n_outputs = 1
+
+        indexes = np.arange(0, n_outputs)
+
+        # chose prediction function
+        if len(indexes) == 1:
+            predfun = partial(self._predfun_dist, estimator=estimator)
+        else:
+            predfun = partial(self._predfun_dist_multioutput, estimator=estimator)
+
+        if dtype is None:
+            dtype = result.dtype
+
+        if nodata is None:
+            nodata = _get_nodata(dtype)
+        
+        if progress is True:
+            disable_tqdm = False
+        else:
+            disable_tqdm = True
+
+        # open output file with updated metadata
+        meta = deepcopy(self.meta)
+        meta.update(driver=driver, count=len(indexes), dtype=dtype, nodata=nodata)
+
+        with rasterio.open(file_path, "w", **meta) as dst:
+            windows = [window for window in self.block_shapes(*self._block_shape)]
+
+            # generator gets raster arrays for each window
+            data_gen = ((window, self.read(window=window, masked=True, as_df=as_df)) for window in windows)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
+                for window, result, pbar in zip(windows, executor.map(predfun, data_gen), tqdm(windows, disable=disable_tqdm)):
+                    result = np.ma.filled(result, fill_value=nodata)
+                    dst.write(result[indexes, :, :].astype(dtype), window=window)
+        
+        # generate layer names
+        prefix = "pred_raw_"
+        names = [prefix + str(i) for i in range(len(indexes))]
+
+        # create new raster object
+        new_raster = self._new_raster(file_path, names)
+
+        if tfile is not None:
+            for layer in new_raster.iloc:
+                layer._close = tfile.close
+
+        return new_raster
+
+    def _predfun_dist(self, img, estimator):
+        """Prediction function for classification or regression response.
+
+        Parameters
+        ----
+        img : tuple (window, numpy.ndarray)
+            A window object, and a 3d ndarray of raster data with the dimensions in
+            order of (band, rows, columns).
+
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
+
+        Returns
+        -------
+        numpy.ndarray
+            2d numpy array representing a single band raster containing the
+            classification or regression result.
+        """
+        window, img = img
+
+        if not isinstance(img, pd.DataFrame):
+            # reshape each image block matrix into a 2D matrix
+            # first reorder into rows, cols, bands(transpose)
+            # then resample into 2D array (rows=sample_n, cols=band_values)
+            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+            n_samples = rows * cols
+            flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+
+            # create mask for NaN values and replace with number
+            flat_pixels_mask = flat_pixels.mask.copy()
+            flat_pixels = flat_pixels.filled(0)
+        
+        else:
+            flat_pixels = img
+            flat_pixels_mask = pd.isna(flat_pixels).values
+            flat_pixels = flat_pixels.fillna(0)
+            flat_pixels = flat_pixels.values
+
+        # predict and replace mask
+        result_cla = estimator.pred_dist(flat_pixels)
+        result_cla = result_cla.params['scale']
+        result_cla = np.ma.masked_array(
+            data=result_cla, mask=flat_pixels_mask.any(axis=1)
+        )
+
+        # reshape the prediction from a 1D into 3D array [band, row, col]
+        result_cla = result_cla.reshape((1, window.height, window.width))
+
+        return result_cla
+
+####################
 
     @staticmethod
     def _probfun(img, estimator):
