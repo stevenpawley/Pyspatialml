@@ -6,4 +6,4 @@ scipy
 shapely
 pandas
 matplotlib
-sklearn
+scikit-learn

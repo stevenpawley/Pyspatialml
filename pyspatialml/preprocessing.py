@@ -15,8 +15,8 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     layer : pyspatialml.RasterLayer
         Containing categories to perform one-hot encoding on.
     categories : list, ndarray, optional
-        Optional list of categories to extract. Default performs one-hot encoding
-        on all categorical values in the input layer.
+        Optional list of categories to extract. Default performs one-hot
+        encoding on all categorical values in the input layer.
     file_path : str, optional. Default is None
         File path to save one-hot encoded raster. If not supplied then data
         is written to a tempfile.
@@ -78,8 +78,8 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
         RasterLayer to use as a template.
     
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then the
-        raster is saved to a temporary file.
+        File path to save to the resulting Raster object. If not supplied then
+        the raster is saved to a temporary file.
     
     driver : str, options. Default is 'GTiff'
         GDAL driver to use to save raster.
@@ -126,8 +126,8 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     n_angles : int, optional. Default is 8
         Number of angles to rotate coordinate system by.
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then the
-        raster is saved to a temporary file.
+        File path to save to the resulting Raster object. If not supplied then
+        the raster is saved to a temporary file.
     
     driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster.
@@ -170,14 +170,16 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
 
 
 def distance_to_corners(layer, file_path=None, driver='GTiff'):
-    """Generate buffer distances to corner and centre coordinates of raster extent.
+    """Generate buffer distances to corner and centre coordinates of raster
+    extent.
+
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
     
     file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then the
-        raster is saved to a temporary file.
+        File path to save to the resulting Raster object. If not supplied then
+        the raster is saved to a temporary file.
     
     driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster.
@@ -269,8 +271,8 @@ def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
     cols : 1d numpy array
         array of column indexes.
     file_path : str, optional. Default=None
-        File path to save to the resulting Raster object. If not supplied then the
-        raster is saved to a temporary file.
+        File path to save to the resulting Raster object. If not supplied then
+        the raster is saved to a temporary file.
     
     driver : str, default='GTiff'
         GDAL driver to use to save raster.
