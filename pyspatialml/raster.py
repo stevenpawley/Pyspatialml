@@ -1053,7 +1053,33 @@ class Raster(RasterPlot, BaseRaster):
             new_layer.norm = old_layer.norm
             new_layer.categorical = old_layer.categorical
 
+        raster.block_shape = self.block_shape
+
         return raster
+
+    def copy(self):
+        """Creates a shallow copy of a Raster object
+
+        Note that shallow in the context of a Raster object means that an
+        immutable copy of the object is made, however the on-disk file
+        locations remain the same.
+
+        Returns
+        -------
+        Raster
+        """
+        new_raster = Raster(self.files)
+        rename = {old: new for old, new in zip(new_raster.names, self.names)}
+        new_raster.rename(rename, in_place=True)
+
+        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
+            new_layer.cmap = old_layer.cmap
+            new_layer.norm = old_layer.norm
+            new_layer.categorical = old_layer.categorical
+
+        new_raster.block_shape = self.block_shape
+
+        return new_raster
 
     def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None,
              driver="GTiff", dtype=None, nodata=None, **kwargs):
