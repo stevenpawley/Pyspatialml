@@ -1,12 +1,13 @@
 from unittest import TestCase
-from pyspatialml import Raster
-import pyspatialml.datasets.nc as nc
+
 import matplotlib as mpl
 import numpy as np
 
+import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
+
 
 class TestPlotting(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_plotting_raster(self):
@@ -30,5 +31,6 @@ class TestPlotting(TestCase):
 
     def test_plotting_single(self):
         stack = Raster(self.predictors[0])
-        p = stack.plot(legend_kwds={"orientation": "horizontal", "fraction": 0.04})
+        p = stack.plot(
+            legend_kwds={"orientation": "horizontal", "fraction": 0.04})
         self.assertIsInstance(p, mpl.axes.Subplot)

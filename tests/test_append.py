@@ -1,18 +1,17 @@
 from unittest import TestCase
-from pyspatialml import Raster
+
 import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
 
 
 class TestAppend(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_append_inplace(self):
-
         # append another Raster containing a single layer with identical name
         stack = Raster(self.predictors)
         band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()
-        stack.append(Raster(nc.band7))
+        stack.append(Raster(nc.band7), in_place=True)
 
         self.assertEqual(stack.names[5], "lsat7_2000_70_1")
         self.assertEqual(stack.names[-1], "lsat7_2000_70_2")
@@ -24,11 +23,10 @@ class TestAppend(TestCase):
 
         # append a multiband raster
         stack = Raster(self.predictors)
-        stack.append(Raster(nc.multiband))
+        stack.append(Raster(nc.multiband), in_place=True)
         self.assertEqual(stack.names[6], "landsat_multiband_1")
 
     def test_append_with_copy(self):
-
         # append another Raster containing a single layer with identical name
         stack = Raster(self.predictors)
         band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()

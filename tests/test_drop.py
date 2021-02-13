@@ -1,14 +1,13 @@
 from unittest import TestCase
-from pyspatialml import Raster
+
 import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
 
 
 class TestDrop(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_drop_inplace(self):
-
         stack = Raster(self.predictors)
         stack.drop(labels="lsat7_2000_50", in_place=True)
 
@@ -20,7 +19,6 @@ class TestDrop(TestCase):
         self.assertNotIn("lsat7_2000_50", stack.names)
 
     def test_drop_with_copy(self):
-
         stack = Raster(self.predictors)
         names = stack.names
         result = stack.drop(labels="lsat7_2000_50", in_place=False)

@@ -1,12 +1,13 @@
 from unittest import TestCase
-from pyspatialml import Raster
-import pyspatialml.datasets.nc as nc
+
 import geopandas as gpd
 import numpy as np
 
+import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
+
 
 class TestMask(TestCase):
-
     training_py = gpd.read_file(nc.polygons)
     mask_py = training_py.iloc[0:1, :]
 
@@ -14,7 +15,6 @@ class TestMask(TestCase):
     stack = Raster(predictors)
 
     def test_mask_defaults(self):
-
         masked_object = self.stack.mask(self.mask_py)
 
         # check raster object
@@ -27,7 +27,6 @@ class TestMask(TestCase):
         self.assertEqual(masked_object.read(masked=True).max(), 168.0)
 
     def test_mask_inverted(self):
-
         masked_object = self.stack.mask(self.mask_py, invert=True)
 
         # check raster object
@@ -40,7 +39,6 @@ class TestMask(TestCase):
         self.assertEqual(masked_object.read(masked=True).max(), 255.0)
 
     def test_mask_custom_dtype(self):
-
         masked_object = self.stack.mask(self.mask_py, dtype=np.int16)
 
         # check raster object
@@ -53,7 +51,6 @@ class TestMask(TestCase):
         self.assertEqual(masked_object.read(masked=True).max(), 168)
 
     def test_mask_custom_nodata(self):
-
         masked_object = self.stack.mask(self.mask_py, nodata=-99999)
 
         # check raster object

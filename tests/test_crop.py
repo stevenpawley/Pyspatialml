@@ -1,11 +1,12 @@
 from unittest import TestCase
-from pyspatialml import Raster
-import pyspatialml.datasets.nc as nc
+
 import geopandas as gpd
+
+import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
 
 
 class TestToCrs(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
     stack = Raster(predictors)
 
@@ -13,7 +14,6 @@ class TestToCrs(TestCase):
     crop_bounds = training_py.loc[0, "geometry"].bounds
 
     def test_crop_defaults(self):
-
         stack_cropped = self.stack.crop(self.crop_bounds)
 
         # check raster object

@@ -355,8 +355,12 @@ class Raster(RasterPlot, BaseRaster):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
 
+        # initiate from a single RasterLayer
+        elif isinstance(src, RasterLayer):
+            src_layers = src
+
         # initiate from a single or list of RasterLayer objects
-        elif (isinstance(src, RasterLayer) or
+        elif (isinstance(src, list) and
               all(isinstance(x, RasterLayer) for x in src)):
             src_layers = src
 
@@ -415,8 +419,8 @@ class Raster(RasterPlot, BaseRaster):
                     raise KeyError("key not present in Raster object")
                 else:
                     selected.append(self.loc[i])
-
-        return Raster(selected)
+            selected = Raster(selected)
+        return selected
 
     def __setitem__(self, key, value):
         """Replace a RasterLayer within the Raster object with a new

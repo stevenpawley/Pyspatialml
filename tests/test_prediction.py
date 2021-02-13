@@ -1,14 +1,16 @@
 from unittest import TestCase
-from pyspatialml import Raster
-from pyspatialml.datasets import nc
-import pyspatialml.datasets.meuse as ms
+
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+import pyspatialml.datasets.meuse as ms
+from pyspatialml import Raster
+from pyspatialml.datasets import nc
+
 
 class TestPrediction(TestCase):
-
-    nc_predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    nc_predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                     nc.band7]
     stack_nc = Raster(nc_predictors)
     stack_meuse = Raster(ms.predictors)
 

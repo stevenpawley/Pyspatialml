@@ -1,15 +1,14 @@
-from unittest import TestCase
-from pyspatialml import Raster
-import pyspatialml.datasets.nc as nc
 from copy import deepcopy
+from unittest import TestCase
+
+import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
 
 
 class TestRename(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_rename_inplace(self):
-
         stack = Raster(self.predictors)
         band3_stats = stack.lsat7_2000_30.mean()
 
@@ -25,7 +24,7 @@ class TestRename(TestCase):
         self.assertNotIn("lsat7_2000_30", dir(stack))
 
         # check that internal name of RasterLayer was also renamed
-        self.assertEqual(stack.iloc[2].names[0], "new_name")
+        self.assertEqual(stack.iloc[2].name, "new_name")
 
         # check that the RasterLayer attached to the new name is the same
         self.assertEqual(stack["new_name"].mean(), band3_stats)
@@ -39,13 +38,13 @@ class TestRename(TestCase):
         self.assertIn("new_name", new_raster.names)
 
     def test_rename_with_copy(self):
-
         stack = Raster(self.predictors)
         names = deepcopy(stack.names)
         band3_stats = stack.lsat7_2000_30.mean()
 
         # rename band 3
-        result = stack.rename(names={"lsat7_2000_30": "new_name"}, in_place=False)
+        result = stack.rename(names={"lsat7_2000_30": "new_name"},
+                              in_place=False)
 
         # check that original is untouched
         self.assertEqual(stack.names, names)

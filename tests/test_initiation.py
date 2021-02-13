@@ -1,11 +1,12 @@
 from unittest import TestCase
+
+import rasterio
+
 from pyspatialml import Raster, RasterLayer
 from pyspatialml.datasets import nc
-import rasterio
 
 
 class TestInit(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_initiation(self):

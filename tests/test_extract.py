@@ -2,15 +2,14 @@ from copy import deepcopy
 from unittest import TestCase
 
 import geopandas
-import numpy as np
 import pandas as pd
 import rasterio
+
 from pyspatialml import Raster
-from pyspatialml.datasets import meuse, nc
+from pyspatialml.datasets import nc
 
 
 class TestExtract(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
     extracted_grass = pd.read_table(nc.extracted_pixels, delimiter=" ")
     stack = Raster(predictors)
@@ -19,24 +18,31 @@ class TestExtract(TestCase):
         training_pt = geopandas.read_file(nc.points)
 
         # check that extracted training data as array match known values
-        ids, X, xys = self.stack.extract_vector(gdf=training_pt, return_array=True)
+        ids, X, xys = self.stack.extract_vector(gdf=training_pt,
+                                                return_array=True)
         self.assertTrue(
-            (X[~X[:, 0].mask, 0].data == training_pt["b1"].dropna().values).all()
+            (X[~X[:, 0].mask, 0].data == training_pt[
+                "b1"].dropna().values).all()
         )
         self.assertTrue(
-            (X[~X[:, 1].mask, 1].data == training_pt["b2"].dropna().values).all()
+            (X[~X[:, 1].mask, 1].data == training_pt[
+                "b2"].dropna().values).all()
         )
         self.assertTrue(
-            (X[~X[:, 2].mask, 2].data == training_pt["b3"].dropna().values).all()
+            (X[~X[:, 2].mask, 2].data == training_pt[
+                "b3"].dropna().values).all()
         )
         self.assertTrue(
-            (X[~X[:, 3].mask, 3].data == training_pt["b4"].dropna().values).all()
+            (X[~X[:, 3].mask, 3].data == training_pt[
+                "b4"].dropna().values).all()
         )
         self.assertTrue(
-            (X[~X[:, 4].mask, 4].data == training_pt["b5"].dropna().values).all()
+            (X[~X[:, 4].mask, 4].data == training_pt[
+                "b5"].dropna().values).all()
         )
         self.assertTrue(
-            (X[~X[:, 5].mask, 5].data == training_pt["b7"].dropna().values).all()
+            (X[~X[:, 5].mask, 5].data == training_pt[
+                "b7"].dropna().values).all()
         )
 
         # check that extracted training data as a DataFrame match known values
@@ -44,12 +50,18 @@ class TestExtract(TestCase):
         df = df.dropna()
         training_pt = training_pt.dropna()
 
-        self.assertTrue((df["lsat7_2000_10"].values == training_pt["b1"].values).all())
-        self.assertTrue((df["lsat7_2000_20"].values == training_pt["b2"].values).all())
-        self.assertTrue((df["lsat7_2000_30"].values == training_pt["b3"].values).all())
-        self.assertTrue((df["lsat7_2000_40"].values == training_pt["b4"].values).all())
-        self.assertTrue((df["lsat7_2000_50"].values == training_pt["b5"].values).all())
-        self.assertTrue((df["lsat7_2000_70"].values == training_pt["b7"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_10"].values == training_pt["b1"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_20"].values == training_pt["b2"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_30"].values == training_pt["b3"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_40"].values == training_pt["b4"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_50"].values == training_pt["b5"].values).all())
+        self.assertTrue(
+            (df["lsat7_2000_70"].values == training_pt["b7"].values).all())
 
     def test_extract_polygons(self):
         # extract training data from polygons
@@ -67,22 +79,28 @@ class TestExtract(TestCase):
         # compare to extracted data using GRASS GIS
         self.assertEqual(df.shape[0], self.extracted_grass.shape[0])
         self.assertAlmostEqual(
-            df["lsat7_2000_10"].mean(), self.extracted_grass["b1"].mean(), places=2
+            df["lsat7_2000_10"].mean(), self.extracted_grass["b1"].mean(),
+            places=2
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_20"].mean(), self.extracted_grass["b2"].mean(), places=2
+            df["lsat7_2000_20"].mean(), self.extracted_grass["b2"].mean(),
+            places=2
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_30"].mean(), self.extracted_grass["b3"].mean(), places=2
+            df["lsat7_2000_30"].mean(), self.extracted_grass["b3"].mean(),
+            places=2
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_40"].mean(), self.extracted_grass["b4"].mean(), places=2
+            df["lsat7_2000_40"].mean(), self.extracted_grass["b4"].mean(),
+            places=2
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_50"].mean(), self.extracted_grass["b5"].mean(), places=2
+            df["lsat7_2000_50"].mean(), self.extracted_grass["b5"].mean(),
+            places=2
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_70"].mean(), self.extracted_grass["b7"].mean(), places=2
+            df["lsat7_2000_70"].mean(), self.extracted_grass["b7"].mean(),
+            places=2
         )
 
     def test_extract_lines(self):
@@ -104,20 +122,26 @@ class TestExtract(TestCase):
 
         self.assertEqual(df.shape[0], self.extracted_grass.shape[0])
         self.assertAlmostEqual(
-            df["lsat7_2000_10"].mean(), self.extracted_grass["b1"].mean(), places=3
+            df["lsat7_2000_10"].mean(), self.extracted_grass["b1"].mean(),
+            places=3
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_20"].mean(), self.extracted_grass["b2"].mean(), places=3
+            df["lsat7_2000_20"].mean(), self.extracted_grass["b2"].mean(),
+            places=3
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_30"].mean(), self.extracted_grass["b3"].mean(), places=3
+            df["lsat7_2000_30"].mean(), self.extracted_grass["b3"].mean(),
+            places=3
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_40"].mean(), self.extracted_grass["b4"].mean(), places=3
+            df["lsat7_2000_40"].mean(), self.extracted_grass["b4"].mean(),
+            places=3
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_50"].mean(), self.extracted_grass["b5"].mean(), places=3
+            df["lsat7_2000_50"].mean(), self.extracted_grass["b5"].mean(),
+            places=3
         )
         self.assertAlmostEqual(
-            df["lsat7_2000_70"].mean(), self.extracted_grass["b7"].mean(), places=3
+            df["lsat7_2000_70"].mean(), self.extracted_grass["b7"].mean(),
+            places=3
         )

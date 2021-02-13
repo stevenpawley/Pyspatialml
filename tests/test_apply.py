@@ -1,11 +1,12 @@
 from unittest import TestCase
-from pyspatialml import Raster
-import pyspatialml.datasets.nc as nc
+
 import numpy as np
+
+import pyspatialml.datasets.nc as nc
+from pyspatialml import Raster
 
 
 class TestCalc(TestCase):
-
     predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
     stack = Raster(predictors)
 
