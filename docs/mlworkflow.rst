@@ -5,11 +5,11 @@ Extraction Training Data
 ========================
 
 Load some training data in the form of polygons, points and labelled pixels in
-``geopandas.GeoDataFrame`` objects. We will also generate some line geometries by
-converting the polygon boundaries into linestrings. All of these geometry types
-can be used to spatially query pixel values in a Raster object, however each
-GeoDataFrame must contain only one type of geometry (i.e. either shapely points,
-polygons or linestrings).
+``geopandas.GeoDataFrame`` objects. We will also generate some line geometries
+by converting the polygon boundaries into linestrings. All of these geometry
+types can be used to spatially query pixel values in a Raster object, however
+each GeoDataFrame must contain only one type of geometry (i.e. either shapely
+points, polygons or linestrings).
 
 ::
 
@@ -54,26 +54,26 @@ Pixel values in the Raster object can be spatially queried using the
 and y coordinates.
 
 The ``extract_vector`` method accepts a Geopandas GeoDataFrame as the
-``gdf`` argument. For GeoDataFrames containing shapely point geometries, the closest pixel to each
-point is sampled. For shapely polygon geometries, all pixels whose centres are
-inside the polygon are sampled. For shapely linestring geometries, every pixel
-touched by the line is sampled. For all geometry types, pixel values are queries
-for each geometry separately. This means that overlapping polygons or points
-that fall within the same pixel with cause the same pixel to be sampled multiple
-times.
+``gdf`` argument. For GeoDataFrames containing shapely point geometries, the
+closest pixel to each point is sampled. For shapely polygon geometries, all
+pixels whose centres are inside the polygon are sampled. For shapely
+linestring geometries, every pixel touched by the line is sampled. For all
+geometry types, pixel values are queries for each geometry separately. This
+means that overlapping polygons or points that fall within the same pixel with
+cause the same pixel to be sampled multiple times.
 
 By default, the extract functions return a Geopandas GeoDataFrame of point
 geometries and the DataFrame containing the extracted pixels, with the column
-names set by the names of the raster datasets in the Raster object. The user can
-also use the ``return_array=True`` argument, which instead of returning a
+names set by the names of the raster datasets in the Raster object. The user
+can also use the ``return_array=True`` argument, which instead of returning a
 DataFrame will return three masked numpy arrays (ids, X, xy) containing the
-geodataframe index positions, extracted pixel values, and the spatial coordinates of the
-sampled pixels. These arrays are masked arrays.
+geodataframe index positions, extracted pixel values, and the spatial
+coordinates of the sampled pixels. These arrays are masked arrays.
 
 The ``extract_raster`` method can also be used to spatially query pixel values
 from a Raster object using another raster containing labelled pixels. This
-raster has to be spatially aligned with the Raster object. The values of the labelled pixels are returned
-along with the queried pixel values.
+raster has to be spatially aligned with the Raster object. The values of the
+labelled pixels are returned along with the queried pixel values.
 
 ::
 
@@ -82,14 +82,15 @@ along with the queried pixel values.
     df_polygons = stack.extract_vector(training_py)
     df_lines = stack.extract_vector(training_lines)
 
-For any vector features, a GeoDataFrame is returned containing the extracted pixel
-values. A pandas.MultiIndex is used to relate the pixels back to the original 
-geometries, with the `pixel_idx` index referring to the index of each pixel, and
-the `geometry_idx` referring to the index of the original geometry in the supplied
-GeoDataFrame. The pixel values themselves are represented as `shapely.geometry.Point` objects.
-These will need to be joined back with the columns of the vector features to get
-the labelled classes. Here we will join the extracted pixels using the "id" column
-and the GeoDataFrame index of the vector features:
+For any vector features, a GeoDataFrame is returned containing the extracted
+pixel values. A pandas.MultiIndex is used to relate the pixels back to the
+original geometries, with the `pixel_idx` index referring to the index of each
+pixel, and the `geometry_idx` referring to the index of the original geometry
+in the supplied GeoDataFrame. The pixel values themselves are represented as
+`shapely.geometry.Point` objects. These will need to be joined back with the
+columns of the vector features to get the labelled classes. Here we will join
+the extracted pixels using the "id" column and the GeoDataFrame index of the
+vector features:
 
 ::
 
@@ -105,8 +106,8 @@ and the GeoDataFrame index of the vector features:
         right_index=True
     )
 
-If the training data is from labelled pixels in a raster, then the extracted data
-will contain a "value" column that contains the pixel labels:
+If the training data is from labelled pixels in a raster, then the extracted
+data will contain a "value" column that contains the pixel labels:
 
 ::
 
@@ -123,7 +124,8 @@ Next we can train a logistic regression classifier:
     from sklearn.pipeline import Pipeline
     from sklearn.model_selection import cross_validate
 
-    # define the classifier with standardization of the input features in a pipeline
+    # define the classifier with standardization of the input features in a
+    # pipeline
     lr = Pipeline(
         [('scaling', StandardScaler()),
          ('classifier', LogisticRegressionCV(n_jobs=-1))])
@@ -138,20 +140,21 @@ Next we can train a logistic regression classifier:
 
 
 After defining a classifier, a typical step consists of performing a
-cross-validation to evaluate the performance of the model. Scikit-learn provides
-the cross_validate function for this purpose. In comparison to non-spatial data,
-spatial data can be spatially correlated, which potentially can mean that
-geographically proximal samples may not represent truely independent samples if
-they are within the autocorrelation range of some of the predictors. This will
-lead to overly optimistic performance measures if samples in the training
-dataset / cross-validation partition are strongly spatially correlated with
-samples in the test dataset / cross-validation partition.
+cross-validation to evaluate the performance of the model. Scikit-learn
+provides the cross_validate function for this purpose. In comparison to
+non-spatial data, spatial data can be spatially correlated, which potentially
+can mean that geographically proximal samples may not represent truely
+independent samples if they are within the autocorrelation range of some of the
+predictors. This will lead to overly optimistic performance measures if samples
+in the training dataset / cross-validation partition are strongly spatially
+correlated with samples in the test dataset / cross-validation partition.
 
 In this case, performing cross-validation using groups is useful, because these
 groups can represent spatial clusters of training samples, and samples from the
 same group will never occur in both the training and test partitions of a
-cross-validation. Here we can use the polygon indices as the groups, i.e. pixels
-within the same polygon will not be split into training and test partitions:
+cross-validation. Here we can use the polygon indices as the groups, i.e.
+pixels within the same polygon will not be split into training and test
+partitions:
 
 ::
 
@@ -170,10 +173,10 @@ within the same polygon will not be split into training and test partitions:
 Raster Prediction
 =================
 
-Prediction on the Raster object is performed using the ```predict``` method. The
-``estimator`` is the only required argument. If the ``file_path`` argument is
-not specified then the result is automatically written to a temporary file. The
-predict method returns an rasterio.io.DatasetReader object which is open.
+Prediction on the Raster object is performed using the ```predict``` method.
+The ``estimator`` is the only required argument. If the ``file_path`` argument
+is not specified then the result is automatically written to a temporary file.
+The predict method returns an rasterio.io.DatasetReader object which is open.
 
 ::
 

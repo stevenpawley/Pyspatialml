@@ -1,14 +1,14 @@
 Plotting
 ********
 
-Both `Raster` and `RasterLayer` objects include basic plotting methods. The plot method
-for a `RasterLayer` object produces a single raster plot using the
+Both `Raster` and `RasterLayer` objects include basic plotting methods. The
+plot method for a `RasterLayer` object produces a single raster plot using the
 `matplotlib.pyplot.imshow' method.
 
-For convenience, plot settings such as color ramps and stretches can also be set for
-each RasterLayer using the `RasterLayer.cmap` that support matplotlib cmap's, and the
-`RasterLayer.norm` attribute to associate a `matplotlib.colors.Normalize` stretch with
-each RasterLayer:
+For convenience, plot settings such as color ramps and stretches can also be
+set for each RasterLayer using the `RasterLayer.cmap` that support matplotlib
+cmap's, and the `RasterLayer.norm` attribute to associate a
+`matplotlib.colors.Normalize` stretch with each RasterLayer:
 
 To plot a single RasterLayer:
 ::
@@ -36,13 +36,13 @@ To plot a single RasterLayer:
 
     A single band
 
-For RasterLayers that represent categorical data types, e.g. land cover, then the
-`RasterLayer.categorical=True` attribute will cause the cmap to be converted to a
-discrete scale.
+For RasterLayers that represent categorical data types, e.g. land cover, then
+the `RasterLayer.categorical=True` attribute will cause the cmap to be
+converted to a discrete scale.
 
-The default plot method for a `Raster` object produces a raster-matrix plot of the
-individual RasterLayers. By default this plot preserves the plotting attributes of
-the individual rasters:
+The default plot method for a `Raster` object produces a raster-matrix plot of
+the individual RasterLayers. By default this plot preserves the plotting
+attributes of the individual rasters:
 
 Plot all RasterLayers in a Raster object:
 ::
@@ -74,7 +74,7 @@ Plot all RasterLayers in a Raster object:
 
     Raster of stacked nc data
 
-The `Raster.plot` method also provides `cmap` and `norm` arguments that can be used to
-override the settings of the individual RasterLayers. Additional settings can be passed
-to control plot layout using the `figure_kwds`, `legend_kwds` and `subplots_kwds`
-arguments.
+The `Raster.plot` method also provides `cmap` and `norm` arguments that can be
+used to override the settings of the individual RasterLayers. Additional
+settings can be passed to control plot layout using the `figure_kwds`,
+`legend_kwds` and `subplots_kwds` arguments.

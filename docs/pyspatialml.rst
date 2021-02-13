@@ -11,14 +11,6 @@ Subpackages
 Submodules
 ==========
 
-pyspatialml.estimators module
-------------------------------
-
-.. automodule:: pyspatialml.estimators
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspatialml.plotting module
 ---------------------------
 

@@ -4,7 +4,8 @@ Quickstart
 Initiating a Raster Object
 ==========================
 
-We are going to use a set of Landsat 7 bands contained within the nc example data:
+We are going to use a set of Landsat 7 bands contained within the nc example
+data:
 
 ::
 
@@ -22,6 +23,21 @@ perform machine learning related operations on the set of rasters:
 ::
 
     stack = Raster(predictors)
+
+
+When a Raster object is created, the names to each layer are automatically
+created based on syntactically-correct versions of the file basenames:
+
+::
+
+    stack.names
+
+
+Color ramps and matplotlib.colors.Normalize objects can be assigned to each
+RasterLayer in the object using the `cmap` and `norm` attributes for
+convenient in plotting:
+
+::
 
     stack.lsat7_2000_10.cmap = "Blues"
     stack.lsat7_2000_20.cmap = "Greens"
@@ -50,27 +66,25 @@ perform machine learning related operations on the set of rasters:
 
     Raster of stacked nc data
 
-Upon 'stacking', syntactically-correct names for each RasterLayer are
-automatically generated from the file_paths.
-
-Subset and Indexing
-===================
+Subsetting and Indexing
+=======================
 
 Indexing of Raster objects is provided by several methods:
 
-The ``Raster[keys]`` method enables key-based indexing using a name of a RasterLayer, or
-a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only
-a single label is used, otherwise it always returns a new Raster object containing only the
-selected layers.
+The ``Raster[keys]`` method enables key-based indexing using a name of a
+RasterLayer, or a list of names. Direct subsetting of a Raster object instance
+returns a RasterLayer if only a single label is used, otherwise it always
+returns a new Raster object containing only the selected layers.
 
-The ``Raster.iloc[int, list, tuple, slice]`` method allows a Raster object instance to be
-subset using integer-based indexing or slicing. The ``iloc`` method returns a RasterLayer object
-if only a single index is used, otherwise it always returns a new Raster object containing
-only the selected layers.
+The ``Raster.iloc[int, list, tuple, slice]`` method allows a Raster object
+instance to be subset using integer-based indexing or slicing. The ``iloc``
+method returns a RasterLayer object if only a single index is used, otherwise
+it always returns a new Raster object containing only the selected layers.
 
-Subsetting of a Raster object instance can also occur by using attribute names in the form of
-``Raster.name_of_layer``. Because only a single RasterLayer can be subset at one time using
-this approach, a RasterLayer object is always returned.
+Subsetting of a Raster object instance can also occur by using attribute names
+in the form of ``Raster.name_of_layer``. Because only a single RasterLayer can
+be subset at one time using this approach, a RasterLayer object is always
+returned.
 
 Examples of methods to subset a Raster object:
 
@@ -80,13 +94,14 @@ Examples of methods to subset a Raster object:
     single_layer = stack.iloc[0]
 
     # subset using a slice
-    new_raster_obj = stack.iloc[0:3]  # slice
+    new_raster_obj = stack.iloc[0:3]
 
     # subset using labels
-    single_layer = stack['lsat7_2000_10']  # key
-    single_layer = stack.lsat7_2000_10  # attribute
+    single_layer = stack['lsat7_2000_10']
+    single_layer = stack.lsat7_2000_10
 
-    new_raster_obj = stack[('lsat7_2000_10', 'lsat7_2000_20')]  # list or tuple of keys
+    # list or tuple of keys
+    new_raster_obj = stack[('lsat7_2000_10', 'lsat7_2000_20')]
 
 
 Iterate through RasterLayers individually:
@@ -104,13 +119,12 @@ Replace a RasterLayer with another:
 Appending and Dropping Layers
 =============================
 
-Append layers from another Raster to the stack. Note that this occurs in-place by default,
-unless the ``in_place = False`` parameter is used. Duplicate names are automatically
-given a suffix:
+Append layers from another Raster to the stack. Duplicate names are
+automatically given a suffix.
 
 ::
 
-    stack.append(Raster(nc.band7))
+    stack.append(Raster(nc.band7), in_place=True)
     stack.names
 
 Rename RasterLayers using a dict of old_name : new_name pairs:
@@ -118,7 +132,7 @@ Rename RasterLayers using a dict of old_name : new_name pairs:
 ::
 
     stack.names
-    stack.rename({'lsat7_2000_30': 'new_name'})
+    stack.rename({'lsat7_2000_30': 'new_name'}, in_place=True)
     stack.names
     stack.new_name
     stack['new_name']
@@ -127,15 +141,15 @@ Drop a RasterLayer:
 ::
 
     stack.names
-    stack.drop(labels='lsat7_2000_70_1')
+    stack.drop(labels='lsat7_2000_70_1', in_place=True)
     stack.names
 
 Integration with Pandas
 =======================
 
-Data from a Raster object can converted into a ``Pandas.DataDrame``, with each pixel
-representing by a row, and columns reflecting the x, y coordinates and the
-values of each RasterLayer in the Raster object:
+Data from a Raster object can converted into a ``Pandas.DataDrame``, with each
+pixel representing by a row, and columns reflecting the x, y coordinates and
+the values of each RasterLayer in the Raster object:
 
 ::
 
@@ -144,11 +158,11 @@ values of each RasterLayer in the Raster object:
     df = stack.to_pandas(max_pixels=50000, resampling='nearest')
     df.head()
 
-The original raster is up-sampled based on max_pixels and the resampling method,
-which uses all of resampling methods available in the underlying rasterio
-library for decimated reads. The Raster.to_pandas method can be useful for
-plotting datasets, or combining with a library such as ``plotnine`` to create
-ggplot2-style plots of stacks of RasterLayers:
+The original raster is up-sampled based on max_pixels and the resampling
+method, which uses all of resampling methods available in the underlying
+rasterio library for decimated reads. The Raster.to_pandas method can be useful
+for plotting datasets, or combining with a library such as ``plotnine`` to
+create ggplot2-style plots of stacks of RasterLayers:
 
 ::
 

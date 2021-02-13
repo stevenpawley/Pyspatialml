@@ -2,8 +2,8 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils.extmath import weighted_mode
 from sklearn.preprocessing import Normalizer
+from sklearn.utils.extmath import weighted_mode
 
 
 class KNNTransformer(BaseEstimator, TransformerMixin):
@@ -93,7 +93,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self, n_neighbors=7, weights="distance", measure="mean",
                  radius=1.0, algorithm="auto", leaf_size=30,
-                 metric="minkowski", p=2,  normalize=True, metric_params=None,
+                 metric="minkowski", p=2, normalize=True, metric_params=None,
                  kernel_params=None, n_jobs=1):
 
         self.n_neighbors = n_neighbors
@@ -144,12 +144,12 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         # some checks
         if self.kernel_params is None:
             self.kernel_params = {}
-        
+
         if y.ndim == 1:
             self.n_outputs_ = 1
         else:
             self.n_outputs_ = y.shape[1]
-        
+
         # fit knn and get values of neighbors
         if self.normalize is True:
             scaler = Normalizer()
@@ -196,13 +196,13 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             mask[:] = False
 
         if neighbor_vals.ndim == 2:
-            neighbor_vals = np.ma.masked_array(neighbor_vals, mask) 
+            neighbor_vals = np.ma.masked_array(neighbor_vals, mask)
         else:
             n_outputs = neighbor_vals.shape[2]
             mask = np.repeat(mask[:, :, np.newaxis], n_outputs, axis=2)
-            neighbor_vals = np.ma.masked_array(neighbor_vals, mask=mask) 
+            neighbor_vals = np.ma.masked_array(neighbor_vals, mask=mask)
 
-        # calculated weighted means
+            # calculated weighted means
         if self.weights == "distance":
             new_X = self._distance_weighting(neighbor_vals, neighbor_dist)
 
@@ -223,7 +223,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             else:
                 X = weighted_mode(
                     neighbor_vals, weights=neighbor_weights, axis=1)
-        
+
         # weighted mean of neighbors for a multi-target regression
         # neighbor_vals = (n_samples, n_neighbors, n_targets)
         else:
@@ -259,11 +259,24 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    ref_xs : list
-        A list of x-coordinates of reference locations.
+    refs : ndarray
+        Array of coordinates of reference locations in (m, n-dimensional)
+        order, such as {n_locations, x_coordinates, y_coordinates, ...}
+        for as many dimensions as required. For example to calculate distances
+        to a single x,y,z location:
 
-    ref_ys : list
-        A list of x-coordinates of reference locations.
+        refs = [-57.345, -110.134, 1012]
+
+        And to calculate distances to three x,y reference locations:
+
+        refs = [
+            [-57.345, -110.134],
+            [-56.345, -109.123],
+            [-58.534, -112.123]
+        ]
+
+        The supplied array has to have at least x,y coordinates with a
+        (1, 2) shape for a single location.
 
     log : bool (opt), default=False
         Optionally log-transform the distance measures.
@@ -271,29 +284,21 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
     Returns
     -------
     X_new : ndarray
-        array of shape (n_samples, n_features) with new geodistance features
+        Array of shape (n_samples, n_features) with new geodistance features
         appended to the right-most columns of the array.
-
     """
 
-    def __init__(self, ref_xs=None, ref_ys=None, log=False):
-        self.ref_xs = ref_xs
-        self.ref_ys = ref_ys
-        self.refs_ = None
+    def __init__(self, refs, log=False):
+        self.refs = refs
         self.log = log
+        self.refs_ = None
 
     def fit(self, X, y=None):
+        self.refs_ = np.asarray(self.refs)
 
-        self.ref_xs = np.asarray(self.ref_xs)
-        self.ref_ys = np.asarray(self.ref_ys)
-
-        if self.ref_xs.ndim == 1:
-            self.ref_xs.reshape(-1, 1)
-
-        if self.ref_ys.ndim == 1:
-            self.ref_ys.reshape(-1, 1)
-
-        self.refs_ = np.column_stack((self.ref_xs, self.ref_ys))
+        if self.refs_.ndim < 2:
+            raise ValueError("`refs` has to be a m,n-dimensional array with \
+                             at least two dimensions")
 
         return self
 

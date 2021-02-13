@@ -549,61 +549,61 @@ class RasterLayer:
 
         return X
 
-    def plot(
-            self,
-            cmap=None,
-            norm=None,
-            ax=None,
-            cax=None,
-            figsize=None,
-            out_shape=(100, 100),
-            categorical=None,
-            legend=False,
-            vmin=None,
-            vmax=None,
-            fig_kwds=None,
-            legend_kwds=None,
-    ):
+    def plot(self, cmap=None, norm=None, ax=None, cax=None, figsize=None,
+             out_shape=(100, 100), categorical=None, legend=False,
+             vmin=None, vmax=None, fig_kwds=None, legend_kwds=None):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
         Parameters
         ----------
         cmap : str (default None)
             The name of a colormap recognized by matplotlib.
             Overrides the cmap attribute of the RasterLayer.
+
         norm : matplotlib.colors.Normalize (opt)
             A matplotlib.colors.Normalize to apply to the RasterLayer.
-            This overides the norm attribute of the RasterLayer.
+            This overrides the norm attribute of the RasterLayer.
+
         ax : matplotlib.pyplot.Artist (optional, default None)
             axes instance on which to draw to plot.
+
         cax : matplotlib.pyplot.Artist (optional, default None)
             axes on which to draw the legend.
+
         figsize : tuple of integers (optional, default None)
             Size of the matplotlib.figure.Figure. If the ax argument is given
             explicitly, figsize is ignored.
+
         out_shape : tuple, default=(100, 100)
             Number of rows, cols to read from the raster datasets for plotting.
+
         categorical : bool (optional, default False)
             if True then the raster values will be considered to represent
             discrete values, otherwise they are considered to represent
             continuous values. This overrides the  RasterLayer 'categorical'
             attribute. Setting the argument categorical to True is ignored if
             the RasterLayer.categorical is already True.
+
         legend : bool (optional, default False)
             Whether to plot the legend.
+
         vmin, xmax : scale (optional, default None)
             vmin and vmax define the data range that the colormap covers. By
             default, the colormap covers the complete value range of the
             supplied data. vmin, vmax are ignored if the norm parameter is
             used.
+
         fig_kwds : dict (optional, default None)
             Additional arguments to pass to the matplotlib.pyplot.figure call
             when creating the figure object. Ignored if ax is passed to the
             plot function.
+
         legend_kwds : dict (optional, default None)
             Keyword arguments to pass to matplotlib.pyplot.colorbar().
+
         Returns
         -------
         ax : matplotlib axes instance
+
         """
 
         # some checks

@@ -206,7 +206,7 @@ class _iLocIndexer(object):
 
 class Raster(RasterPlot, BaseRaster):
     """Creates a collection of file-based GDAL-supported raster datasets that
-     share a common coordinate reference system and geometry.
+    share a common coordinate reference system and geometry.
 
     Raster objects encapsulate RasterLayer objects, which represent single band
     raster datasets that can physically be represented by either separate
@@ -1946,6 +1946,7 @@ class Raster(RasterPlot, BaseRaster):
             A tuple (geodataframe index, extracted values, coordinates) of the
             extracted raster values as a masked array and the  coordinates of
             the extracted pixels if `as_gdf=False`.
+
         """
 
         # rasterize polygon and line geometries

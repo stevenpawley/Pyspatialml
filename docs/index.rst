@@ -10,15 +10,15 @@ datasets.
 
 Pyspatialml includes functions and classes for working with multiple raster
 datasets and applying typical machine learning workflows including raster data
-manipulation, feature engineering on raster datasets, extraction of training data,
-and application of the ``predict`` or ``predict_proba`` methods of 
+manipulation, feature engineering on raster datasets, extraction of training
+data, and application of the ``predict`` or ``predict_proba`` methods of
 scikit-learn estimator objects to a stack of raster datasets.
 
 Pyspatialml is built upon the 
-`rasterio <https://rasterio.readthedocs.io/en/latest/>`_ Python package which performs all of
-the heavy lifting and is designed to work with the 
-`geopandas <https://geopandas.org>`_ package for
-related raster-vector data geoprocessing operations.
+`rasterio <https://rasterio.readthedocs.io/en/latest/>`_ Python package which
+performs all of the heavy lifting and is designed to work with the
+`geopandas <https://geopandas.org>`_ package for related raster-vector data
+geoprocessing operations.
 
 Documentation
 =============
@@ -48,7 +48,6 @@ User Guide
     geoprocessing
     sampling
     transformers
-    estimators
 
 
 Reference Guide
