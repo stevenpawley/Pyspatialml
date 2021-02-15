@@ -1,9 +1,9 @@
-import concurrent.futures
 import os
 import tempfile
 from collections import OrderedDict
 from collections import namedtuple
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor as Exec
 from functools import partial
 
 import geopandas as gpd
@@ -13,6 +13,7 @@ import rasterio
 import rasterio.mask
 import rasterio.plot
 from rasterio import features
+from rasterio.io import MemoryFile
 from rasterio.sample import sample_gen
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
@@ -20,11 +21,10 @@ from shapely.geometry import Point
 from tqdm import tqdm
 
 from .plotting import RasterPlot
-from .prediction import _predfun, _probfun, _predfun_multioutput
-from .rasterbase import BaseRaster, _get_nodata, _get_num_workers, \
-    _check_alignment, _fix_names
+from .prediction import predict_output, predict_prob, predict_multioutput
+from .rasterbase import (BaseRaster, get_nodata_value, get_num_workers,
+                         _check_alignment, _fix_names)
 from .rasterlayer import RasterLayer
-from .temporary_files import _file_path_tempfile
 
 
 class _LocIndexer(Mapping):
@@ -266,10 +266,19 @@ class Raster(RasterPlot, BaseRaster):
     block_shape : tuple
         The default block_shape in (rows, cols) for reading windows of data
         in the Raster for out-of-memory processing.
+
+    tempdir : str, default is tempfile.tempdir
+        Path to a directory to store temporary files that are produced
+        during geoprocessing operations.
+
+    in_memory : bool, default is False
+        Whether to initiated the Raster from an array and store the data
+        in-memory using Rasterio's in-memory files.
     """
 
-    def __init__(self, src, crs=None, transform=None,
-                 nodata=None, mode="r", file_path=None, driver=None):
+    def __init__(self, src, crs=None, transform=None, nodata=None, mode="r",
+                 file_path=None, driver=None, tempdir=tempfile.tempdir,
+                 in_memory=False):
         """Initiate a new Raster object
 
         Parameters
@@ -313,41 +322,67 @@ class Raster(RasterPlot, BaseRaster):
             object
         """
         super().__init__()
+
         self.loc = _LocIndexer(self)
         self.iloc = _iLocIndexer(self, self.loc)
         self.files = []
         self.dtypes = []
         self.nodatavals = []
         self.res = None
+        self.tempdir = tempdir
+        src_layers = []
 
+        # check mode
         if mode not in ["r", "r+", "w", "w+"]:
             raise ValueError("mode must be one of 'r', 'r+', 'w', or 'w+'")
 
-        src_layers = []
+        # check mode for writing to file from ndarray
+        if isinstance(src, np.ndarray) and in_memory is False and mode != "w+":
+            raise ValueError(
+                "mode must be 'w' or 'w+' to initiate from an ndarray")
 
-        # initiate from a numpy array
+        # get temporary file name if file_path is None
+        if file_path is None:
+            file_path, tfile = self._tempfile(file_path)
+            driver = "GTiff"
+
+        # initiate from numpy array
         if isinstance(src, np.ndarray):
-            if file_path is None:
-                file_path = tempfile.NamedTemporaryFile().name
+            if src.ndim == 2:
+                src = src[np.newaxis]
 
-            dst = rasterio.open(file_path, mode=mode, driver=driver,
-                                height=src.shape[1], width=src.shape[2],
-                                count=src.shape[0], dtype=src.dtype, crs=crs,
-                                transform=transform, nodata=nodata)
-            dst.write(src)
+            count, height, width = src.shape
+
+            if in_memory is True:
+                memfile = MemoryFile()
+                dst = memfile.open(height=height, width=width, count=count,
+                                   driver=driver, dtype=src.dtype, crs=crs,
+                                   transform=transform, nodata=nodata)
+                dst.write(src)
+
+            else:
+                dst = rasterio.open(file_path, mode=mode, driver=driver,
+                                    height=height, width=width,
+                                    count=count, dtype=src.dtype, crs=crs,
+                                    transform=transform, nodata=nodata)
+                dst.write(src)
 
             for i in range(dst.count):
                 band = rasterio.band(dst, i + 1)
                 src_layers.append(RasterLayer(band))
 
-        # initiate from a single file path
+            if tfile is not None and in_memory is False:
+                for layer in src_layers:
+                    layer._close = tfile.close
+
+        # from a single file path
         elif isinstance(src, str):
             r = rasterio.open(src, mode=mode, driver=driver)
             for i in range(r.count):
                 band = rasterio.band(r, i + 1)
                 src_layers.append(RasterLayer(band))
 
-        # initiate from a list of file paths
+        # from a list of file paths
         elif isinstance(src, list) and all(isinstance(x, str) for x in src):
             for f in src:
                 r = rasterio.open(f, mode=mode, driver=driver)
@@ -355,30 +390,31 @@ class Raster(RasterPlot, BaseRaster):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
 
-        # initiate from a single RasterLayer
+        # from a single RasterLayer
         elif isinstance(src, RasterLayer):
             src_layers = src
 
-        # initiate from a single or list of RasterLayer objects
+        # from a single or list of RasterLayer objects
         elif (isinstance(src, list) and
               all(isinstance(x, RasterLayer) for x in src)):
             src_layers = src
 
-        # initiate from a single rasterio.io.datasetreader
-        elif isinstance(src, rasterio.io.DatasetReader):
+        # from a single rasterio.io.datasetreader/writer
+        elif isinstance(src, (rasterio.io.DatasetReader, rasterio.io.DatasetWriter)):
             for i in range(src.count):
                 band = rasterio.band(src, i + 1)
                 src_layers.append(RasterLayer(band))
 
-        # initiate from a list of rasterio.io.datasetreader
-        elif (isinstance(src, list) and
-              all(isinstance(x, rasterio.io.DatasetReader) for x in src)):
+        # from a list of rasterio.io.datasetreader
+        elif (isinstance(src, list) and 
+              all(isinstance(x, (rasterio.io.DatasetReader, rasterio.io.DatasetWriter))
+              for x in src)):
             for r in src:
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
 
-        # initiate from a single rasterio.band objects
+        # from a single rasterio.band objects
         elif isinstance(src, rasterio.Band):
             src_layers = RasterLayer(src)
 
@@ -436,7 +472,6 @@ class Raster(RasterPlot, BaseRaster):
         value : pyspatialml.RasterLayer
             RasterLayer object to use for replacement.
         """
-
         if isinstance(value, RasterLayer):
             self.loc[key] = value
             self.iloc[self.names.index(key)] = value
@@ -445,44 +480,27 @@ class Raster(RasterPlot, BaseRaster):
             raise ValueError("value is not a RasterLayer object")
 
     def __iter__(self):
-        """Iterate over RasterLayers."""
         return iter(self.loc.items())
 
     @property
     def _layers(self):
-        """Getter method
-
-        Returns
-        -------
-        pyspatialml.indexing._LocIndexer
-            Returns a dict of key-value pairs of names and RasterLayers.
-        """
         return self.loc
 
     @_layers.setter
     def _layers(self, layers):
-        """Setter method for the files attribute in the Raster object
-
-        Parameters
-        ----------
-        layers : RasterLayer or list of RasterLayers
-            RasterLayers used to initiate a Raster object.
-        """
-
         # some checks
         if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
-            raise ValueError("Cannot create a Raster object from a mixture of \
-                             input types")
+            raise ValueError(
+                "Cannot create a Raster object from a mixture of input types")
 
         meta = _check_alignment(layers)
 
         if meta is False:
             raise ValueError(
-                "Raster datasets do not all have the same dimensions or \
-                transform")
+                "Raster datasets do not have the same dimensions or transform")
 
         # reset existing attributes
         for name in self.names:
@@ -517,7 +535,7 @@ class Raster(RasterPlot, BaseRaster):
             self.dtypes.append(layer.dtype)
             self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
-            layer.names = [name]
+            layer.name = name
             self.loc[name] = layer
             setattr(self, name, self.loc[name])
 
@@ -529,9 +547,6 @@ class Raster(RasterPlot, BaseRaster):
     def read(self, masked=False, window=None, out_shape=None,
              resampling="nearest", as_df=False, **kwargs):
         """Reads data from the Raster object into a numpy array.
-
-        Overrides read BaseRaster class read method and replaces it with a
-        method that reads from multiple RasterLayer objects.
 
         Parameters
         ----------
@@ -642,8 +657,9 @@ class Raster(RasterPlot, BaseRaster):
             New Raster object from saved file.
         """
         dtype = self._check_supported_dtype(dtype)
+
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         meta = self.meta.copy()
         meta["driver"] = driver
@@ -660,9 +676,9 @@ class Raster(RasterPlot, BaseRaster):
 
         return self._new_raster(file_path, self.names)
 
-    def predict_proba(self, estimator, file_path=None, indexes=None,
-                      driver="GTiff", dtype=None, nodata=None, progress=False,
-                      **kwargs):
+    def predict_proba(self, estimator, file_path=None, in_memory=False,
+                      indexes=None, driver="GTiff", dtype=None, nodata=None,
+                      progress=False, n_jobs=1, **kwargs):
         """Apply class probability prediction of a scikit learn model to a
         Raster.
 
@@ -674,6 +690,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             Path to a GeoTiff raster for the prediction results. If not
             specified then the output is written to a temporary file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         indexes : list of integers (optional, default None)
             List of class indices to export. In some circumstances, only a
@@ -694,6 +714,10 @@ class Raster(RasterPlot, BaseRaster):
             value is derived from the minimum permissible value for the given
             data type.
 
+        n_jobs : int (default 1)
+            Number of processing cores to use for parallel execution. Default
+            is n_jobs=1. -1 is all cores; -2 is all cores -1.
+
         progress : bool (default False)
             Show progress bar for prediction.
 
@@ -713,15 +737,19 @@ class Raster(RasterPlot, BaseRaster):
             values of 1, 3, and 5 would result in three RasterLayers named
             'prob_1', 'prob_2' and 'prob_3'.
         """
-        file_path, tfile = _file_path_tempfile(file_path)
+        # some checks
+        tfile = None
 
-        # determine output count for multi-class prediction
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+
+        n_jobs = get_num_workers(n_jobs)
+        probfun = partial(predict_prob, estimator=estimator)
+
         if isinstance(indexes, int):
             indexes = range(indexes, indexes + 1)
 
         elif indexes is None:
-            # perform test prediction - easier than using estimator.n_outputs_
-            # because the estimator may be wrapped inside other pipelines
             window = next(self.block_shapes(*self.block_shape))
             img = self.read(masked=True, window=window)
             n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
@@ -731,49 +759,75 @@ class Raster(RasterPlot, BaseRaster):
             result = estimator.predict_proba(flat_pixels)
             indexes = np.arange(0, result.shape[1])
 
+        # check dtype and nodata
         if dtype is None:
-            dtype = np.float32
-
-        if rasterio.dtypes.check_dtype(dtype) is False:
-            raise AttributeError(
-                "{} is not a support GDAL dtype".format(dtype))
+            dtype = self._check_supported_dtype(result)
+        else:
+            dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         # open output file with updated metadata
         meta = self.meta.copy()
-        meta.update(driver=driver, count=len(indexes), dtype=dtype,
-                    nodata=nodata)
+        count = len(indexes)
+        meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            windows = [window for window in
-                       self.block_shapes(*self.block_shape)]
-            data_gen = ((window, self.read(window=window, masked=True)) for
-                        window in windows)
+        # get windows
+        windows = [w for w in self.block_shapes(*self.block_shape)]
+        data_gen = ((w, self.read(window=w, masked=True)) for w in windows)
 
-            for window, arr, pbar in zip(windows, data_gen,
-                                         tqdm(windows, disable=not progress)):
-                result = _probfun(arr, estimator)
-                result = np.ma.filled(result, fill_value=nodata)
-                dst.write(result[indexes, :, :].astype(dtype), window=window)
+        # apply prediction function
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(probfun, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(
+                    height=meta["height"],
+                    width=meta["width"],
+                    count=meta["count"],
+                    dtype=meta["dtype"],
+                    crs=meta["crs"],
+                    transform=meta["transform"],
+                    nodata=meta["nodata"],
+                    driver=driver
+                )
+
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(probfun, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+
+            file_path = dst
 
         # generate layer names
         prefix = "prob_"
         names = [prefix + str(i) for i in range(len(indexes))]
 
-        # create new raster object
+        # create new Raster object with the result
         new_raster = self._new_raster(file_path, names)
 
+        # override close method
         if tfile is not None:
             for layer in new_raster.iloc:
                 layer._close = tfile.close
 
         return new_raster
 
-    def predict(self, estimator, file_path=None, driver="GTiff", dtype=None,
-                nodata=None, n_jobs=-1, progress=False, **kwargs):
+    def predict(self, estimator, file_path=None, in_memory=False,
+                driver="GTiff", dtype=None, nodata=None, n_jobs=1,
+                progress=False, **kwargs):
         """Apply prediction of a scikit learn model to a Raster.
 
         The model can represent any scikit learn model or compatible api with a
@@ -790,6 +844,10 @@ class Raster(RasterPlot, BaseRaster):
             Path to a GeoTiff raster for the prediction results. If not
             specified then the output is written to a temporary file.
 
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
+
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export
 
@@ -802,7 +860,7 @@ class Raster(RasterPlot, BaseRaster):
             value is derived from the minimum permissible value for the given
             data type.
 
-        n_jobs : int (default -1)
+        n_jobs : int (default 1)
             Number of processing cores to use for parallel execution. Default
             is n_jobs=1. -1 is all cores; -2 is all cores -1.
 
@@ -822,8 +880,12 @@ class Raster(RasterPlot, BaseRaster):
             multi-target. Layers are named automatically as `pred_raw_n` with
             n = 1, 2, 3 ..n.
         """
-        file_path, tfile = _file_path_tempfile(file_path)
-        n_jobs = _get_num_workers(n_jobs)
+        tfile = None
+
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+
+        n_jobs = get_num_workers(n_jobs)
 
         # determine output count for multi-class or multi-target cases
         window = next(self.block_shapes(*self.block_shape))
@@ -843,49 +905,67 @@ class Raster(RasterPlot, BaseRaster):
 
         # chose prediction function
         if len(indexes) == 1:
-            predfun = partial(_predfun, estimator=estimator)
+            predfun = partial(predict_output, estimator=estimator)
         else:
-            predfun = partial(_predfun_multioutput, estimator=estimator)
+            predfun = partial(predict_multioutput, estimator=estimator)
 
+        # check dtype and nodata
         if dtype is None:
-            dtype = np.float32
-
-        if rasterio.dtypes.check_dtype(dtype) is False:
-            raise AttributeError(
-                "{dtype} is not a support GDAL dtype".format(dtype=dtype)
-            )
+            dtype = self._check_supported_dtype(result)
+        else:
+            dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         # open output file with updated metadata
         meta = self.meta.copy()
-        meta.update(driver=driver, count=len(indexes), dtype=dtype,
-                    nodata=nodata)
+        count = len(indexes)
+        meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            windows = [win for win in self.block_shapes(*self.block_shape)]
-            data_gen = ((win, self.read(window=win, masked=True)) for win in
-                        windows)
+        # get windows
+        windows = [w for w in self.block_shapes(*self.block_shape)]
+        data_gen = ((w, self.read(window=w, masked=True)) for w in windows)
 
-            with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=n_jobs) as executor:
-                for window, result, pbar in zip(
-                        windows,
-                        executor.map(predfun, data_gen),
-                        tqdm(windows, disable=not progress)):
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result[indexes, :, :].astype(dtype),
-                              window=window)
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(predfun, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(
+                    height=meta["height"],
+                    width=meta["width"],
+                    count=meta["count"],
+                    dtype=meta["dtype"],
+                    crs=meta["crs"],
+                    driver=driver,
+                    transform=meta["transform"],
+                    nodata=meta["nodata"]
+                )
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(predfun, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+            file_path = dst
 
         # generate layer names
         prefix = "pred_raw_"
         names = [prefix + str(i) for i in range(len(indexes))]
 
-        # create new raster object
+        # create new Raster object with the result
         new_raster = self._new_raster(file_path, names)
 
+        # override close method
         if tfile is not None:
             for layer in new_raster.iloc:
                 layer._close = tfile.close
@@ -1041,7 +1121,7 @@ class Raster(RasterPlot, BaseRaster):
         """
 
         # some checks
-        if isinstance(file_path, str):
+        if not isinstance(file_path, list):
             file_path = [file_path]
 
         # create new raster from supplied file path
@@ -1086,7 +1166,8 @@ class Raster(RasterPlot, BaseRaster):
         return new_raster
 
     def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None,
-             driver="GTiff", dtype=None, nodata=None, **kwargs):
+             in_memory=False, driver="GTiff", dtype=None, nodata=None, 
+             **kwargs):
         """Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
 
@@ -1109,6 +1190,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             File path to save to resulting Raster. If not supplied then the
             resulting Raster is saved to a temporary file
+        
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
@@ -1134,12 +1219,17 @@ class Raster(RasterPlot, BaseRaster):
         if invert is True:
             crop = False
 
-        file_path, tfile = _file_path_tempfile(file_path)
+        tfile = None
+
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+        
         meta = self.meta.copy()
 
         dtype = self._check_supported_dtype(dtype)
+
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         meta["dtype"] = dtype
 
@@ -1176,19 +1266,28 @@ class Raster(RasterPlot, BaseRaster):
         meta.update(kwargs)
         masked_ndarrays = masked_ndarrays.filled(fill_value=nodata)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            dst.write(masked_ndarrays.astype(dtype))
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                dst.write(masked_ndarrays.astype(dtype))
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(**meta)
+                dst.write(masked_ndarrays.astype(dtype))
+            
+            file_path = dst
 
+        # create new Raster object with the result
         new_raster = self._new_raster(file_path, self.names)
 
+        # override close method
         if tfile is not None:
             for layer in new_raster.iloc:
                 layer._close = tfile.close
 
         return new_raster
 
-    def intersect(self, file_path=None, driver="GTiff", dtype=None,
-                  nodata=None, **kwargs):
+    def intersect(self, file_path=None, in_memory=False, driver="GTiff", 
+                  dtype=None, nodata=None, **kwargs):
         """Perform a intersect operation on the Raster object.
 
         Computes the geometric intersection of the RasterLayers with the Raster
@@ -1200,6 +1299,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             File path to save to resulting Raster. If not supplied then the
             resulting Raster is saved to a temporary file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
@@ -1226,22 +1329,26 @@ class Raster(RasterPlot, BaseRaster):
             Raster with layers that are masked based on a union of all masks in
             the suite of RasterLayers.
         """
-        file_path, tfile = _file_path_tempfile(file_path)
+        tfile = None
+
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+        
         meta = self.meta.copy()
         dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         arr = self.read(masked=True)
         mask_2d = arr.mask.any(axis=0)
 
         # repeat mask for n_bands
-        mask_3d = np.repeat(a=mask_2d[np.newaxis, :, :], repeats=self.count,
-                            axis=0)
+        mask_3d = np.repeat(
+            a=mask_2d[np.newaxis, :, :], repeats=self.count, axis=0)
 
-        intersected_arr = np.ma.masked_array(arr, mask=mask_3d,
-                                             fill_value=nodata)
+        intersected_arr = np.ma.masked_array(
+            arr, mask=mask_3d, fill_value=nodata)
         intersected_arr = np.ma.filled(intersected_arr, fill_value=nodata)
 
         meta["driver"] = driver
@@ -1249,19 +1356,27 @@ class Raster(RasterPlot, BaseRaster):
         meta["dtype"] = dtype
         meta.update(kwargs)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            dst.write(intersected_arr.astype(dtype))
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                dst.write(intersected_arr.astype(dtype))
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(**meta)
+                dst.write(intersected_arr.astype(dtype))
+            file_path = dst
 
+        # create new Raster object with the result
         new_raster = self._new_raster(file_path, self.names)
 
+        # override close method
         if tfile is not None:
             for layer in new_raster.iloc:
                 layer._close = tfile.close
 
         return new_raster
 
-    def crop(self, bounds, file_path=None, driver="GTiff", dtype=None,
-             nodata=None, **kwargs):
+    def crop(self, bounds, file_path=None, in_memory=False, driver="GTiff", 
+             dtype=None, nodata=None, **kwargs):
         """Crops a Raster object by the supplied bounds.
 
         Parameters
@@ -1273,6 +1388,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             File path to save to cropped raster. If not supplied then the
             cropped raster is saved to a temporary file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff'). Default is 'GTiff'
             Named of GDAL-supported driver for file export.
@@ -1299,11 +1418,14 @@ class Raster(RasterPlot, BaseRaster):
         Raster
             Raster cropped to new extent.
         """
+        tfile = None
 
-        file_path, tfile = _file_path_tempfile(file_path)
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+        
         dtype = self._check_supported_dtype(dtype)
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         # get row, col positions for bounds
         xmin, ymin, xmax, ymax = bounds
@@ -1343,8 +1465,15 @@ class Raster(RasterPlot, BaseRaster):
         meta.update(kwargs)
         cropped_arr = cropped_arr.filled(fill_value=nodata)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            dst.write(cropped_arr.astype(dtype))
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                dst.write(cropped_arr.astype(dtype))
+        
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(**meta)
+                dst.write(cropped_arr.astype(dtype))
+            file_path = dst
 
         new_raster = self._new_raster(file_path, self.names)
 
@@ -1354,9 +1483,9 @@ class Raster(RasterPlot, BaseRaster):
 
         return new_raster
 
-    def to_crs(self, crs, resampling="nearest", file_path=None, driver="GTiff",
-               nodata=None, n_jobs=1, warp_mem_lim=0, progress=False,
-               **kwargs):
+    def to_crs(self, crs, resampling="nearest", file_path=None, in_memory=False,
+               driver="GTiff", nodata=None, n_jobs=1, warp_mem_lim=0, 
+               progress=False, **kwargs):
         """Reprojects a Raster object to a different crs.
 
         Parameters
@@ -1382,6 +1511,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             Optional path to save reprojected Raster object. If not specified
             then a tempfile is used.
+        
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
@@ -1413,17 +1546,19 @@ class Raster(RasterPlot, BaseRaster):
         Raster
             Raster following reprojection.
         """
+        tfile = None
 
-        file_path, tfile = _file_path_tempfile(file_path)
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
 
         if nodata is None:
-            nodata = _get_nodata(self.meta["dtype"])
+            nodata = get_nodata_value(self.meta["dtype"])
 
         resampling_methods = [i.name for i in rasterio.enums.Resampling]
         if resampling not in resampling_methods:
             raise ValueError(
-                "Invalid resampling method. Resampling method must be one \
-                of {}:".format(resampling_methods))
+                "Resampling method must be one of {}:".format(
+                    resampling_methods))
 
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=self.crs,
@@ -1447,18 +1582,34 @@ class Raster(RasterPlot, BaseRaster):
         if progress is True:
             t = tqdm(total=self.count)
 
-        with rasterio.open(file_path, "w", driver=driver, **meta) as dst:
-            for i, layer in enumerate(self.iloc):
-                reproject(
-                    source=rasterio.band(layer.ds, layer.bidx),
-                    destination=rasterio.band(dst, i + 1),
-                    resampling=rasterio.enums.Resampling[resampling],
-                    num_threads=n_jobs,
-                    warp_mem_lim=warp_mem_lim,
-                )
+        if in_memory is False:
+            with rasterio.open(file_path, "w", driver=driver, **meta) as dst:
+                for i, layer in enumerate(self.iloc):
+                    reproject(
+                        source=rasterio.band(layer.ds, layer.bidx),
+                        destination=rasterio.band(dst, i + 1),
+                        resampling=rasterio.enums.Resampling[resampling],
+                        num_threads=n_jobs,
+                        warp_mem_lim=warp_mem_lim,
+                    )
 
-                if progress is True:
-                    t.update()
+                    if progress is True:
+                        t.update()
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(driver=driver, **meta)
+                for i, layer in enumerate(self.iloc):
+                    reproject(
+                        source=rasterio.band(layer.ds, layer.bidx),
+                        destination=rasterio.band(dst, i + 1),
+                        resampling=rasterio.enums.Resampling[resampling],
+                        num_threads=n_jobs,
+                        warp_mem_lim=warp_mem_lim,
+                    )
+
+                    if progress is True:
+                        t.update()
+            file_path = dst
 
         new_raster = self._new_raster(file_path, self.names)
 
@@ -1469,7 +1620,8 @@ class Raster(RasterPlot, BaseRaster):
         return new_raster
 
     def aggregate(self, out_shape, resampling="nearest", file_path=None,
-                  driver="GTiff", dtype=None, nodata=None, **kwargs):
+                  in_memory=False, driver="GTiff", dtype=None, nodata=None, 
+                  **kwargs):
         """Aggregates a raster to (usually) a coarser grid cell size.
 
         Parameters
@@ -1486,6 +1638,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             File path to save to cropped raster. If not supplied then the
             aggregated raster is saved to a temporary file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
@@ -1512,8 +1668,11 @@ class Raster(RasterPlot, BaseRaster):
         Raster
             Raster object aggregated to a new pixel size.
         """
+        tfile = None
 
-        file_path, tfile = _file_path_tempfile(file_path)
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
+        
         rows, cols = out_shape
 
         arr = self.read(masked=True, out_shape=out_shape,
@@ -1521,8 +1680,9 @@ class Raster(RasterPlot, BaseRaster):
         meta = self.meta.copy()
 
         dtype = self._check_supported_dtype(dtype)
+        
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         arr = arr.filled(fill_value=nodata)
 
@@ -1542,8 +1702,15 @@ class Raster(RasterPlot, BaseRaster):
         )
         meta.update(kwargs)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            dst.write(arr.astype(dtype))
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                dst.write(arr.astype(dtype))
+        
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(**meta)
+                dst.write(arr.astype(dtype))
+            file_path = dst
 
         new_raster = self._new_raster(file_path, self.names)
 
@@ -1553,9 +1720,9 @@ class Raster(RasterPlot, BaseRaster):
 
         return new_raster
 
-    def apply(self, function, file_path=None, driver="GTiff", dtype=None,
-              nodata=None, progress=False, n_jobs=-1, function_args={},
-              **kwargs):
+    def apply(self, function, file_path=None, in_memory=False, driver="GTiff",
+              dtype=None, nodata=None, progress=False, n_jobs=1,
+              function_args={}, **kwargs):
         """Apply user-supplied function to a Raster object.
 
         Parameters
@@ -1566,6 +1733,10 @@ class Raster(RasterPlot, BaseRaster):
         file_path : str (optional, default None)
             Optional path to save calculated Raster object. If not specified
             then a tempfile is used.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
 
         driver : str (default 'GTiff')
             Named of GDAL-supported driver for file export.
@@ -1581,7 +1752,7 @@ class Raster(RasterPlot, BaseRaster):
             type. Note that this changes the values of the pixels that
             represent nodata pixels.
 
-        n_jobs : int (default -1)
+        n_jobs : int (default 1)
             Number of processing cores to use for parallel execution. Default
             of -1 is all cores.
 
@@ -1601,10 +1772,12 @@ class Raster(RasterPlot, BaseRaster):
         Raster
             Raster containing the calculated result.
         """
+        tfile = None
+        
+        if in_memory is False:
+            file_path, tfile = self._tempfile(file_path)
 
-        file_path, tfile = _file_path_tempfile(file_path)
-        n_jobs = _get_num_workers(n_jobs)
-
+        n_jobs = get_num_workers(n_jobs)
         function = partial(function, **function_args)
 
         # perform test calculation determine dimensions, dtype, nodata
@@ -1620,33 +1793,44 @@ class Raster(RasterPlot, BaseRaster):
             count = 1
 
         dtype = self._check_supported_dtype(dtype)
+        
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         # open output file with updated metadata
         meta = self.meta.copy()
         meta.update(driver=driver, count=count, dtype=dtype, nodata=nodata)
         meta.update(kwargs)
 
-        with rasterio.open(file_path, "w", **meta) as dst:
-            windows = [window for window in
-                       self.block_shapes(*self.block_shape)]
-            data_gen = (self.read(window=window, masked=True) for window in
-                        windows)
+        # get windows
+        windows = [w for w in self.block_shapes(*self.block_shape)]
+        data_gen = (self.read(window=w, masked=True) for w in windows)
 
-            with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=n_jobs) as executor:
-                for window, result, pbar in zip(
-                        windows,
-                        executor.map(function, data_gen),
-                        tqdm(windows, disable=not progress),
-                ):
-                    result = np.ma.filled(result, fill_value=nodata)
-                    dst.write(result.astype(dtype), window=window,
-                              indexes=indexes)
+        if in_memory is False:
+            with rasterio.open(file_path, "w", **meta) as dst:
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(function, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res.astype(dtype), window=w, indexes=indexes)
+        else:
+            with MemoryFile() as memfile:
+                dst = memfile.open(**meta)
+                with Exec(max_workers=n_jobs) as executor:
+                    for w, res, pbar in zip(
+                            windows,
+                            executor.map(function, data_gen),
+                            tqdm(windows, disable=not progress)):
+                        res = np.ma.filled(res, fill_value=nodata)
+                        dst.write(res.astype(dtype), window=w, indexes=indexes)
+            file_path = dst
 
+        # create new raster object with result
         new_raster = self._new_raster(file_path)
 
+        # override close method
         if tfile is not None:
             for layer in new_raster.iloc:
                 layer._close = tfile.close
@@ -1806,10 +1990,9 @@ class Raster(RasterPlot, BaseRaster):
                 ind = np.transpose(np.nonzero(strata_arr == cat))
 
                 if size > ind.shape[0]:
-                    msg = (
-                        "Sample size is greater than number of pixels in \
-                        strata {0}"
-                    ).format(str(ind))
+                    msg = ("Sample size is greater than number of pixels in "
+                           "strata {}").format(str(ind))
+
                     msg = os.linesep.join([msg, "Sampling using replacement"])
                     Warning(msg)
 
@@ -1872,14 +2055,9 @@ class Raster(RasterPlot, BaseRaster):
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
-        if progress is True:
-            disable_tqdm = False
-        else:
-            disable_tqdm = True
-
         for i, (layer, pbar) in enumerate(
                 zip(self.iloc,
-                    tqdm(self.iloc, total=self.count, disable=disable_tqdm))
+                    tqdm(self.iloc, total=self.count, disable=not progress))
         ):
             sampler = sample_gen(
                 dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True

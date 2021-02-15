@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Design &mdash; Pyspatialml 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Plotting" href="plotting.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Pyspatialml
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Design</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#raster-objects">Raster Objects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-new-raster-object">Creating a new Raster object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview-of-attributes-and-methods">Overview of attributes and methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#attributes">Attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rasterlayer">RasterLayer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Overview of attributes and methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformers.html">Transformers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pyspatialml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Design</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/design.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="design">
+<h1>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h1>
+<p>Pyspatialml provides access to raster datasets using two main structures,
+comprising the <cite>Raster</cite> and <cite>RasterLayer</cite> classes.</p>
+<div class="section" id="raster-objects">
+<h2>Raster Objects<a class="headerlink" href="#raster-objects" title="Permalink to this headline">¶</a></h2>
+<p>The main class that facilitates working with multiple raster datasets is the
+<cite>Raster</cite> class. The <cite>Raster</cite> object takes a list
+GDAL-supported raster datasets and ‘stacks’ them into a single Raster
+object. The underlying file-based raster datasets are not physically-stacked,
+but rather the Raster object internally represents each band within the
+datasets as a <cite>RasterLayer</cite>. This means that metadata regarding what
+each raster dataset represents (e.g. the dataset’s name) can be retained, and
+additional raster datasets can be added or removed from the stack without
+physical on-disk changes.</p>
+<p>Note these raster datasets need to be spatially aligned in terms of their
+extent, resolution and coordinate reference system.</p>
+<div class="section" id="creating-a-new-raster-object">
+<h3>Creating a new Raster object<a class="headerlink" href="#creating-a-new-raster-object" title="Permalink to this headline">¶</a></h3>
+<p>There are several methods of creating a new Raster object:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Raster(src=[raster1.tif,</span> <span class="pre">raster2.tif,</span> <span class="pre">raster3.tif])</span></code> creates a
+Raster object from existing file-based GDAL-supported datasets, or a single
+raster dataset. The file-based datasets can contain single or multiple bands.</p>
+<p>2. <code class="docutils literal notranslate"><span class="pre">Raster(src=new_numpy_array,</span> <span class="pre">crs=crs,</span> <span class="pre">transform=transform)</span></code> creates a
+Raster object from a 3D numpy array (band, row, column). The <code class="docutils literal notranslate"><span class="pre">crs</span></code> and
+<code class="docutils literal notranslate"><span class="pre">transform</span></code> arguments are optional but are required to provide coordinate
+reference system information to the Raster object. The crs argument has to be
+represented by <code class="docutils literal notranslate"><span class="pre">`rasterio.crs.CRS`</span></code> object, and the transform parameter
+requires an <code class="docutils literal notranslate"><span class="pre">`affine.Affine`</span></code> object.</p>
+<p>3. <code class="docutils literal notranslate"><span class="pre">Raster(src=[RasterLayer1,</span> <span class="pre">RasterLayer2,</span> <span class="pre">RasterLayer3])</span></code> creates a
+Raster object from a single or list of RasterLayer objects. RasterLayers are a
+thin wrapper around rasterio.Band objects with additional methods. This is
+mostly used internally. A RasterLayer itself is initiated directly from a
+rasterio.Band object.</p>
+<p>4. A Raster can also be initated directly from a <cite>rasterio.Band</cite> object, or
+a list of rasterio.Band objects.</p>
+<p>Generally, Pyspatialml intends users to work with the Raster object. However,
+access to individual RasterLayer objects, or the underlying rasterio.band
+datasets can be useful if pyspatialml is being used in conjunction with other
+functions and methods in the <code class="docutils literal notranslate"><span class="pre">rasterio</span></code> package.</p>
+</div>
+<div class="section" id="overview-of-attributes-and-methods">
+<h3>Overview of attributes and methods<a class="headerlink" href="#overview-of-attributes-and-methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="attributes">
+<h4>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><cite>Raster.loc</cite>: Access pyspatialml.RasterLayer objects within a Raster
+using a key, or a list of keys.</p></li>
+<li><p><cite>Raster.iloc</cite>: Access pyspatialml.RasterLayer objects using an index
+position.</p></li>
+<li><p><cite>Raster.files</cite>: A list of the on-disk files that the Raster object
+references.</p></li>
+<li><p><cite>Raster.dtypes</cite>: A list of numpy dtypes for each RasterLayer.</p></li>
+<li><p><cite>Raster.nodatavals</cite>: A list of the nodata values for each RasterLayer.</p></li>
+<li><p><cite>Raster.count</cite>: The number of RasterLayers in the Raster.</p></li>
+<li><p><cite>Raster.res</cite>: The resolution in (x, y) dimensions of the Raster.</p></li>
+<li><p><cite>Raster.meta</cite>: A dict containing the raster metadata.</p></li>
+<li><p><cite>Raster.names</cite>: A list of the RasterLayer names.</p></li>
+<li><p><cite>Raster.block_shape</cite>: The default block_shape in (rows, cols) for
+reading windows of data in the Raster for out-of-memory processing.</p></li>
+</ul>
+</div>
+<div class="section" id="methods">
+<h4>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><cite>Raster.read</cite>: eads data from the Raster object into a numpy array.</p></li>
+<li><p><cite>Raster.write</cite>: Write the Raster object to a file.</p></li>
+<li><p><cite>Raster.predict_proba</cite>: Apply class probability prediction of a scikit
+learn model to a Raster.</p></li>
+<li><p><cite>Raster.predict</cite>: Apply prediction of a scikit learn model to a Raster.</p></li>
+<li><p><cite>Raster.append</cite>: Method to add new RasterLayers to a Raster object.</p></li>
+<li><p><cite>Raster.drop</cite>: Drop individual RasterLayers from a Raster object.</p></li>
+<li><p><cite>Raster.rename</cite>: Rename a RasterLayer within the Raster object.</p></li>
+<li><p><cite>Raster.plot</cite>: Plot a Raster object as a raster matrix.</p></li>
+<li><p><cite>Raster.mask</cite>: Mask a Raster object based on the outline of shapes in
+a <code class="docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>.</p></li>
+<li><p><cite>Raster.intersect</cite>: Perform a intersect operation on the Raster object.</p></li>
+<li><p><cite>Raster.crop</cite>: Crops a Raster object by the supplied bounds.</p></li>
+<li><p><cite>Raster.to_crs</cite>: Reprojects a Raster object to a different crs.</p></li>
+<li><p><cite>Raster.aggregate</cite>: Aggregates a raster to (usually) a coarser grid
+cell size.</p></li>
+<li><p><cite>Raster.apply</cite>: Apply user-supplied function to a Raster object.</p></li>
+<li><p><cite>Raster.block_shapes</cite>: Generator for windows for optimal reading and
+writing based on the raster.</p></li>
+<li><p><cite>Raster.copy</cite>: Perform a shallow copy of a Raster object. Note only the
+object itself is copied, not the physical file locations that it is linked
+with.</p></li>
+<li><p><cite>Raster.sample</cite>: Take a random or stratified sample from a Raster.</p></li>
+<li><p><cite>Raster.extract_vector</cite>: Spatial query the pixels in the Raster using a
+geopandas.GeoDataFrame of point, line or polygon geometries.</p></li>
+<li><p><cite>Raster.extract_raster</cite>: Spatial query the pixels in the Raster using a
+raster of labelled pixels.</p></li>
+<li><p><cite>Raster.extract_xy</cite>: Extract pixel values using a list of x,y coordinates.</p></li>
+<li><p><cite>Raster.plot</cite>: Plot a rasterplot matrix of all layers within the Raster.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="rasterlayer">
+<h2>RasterLayer<a class="headerlink" href="#rasterlayer" title="Permalink to this headline">¶</a></h2>
+<p>A <cite>RasterLayer</cite> is an object that represents a single raster band. It is
+based on a <code class="docutils literal notranslate"><span class="pre">rasterio.band</span></code> object with some additional attributes and
+methods. A RasterLayer is used because the <code class="docutils literal notranslate"><span class="pre">rasterio.Band.ds.read</span></code> method
+reads all bands from a multi-band dataset, whereas the RasterLayer read method
+always refers to a single band.</p>
+<p>A RasterLayer object is generally not intended to be initiated directly, but
+rather is used internally as part of a <cite>Raster</cite> to represent individual
+bands. However, a RasterLayer can be initiated from a <cite>rasterio.band</cite> object.</p>
+<div class="section" id="id1">
+<h3>Overview of attributes and methods<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Methods encapsulated in RasterLayer objects represent those that typically
+would only be applied to a single-band of a raster, i.e. sieve-clump, distance
+to non-NaN pixels, or arithmetic operations on individual layers.</p>
+<div class="section" id="id2">
+<h4>Attributes<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><cite>RasterLayer.bidx</cite>: The band index of the RasterLayer within the file
+dataset.</p></li>
+<li><p><cite>RasterLayer.dtype</cite>: The data type of the RasterLayer.</p></li>
+<li><p><cite>RasterLayer.nodata</cite>: The number that is used to represent nodata
+pixels in the RasterLayer.</p></li>
+<li><p><cite>RasterLayer.file</cite>: The file path to the dataset.</p></li>
+<li><p><cite>RasterLayer.ds</cite>: The underlying rasterio.band object.</p></li>
+<li><p><cite>RasterLayer.driver</cite>: The name of the GDAL format driver.</p></li>
+<li><p><cite>RasterLayer.meta</cite>: A python dict storing the RasterLayer metadata.</p></li>
+<li><p><cite>RasterLayer.cmap</cite>: The name of matplotlib map, or a custom
+matplotlib.cm.LinearSegmentedColormap or ListedColormap object.</p></li>
+<li><p><cite>RasterLayer.norm</cite>: A matplotlib.colors.Normalize to apply to the
+RasterLayer.</p></li>
+<li><p><cite>RasterLayer.count</cite>: Number of layers; always equal to 1.</p></li>
+<li><p><cite>RasterLayer.name</cite>: A name that is assigned to the RasterLayer, usually
+created when a parent Raster object is initiated.</p></li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h4>Methods<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><cite>RasterLayer.close</cite>: Closes a RasterLayer.</p></li>
+<li><p><cite>RasterLayer.read</cite>: Reads data from the RasterLayer into a numpy array.</p></li>
+<li><p><cite>RasterLayer.write</cite>: Write the RasterLayer to a GDAL-supported raster
+dataset.</p></li>
+<li><p><cite>RasterLayer.fill</cite>: Fill nodata gaps in a RasterLayer. Wrapper around
+the <code class="docutils literal notranslate"><span class="pre">rasterio.fill.fillnodata</span></code> method.</p></li>
+<li><p><cite>RasterLayer.sieve</cite>: Replace pixels with their largest neighbor.
+Wrapper around the <code class="docutils literal notranslate"><span class="pre">rasterio.features.sieve</span></code> method.</p></li>
+<li><p><cite>RasterLayer.distance</cite>: Calculate euclidean grid distances to non-NaN
+pixels.</p></li>
+<li><p><cite>RasterLayer.plot</cite>: Plot a RasterLayer using <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.imshow</span></code>.</p></li>
+<li><p><cite>RasterLayer.min</cite>, <cite>RasterLayer.max</cite>, <cite>RasterLayer.mean</cite>,
+<cite>RasterLayer.median</cite>: Basic summary statistics for a layer.</p></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="plotting.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Steven Pawley.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

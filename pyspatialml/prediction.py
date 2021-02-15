@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def _predfun(img, estimator):
+def predict_output(img, estimator):
     """Prediction function for classification or regression response.
 
     Parameters
@@ -44,7 +44,7 @@ def _predfun(img, estimator):
     return result_cla
 
 
-def _probfun(img, estimator):
+def predict_prob(img, estimator):
     """Class probabilities function.
 
     Parameters
@@ -87,16 +87,22 @@ def _probfun(img, estimator):
 
     # repeat mask for n_bands
     mask3d = np.repeat(
-        a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0
+        a=mask2d[np.newaxis, :, :],
+        repeats=result_proba.shape[0],
+        axis=0
     )
 
     # convert proba to masked array
-    result_proba = np.ma.masked_array(result_proba, mask=mask3d, fill_value=np.nan)
+    result_proba = np.ma.masked_array(
+        result_proba,
+        mask=mask3d,
+        fill_value=np.nan
+    )
 
     return result_proba
 
 
-def _predfun_multioutput(img, estimator):
+def predict_multioutput(img, estimator):
     """Multi-target prediction function.
 
     Parameters
@@ -135,7 +141,11 @@ def _predfun_multioutput(img, estimator):
     result = result.transpose(2, 0, 1)
 
     # repeat mask for n_bands
-    mask3d = np.repeat(a=mask2d[np.newaxis, :, :], repeats=result.shape[0], axis=0)
+    mask3d = np.repeat(
+        a=mask2d[np.newaxis, :, :],
+        repeats=result.shape[0],
+        axis=0
+    )
 
     # convert proba to masked array
     result = np.ma.masked_array(result, mask=mask3d, fill_value=np.nan)

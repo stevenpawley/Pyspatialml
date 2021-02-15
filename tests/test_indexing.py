@@ -5,7 +5,9 @@ from pyspatialml.datasets import nc
 
 
 class TestIndexing(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
 
     def test_naming(self):
         stack = Raster(self.predictors + [nc.multiband])
@@ -26,6 +28,7 @@ class TestIndexing(TestCase):
             "landsat_multiband_5",
         ]
         self.assertListEqual(stack.names, expected_names)
+        stack.close()
 
     def test_subset_single_layer(self):
         stack = Raster(self.predictors + [nc.multiband])
@@ -49,6 +52,7 @@ class TestIndexing(TestCase):
             stack.lsat7_2000_70.read(masked=True).mean(),
             59.17773813401238
         )
+        stack.close()
 
     def test_subset_multiple_layers(self):
         stack = Raster(self.predictors + [nc.multiband])
@@ -76,6 +80,8 @@ class TestIndexing(TestCase):
             stack[["lsat7_2000_10", "lsat7_2000_20", "lsat7_2000_30"]].names,
         )
 
+        stack.close()
+
     def test_indexing(self):
         stack = Raster(self.predictors + [nc.multiband])
 
@@ -91,3 +97,5 @@ class TestIndexing(TestCase):
                          band7_mean)
         self.assertEqual(stack.lsat7_2000_10.read(masked=True).mean(),
                          band7_mean)
+
+        stack.close()

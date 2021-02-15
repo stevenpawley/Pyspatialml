@@ -7,55 +7,66 @@ from pyspatialml import Raster
 
 
 class TestCalc(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
-    stack = Raster(predictors)
+    def setUp(self) -> None:
+        predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                      nc.band7]
+        self.stack = Raster(predictors)
+        self.result = None
+
+    def tearDown(self) -> None:
+        self.stack.close()
+        self.result.close()
+        self.stack = None
+        self.result = None
 
     def test_calc_with_2d_output(self):
         def compute_outputs_2d_array(arr):
-            new_arr = arr[0, :, :] + arr[1, :, :]
-            return new_arr
+            return arr[0, :, :] + arr[1, :, :]
 
-        calculation = self.stack.apply(compute_outputs_2d_array, n_jobs=1)
-
-        self.assertIsInstance(calculation, Raster)
-        self.assertEqual(calculation.count, 1)
-        self.assertEqual(calculation.read(masked=True).count(), 183418)
+        self.result = self.stack.apply(compute_outputs_2d_array, n_jobs=1)
+        self.assertIsInstance(self.result, Raster)
+        self.assertEqual(self.result.count, 1)
+        self.assertEqual(self.result.read(masked=True).count(), 183418)
 
     def test_calc_with_2d_output_coerce_dtype(self):
         def compute_outputs_2d_array(arr):
-            new_arr = arr[0, :, :] + arr[1, :, :]
-            return new_arr
+            return arr[0, :, :] + arr[1, :, :]
 
-        calculation = self.stack.apply(
-            compute_outputs_2d_array, dtype=np.int16, n_jobs=1
-        )
-
-        self.assertIsInstance(calculation, Raster)
-        self.assertEqual(calculation.count, 1)
-        self.assertEqual(calculation.read(masked=True).count(), 183418)
+        self.result = self.stack.apply(
+            compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
+        self.assertIsInstance(self.result, Raster)
+        self.assertEqual(self.result.count, 1)
+        self.assertEqual(self.result.read(masked=True).count(), 183418)
 
         # test that nodata value is properly recognised
-        self.assertEqual(calculation.read(masked=True).min(), 94)
-        self.assertEqual(calculation.read(masked=True).max(), 510)
+        self.assertEqual(self.result.read(masked=True).min(), 94)
+        self.assertEqual(self.result.read(masked=True).max(), 510)
 
     def test_calc_with_3d_output(self):
         def compute_outputs_3d_array(arr):
             arr[0, :, :] = arr[0, :, :] + arr[1, ::]
             return arr
 
-        calculation = self.stack.apply(compute_outputs_3d_array, n_jobs=1)
-
-        self.assertIsInstance(calculation, Raster)
-        self.assertEqual(calculation.count, 6)
-        self.assertEqual(calculation.read(masked=True).count(), 1052182)
+        self.result = self.stack.apply(compute_outputs_3d_array, n_jobs=1)
+        self.assertIsInstance(self.result, Raster)
+        self.assertEqual(self.result.count, 6)
+        self.assertEqual(self.result.read(masked=True).count(), 1052182)
 
     def test_calc_with_multiprocessing(self):
         def compute_outputs_2d_array(arr):
-            new_arr = arr[0, :, :] + arr[1, :, :]
-            return new_arr
+            return arr[0, :, :] + arr[1, :, :]
 
-        calculation = self.stack.apply(compute_outputs_2d_array, n_jobs=-1)
+        self.result = self.stack.apply(compute_outputs_2d_array, n_jobs=-1)
+        self.assertIsInstance(self.result, Raster)
+        self.assertEqual(self.result.count, 1)
+        self.assertEqual(self.result.read(masked=True).count(), 183418)
 
-        self.assertIsInstance(calculation, Raster)
-        self.assertEqual(calculation.count, 1)
-        self.assertEqual(calculation.read(masked=True).count(), 183418)
+    def test_calc_in_memory(self):
+        def compute_outputs_2d_array(arr):
+            return arr[0, :, :] + arr[1, :, :]
+
+        self.result = self.stack.apply(
+            compute_outputs_2d_array, n_jobs=1, in_memory=True)
+        self.assertIsInstance(self.result, Raster)
+        self.assertEqual(self.result.count, 1)
+        self.assertEqual(self.result.read(masked=True).count(), 183418)

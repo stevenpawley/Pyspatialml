@@ -8,17 +8,24 @@ from pyspatialml import Raster
 
 
 class TestPlotting(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
+        self.stack = Raster(self.predictors)
+        self.stack_single = Raster(self.predictors[0])
+
+    def tearDown(self) -> None:
+        self.stack.close()
+        self.stack_single.close()
 
     def test_plotting_raster(self):
-        stack = Raster(self.predictors)
 
         # test basic raster matrix plot
-        p = stack.plot()
+        p = self.stack.plot()
         self.assertIsInstance(p, np.ndarray)
 
         # test with arguments
-        p = stack.plot(
+        p = self.stack.plot(
             cmap="plasma",
             norm=mpl.colors.Normalize(vmin=10, vmax=100),
             title_fontsize=10,
@@ -30,7 +37,6 @@ class TestPlotting(TestCase):
         self.assertIsInstance(p, np.ndarray)
 
     def test_plotting_single(self):
-        stack = Raster(self.predictors[0])
-        p = stack.plot(
+        p = self.stack_single.plot(
             legend_kwds={"orientation": "horizontal", "fraction": 0.04})
         self.assertIsInstance(p, mpl.axes.Subplot)

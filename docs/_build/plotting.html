@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Plotting &mdash; Pyspatialml 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Raster Geoprocessing" href="geoprocessing.html" />
+    <link rel="prev" title="Design" href="design.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Pyspatialml
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlworkflow.html">A Machine Learning Example</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geoprocessing.html">Raster Geoprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Random Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformers.html">Transformers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyspatialml</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pyspatialml</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Plotting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/plotting.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="plotting">
+<h1>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h1>
+<p>Both <cite>Raster</cite> and <cite>RasterLayer</cite> objects include basic plotting methods. The
+plot method for a <cite>RasterLayer</cite> object produces a single raster plot using the
+<a href="#id1"><span class="problematic" id="id2">`</span></a>matplotlib.pyplot.imshow’ method.</p>
+<p>For convenience, plot settings such as color ramps and stretches can also be
+set for each RasterLayer using the <cite>RasterLayer.cmap</cite> that support matplotlib
+cmap’s, and the <cite>RasterLayer.norm</cite> attribute to associate a
+<cite>matplotlib.colors.Normalize</cite> stretch with each RasterLayer:</p>
+<p>To plot a single RasterLayer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspatialml</span> <span class="kn">import</span> <span class="n">Raster</span>
+<span class="kn">from</span> <span class="nn">pyspatialml.datasets</span> <span class="kn">import</span> <span class="n">nc</span>
+
+<span class="n">stack</span> <span class="o">=</span> <span class="n">Raster</span><span class="p">([</span><span class="n">nc</span><span class="o">.</span><span class="n">band1</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band2</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band3</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band4</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band5</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">band7</span><span class="p">])</span>
+
+<span class="c1"># set RasterLayer color table</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;plasma&quot;</span>
+
+<span class="c1"># plot a single layer using an existing axis</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="align-center figure" id="id3">
+<a class="reference internal image-reference" href="_images/nc_band1.png"><img alt="nc stack" src="_images/nc_band1.png" style="width: 550px; height: 400px;" /></a>
+<p class="caption"><span class="caption-text">A single band</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>For RasterLayers that represent categorical data types, e.g. land cover, then
+the <cite>RasterLayer.categorical=True</cite> attribute will cause the cmap to be
+converted to a discrete scale.</p>
+<p>The default plot method for a <cite>Raster</cite> object produces a raster-matrix plot of
+the individual RasterLayers. By default this plot preserves the plotting
+attributes of the individual rasters:</p>
+<p>Plot all RasterLayers in a Raster object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_10</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;Blues&quot;</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_20</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;Greens&quot;</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_30</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;Reds&quot;</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_40</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;RdPu&quot;</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_50</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;autumn&quot;</span>
+<span class="n">stack</span><span class="o">.</span><span class="n">lsat7_2000_70</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="s2">&quot;hot&quot;</span>
+
+<span class="n">stack</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">title_fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">label_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">legend_fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B1&quot;</span><span class="p">,</span> <span class="s2">&quot;B2&quot;</span><span class="p">,</span> <span class="s2">&quot;B3&quot;</span><span class="p">,</span> <span class="s2">&quot;B4&quot;</span><span class="p">,</span> <span class="s2">&quot;B5&quot;</span><span class="p">,</span> <span class="s2">&quot;B7&quot;</span><span class="p">],</span>
+    <span class="n">fig_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;figsize&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)},</span>
+    <span class="n">subplots_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;wspace&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="align-center figure" id="id4">
+<a class="reference internal image-reference" href="_images/nc_stack.png"><img alt="nc stack" src="_images/nc_stack.png" style="width: 700px; height: 400px;" /></a>
+<p class="caption"><span class="caption-text">Raster of stacked nc data</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<p>The <cite>Raster.plot</cite> method also provides <cite>cmap</cite> and <cite>norm</cite> arguments that can be
+used to override the settings of the individual RasterLayers. Additional
+settings can be passed to control plot layout using the <cite>figure_kwds</cite>,
+<cite>legend_kwds</cite> and <cite>subplots_kwds</cite> arguments.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="geoprocessing.html" class="btn btn-neutral float-right" title="Raster Geoprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="design.html" class="btn btn-neutral float-left" title="Design" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Steven Pawley.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -5,7 +5,9 @@ from pyspatialml import Raster
 
 
 class TestDrop(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
 
     def test_drop_inplace(self):
         stack = Raster(self.predictors)
@@ -17,6 +19,7 @@ class TestDrop(TestCase):
         # check that RasterLayer has been dropped
         self.assertEqual(stack.count, 5)
         self.assertNotIn("lsat7_2000_50", stack.names)
+        stack.close()
 
     def test_drop_with_copy(self):
         stack = Raster(self.predictors)
@@ -33,3 +36,4 @@ class TestDrop(TestCase):
         # check that original raster is unaffected
         self.assertEqual(stack.count, 6)
         self.assertEqual(stack.names, names)
+        stack.close()

@@ -5,7 +5,9 @@ from pyspatialml import Raster
 
 
 class TestAppend(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
 
     def test_append_inplace(self):
         # append another Raster containing a single layer with identical name
@@ -25,6 +27,7 @@ class TestAppend(TestCase):
         stack = Raster(self.predictors)
         stack.append(Raster(nc.multiband), in_place=True)
         self.assertEqual(stack.names[6], "landsat_multiband_1")
+        stack.close()
 
     def test_append_with_copy(self):
         # append another Raster containing a single layer with identical name
@@ -49,3 +52,4 @@ class TestAppend(TestCase):
         # append a multiband raster
         result = stack.append(Raster(nc.multiband), in_place=False)
         self.assertEqual(result.names[6], "landsat_multiband_1")
+        stack.close()

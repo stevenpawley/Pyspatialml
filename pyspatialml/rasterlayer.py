@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 from rasterio.windows import Window
+from rasterio.io import MemoryFile
 
 from .plotting import discrete_cmap
-from .rasterbase import _get_nodata
-from .temporary_files import _file_path_tempfile
+from .rasterbase import get_nodata_value
 
 
 class RasterLayer:
@@ -86,8 +86,13 @@ class RasterLayer:
         self.bidx = band.bidx
         self.dtype = band.dtype
         self.ds = band.ds
-        self.name = self._make_name(band.ds.files[0])
-        self.file = band.ds.files[0]
+
+        if len(band.ds.files) > 0:
+            self.name = self._make_name(band.ds.files[0])
+            self.file = band.ds.files[0]
+        else:
+            self.name = "in_memory"
+            self.file = None
 
         self.nodata = band.ds.nodata
         self.driver = band.ds.meta["driver"]
@@ -160,60 +165,26 @@ class RasterLayer:
             Returns a single RasterLayer containing the calculated result.
         """
 
-        _, tfile = _file_path_tempfile(None)
         driver = self.driver
 
-        # determine dtype of result based on calc on single pixel
-        if other is not None:
-            arr1 = self.read(masked=True, window=Window(0, 0, 1, 1))
-
-            try:
-                arr2 = other.read(masked=True, window=Window(0, 0, 1, 1))
-            except AttributeError:
-                arr2 = other
-
-            test = function(arr1, arr2)
-            dtype = test.dtype
+        if isinstance(other, RasterLayer):
+            result = function(self.read(masked=True), other.read(masked=True))
         else:
-            dtype = self.dtype
+            result = function(self.read(masked=True))
 
-        nodata = _get_nodata(dtype)
+        nodata = get_nodata_value(result.dtype)
 
         # open output file with updated metadata
-        meta = self.meta
-        meta.update(driver=driver, count=1, dtype=dtype, nodata=nodata)
+        meta = self.meta.copy()
+        meta.update(driver=driver, count=1, dtype=result.dtype, nodata=nodata)
 
-        with rasterio.open(tfile.name, "w", **meta) as dst:
-
-            # define windows
-            windows = [window for ij, window in dst.block_windows()]
-
-            # generator gets raster arrays for each window
-            self_gen = (self.read(window=w, masked=True) for w in windows)
-
-            if isinstance(other, RasterLayer):
-                other_gen = (
-                    other.read(window=w, masked=True) for w in windows)
-            else:
-                other_gen = (other for w in windows)
-
-            for window, arr1, arr2 in zip(windows, self_gen, other_gen):
-
-                if other is not None:
-                    result = function(arr1, arr2)
-                else:
-                    result = function(arr1)
-
-                result = np.ma.filled(result, fill_value=nodata)
-                dst.write(result.astype(dtype), window=window, indexes=1)
+        with MemoryFile() as memfile:
+            dst = memfile.open(**meta)
+            result = np.ma.filled(result, fill_value=nodata)
+            dst.write(result, indexes=1)
 
         # create RasterLayer from result
-        src = rasterio.open(tfile.name)
-        band = rasterio.band(src, 1)
-        layer = RasterLayer(band)
-
-        # overwrite close attribute with close method from temporaryfilewrapper
-        layer.close = tfile.close
+        layer = RasterLayer(rasterio.band(dst, 1))
 
         return layer
 
@@ -458,29 +429,48 @@ class RasterLayer:
             resampling_methods = [i.name for i in rasterio.enums.Resampling]
 
             if kwargs["resampling"] not in resampling_methods:
-                raise ValueError(
-                    "Invalid resampling method. Resampling method must be one \
-                     of {0}:".format(resampling_methods)
-                )
+                raise ValueError("Invalid resampling method. Resampling "
+                                 "method must be one of {0}:".format(
+                    resampling_methods))
 
             kwargs["resampling"] = (
                 rasterio.enums.Resampling[kwargs["resampling"]])
 
         return self.ds.read(indexes=self.bidx, **kwargs)
 
-    def _write(self, arr, file_path=None, driver="GTiff", dtype=None,
-               nodata=None, **kwargs):
-        """Internal function to write processed results to a file, usually a
-        tempfile"""
+    def write(self, file_path, driver="GTiff", dtype=None, nodata=None,
+              **kwargs):
+        """Write method for a single RasterLayer.
 
-        # generate a file path to a temporary file is file_path is None
-        file_path, tfile = _file_path_tempfile(file_path)
+        Parameters
+        ----------
+        file_path : str (opt)
+            File path to save the dataset.
 
+        driver : str
+            GDAL-compatible driver used for the file format.
+
+        dtype : str (opt)
+            Numpy dtype used for the file. If omitted then the RasterLayer's
+            dtype is used.
+
+        nodata : any number (opt)
+            A value used to represent the nodata pixels. If omitted then the
+            RasterLayer's nodata value is used (if assigned already).
+
+        kwargs : opt
+            Optional named arguments to pass to the format drivers. For example
+            can be `compress="deflate"` to add compression.
+
+        Returns
+        -------
+        pyspatialml.RasterLayer
+        """
         if dtype is None:
             dtype = self.dtype
 
         if nodata is None:
-            nodata = _get_nodata(dtype)
+            nodata = get_nodata_value(dtype)
 
         meta = self.ds.meta
         meta["driver"] = driver
@@ -489,9 +479,7 @@ class RasterLayer:
         meta.update(kwargs)
 
         # mask any nodata values
-        arr = np.ma.masked_equal(arr, self.nodata)
-
-        # replace masked values with the user-specified nodata value
+        arr = np.ma.masked_equal(self.read(), self.nodata)
         arr = arr.filled(fill_value=nodata)
 
         # write to file
@@ -501,10 +489,6 @@ class RasterLayer:
         src = rasterio.open(file_path)
         band = rasterio.band(src, 1)
         layer = RasterLayer(band)
-
-        # override RasterLayer close method if temp file is used
-        if tfile is not None:
-            layer.close = tfile.close
 
         return layer
 
@@ -619,8 +603,8 @@ class RasterLayer:
 
         if norm:
             if not isinstance(norm, mpl.colors.Normalize):
-                raise AttributeError("norm argument should be a \
-                matplotlib.colors.Normalize object")
+                raise AttributeError("norm argument should be a "
+                                     "matplotlib.colors.Normalize object")
 
         if cmap is None:
             cmap = self.cmap

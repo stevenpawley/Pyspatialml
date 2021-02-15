@@ -6,7 +6,9 @@ from pyspatialml import Raster
 
 
 class TestRename(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
 
     def test_rename_inplace(self):
         stack = Raster(self.predictors)

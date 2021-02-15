@@ -5,41 +5,58 @@ from pyspatialml import Raster
 
 
 class TestToCrs(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
-    stack = Raster(predictors)
+    def setUp(self) -> None:
+        # test inputs
+        predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                      nc.band7]
+        self.stack = Raster(predictors)
+
+        # test results
+        self.stack_prj = None
+
+    def tearDown(self) -> None:
+        self.stack.close()
+        self.stack_prj.close()
 
     def test_to_crs_defaults(self):
-        stack_prj = self.stack.to_crs({"init": "EPSG:4326"})
+        self.stack_prj = self.stack.to_crs({"init": "EPSG:4326"})
 
         # check raster object
-        self.assertIsInstance(stack_prj, Raster)
-        self.assertEqual(stack_prj.count, self.stack.count)
-        self.assertEqual(stack_prj.read(masked=True).count(), 1012061)
+        self.assertIsInstance(self.stack_prj, Raster)
+        self.assertEqual(self.stack_prj.count, self.stack.count)
+        self.assertEqual(self.stack_prj.read(masked=True).count(), 1012061)
 
         # test nodata value is recognized
         self.assertEqual(
-            stack_prj.read(masked=True).min(),
+            self.stack_prj.read(masked=True).min(),
             self.stack.read(masked=True).min()
         )
         self.assertEqual(
-            stack_prj.read(masked=True).max(),
+            self.stack_prj.read(masked=True).max(),
             self.stack.read(masked=True).max()
         )
 
     def test_to_crs_custom_nodata(self):
-        stack_prj = self.stack.to_crs({"init": "EPSG:4326"}, nodata=-999)
+        self.stack_prj = self.stack.to_crs({"init": "EPSG:4326"}, nodata=-999)
 
         # check raster object
-        self.assertIsInstance(stack_prj, Raster)
-        self.assertEqual(stack_prj.count, self.stack.count)
-        self.assertEqual(stack_prj.read(masked=True).count(), 1012061)
+        self.assertIsInstance(self.stack_prj, Raster)
+        self.assertEqual(self.stack_prj.count, self.stack.count)
+        self.assertEqual(self.stack_prj.read(masked=True).count(), 1012061)
 
         # test nodata value is recognized
         self.assertEqual(
-            stack_prj.read(masked=True).min(),
+            self.stack_prj.read(masked=True).min(),
             self.stack.read(masked=True).min()
         )
         self.assertEqual(
-            stack_prj.read(masked=True).max(),
+            self.stack_prj.read(masked=True).max(),
             self.stack.read(masked=True).max()
         )
+
+    def test_to_crs_in_memory(self):
+        self.stack_prj = self.stack.to_crs({"init": "EPSG:4326"},
+                                           in_memory=True)
+
+        # check raster object
+        self.assertIsInstance(self.stack_prj, Raster)

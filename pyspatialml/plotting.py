@@ -120,7 +120,7 @@ class RasterPlot(object):
         cmap=None,
         norm=None,
         figsize=None,
-        out_shape=(100, 100),
+        out_shape=None,
         title_fontsize=8,
         label_fontsize=6,
         legend_fontsize=6,

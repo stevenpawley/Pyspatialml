@@ -10,9 +10,16 @@ from pyspatialml.datasets import nc
 
 
 class TestExtract(TestCase):
-    predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
-    extracted_grass = pd.read_table(nc.extracted_pixels, delimiter=" ")
-    stack = Raster(predictors)
+    def setUp(self) -> None:
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
+                           nc.band7]
+        self.extracted_grass = pd.read_table(
+            nc.extracted_pixels, delimiter=" ")
+
+        self.stack = Raster(self.predictors)
+
+    def tearDown(self) -> None:
+        self.stack.close()
 
     def test_extract_points(self):
         training_pt = geopandas.read_file(nc.points)
