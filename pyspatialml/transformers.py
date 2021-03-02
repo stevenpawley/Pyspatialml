@@ -76,7 +76,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.
 
     normalize : bool, default=True
-        Whether to standardize the inputs using
+        Whether to normalize the inputs using
         sklearn.preprocessing.Normalizer
 
     metric_params : dict, default=None
@@ -202,7 +202,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             mask = np.repeat(mask[:, :, np.newaxis], n_outputs, axis=2)
             neighbor_vals = np.ma.masked_array(neighbor_vals, mask=mask)
 
-            # calculated weighted means
+        # calculated weighted means
         if self.weights == "distance":
             new_X = self._distance_weighting(neighbor_vals, neighbor_dist)
 
@@ -241,16 +241,16 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         return X
 
     def _distance_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = 1 / neighbor_dist
-        return self._apply_weights(neighbor_vals, neighbor_weights)
+        weights = 1 / neighbor_dist
+        return self._apply_weights(neighbor_vals, weights)
 
     def _uniform_weighting(self, neighbor_vals):
         weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
         return self._apply_weights(neighbor_vals, weights)
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        neighbor_weights = self.weights(neighbor_dist, **self.kernel_params)
-        return self._apply_weights(neighbor_vals, neighbor_weights)
+        weights = self.weights(neighbor_dist, **self.kernel_params)
+        return self._apply_weights(neighbor_vals, weights)
 
 
 class GeoDistTransformer(BaseEstimator, TransformerMixin):

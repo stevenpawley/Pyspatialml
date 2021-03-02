@@ -15,6 +15,11 @@ designed for quick an interactive analyses on raster datasets, and if a file
 path is not specified then the results are saved to a temporary file location
 and a new Raster object is returned with the geoprocessing results.
 
+For datasets that will easily fit into memory, all geoprocessing methods also
+have an `in_memory` parameter. If `in_memory=True` is set, then the results
+will be created using Rasterio's in-memory files and stored in RAM. This has
+performance advantages, at the expense of memory expenditure.
+
 Cropping
 ========
 
@@ -142,3 +147,14 @@ datasets in windows, using `Raster.apply()`.
 
     ndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
 
+Arithmetic operations on RasterLayer's will return another RasterLayer. The
+result can be coerced into a Raster object using:
+
+::
+
+ndvi = Raster(
+    (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])
+)
+
+Currently, arithmetic operations are only supported on RasterLayer objects and
+not in a parent Raster object directly.

@@ -534,7 +534,7 @@ class RasterLayer:
         return X
 
     def plot(self, cmap=None, norm=None, ax=None, cax=None, figsize=None,
-             out_shape=(100, 100), categorical=None, legend=False,
+             out_shape=None, categorical=None, legend=False,
              vmin=None, vmax=None, fig_kwds=None, legend_kwds=None):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
         Parameters
