@@ -192,7 +192,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         mask = neighbor_dist.mask
 
         if mask.all() == False:
-            mask = np.zeros((neighbor_dist.shape), dtype=np.bool)
+            mask = np.zeros(neighbor_dist.shape, dtype=np.bool)
             mask[:] = False
 
         if neighbor_vals.ndim == 2:
@@ -221,8 +221,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
                 X = np.ma.average(
                     neighbor_vals, weights=neighbor_weights, axis=1)
             else:
-                X = weighted_mode(
-                    neighbor_vals, weights=neighbor_weights, axis=1)
+                X, _ = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
 
         # weighted mean of neighbors for a multi-target regression
         # neighbor_vals = (n_samples, n_neighbors, n_targets)
@@ -235,10 +234,22 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
                                             weights=neighbor_weights, axis=1)
             else:
                 for i in range(neighbor_vals.shape[-1]):
-                    X[:, i] = weighted_mode(neighbor_vals[:, :, i],
-                                            weights=neighbor_weights, axis=1)
+                    X[:, i], _ = weighted_mode(neighbor_vals[:, :, i],
+                                               neighbor_weights, axis=1)
 
         return X
+
+    def _distance_weighting(self, neighbor_vals, neighbor_dist):
+        weights = 1 / neighbor_dist
+        return self._apply_weights(neighbor_vals, weights)
+
+    def _uniform_weighting(self, neighbor_vals):
+        weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
+        return self._apply_weights(neighbor_vals, weights)
+
+    def _custom_weighting(self, neighbor_vals, neighbor_dist):
+        weights = self.weights(neighbor_dist, **self.kernel_params)
+        return self._apply_weights(neighbor_vals, weights)
 
     def _distance_weighting(self, neighbor_vals, neighbor_dist):
         weights = 1 / neighbor_dist
