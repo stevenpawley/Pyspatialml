@@ -1096,7 +1096,7 @@ class Raster(RasterPlot, BaseRaster):
             new_raster = self._new_raster(self.files, self.names)
             for old_name, new_name in names.items():
                 # change internal name of RasterLayer
-                new_raster.loc[old_name].names = [new_name]
+                new_raster.loc[old_name].name = [new_name]
 
                 # change name of layer in stack
                 new_raster.loc.rename(old_name, new_name)
