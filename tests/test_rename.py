@@ -60,7 +60,7 @@ class TestRename(TestCase):
         self.assertNotIn("lsat7_2000_30", dir(result))
 
         # check that internal name of RasterLayer was also renamed
-        self.assertEqual(result.iloc[2].names[0], "new_name")
+        self.assertEqual(result.iloc[2].name, "new_name")
 
         # check that the RasterLayer attached to the new name is the same
         self.assertEqual(result["new_name"].mean(), band3_stats)
