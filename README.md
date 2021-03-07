@@ -262,7 +262,7 @@ pixels. These arrays are masked arrays with nodata values in the RasterStack dat
 
 The ```extract_raster``` method can also be used to spatially query pixel values from a Raster object using another
 raster containing labelled pixels. This raster has to be spatially aligned with the Raster object. This method also returns
-the values of the labelled pixels are returned along with the queried pixel values.
+the values of the labelled pixels along with the queried pixel values.
 
 ```
 # Create a training dataset by extracting the raster values at the training point locations:
