@@ -369,7 +369,12 @@ class Raster(RasterPlot, BaseRaster):
 
             for i in range(dst.count):
                 band = rasterio.band(dst, i + 1)
-                src_layers.append(RasterLayer(band))
+                rasterlayer = RasterLayer(band)
+
+                if in_memory is True:
+                    rasterlayer.in_memory = True
+
+                src_layers.append(rasterlayer)
 
             if tfile is not None and in_memory is False:
                 for layer in src_layers:
@@ -674,7 +679,7 @@ class Raster(RasterPlot, BaseRaster):
                 arr[arr == layer.nodata] = nodata
                 dst.write(arr.astype(dtype), i + 1)
 
-        return self._new_raster(file_path, self.names)
+        return self._copy(file_path, self.names)
 
     def predict_proba(self, estimator, file_path=None, in_memory=False,
                       indexes=None, driver="GTiff", dtype=None, nodata=None,
@@ -789,6 +794,8 @@ class Raster(RasterPlot, BaseRaster):
                             tqdm(windows, disable=not progress)):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
+            output_dst = file_path
+
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(
@@ -810,14 +817,14 @@ class Raster(RasterPlot, BaseRaster):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            file_path = dst
-
-        # generate layer names
-        prefix = "prob_"
-        names = [prefix + str(i) for i in range(len(indexes))]
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
 
         # create new Raster object with the result
-        new_raster = self._new_raster(file_path, names)
+        prefix = "prob_"
+        names = [prefix + str(i) for i in range(len(indexes))]
+        new_raster = self._copy(output_dst, names)
 
         # override close method
         if tfile is not None:
@@ -938,6 +945,8 @@ class Raster(RasterPlot, BaseRaster):
                             tqdm(windows, disable=not progress)):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
+            output_dst = file_path
+
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(
@@ -957,14 +966,15 @@ class Raster(RasterPlot, BaseRaster):
                             tqdm(windows, disable=not progress)):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
-            file_path = dst
 
-        # generate layer names
-        prefix = "pred_raw_"
-        names = [prefix + str(i) for i in range(len(indexes))]
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
 
         # create new Raster object with the result
-        new_raster = self._new_raster(file_path, names)
+        prefix = "pred_raw_"
+        names = [prefix + str(i) for i in range(len(indexes))]
+        new_raster = self._copy(output_dst, names)
 
         # override close method
         if tfile is not None:
@@ -997,7 +1007,6 @@ class Raster(RasterPlot, BaseRaster):
             other = [other]
 
         for new_raster in other:
-
             if not isinstance(new_raster, Raster):
                 raise AttributeError(
                     new_raster + " is not a pyspatialml.Raster object")
@@ -1007,8 +1016,10 @@ class Raster(RasterPlot, BaseRaster):
             combined_names = _fix_names(combined_names)
 
             # update layers and names
-            combined_layers = list(self.loc.values()) + list(
-                new_raster.loc.values())
+            combined_layers = (
+                list(self.loc.values()) +
+                list(new_raster.loc.values())
+            )
 
             for layer, name in zip(combined_layers, combined_names):
                 layer.names = [name]
@@ -1016,7 +1027,7 @@ class Raster(RasterPlot, BaseRaster):
             if in_place is True:
                 self._layers = combined_layers
             else:
-                new_raster = self._new_raster(self.files, self.names)
+                new_raster = self._copy(self.files, self.names)
                 new_raster._layers = combined_layers
 
                 return new_raster
@@ -1063,7 +1074,7 @@ class Raster(RasterPlot, BaseRaster):
         if in_place is True:
             self._layers = subset_layers
         else:
-            new_raster = self._new_raster(self.files, self.names)
+            new_raster = self._copy(self.files, self.names)
             new_raster._layers = subset_layers
 
             return new_raster
@@ -1094,7 +1105,7 @@ class Raster(RasterPlot, BaseRaster):
                 # change name of layer in stack
                 self.loc.rename(old_name, new_name)
         else:
-            new_raster = self._new_raster(self.files, self.names)
+            new_raster = self._copy(self.files, self.names)
             for old_name, new_name in names.items():
                 # change internal name of RasterLayer
                 new_raster.loc[old_name].name = new_name
@@ -1104,13 +1115,17 @@ class Raster(RasterPlot, BaseRaster):
 
             return new_raster
 
-    def _new_raster(self, file_path, names=None):
-        """Return a new Raster object
+    def _copy(self, src, names=None):
+        """Return a new Raster object from a list of files but retaining the
+        attributes of the parent Raster.
+
+        Designed to be used internally to copy a Raster object.
 
         Parameters
         ----------
-        file_path : str
-            Path to files to create the new Raster object from.
+        src : List of RasterLayers or file paths
+            List of RasterLayers or file paths used create the new Raster
+            object.
 
         names : list (optional, default None)
             List to name the RasterLayer objects in the stack. If not supplied
@@ -1120,20 +1135,40 @@ class Raster(RasterPlot, BaseRaster):
         -------
         pyspatialml.Raster
         """
+        if not isinstance(src, list):
+            src = [src]
 
-        # some checks
-        if not isinstance(file_path, list):
-            file_path = [file_path]
+        is_file = [isinstance(i, str) for i in src]
 
-        # create new raster from supplied file path
-        raster = Raster(file_path)
+        if all(is_file):
+            raster = Raster(src)
+        else:
+            copied_layers = list()
+            for i, layer in enumerate(src):
+                if layer.in_memory is False:
+                    copied_layers.append(layer)
+                else:
+                    meta = self.meta.copy()
+                    meta["count"] = 1
+                    meta["driver"] = "GTiff"
+                    meta["nodata"] = layer.nodata
+                    meta["dtype"] = layer.dtype
+
+                    with rasterio.MemoryFile() as memfile:
+                        dst = memfile.open(**meta)
+                        arr = layer.read(masked=True)
+                        dst.write(arr, 1)
+                    band = rasterio.band(dst, 1)
+                    copied_layers.append(RasterLayer(band))
+
+            raster = Raster(copied_layers)
 
         # rename and copy attributes
         if names is not None:
             rename = {old: new for old, new in zip(raster.names, names)}
             raster.rename(rename, in_place=True)
 
-        for old_layer, new_layer in zip(self.iloc, raster.iloc):
+        for old_layer, new_layer in zip(self.iloc, list(raster.loc.values())):
             new_layer.cmap = old_layer.cmap
             new_layer.norm = old_layer.norm
             new_layer.categorical = old_layer.categorical
@@ -1153,18 +1188,8 @@ class Raster(RasterPlot, BaseRaster):
         -------
         Raster
         """
-        new_raster = Raster(self.files)
-        rename = {old: new for old, new in zip(new_raster.names, self.names)}
-        new_raster.rename(rename, in_place=True)
-
-        for old_layer, new_layer in zip(self.iloc, new_raster.iloc):
-            new_layer.cmap = old_layer.cmap
-            new_layer.norm = old_layer.norm
-            new_layer.categorical = old_layer.categorical
-
-        new_raster.block_shape = self.block_shape
-
-        return new_raster
+        layers = list(self._layers.values())
+        return self._copy(layers)
 
     def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None,
              in_memory=False, driver="GTiff", dtype=None, nodata=None, 
@@ -1226,7 +1251,6 @@ class Raster(RasterPlot, BaseRaster):
             file_path, tfile = self._tempfile(file_path)
         
         meta = self.meta.copy()
-
         dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
@@ -1270,15 +1294,18 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
                 dst.write(masked_ndarrays.astype(dtype))
+            output_dst = file_path
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
                 dst.write(masked_ndarrays.astype(dtype))
-            
-            file_path = dst
+
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
 
         # create new Raster object with the result
-        new_raster = self._new_raster(file_path, self.names)
+        new_raster = self._copy(output_dst, self.names)
 
         # override close method
         if tfile is not None:
@@ -1360,14 +1387,18 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
                 dst.write(intersected_arr.astype(dtype))
+            output_dst = file_path
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
                 dst.write(intersected_arr.astype(dtype))
-            file_path = dst
+
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
 
         # create new Raster object with the result
-        new_raster = self._new_raster(file_path, self.names)
+        new_raster = self._copy(output_dst, self.names)
 
         # override close method
         if tfile is not None:
@@ -1469,14 +1500,18 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
                 dst.write(cropped_arr.astype(dtype))
+            output_dst = file_path
         
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
                 dst.write(cropped_arr.astype(dtype))
-            file_path = dst
 
-        new_raster = self._new_raster(file_path, self.names)
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
+
+        new_raster = self._copy(output_dst, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1596,6 +1631,8 @@ class Raster(RasterPlot, BaseRaster):
 
                     if progress is True:
                         t.update()
+            output_dst = file_path
+
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(driver=driver, **meta)
@@ -1610,9 +1647,12 @@ class Raster(RasterPlot, BaseRaster):
 
                     if progress is True:
                         t.update()
-            file_path = dst
 
-        new_raster = self._new_raster(file_path, self.names)
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
+
+        new_raster = self._copy(output_dst, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1675,11 +1715,8 @@ class Raster(RasterPlot, BaseRaster):
             file_path, tfile = self._tempfile(file_path)
         
         rows, cols = out_shape
-
-        arr = self.read(masked=True, out_shape=out_shape,
-                        resampling=resampling)
+        arr = self.read(masked=True, out_shape=out_shape, resampling=resampling)
         meta = self.meta.copy()
-
         dtype = self._check_supported_dtype(dtype)
         
         if nodata is None:
@@ -1706,14 +1743,18 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
                 dst.write(arr.astype(dtype))
-        
+            output_dst = file_path
+
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
                 dst.write(arr.astype(dtype))
-            file_path = dst
 
-        new_raster = self._new_raster(file_path, self.names)
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
+
+        new_raster = self._copy(output_dst, self.names)
 
         if tfile is not None:
             for layer in new_raster.iloc:
@@ -1786,7 +1827,7 @@ class Raster(RasterPlot, BaseRaster):
         img = self.read(masked=True, window=window)
         arr = function(img, **function_args)
 
-        if np.ndim(arr) > 2:
+        if arr.ndim > 2:
             indexes = np.arange(1, arr.shape[0] + 1)
             count = len(indexes)
         else:
@@ -1816,6 +1857,7 @@ class Raster(RasterPlot, BaseRaster):
                             tqdm(windows, disable=not progress)):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res.astype(dtype), window=w, indexes=indexes)
+            output_dst = file_path
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
@@ -1826,10 +1868,13 @@ class Raster(RasterPlot, BaseRaster):
                             tqdm(windows, disable=not progress)):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res.astype(dtype), window=w, indexes=indexes)
-            file_path = dst
+
+            output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
+            for i in output_dst:
+                i.in_memory = True
 
         # create new raster object with result
-        new_raster = self._new_raster(file_path)
+        new_raster = self._copy(output_dst)
 
         # override close method
         if tfile is not None:
@@ -1864,22 +1909,18 @@ class Raster(RasterPlot, BaseRaster):
         n_pixels = self.shape[0] * self.shape[1]
 
         if max_pixels is not None:
-            scaling = max_pixels / n_pixels
+            scaling = float(max_pixels) / float(n_pixels)
         else:
             scaling = 1.0
 
-        out_shape = (
-            round(self.shape[0] * scaling), round(self.shape[1] * scaling))
-        arr = self.read(masked=True, out_shape=out_shape,
-                        resampling=resampling)
+        out_shape = (round(self.shape[0] * scaling), round(self.shape[1] * scaling))
+        arr = self.read(masked=True, out_shape=out_shape, resampling=resampling)
         bands, rows, cols = arr.shape
         nodatavals = self.nodatavals
 
         # x and y grid coordinate arrays
-        x_range = np.linspace(start=self.bounds.left, stop=self.bounds.right,
-                              num=cols)
-        y_range = np.linspace(start=self.bounds.top, stop=self.bounds.bottom,
-                              num=rows)
+        x_range = np.linspace(start=self.bounds.left, stop=self.bounds.right, num=cols)
+        y_range = np.linspace(start=self.bounds.top, stop=self.bounds.bottom, num=rows)
         xs, ys = np.meshgrid(x_range, y_range)
 
         arr = arr.reshape((bands, rows * cols))

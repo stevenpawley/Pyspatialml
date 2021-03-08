@@ -6,7 +6,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
-from rasterio.windows import Window
 from rasterio.io import MemoryFile
 
 from .plotting import discrete_cmap
@@ -104,6 +103,7 @@ class RasterLayer:
         self.width = band.ds.width
         self.height = band.ds.height
         self.bounds = band.ds.bounds
+        self.in_memory = False
 
         self.cmap = "viridis"
         self.norm = None
@@ -490,38 +490,6 @@ class RasterLayer:
         band = rasterio.band(src, 1)
         layer = RasterLayer(band)
 
-        return layer
-
-    def write(self, file_path, driver="GTiff", dtype=None, nodata=None,
-              **kwargs):
-        """Write method for a single RasterLayer.
-
-        Parameters
-        ----------
-        file_path : str (opt)
-            File path to save the dataset.
-
-        driver : str
-            GDAL-compatible driver used for the file format.
-
-        dtype : str (opt)
-            Numpy dtype used for the file. If omitted then the RasterLayer's
-            dtype is used.
-
-        nodata : any number (opt)
-            A value used to represent the nodata pixels. If omitted then the
-            RasterLayer's nodata value is used (if assigned already).
-
-        kwargs : opt
-            Optional named arguments to pass to the format drivers. For example
-            can be `compress="deflate"` to add compression.
-
-        Returns
-        -------
-        pyspatialml.RasterLayer
-        """
-        arr = self.read()
-        layer = self._write(arr, file_path, driver, dtype, nodata, **kwargs)
         return layer
 
     def _extract_by_indices(self, rows, cols):

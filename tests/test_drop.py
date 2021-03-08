@@ -37,3 +37,23 @@ class TestDrop(TestCase):
         self.assertEqual(stack.count, 6)
         self.assertEqual(stack.names, names)
         stack.close()
+        result.close()
+
+    def test_drop_in_memory(self):
+        stack = Raster(self.predictors)
+        names = stack.names
+
+        result = stack.intersect(in_memory=True)
+        result = stack.drop(labels="lsat7_2000_50", in_place=False)
+
+        # check that Raster object is returned
+        self.assertIsInstance(result, Raster)
+
+        # check that RasterLayer has been dropped
+        self.assertEqual(result.count, 5)
+        self.assertNotIn("lsat7_2000_50", result.names)
+
+        # check that original raster is unaffected
+        self.assertEqual(stack.count, 6)
+        self.assertEqual(stack.names, names)
+        stack.close()
