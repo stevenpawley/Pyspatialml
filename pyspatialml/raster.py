@@ -272,7 +272,7 @@ class Raster(RasterPlot, BaseRaster):
         during geoprocessing operations.
 
     in_memory : bool, default is False
-        Whether to initiated the Raster from an array and store the data
+        Whether to initiate the Raster from an array and store the data
         in-memory using Rasterio's in-memory files.
     """
 
