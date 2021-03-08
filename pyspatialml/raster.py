@@ -290,7 +290,7 @@ class Raster(RasterPlot, BaseRaster):
             opened in 'r' or 'rw' mode.
 
             A Raster object can also be created directly from a numpy array
-            in [band, rows, cols] order. The dditional arguments `crs` and
+            in [band, rows, cols] order. The additional arguments `crs` and
             `transform` should also be provided to supply spatial coordinate
             information.
 
