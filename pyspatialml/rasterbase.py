@@ -31,7 +31,7 @@ class BaseRaster:
         Parameters
         ----------
         name : str
-            File basename for convert to a valid class attribute name.
+            File basename for converting to a valid class attribute name.
 
         Returns
         -------
@@ -114,7 +114,7 @@ class BaseRaster:
 
     def block_shapes(self, rows, cols):
         """Generator for windows for optimal reading and writing based on the
-        raster format Windows are returns as a tuple with xoff, yoff, width,
+        raster format Windows and returns as a tuple with xoff, yoff, width,
         height.
 
         Parameters
@@ -308,7 +308,7 @@ def _fix_names(combined_names):
     when appending new layers.
 
     This avoids the Raster object containing duplicated names in the case that
-    multiple RasterLayer's are appended with the same name.
+    multiple RasterLayers are appended with the same name.
 
     In the case of duplicated names, the RasterLayer names are appended
     with a `_n` with n = 1, 2, 3 .. n.
@@ -316,7 +316,7 @@ def _fix_names(combined_names):
     Parameters
     ----------
     combined_names : list
-        List of str representing names of RasterLayers. Any duplicates with
+        List of str representing names of RasterLayers. Any duplicates will
         have a suffix appended to them.
 
     Returns
