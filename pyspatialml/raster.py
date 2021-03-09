@@ -526,10 +526,8 @@ class Raster(RasterPlot, BaseRaster):
         self.res = (abs(meta["transform"].a), abs(meta["transform"].e))
         self.crs = meta["crs"]
 
-        bounds = rasterio.transform.array_bounds(self.height, self.width,
-                                                 self.transform)
-        BoundingBox = namedtuple("BoundingBox",
-                                 ["left", "bottom", "right", "top"])
+        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
+        BoundingBox = namedtuple("BoundingBox", ["left", "bottom", "right", "top"])
         self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
         names = [i.name for i in layers]

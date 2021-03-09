@@ -43,7 +43,8 @@ class BaseRaster:
             os.path.basename(name).
             split(os.path.extsep)[0].
             replace(" ", "_").
-            replace("-", "_")
+            replace("-", "_").
+            replace(".", "d")
         )
 
         if valid_name[0].isdigit():
