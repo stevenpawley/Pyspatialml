@@ -25,42 +25,6 @@ class BaseRaster:
         self._block_shape = (256, 256)
         self.tempdir = None
 
-    def _make_name(self, name):
-        """Converts a file basename to a valid class attribute name.
-
-        Parameters
-        ----------
-        name : str
-            File basename for converting to a valid class attribute name.
-
-        Returns
-        -------
-        valid_name : str
-            Syntactically correct name of layer so that it can form a class
-            instance attribute.
-        """
-        basename = os.path.basename(name)
-        sans_ext = os.path.splitext(basename)[0]
-
-        valid_name = (
-            sans_ext.
-                replace(" ", "_").
-                replace("-", "_").
-                replace(".", "_")
-        )
-
-        if valid_name[0].isdigit():
-            valid_name = "x" + valid_name
-
-        valid_name = re.sub(r"[\[\]\(\)\{\}\;]", "", valid_name)
-        valid_name = re.sub(r"_+", "_", valid_name)
-
-        if self.names is not None:
-            if valid_name in self.names:
-                valid_name = "_".join([valid_name, "1"])
-
-        return valid_name
-
     def _stats(self, max_pixels):
         n_pixels = self.shape[0] * self.shape[1]
         scaling = max_pixels / n_pixels
@@ -304,6 +268,39 @@ def _check_alignment(layers):
 
     else:
         return src_meta[0]
+
+
+def _make_name(name):
+    """Converts a file basename to a valid class attribute name.
+
+    Parameters
+    ----------
+    name : str
+        File basename for converting to a valid class attribute name.
+
+    Returns
+    -------
+    valid_name : str
+        Syntactically correct name of layer so that it can form a class
+        instance attribute.
+    """
+    basename = os.path.basename(name)
+    sans_ext = os.path.splitext(basename)[0]
+
+    valid_name = (
+        sans_ext.
+            replace(" ", "_").
+            replace("-", "_").
+            replace(".", "_")
+    )
+
+    if valid_name[0].isdigit():
+        valid_name = "x" + valid_name
+
+    valid_name = re.sub(r"[\[\]\(\)\{\}\;]", "", valid_name)
+    valid_name = re.sub(r"_+", "_", valid_name)
+
+    return valid_name
 
 
 def _fix_names(combined_names):

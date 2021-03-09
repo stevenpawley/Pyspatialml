@@ -9,7 +9,7 @@ import rasterio
 from rasterio.io import MemoryFile
 
 from .plotting import discrete_cmap
-from .rasterbase import get_nodata_value
+from .rasterbase import get_nodata_value, _make_name
 
 
 class RasterLayer:
@@ -87,7 +87,7 @@ class RasterLayer:
         self.ds = band.ds
 
         if len(band.ds.files) > 0:
-            self.name = self._make_name(band.ds.files[0])
+            self.name = _make_name(band.ds.files[0])
             self.file = band.ds.files[0]
         else:
             self.name = "in_memory"
@@ -108,36 +108,6 @@ class RasterLayer:
         self.cmap = "viridis"
         self.norm = None
         self.categorical = False
-
-    @staticmethod
-    def _make_name(name):
-        """Converts a file basename to a valid class attribute name.
-
-        Parameters
-        ----------
-        name : str
-            File basename for convert to a valid class attribute name.
-
-        Returns
-        -------
-        valid_name : str
-            Syntactically correct name of layer so that it can form a class
-            instance attribute.
-        """
-        valid_name = (
-            os.path.basename(name).
-                split(os.path.extsep)[0].
-                replace(" ", "_").
-                replace("-", "_")
-        )
-
-        if valid_name[0].isdigit():
-            valid_name = "x" + valid_name
-
-        valid_name = re.sub(r"[\[\]\(\)\{\}\;]", "", valid_name)
-        valid_name = re.sub(r"_+", "_", valid_name)
-
-        return valid_name
 
     def close(self):
         self.ds.close()
