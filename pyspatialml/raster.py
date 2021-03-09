@@ -20,10 +20,10 @@ from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
 
-from .plotting import RasterPlot
-from .prediction import predict_output, predict_prob, predict_multioutput
-from .rasterbase import (BaseRaster, get_nodata_value, get_num_workers,
-                         _check_alignment, _fix_names)
+from ._plotting import RasterPlot
+from ._prediction import predict_output, predict_prob, predict_multioutput
+from ._rasterbase import (BaseRaster, get_nodata_value, get_num_workers,
+                          _check_alignment, _fix_names)
 from .rasterlayer import RasterLayer
 
 

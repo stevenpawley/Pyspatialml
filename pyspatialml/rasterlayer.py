@@ -8,8 +8,8 @@ import numpy as np
 import rasterio
 from rasterio.io import MemoryFile
 
-from .plotting import discrete_cmap
-from .rasterbase import get_nodata_value, _make_name
+from ._plotting import discrete_cmap
+from ._rasterbase import get_nodata_value, _make_name
 
 
 class RasterLayer:
