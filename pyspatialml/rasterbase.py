@@ -39,12 +39,14 @@ class BaseRaster:
             Syntactically correct name of layer so that it can form a class
             instance attribute.
         """
+        basename = os.path.basename(name)
+        sans_ext = os.path.splitext(basename)[0]
+
         valid_name = (
-            os.path.basename(name).
-            split(os.path.extsep)[0].
-            replace(" ", "_").
-            replace("-", "_").
-            replace(".", "d")
+            sans_ext.
+                replace(" ", "_").
+                replace("-", "_").
+                replace(".", "_")
         )
 
         if valid_name[0].isdigit():
