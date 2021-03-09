@@ -138,7 +138,7 @@ RasterLayer objects also support basic raster math operations using python's
 magic methods, which supports all of the usual math operators. Calculations
 on RasterLayers occur in memory using Rasterio's in-memory files, thus they
 are not memory safe. For applying computations and algebra to large raster
-datasets in windows, using `Raster.apply()`.
+datasets in windows, use `Raster.apply()`.
 
 ::
 
