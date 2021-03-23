@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial.distance import cdist
+from scipy.spatial import cKDTree
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import Normalizer
@@ -289,6 +290,11 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         The supplied array has to have at least x,y coordinates with a
         (1, 2) shape for a single location.
 
+    minimum : bool, default is False
+        Optionally calculate the minimum distance to the combined reference
+        locations, resulting in a single new feature, rather than a new
+        feature for each individual reference location.
+
     log : bool (opt), default=False
         Optionally log-transform the distance measures.
 
@@ -299,10 +305,11 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         appended to the right-most columns of the array.
     """
 
-    def __init__(self, refs, log=False):
+    def __init__(self, refs, minimum=False, log=False):
         self.refs = refs
         self.log = log
         self.refs_ = None
+        self.minimum = minimum
 
     def fit(self, X, y=None):
         self.refs_ = np.asarray(self.refs)
@@ -314,7 +321,12 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        dists = cdist(self.refs_, X).transpose()
+        if self.minimum is False:
+            dists = cdist(self.refs_, X).transpose()
+
+        if self.minimum is True:
+            tree = cKDTree(self.refs_)
+            dists, _ = tree.query(X)
 
         if self.log is True:
             dists = np.log(dists)

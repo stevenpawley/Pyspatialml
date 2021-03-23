@@ -749,18 +749,20 @@ class Raster(RasterPlot, BaseRaster):
         n_jobs = get_num_workers(n_jobs)
         probfun = partial(predict_prob, estimator=estimator)
 
+        # perform test prediction
+        window = next(self.block_shapes(*self.block_shape))
+        img = self.read(masked=True, window=window)
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        n_samples = rows * cols
+        flat_pixels = img.transpose(1, 2, 0).reshape(
+            (n_samples, n_features))
+        flat_pixels = flat_pixels.filled(0)
+        result = estimator.predict_proba(flat_pixels)
+
         if isinstance(indexes, int):
             indexes = range(indexes, indexes + 1)
 
         elif indexes is None:
-            window = next(self.block_shapes(*self.block_shape))
-            img = self.read(masked=True, window=window)
-            n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-            n_samples = rows * cols
-            flat_pixels = img.transpose(1, 2, 0).reshape(
-                (n_samples, n_features))
-            flat_pixels = flat_pixels.filled(0)
-            result = estimator.predict_proba(flat_pixels)
             indexes = np.arange(0, result.shape[1])
 
         # check dtype and nodata
