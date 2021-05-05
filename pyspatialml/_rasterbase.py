@@ -26,28 +26,34 @@ class BaseRaster:
         self.tempdir = None
 
     def _stats(self, max_pixels):
-        n_pixels = self.shape[0] * self.shape[1]
-        scaling = max_pixels / n_pixels
-        out_shape = (round(self.shape[0] * scaling),
-                     round(self.shape[1] * scaling))
+        rel_width = self.shape[1] / max_pixels
+
+        if rel_width > 1:
+            col_scaling = round(max_pixels / rel_width)
+            row_scaling = max_pixels - col_scaling
+        else:
+            col_scaling = round(max_pixels * rel_width)
+            row_scaling = max_pixels - col_scaling
+
+        out_shape = (row_scaling, col_scaling)
         arr = self.read(masked=True, out_shape=out_shape)
         return arr.reshape((arr.shape[0], arr.shape[1] * arr.shape[2]))
 
     def min(self, max_pixels=10000):
         arr = self._stats(max_pixels)
-        return arr.min(axis=1).data
+        return np.nanmin(arr, axis=1).data
 
     def max(self, max_pixels=10000):
         arr = self._stats(max_pixels)
-        return arr.max(axis=1).data
+        return np.nanmax(arr, axis=1).data
 
     def mean(self, max_pixels=10000):
         arr = self._stats(max_pixels)
-        return arr.mean(axis=1).data
+        return np.nanmean(arr, axis=1).data
 
     def median(self, max_pixels=10000):
         arr = self._stats(max_pixels)
-        return np.median(arr, axis=1).data
+        return np.nanmedian(arr, axis=1).data
 
     def head(self):
         window = Window(col_off=0, row_off=0, width=20, height=10)

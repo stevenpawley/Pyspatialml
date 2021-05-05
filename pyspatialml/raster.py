@@ -1906,14 +1906,19 @@ class Raster(RasterPlot, BaseRaster):
         """
 
         # read dataset using decimated reads
-        n_pixels = self.shape[0] * self.shape[1]
-
         if max_pixels is not None:
-            scaling = float(max_pixels) / float(n_pixels)
-        else:
-            scaling = 1.0
+            rel_width = self.shape[1] / max_pixels
 
-        out_shape = (round(self.shape[0] * scaling), round(self.shape[1] * scaling))
+            if rel_width > 1:
+                col_scaling = round(max_pixels / rel_width)
+                row_scaling = max_pixels - col_scaling
+            else:
+                col_scaling = round(max_pixels * rel_width)
+                row_scaling = max_pixels - col_scaling
+        else:
+            row_scaling, col_scaling = self.shape[0], self.shape[1]
+
+        out_shape = (row_scaling, col_scaling)
         arr = self.read(masked=True, out_shape=out_shape, resampling=resampling)
         bands, rows, cols = arr.shape
         nodatavals = self.nodatavals

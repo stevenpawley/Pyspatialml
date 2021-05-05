@@ -1,5 +1,3 @@
-import os
-import re
 from functools import partial
 
 import matplotlib as mpl
@@ -308,14 +306,17 @@ class RasterLayer:
 
     def _stats(self, max_pixels):
         """Take a sample of pixels from which to derive per-band statistics."""
-        n_pixels = self.shape[0] * self.shape[1]
-        scaling = max_pixels / n_pixels
 
-        # read dataset using decimated reads
-        out_shape = (
-            round(self.shape[0] * scaling),
-            round(self.shape[1] * scaling)
-        )
+        rel_width = self.shape[1] / max_pixels
+
+        if rel_width > 1:
+            col_scaling = round(max_pixels / rel_width)
+            row_scaling = max_pixels - col_scaling
+        else:
+            col_scaling = round(max_pixels * rel_width)
+            row_scaling = max_pixels - col_scaling
+
+        out_shape = (row_scaling, col_scaling)
         arr = self.read(masked=True, out_shape=out_shape)
         arr = arr.flatten()
         return arr
@@ -334,7 +335,7 @@ class RasterLayer:
             The minimum value of the object
         """
         arr = self._stats(max_pixels)
-        return arr.min()
+        return np.nanmin(arr)
 
     def max(self, max_pixels=10000):
         """Maximum value.
@@ -350,7 +351,7 @@ class RasterLayer:
             The maximum value of the object's pixels.
         """
         arr = self._stats(max_pixels)
-        return arr.max()
+        return np.nanmax(arr)
 
     def mean(self, max_pixels=10000):
         """Mean value
@@ -366,7 +367,7 @@ class RasterLayer:
             The mean value of the object's pixels.
         """
         arr = self._stats(max_pixels)
-        return arr.mean()
+        return np.nanmean(arr)
 
     def median(self, max_pixels=10000):
         """Median value
@@ -382,7 +383,7 @@ class RasterLayer:
             The medium value of the object's pixels.
         """
         arr = self._stats(max_pixels)
-        return np.median(arr)
+        return np.nanmedian(arr)
 
     def read(self, **kwargs):
         """Read method for a single RasterLayer.
