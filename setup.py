@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 setup(
     # package metadata
     name="pyspatialml",
-    version="0.12",
+    version="0.13",
     author="Steven Pawley",
     author_email="steven.pawley@gmail.com",
     description=("Machine learning for GIS spatial modelling"),
