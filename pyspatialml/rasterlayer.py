@@ -473,7 +473,7 @@ class RasterLayer:
         return X
 
     def plot(self, cmap=None, norm=None, ax=None, cax=None, figsize=None,
-             out_shape=None, categorical=None, legend=False,
+             out_shape=(500, 500), categorical=None, legend=False,
              vmin=None, vmax=None, fig_kwds=None, legend_kwds=None):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
         Parameters
@@ -496,7 +496,7 @@ class RasterLayer:
             Size of the matplotlib.figure.Figure. If the ax argument is given
             explicitly, figsize is ignored.
 
-        out_shape : tuple, default=(100, 100)
+        out_shape : tuple, default=(500, 500)
             Number of rows, cols to read from the raster datasets for plotting.
 
         categorical : bool (optional, default False)

@@ -40,7 +40,7 @@ class RasterPlot(object):
         cmap=None,
         norm=None,
         figsize=None,
-        out_shape=None,
+        out_shape=(500, 500),
         title_fontsize=8,
         label_fontsize=6,
         legend_fontsize=6,
@@ -64,7 +64,7 @@ class RasterPlot(object):
         figsize : tuple (opt), default=None
             Size of the resulting matplotlib.figure.Figure.
 
-        out_shape : tuple, default=(100, 100)
+        out_shape : tuple, default=(500, 500)
             Number of rows, cols to read from the raster datasets for plotting.
 
         title_fontsize : any number, default=8
