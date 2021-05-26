@@ -3,7 +3,7 @@ import tempfile
 from collections import OrderedDict
 from collections import namedtuple
 from collections.abc import Mapping
-from concurrent.futures import ThreadPoolExecutor as Exec
+# from concurrent.futures import ThreadPoolExecutor as Exec
 from functools import partial
 
 import geopandas as gpd
@@ -681,7 +681,7 @@ class Raster(RasterPlot, BaseRaster):
 
     def predict_proba(self, estimator, file_path=None, in_memory=False,
                       indexes=None, driver="GTiff", dtype=None, nodata=None,
-                      progress=False, n_jobs=1, **kwargs):
+                      progress=False, **kwargs):
         """Apply class probability prediction of a scikit learn model to a
         Raster.
 
@@ -717,10 +717,6 @@ class Raster(RasterPlot, BaseRaster):
             value is derived from the minimum permissible value for the given
             data type.
 
-        n_jobs : int (default 1)
-            Number of processing cores to use for parallel execution. Default
-            is n_jobs=1. -1 is all cores; -2 is all cores -1.
-
         progress : bool (default False)
             Show progress bar for prediction.
 
@@ -746,11 +742,11 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             file_path, tfile = self._tempfile(file_path)
 
-        n_jobs = get_num_workers(n_jobs)
+        # n_jobs = get_num_workers(n_jobs)
         probfun = partial(predict_prob, estimator=estimator)
 
         # perform test prediction
-        window = next(self.block_shapes(*self.block_shape))
+        window = Window(0, 0, 1, 1)
         img = self.read(masked=True, window=window)
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
         n_samples = rows * cols
@@ -787,13 +783,13 @@ class Raster(RasterPlot, BaseRaster):
         # apply prediction function
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(probfun, data_gen),
-                            tqdm(windows, disable=not progress, total=len(windows))):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+                #with Exec(max_workers=n_jobs) as executor:
+                for w, res, pbar in zip(
+                        windows,
+                        map(probfun, data_gen),
+                        tqdm(windows, disable=not progress, total=len(windows))):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res[indexes, :, :].astype(dtype), window=w)
             output_dst = file_path
 
         else:
@@ -809,13 +805,13 @@ class Raster(RasterPlot, BaseRaster):
                     driver=driver
                 )
 
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(probfun, data_gen),
-                            tqdm(windows, disable=not progress, total=len(windows))):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+                #with Exec(max_workers=n_jobs) as executor:
+                for w, res, pbar in zip(
+                        windows,
+                        map(probfun, data_gen),
+                        tqdm(windows, disable=not progress, total=len(windows))):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res[indexes, :, :].astype(dtype), window=w)
 
             output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
             for i in output_dst:
@@ -834,7 +830,7 @@ class Raster(RasterPlot, BaseRaster):
         return new_raster
 
     def predict(self, estimator, file_path=None, in_memory=False,
-                driver="GTiff", dtype=None, nodata=None, n_jobs=1,
+                driver="GTiff", dtype=None, nodata=None,
                 progress=False, **kwargs):
         """Apply prediction of a scikit learn model to a Raster.
 
@@ -893,10 +889,10 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             file_path, tfile = self._tempfile(file_path)
 
-        n_jobs = get_num_workers(n_jobs)
+        # n_jobs = get_num_workers(n_jobs)
 
         # determine output count for multi-class or multi-target cases
-        window = next(self.block_shapes(*self.block_shape))
+        window = Window(0, 0, 1, 1)
         img = self.read(masked=True, window=window)
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
         n_samples = rows * cols
@@ -938,13 +934,13 @@ class Raster(RasterPlot, BaseRaster):
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(predfun, data_gen),
-                            tqdm(windows, disable=not progress, total=len(windows))):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+                #with Exec(max_workers=n_jobs) as executor:
+                for w, res, pbar in zip(
+                        windows,
+                        map(predfun, data_gen),
+                        tqdm(windows, disable=not progress, total=len(windows))):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res[indexes, :, :].astype(dtype), window=w)
             output_dst = file_path
 
         else:
@@ -959,13 +955,13 @@ class Raster(RasterPlot, BaseRaster):
                     transform=meta["transform"],
                     nodata=meta["nodata"]
                 )
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(predfun, data_gen),
-                            tqdm(windows, disable=not progress, total=len(windows))):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res[indexes, :, :].astype(dtype), window=w)
+                #with Exec(max_workers=n_jobs) as executor:
+                for w, res, pbar in zip(
+                        windows,
+                        map(predfun, data_gen),
+                        tqdm(windows, disable=not progress, total=len(windows))):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res[indexes, :, :].astype(dtype), window=w)
 
             output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
             for i in output_dst:
