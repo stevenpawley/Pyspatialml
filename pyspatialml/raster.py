@@ -791,7 +791,7 @@ class Raster(RasterPlot, BaseRaster):
                     for w, res, pbar in zip(
                             windows,
                             executor.map(probfun, data_gen),
-                            tqdm(windows, disable=not progress)):
+                            tqdm(windows, disable=not progress, total=len(windows))):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
             output_dst = file_path
@@ -813,7 +813,7 @@ class Raster(RasterPlot, BaseRaster):
                     for w, res, pbar in zip(
                             windows,
                             executor.map(probfun, data_gen),
-                            tqdm(windows, disable=not progress)):
+                            tqdm(windows, disable=not progress, total=len(windows))):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
 
@@ -942,7 +942,7 @@ class Raster(RasterPlot, BaseRaster):
                     for w, res, pbar in zip(
                             windows,
                             executor.map(predfun, data_gen),
-                            tqdm(windows, disable=not progress)):
+                            tqdm(windows, disable=not progress, total=len(windows))):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
             output_dst = file_path
@@ -963,7 +963,7 @@ class Raster(RasterPlot, BaseRaster):
                     for w, res, pbar in zip(
                             windows,
                             executor.map(predfun, data_gen),
-                            tqdm(windows, disable=not progress)):
+                            tqdm(windows, disable=not progress, total=len(windows))):
                         res = np.ma.filled(res, fill_value=nodata)
                         dst.write(res[indexes, :, :].astype(dtype), window=w)
 
