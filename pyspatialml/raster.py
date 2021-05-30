@@ -3,7 +3,6 @@ import tempfile
 from collections import OrderedDict
 from collections import namedtuple
 from collections.abc import Mapping
-# from concurrent.futures import ThreadPoolExecutor as Exec
 from functools import partial
 
 import geopandas as gpd
@@ -783,7 +782,6 @@ class Raster(RasterPlot, BaseRaster):
         # apply prediction function
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                #with Exec(max_workers=n_jobs) as executor:
                 for w, res, pbar in zip(
                         windows,
                         map(probfun, data_gen),
@@ -805,7 +803,6 @@ class Raster(RasterPlot, BaseRaster):
                     driver=driver
                 )
 
-                #with Exec(max_workers=n_jobs) as executor:
                 for w, res, pbar in zip(
                         windows,
                         map(probfun, data_gen),
@@ -863,10 +860,6 @@ class Raster(RasterPlot, BaseRaster):
             Nodata value for file export. If not specified then the nodata
             value is derived from the minimum permissible value for the given
             data type.
-
-        n_jobs : int (default 1)
-            Number of processing cores to use for parallel execution. Default
-            is n_jobs=1. -1 is all cores; -2 is all cores -1.
 
         progress : bool (default False)
             Show progress bar for prediction.
@@ -934,7 +927,6 @@ class Raster(RasterPlot, BaseRaster):
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                #with Exec(max_workers=n_jobs) as executor:
                 for w, res, pbar in zip(
                         windows,
                         map(predfun, data_gen),
@@ -955,7 +947,7 @@ class Raster(RasterPlot, BaseRaster):
                     transform=meta["transform"],
                     nodata=meta["nodata"]
                 )
-                #with Exec(max_workers=n_jobs) as executor:
+
                 for w, res, pbar in zip(
                         windows,
                         map(predfun, data_gen),
@@ -1759,8 +1751,7 @@ class Raster(RasterPlot, BaseRaster):
         return new_raster
 
     def apply(self, function, file_path=None, in_memory=False, driver="GTiff",
-              dtype=None, nodata=None, progress=False, n_jobs=1,
-              function_args={}, **kwargs):
+              dtype=None, nodata=None, progress=False, function_args={}, **kwargs):
         """Apply user-supplied function to a Raster object.
 
         Parameters
@@ -1790,10 +1781,6 @@ class Raster(RasterPlot, BaseRaster):
             type. Note that this changes the values of the pixels that
             represent nodata pixels.
 
-        n_jobs : int (default 1)
-            Number of processing cores to use for parallel execution. Default
-            of -1 is all cores.
-
         progress : bool (default False)
             Optionally show progress of transform operations.
 
@@ -1815,7 +1802,6 @@ class Raster(RasterPlot, BaseRaster):
         if in_memory is False:
             file_path, tfile = self._tempfile(file_path)
 
-        n_jobs = get_num_workers(n_jobs)
         function = partial(function, **function_args)
 
         # perform test calculation determine dimensions, dtype, nodata
@@ -1846,24 +1832,22 @@ class Raster(RasterPlot, BaseRaster):
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(function, data_gen),
-                            tqdm(windows, disable=not progress)):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res.astype(dtype), window=w, indexes=indexes)
+                for w, res, pbar in zip(
+                        windows,
+                        map(function, data_gen),
+                        tqdm(windows, disable=not progress)):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res.astype(dtype), window=w, indexes=indexes)
             output_dst = file_path
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
-                with Exec(max_workers=n_jobs) as executor:
-                    for w, res, pbar in zip(
-                            windows,
-                            executor.map(function, data_gen),
-                            tqdm(windows, disable=not progress)):
-                        res = np.ma.filled(res, fill_value=nodata)
-                        dst.write(res.astype(dtype), window=w, indexes=indexes)
+                for w, res, pbar in zip(
+                        windows,
+                        map(function, data_gen),
+                        tqdm(windows, disable=not progress)):
+                    res = np.ma.filled(res, fill_value=nodata)
+                    dst.write(res.astype(dtype), window=w, indexes=indexes)
 
             output_dst = [RasterLayer(rasterio.band(dst, i+1)) for i in range(dst.count)]
             for i in output_dst:
