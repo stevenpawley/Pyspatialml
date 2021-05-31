@@ -2268,3 +2268,72 @@ class Raster(RasterPlot, BaseRaster):
             return gdf
 
         return X, ys, xys
+
+    def scale(self, centre=True, scale=True, file_path=None, in_memory=False, 
+              driver="GTiff", dtype=None, nodata=None, progress=False):
+        """Standardize (centre and scale) a Raster object by subtracting
+        the mean and dividing by the standard deviation for each layer
+        in the object.
+
+        The mean and standard deviation statistics are calculated for
+        each layer separately.
+
+        Parameters
+        ----------
+        centre : bool, default is True
+            Whether to subtract the mean from each layer.
+        
+        scale : bool, default is True
+            Whether to divide each layer by the standard deviation
+            of the layer.
+        
+        file_path : str (optional, default None)
+            Path to a GeoTiff raster for the prediction results. If not
+            specified then the output is written to a temporary file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the data
+            in-memory using Rasterio's in-memory files.
+
+        driver : str (default 'GTiff')
+            Named of GDAL-supported driver for file export.
+
+        dtype : str (optional, default None)
+            Optionally specify a GDAL compatible data type when saving to file.
+            If not specified, a data type is set based on the data type of the
+            prediction.
+
+        nodata : any number (optional, default None)
+            Nodata value for file export. If not specified then the nodata
+            value is derived from the minimum permissible value for the given
+            data type.
+
+        progress : bool (default False)
+            Show progress bar for prediction.
+
+        Returns
+        -------
+        Pyspatialml.Raster object with rescaled data.
+        """
+
+        def scaler(x, means, sds):
+            for i, m, z in zip(range(x.shape[0]), means, sds):
+                x[i, :, :] = (x[i, :, :] - m) / z
+            return x
+
+        if centre is True:
+            means = self.mean()
+        else:
+            means = np.repeat(0, self.count)
+
+        if scale is True:
+            sds = self.stddev()
+        else:
+            sds = np.repeat(1, self.count)
+
+        res = self.apply(scaler, file_path=file_path, in_memory=in_memory,
+                         driver=driver, dtype=dtype, nodata=nodata,
+                         progress=progress,
+                         function_args=dict(means=means, sds=sds))
+
+        return res

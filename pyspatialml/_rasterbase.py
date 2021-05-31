@@ -17,7 +17,7 @@ class BaseRaster:
         self.transform = None
         self.width = None
         self.height = None
-        self.bounds =None
+        self.bounds = None
         self.meta = None
         self.count = 0
         self.iloc = None
@@ -54,6 +54,10 @@ class BaseRaster:
     def median(self, max_pixels=10000):
         arr = self._stats(max_pixels)
         return np.nanmedian(arr, axis=1).data
+
+    def stddev(self, max_pixels=10000):
+        arr = self._stats(max_pixels)
+        return np.nanstd(arr, axis=1).data
 
     def head(self):
         window = Window(col_off=0, row_off=0, width=20, height=10)

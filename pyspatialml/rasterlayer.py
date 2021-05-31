@@ -385,6 +385,22 @@ class RasterLayer:
         arr = self._stats(max_pixels)
         return np.nanmedian(arr)
 
+    def stddev(self, max_pixels=10000):
+        """Standard deviation
+
+        Parameters
+        ----------
+        max_pixels : int
+            Number of pixels used to inform statistical estimate.
+
+        Returns
+        -------
+        numpy.float32
+            The standard deviation of the object's pixels.
+        """
+        arr = self._stats(max_pixels)
+        return np.nanstd(arr)
+
     def read(self, **kwargs):
         """Read method for a single RasterLayer.
 
