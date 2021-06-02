@@ -5,23 +5,26 @@ import rasterio
 from scipy import ndimage
 
 from .raster import Raster
-from .temporary_files import _file_path_tempfile
 
 
-def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
+def one_hot_encode(layer, file_path, categories=None, driver="GTiff"):
     """One-hot encoding of a RasterLayer.
+
     Parameters
     ----------
     layer : pyspatialml.RasterLayer
         Containing categories to perform one-hot encoding on.
+
+    file_path : str
+        File path to save one-hot encoded raster.
+
     categories : list, ndarray, optional
         Optional list of categories to extract. Default performs one-hot
         encoding on all categorical values in the input layer.
-    file_path : str, optional. Default is None
-        File path to save one-hot encoded raster. If not supplied then data
-        is written to a tempfile.
+
     driver : str, options. Default is 'GTiff'
         GDAL-compatible driver.
+
     Returns
     -------
     pyspatialml.Raster
@@ -32,10 +35,9 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
     if categories is None:
         categories = np.unique(arr)
         categories = categories[~categories.mask]
-        categories = categories.data.astype('int32')
+        categories = categories.data.astype("int32")
 
-    arr_ohe = np.ma.zeros(
-        (len(categories), arr.shape[0], arr.shape[1]), dtype='int32')
+    arr_ohe = np.ma.zeros((len(categories), arr.shape[0], arr.shape[1]), dtype="int32")
     names = []
     prefix = layer.names[0]
 
@@ -45,44 +47,39 @@ def one_hot_encode(layer, categories=None, file_path=None, driver='GTiff'):
         enc[enc == cat] = 1
         arr_ohe[i, :, :] = enc
 
-        names.append('_'.join([prefix, 'cat',  str(cat)]))
+        names.append("_".join([prefix, "cat", str(cat)]))
 
     # create new stack
-    file_path, tfile = _file_path_tempfile(file_path)
-
     meta = deepcopy(layer.ds.meta)
-    meta['driver'] = driver
-    meta['nodata'] = -99999
-    meta['count'] = arr_ohe.shape[0]
-    meta['dtype'] = 'int32'
+    meta["driver"] = driver
+    meta["nodata"] = -99999
+    meta["count"] = arr_ohe.shape[0]
+    meta["dtype"] = "int32"
 
-    with rasterio.open(file_path, mode='w', **meta) as dst:
+    with rasterio.open(file_path, mode="w", **meta) as dst:
         dst.write(arr_ohe)
 
     new_raster = Raster(file_path)
     new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
-    if tfile is not None:
-        for layer in new_raster.iloc:
-            layer.close = tfile.close
-
     return new_raster
 
 
-def xy_coordinates(layer, file_path=None, driver='GTiff'):
+def xy_coordinates(layer, file_path, driver="GTiff"):
     """
     Fill 2d arrays with their x,y indices.
+
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
         RasterLayer to use as a template.
-    
-    file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then
-        the raster is saved to a temporary file.
-    
+
+    file_path : str
+        File path to save to the resulting Raster object.s
+
     driver : str, options. Default is 'GTiff'
         GDAL driver to use to save raster.
+
     Returns
     -------
     pyspatialml.Raster object
@@ -96,46 +93,39 @@ def xy_coordinates(layer, file_path=None, driver='GTiff'):
     xyarrays[1, :, :] = xy
 
     # create new stack
-    file_path, tfile = _file_path_tempfile(file_path)
-
     meta = deepcopy(layer.meta)
-    meta['driver'] = driver
-    meta['count'] = 2
-    meta['dtype'] = xyarrays.dtype
+    meta["driver"] = driver
+    meta["count"] = 2
+    meta["dtype"] = xyarrays.dtype
 
-    with rasterio.open(file_path, 'w', **meta) as dst:
+    with rasterio.open(file_path, "w", **meta) as dst:
         dst.write(xyarrays)
-    
-    new_raster = Raster(file_path)
-    names = ['x_coordinates', 'y_coordinates']
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
-    if tfile is not None:
-        for layer in new_raster.iloc:
-            layer.close = tfile.close
+    new_raster = Raster(file_path)
+    names = ["x_coordinates", "y_coordinates"]
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
     return new_raster
 
 
-def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
+def rotated_coordinates(layer, file_path, n_angles=8, driver="GTiff"):
     """Generate 2d arrays with n_angles rotated coordinates.
+
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
         RasterLayer to use as a template.
+
     n_angles : int, optional. Default is 8
         Number of angles to rotate coordinate system by.
-    file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then
-        the raster is saved to a temporary file.
-    
+
     driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster.
+
     Returns
     -------
     pyspatialml.Raster
     """
-
     # define x and y grid dimensions
     xmin, ymin, xmax, ymax = 0, 0, layer.shape[1], layer.shape[0]
     x_range = np.arange(start=xmin, stop=xmax, step=1)
@@ -149,79 +139,62 @@ def rotated_coordinates(layer, n_angles=8, file_path=None, driver='GTiff'):
     grids_directional = grids_directional.transpose((2, 0, 1))
 
     # create new stack
-    file_path, tfile = _file_path_tempfile(file_path)
-
     meta = deepcopy(layer.meta)
-    meta['driver'] = driver
-    meta['count'] = n_angles
-    meta['dtype'] = grids_directional.dtype
-    with rasterio.open(file_path, 'w', **meta) as dst:
+    meta["driver"] = driver
+    meta["count"] = n_angles
+    meta["dtype"] = grids_directional.dtype
+    with rasterio.open(file_path, "w", **meta) as dst:
         dst.write(grids_directional)
-    
-    new_raster = Raster(file_path)
-    names = ['angle_' + str(i+1) for i in range(n_angles)]
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
-    if tfile is not None:
-        for layer in new_raster.iloc:
-            layer.close = tfile.close
+    new_raster = Raster(file_path)
+    names = ["angle_" + str(i + 1) for i in range(n_angles)]
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
     return new_raster
 
 
-def distance_to_corners(layer, file_path=None, driver='GTiff'):
+def distance_to_corners(layer, file_path, driver="GTiff"):
     """Generate buffer distances to corner and centre coordinates of raster
     extent.
 
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
-    
-    file_path : str, optional. Default is None
-        File path to save to the resulting Raster object. If not supplied then
-        the raster is saved to a temporary file.
-    
+
+    file_path : str
+        File path to save to the resulting Raster object
+
     driver : str, optional. Default is 'GTiff'
         GDAL driver to use to save raster.
+
     Returns
     -------
     pyspatialml.Raster object
     """
 
-    names = [
-        'top_left',
-        'top_right',
-        'bottom_left',
-        'bottom_right',
-        'centre_indices'
-    ]
+    names = ["top_left", "top_right", "bottom_left", "bottom_right", "centre_indices"]
 
     rows = np.asarray(
-        [0, 0, layer.shape[0]-1, layer.shape[0]-1, int(layer.shape[0]/2)])
+        [0, 0, layer.shape[0] - 1, layer.shape[0] - 1, int(layer.shape[0] / 2)]
+    )
     cols = np.asarray(
-        [0, layer.shape[1]-1, 0, layer.shape[1]-1, int(layer.shape[1]/2)])
+        [0, layer.shape[1] - 1, 0, layer.shape[1] - 1, int(layer.shape[1] / 2)]
+    )
 
     # euclidean distances
     arr = _grid_distance(layer.shape, rows, cols)
 
     # create new stack
-    file_path, tfile = _file_path_tempfile(file_path)
-
     meta = deepcopy(layer.meta)
-    meta['driver'] = driver
-    meta['count'] = 5
-    meta['dtype'] = arr.dtype
+    meta["driver"] = driver
+    meta["count"] = 5
+    meta["dtype"] = arr.dtype
 
-    with rasterio.open(file_path, 'w', **meta) as dst:
+    with rasterio.open(file_path, "w", **meta) as dst:
         dst.write(arr)
-        
-    new_raster = Raster(file_path)
-    new_raster.rename({
-        old: new for old, new in zip(new_raster.names, names)})
 
-    if tfile is not None:
-        for layer in new_raster.iloc:
-            layer.close = tfile.close
+    new_raster = Raster(file_path)
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
     return new_raster
 
@@ -244,8 +217,7 @@ def _grid_distance(shape, rows, cols):
     """
 
     # create buffer distances
-    grids_buffers = np.zeros((shape[0], shape[1], rows.shape[0]),
-                             dtype=np.float32)
+    grids_buffers = np.zeros((shape[0], shape[1], rows.shape[0]), dtype=np.float32)
 
     for i, (y, x) in enumerate(zip(rows, cols)):
         # create 2d array (image) with pick indexes set to z
@@ -260,57 +232,54 @@ def _grid_distance(shape, rows, cols):
     return grids_buffers
 
 
-def distance_to_samples(layer, rows, cols, file_path=None, driver='GTiff'):
+def distance_to_samples(layer, file_path, rows, cols, driver="GTiff"):
     """Generate buffer distances to x,y coordinates.
+
     Parameters
     ----------
     layer : pyspatialml.RasterLayer, or rasterio.DatasetReader
-    
+        RasterLayer to use as a template.
+
+    file_path : str
+        File path to save to the resulting Raster object.
+
     rows : 1d numpy array
         array of row indexes.
+
     cols : 1d numpy array
         array of column indexes.
-    file_path : str, optional. Default=None
-        File path to save to the resulting Raster object. If not supplied then
-        the raster is saved to a temporary file.
-    
+
     driver : str, default='GTiff'
         GDAL driver to use to save raster.
+
     Returns
     -------
     pyspatialml.Raster object
     """
-
     # some checks
     if isinstance(rows, list):
         rows = np.asarray(rows)
+
     if isinstance(cols, list):
         cols = np.asarray(cols)
 
     if rows.shape != cols.shape:
-        raise ValueError('rows and cols must have same dimensions')
+        raise ValueError("rows and cols must have same dimensions")
 
     shape = layer.shape
     arr = _grid_distance(shape, rows, cols)
 
     # create new stack
-    file_path, tfile = _file_path_tempfile(file_path)
-
     meta = deepcopy(layer.meta)
-    meta['driver'] = driver
-    meta['count'] = arr.shape[0]
-    meta['dtype'] = arr.dtype
+    meta["driver"] = driver
+    meta["count"] = arr.shape[0]
+    meta["dtype"] = arr.dtype
 
-    with rasterio.open(file_path, 'w', **meta) as dst:
+    with rasterio.open(file_path, "w", **meta) as dst:
         dst.write(arr)
-        
-    names = ['dist_sample' + str(i+1) for i in range(len(rows))]
-    new_raster = Raster(file_path)
-    new_raster.rename(
-        {old: new for old, new in zip(new_raster.names, names)})
 
-    if tfile is not None:
-        for layer in new_raster.iloc:
-            layer.close = tfile.close
+    names = ["dist_sample" + str(i + 1) for i in range(len(rows))]
+    new_raster = Raster(file_path)
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
 
     return new_raster

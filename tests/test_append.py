@@ -29,6 +29,11 @@ class TestAppend(TestCase):
         self.assertEqual(stack.names[6], "landsat_multiband_1")
         stack.close()
 
+        # append multiple rasters
+        stack = Raster(self.predictors)
+        stack.append([Raster(nc.band5), Raster(nc.band7)], in_place=True)
+        self.assertEqual(stack.count, 8)
+
     def test_append_with_copy(self):
         # append another Raster containing a single layer with identical name
         stack = Raster(self.predictors)
@@ -53,3 +58,8 @@ class TestAppend(TestCase):
         result = stack.append(Raster(nc.multiband), in_place=False)
         self.assertEqual(result.names[6], "landsat_multiband_1")
         stack.close()
+
+        # append multiple rasters
+        stack = Raster(self.predictors)
+        new_stack = stack.append([Raster(nc.band5), Raster(nc.band7)], in_place=False)
+        self.assertEqual(new_stack.count, 8)

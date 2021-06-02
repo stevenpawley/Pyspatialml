@@ -416,17 +416,16 @@ class RasterLayer:
             resampling_methods = [i.name for i in rasterio.enums.Resampling]
 
             if kwargs["resampling"] not in resampling_methods:
-                raise ValueError("Invalid resampling method. Resampling "
-                                 "method must be one of {0}:".format(
-                    resampling_methods))
+                raise ValueError(
+                    "Invalid resampling method. Resampling "
+                    "method must be one of {0}:".format(resampling_methods)
+                )
 
-            kwargs["resampling"] = (
-                rasterio.enums.Resampling[kwargs["resampling"]])
+            kwargs["resampling"] = rasterio.enums.Resampling[kwargs["resampling"]]
 
         return self.ds.read(indexes=self.bidx, **kwargs)
 
-    def write(self, file_path, driver="GTiff", dtype=None, nodata=None,
-              **kwargs):
+    def write(self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Write method for a single RasterLayer.
 
         Parameters
@@ -488,9 +487,21 @@ class RasterLayer:
 
         return X
 
-    def plot(self, cmap=None, norm=None, ax=None, cax=None, figsize=None,
-             out_shape=(500, 500), categorical=None, legend=False,
-             vmin=None, vmax=None, fig_kwds=None, legend_kwds=None):
+    def plot(
+        self,
+        cmap=None,
+        norm=None,
+        ax=None,
+        cax=None,
+        figsize=None,
+        out_shape=(500, 500),
+        categorical=None,
+        legend=False,
+        vmin=None,
+        vmax=None,
+        fig_kwds=None,
+        legend_kwds=None,
+    ):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
         Parameters
         ----------
@@ -558,8 +569,9 @@ class RasterLayer:
 
         if norm:
             if not isinstance(norm, mpl.colors.Normalize):
-                raise AttributeError("norm argument should be a "
-                                     "matplotlib.colors.Normalize object")
+                raise AttributeError(
+                    "norm argument should be a " "matplotlib.colors.Normalize object"
+                )
 
         if cmap is None:
             cmap = self.cmap

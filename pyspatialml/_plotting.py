@@ -192,32 +192,44 @@ class RasterPlot(object):
                 if n == 0 and rows > 1:
                     ticks_loc = ax.get_yticks().tolist()
                     ax.yaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
-                    ax.set_yticklabels(ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
-                
+                    ax.set_yticklabels(
+                        ax.yaxis.get_majorticklocs().astype("int"),
+                        fontsize=label_fontsize,
+                    )
+
                 if n == 0 and rows == 1:
                     ticks_loc = ax.get_xticks().tolist()
                     ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
-                    ax.set_xticklabels(ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
+                    ax.set_xticklabels(
+                        ax.xaxis.get_majorticklocs().astype("int"),
+                        fontsize=label_fontsize,
+                    )
 
                     ticks_loc = ax.get_yticks().tolist()
                     ax.yaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
-                    ax.set_yticklabels(ax.yaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
-                
+                    ax.set_yticklabels(
+                        ax.yaxis.get_majorticklocs().astype("int"),
+                        fontsize=label_fontsize,
+                    )
+
                 if rows > 1 and n == (rows * cols) - cols:
                     ticks_loc = ax.get_xticks().tolist()
                     ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
-                    ax.set_xticklabels(ax.xaxis.get_majorticklocs().astype("int"), fontsize=label_fontsize)
+                    ax.set_xticklabels(
+                        ax.xaxis.get_majorticklocs().astype("int"),
+                        fontsize=label_fontsize,
+                    )
 
             for ax in axs.flat[axs.size - 1 : self.count - 1 : -1]:
                 ax.set_visible(False)
 
             plt.subplots_adjust(**subplots_kwds)
-        
+
         else:
             arr = self.iloc[0].read(masked=True, out_shape=out_shape)
             cmap = cmaps[0]
             norm = norms[0]
-            axs.set_title(names[0], fontsize=title_fontsize, y=1.00)            
+            axs.set_title(names[0], fontsize=title_fontsize, y=1.00)
             im = axs.imshow(
                 arr,
                 extent=[

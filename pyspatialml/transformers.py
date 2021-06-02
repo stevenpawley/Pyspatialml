@@ -92,10 +92,21 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         processors. See Glossary for more details.
     """
 
-    def __init__(self, n_neighbors=7, weights="distance", measure="mean",
-                 radius=1.0, algorithm="auto", leaf_size=30,
-                 metric="minkowski", p=2, normalize=True, metric_params=None,
-                 kernel_params=None, n_jobs=1):
+    def __init__(
+        self,
+        n_neighbors=7,
+        weights="distance",
+        measure="mean",
+        radius=1.0,
+        algorithm="auto",
+        leaf_size=30,
+        metric="minkowski",
+        p=2,
+        normalize=True,
+        metric_params=None,
+        kernel_params=None,
+        n_jobs=1,
+    ):
 
         self.n_neighbors = n_neighbors
         self.weights = weights
@@ -219,8 +230,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         # weighted mean/mode of neighbors for a single regression target
         if neighbor_vals.ndim == 2:
             if self.measure == "mean":
-                X = np.ma.average(
-                    neighbor_vals, weights=neighbor_weights, axis=1)
+                X = np.ma.average(neighbor_vals, weights=neighbor_weights, axis=1)
             else:
                 X, _ = weighted_mode(neighbor_vals, neighbor_weights, axis=1)
 
@@ -231,12 +241,14 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
 
             if self.measure == "mean":
                 for i in range(neighbor_vals.shape[-1]):
-                    X[:, i] = np.ma.average(neighbor_vals[:, :, i],
-                                            weights=neighbor_weights, axis=1)
+                    X[:, i] = np.ma.average(
+                        neighbor_vals[:, :, i], weights=neighbor_weights, axis=1
+                    )
             else:
                 for i in range(neighbor_vals.shape[-1]):
-                    X[:, i], _ = weighted_mode(neighbor_vals[:, :, i],
-                                               neighbor_weights, axis=1)
+                    X[:, i], _ = weighted_mode(
+                        neighbor_vals[:, :, i], neighbor_weights, axis=1
+                    )
 
         return X
 
@@ -315,8 +327,10 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         self.refs_ = np.asarray(self.refs)
 
         if self.refs_.ndim < 2:
-            raise ValueError("`refs` has to be a m,n-dimensional array with \
-                             at least two dimensions")
+            raise ValueError(
+                "`refs` has to be a m,n-dimensional array with \
+                             at least two dimensions"
+            )
 
         return self
 

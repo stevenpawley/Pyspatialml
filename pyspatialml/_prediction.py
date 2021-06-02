@@ -34,9 +34,7 @@ def predict_output(img, estimator):
 
     # predict and replace mask
     result_cla = estimator.predict(flat_pixels)
-    result_cla = np.ma.masked_array(
-        data=result_cla, mask=flat_pixels_mask.any(axis=1)
-    )
+    result_cla = np.ma.masked_array(data=result_cla, mask=flat_pixels_mask.any(axis=1))
 
     # reshape the prediction from a 1D into 3D array [band, row, col]
     result_cla = result_cla.reshape((1, window.height, window.width))
@@ -87,17 +85,11 @@ def predict_prob(img, estimator):
 
     # repeat mask for n_bands
     mask3d = np.repeat(
-        a=mask2d[np.newaxis, :, :],
-        repeats=result_proba.shape[0],
-        axis=0
+        a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0
     )
 
     # convert proba to masked array
-    result_proba = np.ma.masked_array(
-        result_proba,
-        mask=mask3d,
-        fill_value=np.nan
-    )
+    result_proba = np.ma.masked_array(result_proba, mask=mask3d, fill_value=np.nan)
 
     return result_proba
 
@@ -141,11 +133,7 @@ def predict_multioutput(img, estimator):
     result = result.transpose(2, 0, 1)
 
     # repeat mask for n_bands
-    mask3d = np.repeat(
-        a=mask2d[np.newaxis, :, :],
-        repeats=result.shape[0],
-        axis=0
-    )
+    mask3d = np.repeat(a=mask2d[np.newaxis, :, :], repeats=result.shape[0], axis=0)
 
     # convert proba to masked array
     result = np.ma.masked_array(result, mask=mask3d, fill_value=np.nan)
