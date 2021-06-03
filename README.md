@@ -170,18 +170,24 @@ Rename RasterLayers using a dict of old_name : new_name pairs:
 
 ```
 stack.names
-stack.rename({'lsat7_2000_30': 'new_name'})
+stack.rename({'lsat7_2000_30': 'new_name'}, in_place=True)
 stack.names
 stack.new_name
 stack['new_name']
 stack.loc['new_name']
 ```
 
+We can also change all of the column names by replacing them:
+
+```
+stack.names = ["band1", "band2", "band3", "band4", "band5", "band7"]
+```
+
 Drop a RasterLayer:
 
 ```
 stack.names
-stack.drop(labels='lsat7_2000_70_1')
+stack.drop(labels='band1', in_place=True)
 stack.names
 ```
 
@@ -190,8 +196,7 @@ Save a Raster:
 ```
 tmp_tif = tempfile.NamedTemporaryFile().name + '.tif'
 newstack = stack.write(file_path=tmp_tif, nodata=-9999)
-newstack.new_name.read()
-newstack = None
+newstack.band2.read()
 ```
 
 ### Plotting
@@ -202,8 +207,11 @@ in the future. Currently you can set a matplotlib cmap for each RasterLayer usin
 Plot a single RasterLayer:
 
 ```
+from matplotlib.colors import Normalize
+
+stack = Raster(predictors)
 stack.lsat7_2000_10.cmap = 'plasma'
-stack.lsat7_2000_10.norm = mpl.colors.Normalize(20, 210)
+stack.lsat7_2000_10.norm = Normalize(20, 210)
 stack.lsat7_2000_10.plot()
 ```
 
@@ -285,14 +293,20 @@ the values of the labelled pixels along with the queried pixel values.
 
 ```
 # Create a training dataset by extracting the raster values at the training point locations:
-df_points = stack.extract_vector(response=training_pt, columns='id')
-df_polygons = stack.extract_vector(response=training_py, columns='id')
-df_lines = stack.extract_vector(response=training_lines, columns='id')
-df_raster = stack.extract_raster(response=training_px, value_name='id')
+df_points = stack.extract_vector(training_pt)
+df_polygons = stack.extract_vector(training_py)
+df_lines = stack.extract_vector(training_lines)
+df_raster = stack.extract_raster(training_px)
+
 df_points.head()
 
 # join the extracted pixel data back with the training data
-df_points = df_points.merge(training_pt.loc[:, ("id")], left_index=True, right_index=True)
+df_points = df_points.droplevel(0).merge(
+    training_pt.loc[:, ("id")], 
+    left_index=True, 
+    right_index=True
+)
+df_points = df_points.dropna()
 ```
 
 ### Model Training
@@ -312,8 +326,8 @@ lr = Pipeline(
      ('classifier', LogisticRegressionCV(n_jobs=-1))])
 
 # fit the classifier
-X = df_polygons.drop(columns=['id', 'geometry'])
-y = df_polygons.id
+X = df_points.drop(columns=["geometry", "id"])
+y = df_points.id
 lr.fit(X, y)
 ````
 
@@ -334,7 +348,7 @@ from sklearn.cluster import KMeans
 
 # create 10 spatial clusters based on clustering of the training data point x,y coordinates
 clusters = KMeans(n_clusters=34, n_jobs=-1)
-clusters.fit(df_polygons.geometry.bounds.iloc[:, 0:2])
+clusters.fit(df_points.geometry.bounds.iloc[:, 0:2])
 
 # cross validate
 scores = cross_validate(
@@ -373,7 +387,7 @@ environmental background or pseudo-absences in a binary classification model). T
 sampling module for this purpose:
 ```
 # extract training data using a random sample
-df_rand = stack.sample(size=1000, random_state=1)
+df_rand = stack.sample(size=100, random_state=1)
 df_rand.plot()
 ```
 
@@ -401,7 +415,7 @@ point geometries:
 ```
 from pyspatialml.vector import filter_points
 
-thinned_points = filter_points(xy=training_pt, min_dist=500, remove='first')
+thinned_points = filter_points(training_pt, min_dist=500, remove='first')
 thinned_points.shape
 ```
 
