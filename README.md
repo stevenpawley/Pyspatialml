@@ -126,11 +126,16 @@ supplied then a RasterLayer is returned, otherwise a Raster object is returned c
 RasterLayer indexing which returns a RasterLayer:
 
 ```
-stack.iloc[0]  # index
-stack.iloc[0:3]  # slice
-stack['lsat7_2000_10']  # key
-stack[('lsat7_2000_10', 'lsat7_2000_20')]  # list or tuple of keys
-stack.lsat7_2000_10  # attribute
+# index by integer position
+rasterlayer = stack.iloc[0]
+rasterstack = stack.iloc[0:3]
+
+# index by name
+rasterlayer = stack['lsat7_2000_10']
+rasterstack = stack[('lsat7_2000_10', 'lsat7_2000_20')]
+
+# index by atttribute
+rasterlayer = stack.lsat7_2000_10
 ```
 
 Iterate through RasterLayers:
