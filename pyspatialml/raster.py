@@ -220,18 +220,6 @@ class Raster(RasterStats, RasterPlot):
         have to be the same length as the number of RasterLayers because some files may
         have multiple bands.
 
-    dtypes : list
-        A list of numpy dtypes for each RasterLayer.
-
-    nodatavals : list
-        A list of the nodata values for each RasterLayer.
-
-    count : int
-        The number of RasterLayers in the Raster.
-
-    res : tuple
-        The resolution in (x, y) dimensions of the Raster.
-
     meta : dict
         A dict containing the raster metadata. The dict contains the
         following keys/values:
@@ -316,21 +304,12 @@ class Raster(RasterStats, RasterPlot):
 
         self.loc = _LocIndexer(self)
         self.iloc = _iLocIndexer(self, self.loc)
-        self.files = []
-        self.dtypes = []
-        self.nodatavals = []
-        self.res = None
-        self.shape = None
-        self.tempdir = tempdir
-        src_layers = []
-        self.crs = None
-        self.transform = None
-        self.width = None
-        self.height = None
-        self.bounds = None
+        self.files = list()
         self.meta = None
-        self.count = 0
         self._block_shape = (256, 256)
+        self.tempdir = tempdir
+
+        src_layers = []
 
         # check mode
         if mode not in ["r", "r+", "w", "w+"]:
@@ -491,6 +470,9 @@ class Raster(RasterStats, RasterPlot):
 
     @property
     def block_shape(self):
+        """Return the block shape in (height, width) used to read windows from the
+        Raster
+        """
         return self._block_shape
 
     @block_shape.setter
@@ -509,26 +491,93 @@ class Raster(RasterStats, RasterPlot):
         self._block_shape = (rows, cols)
 
     @property
+    def count(self):
+        """Return the number of layers in the Raster"""
+        return len(self.loc)
+
+    @property
+    def crs(self):
+        """Return to crs of the Raster"""
+        return self.meta["crs"]
+
+    @property
+    def transform(self):
+        """Return the transform of the Raster"""
+        return self.meta["transform"]
+
+    @property
+    def width(self):
+        """Return the width (number of columns) in the Raster"""
+        return self.meta["width"]
+
+    @property
+    def height(self):
+        """Return the height (number of rows) in the Raster"""
+        return self.meta["height"]
+
+    @property
+    def shape(self):
+        """Return the shape (height, width) of the Raster"""
+        return self.height, self.width
+
+    @property
+    def res(self):
+        """Return a tuple of the resolution of the Raster in (width, height)"""
+        return abs(self.meta["transform"].a), abs(self.meta["transform"].e)
+
+    @property
+    def bounds(self):
+        """Return the bounding box of the raster in (left, bottom, right, top)"""
+        bounds = rasterio.transform.array_bounds(self.height, self.width, self.transform)
+        BoundingBox = namedtuple("BoundingBox", ["left", "bottom", "right", "top"])
+        return BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
+
+    @property
+    def dtypes(self):
+        """Return the dtype of each layer in the Raster as a list"""
+        dtypes = list()
+
+        for layer in self.loc.values():
+            dtypes.append(layer.dtype)
+
+        return dtypes
+
+    @property
+    def nodatavals(self):
+        """Return the nodata value of each layer in the Raster as a list"""
+        nodatavals = list()
+
+        for layer in self.loc.values():
+            nodatavals.append(layer.nodata)
+
+        return nodatavals
+
+    @property
     def _layers(self):
         return self.loc
 
     @_layers.setter
     def _layers(self, layers):
-        # some checks
+        """Assign RasterLayer objects to the Raster
+
+        The function assigns the layers to the loc indexer, updates the `files` 
+        attribute and assigns syntactically-correct names to each layer.
+
+        Parameters
+        ----------
+        layers : list
+            A list of pyspatialml.RasterLayer objects
+        """
         if isinstance(layers, RasterLayer):
             layers = [layers]
 
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
-            raise ValueError(
-                "Cannot create a Raster object from a mixture of input types"
-            )
+            raise ValueError("Cannot create a Raster object from a mixture of inputs")
 
         meta = _check_alignment(layers)
 
         if meta is False:
-            raise ValueError(
-                "Raster datasets do not have the same dimensions or transform"
-            )
+            raise ValueError("Raster datasets do not have the same dimensions/transform")
 
         # reset existing attributes
         for name in self.names:
@@ -536,51 +585,35 @@ class Raster(RasterStats, RasterPlot):
 
         self.loc = _LocIndexer(self)
         self.iloc = _iLocIndexer(self, self.loc)
-        self.files = []
-        self.dtypes = []
-        self.nodatavals = []
+        self.files = list()
 
         # update global Raster object attributes with new values
-        self.count = len(layers)
-        self.width = meta["width"]
-        self.height = meta["height"]
-        self.shape = (self.height, self.width)
-        self.transform = meta["transform"]
-        self.res = (abs(meta["transform"].a), abs(meta["transform"].e))
-        self.crs = meta["crs"]
-
-        bounds = rasterio.transform.array_bounds(
-            self.height, self.width, self.transform
-        )
-        BoundingBox = namedtuple("BoundingBox", ["left", "bottom", "right", "top"])
-        self.bounds = BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
-
         names = [i.name for i in layers]
         names = _fix_names(names)
 
         # update attributes per dataset
         for layer, name in zip(layers, names):
-            self.dtypes.append(layer.dtype)
-            self.nodatavals.append(layer.nodata)
             self.files.append(layer.file)
             layer.name = name
             self.loc[name] = layer
             setattr(self, name, self.loc[name])
 
         self.meta = dict(
-            crs=self.crs,
-            transform=self.transform,
-            width=self.width,
-            height=self.height,
+            crs=meta["crs"],
+            transform=meta["transform"],
+            width=meta["width"],
+            height=meta["height"],
             count=self.count,
             dtype=np.find_common_type(self.dtypes, []),
         )
 
     def head(self):
+        """Return the first 10 rows from the Raster as a ndarray"""
         window = Window(col_off=0, row_off=0, width=20, height=10)
         return self.read(window=window)
 
     def tail(self):
+        """Return the last 10 rows from the Raster as a ndarray"""
         window = Window(
             col_off=self.width - 20, row_off=self.height - 10, width=20, height=10
         )
