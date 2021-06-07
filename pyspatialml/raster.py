@@ -241,18 +241,8 @@ class Raster(RasterStats, RasterPlot):
         in the Raster for out-of-memory processing.
     """
 
-    def __init__(
-        self,
-        src,
-        crs=None,
-        transform=None,
-        nodata=None,
-        mode="r",
-        file_path=None,
-        driver=None,
-        tempdir=tempfile.tempdir,
-        in_memory=False,
-    ):
+    def __init__(self, src, crs=None, transform=None, nodata=None, mode="r", file_path=None,
+                 driver=None, tempdir=tempfile.tempdir, in_memory=False):
         """Initiate a new Raster object
 
         Parameters
@@ -1351,9 +1341,9 @@ class Raster(RasterStats, RasterPlot):
             subset = [subset]
 
         if subset:
-            layers = list(self.loc[subset]._layers.values())
+            layers = list(self.loc[subset].loc.values())
         else:
-            layers = list(self._layers.values())
+            layers = list(self.loc.values())
 
         return self._copy(layers)
 
