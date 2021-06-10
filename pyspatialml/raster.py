@@ -1,7 +1,7 @@
 import os
 import tempfile
-from collections import OrderedDict, namedtuple
-from collections.abc import Mapping
+from collections import namedtuple
+from collections.abc import MutableMapping, ValuesView
 from functools import partial
 
 import geopandas as gpd
@@ -17,6 +17,7 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
+from ordered_set import OrderedSet
 
 from ._plotting import RasterPlot
 from ._prediction import predict_multioutput, predict_output, predict_prob
@@ -25,7 +26,7 @@ from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
 
 
-class _LocIndexer(Mapping):
+class _LocIndexer(MutableMapping):
     """Access pyspatialml.RasterLayer objects by using a key.
 
     Represents a structure similar to a dict but allows access using a list of
@@ -56,57 +57,62 @@ class _LocIndexer(Mapping):
         parent Raster object.
     """
 
-    def __init__(self, raster, *args, **kw):
-        """
-        Initiate a _LocIndexer class
+    def __init__(self, *args, **kw):
+        self.__dict__.update(*args, **kw)
 
-        Parameters
-        ----------
-        raster : pyspatialml.Raster object
-            Pass the parent raster object to the _LocIndexer so that the
-            parents attributes are kept up-to-date with change to the
-            individual RasterLayers in the _LocIndexer.
-        """
-
-        self.raster = raster
-        self._dict = OrderedDict(*args, **kw)
-
-    def __getitem__(self, keys):
-        if isinstance(keys, str):
-            selected = self._dict[keys]
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            new = self.__dict__[key]
         else:
-            selected = [self._dict[i] for i in keys]
-            selected = Raster(selected)
+            selected = []
 
-        return selected
+            for i in key:
+                if i in self.names is False:
+                    raise KeyError("key not present in Raster object")
+                else:
+                    selected.append(self.__dict__[i])
+
+            new = Raster(selected)
+        return new
 
     def __setitem__(self, key, value):
-        self._dict[key] = value
-        setattr(self.raster, key, value)
+        if isinstance(value, RasterLayer):
+            self.__dict__[key] = value
+        else:
+            raise ValueError("value is not a RasterLayer object")
 
     def __iter__(self):
-        return iter(self._dict)
+        keys = OrderedSet(list(self.__dict__.keys()))
+        keys = keys.difference(self._internal)
+        return iter(keys)
 
     def __len__(self):
-        return len(self._dict)
+        return len(self.__dict__) - len(self._internal)
 
-    def pop(self, key):
-        pop = self._dict.pop(key)
-        delattr(self.raster, key)
-        return pop
+    def __delitem__(self, key):
+        self.__dict__.pop(key)
 
-    def rename(self, old, new):
-        # rename the index
-        self._dict = OrderedDict(
-            [(new, v) if k == old else (k, v) for k, v in self._dict.items()]
-        )
+    def _rename_inplace(self, old, new):
+        # rename the index by rebuilding the dict
+        old_keys = list(self.__dict__.keys())
+        new_keys = [new if i == old else i for i in old_keys]
+        new_dict = dict(zip(new_keys, self.__dict__.values()))
+        self.__dict__ = new_dict
 
-        # update the parent raster's attributes
-        delattr(self.raster, old)
-        setattr(self.raster, new, self._dict[new])
+        # update the internal name of a RasterLayer
+        self.__dict__[new].name = new
 
-        # update the internal name of the RasterLayer
-        self.raster[new].name = new
+    @property
+    def loc(self):
+        return self
+
+    @loc.setter
+    def loc(self, key, value):
+        self.__dict__[key] = value
+
+    @property
+    def iloc(self):
+        return _iLocIndexer(self)
 
 
 class _iLocIndexer(object):
@@ -131,28 +137,20 @@ class _iLocIndexer(object):
         as the value.
     """
 
-    def __init__(self, raster, loc_indexer):
+    def __init__(self, loc_indexer):
         """Initiate a _iLocIndexer
 
         Parameters
         ----------
-        raster : pyspatialml.Raster
-            The parent Raster object. The _LocIndexer requires the parent
-            Raster object so that the raster's attributes are kept up to date
-            with changes to the RasterLayers in the dict.
-
         loc_indexer : pyspatialml.raster._LocIndexer
             An instance of a _LocIndexer.
         """
-
-        self.raster = raster
         self._index = loc_indexer
 
     def __setitem__(self, index, value):
         if isinstance(index, int):
             key = list(self._index.keys())[index]
             self._index[key] = value
-            setattr(self.raster, key, value)
 
         if isinstance(index, slice):
             start = index.start
@@ -162,7 +160,7 @@ class _iLocIndexer(object):
             if start is None:
                 start = 0
             if stop is None:
-                stop = self.raster.count
+                stop = self.count
             if step is None:
                 step = 1
 
@@ -172,7 +170,6 @@ class _iLocIndexer(object):
             for i, v in zip(index, value):
                 key = list(self._index.keys())[i]
                 self._index[key] = v
-                setattr(self.raster, key, v)
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -188,7 +185,7 @@ class _iLocIndexer(object):
                 start = 0
 
             if stop is None:
-                stop = self.raster.count
+                stop = self.count
 
             if step is None:
                 step = 1
@@ -204,7 +201,7 @@ class _iLocIndexer(object):
         return selected
 
 
-class Raster(RasterStats, RasterPlot):
+class Raster(_LocIndexer, RasterStats, RasterPlot):
     """Creates a collection of file-based GDAL-supported raster datasets that share a
     common coordinate reference system and geometry.
 
@@ -292,12 +289,17 @@ class Raster(RasterStats, RasterPlot):
             Raster object containing the src layers stacked into a single object
         """
 
-        self.loc = _LocIndexer(self)
-        self.iloc = _iLocIndexer(self, self.loc)
         self.files = list()
         self.meta = None
         self._block_shape = (256, 256)
         self.tempdir = tempdir
+        self._internal = frozenset([
+            "_internal",
+            "files",
+            "meta",
+            "_block_shape",
+            "tempdir"
+        ])
 
         src_layers = []
 
@@ -415,35 +417,10 @@ class Raster(RasterStats, RasterPlot):
 
         self._layers = src_layers
 
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            selected = self.loc[key]
-
-        else:
-            selected = []
-            for i in key:
-                if i in self.names is False:
-                    raise KeyError("key not present in Raster object")
-                else:
-                    selected.append(i)
-            selected = self.copy(subset=selected)
-
-        return selected
-
-    def __setitem__(self, key, value):
-        if isinstance(value, RasterLayer):
-            self.loc[key] = value
-            self.iloc[self.names.index(key)] = value
-            setattr(self, key, value)
-        else:
-            raise ValueError("value is not a RasterLayer object")
-
-    def __iter__(self):
-        return iter(self.loc.items())
-
     @property
     def names(self):
-        return list(self.loc.keys())
+        all_names = OrderedSet(list(self.__dict__))
+        return all_names.difference(self._internal)
 
     @names.setter
     def names(self, value):
@@ -569,13 +546,10 @@ class Raster(RasterStats, RasterPlot):
         if meta is False:
             raise ValueError("Raster datasets do not have the same dimensions/transform")
 
-        # reset existing attributes
-        for name in self.names:
-            delattr(self, name)
-
-        self.loc = _LocIndexer(self)
-        self.iloc = _iLocIndexer(self, self.loc)
+        # reset locindexer
         self.files = list()
+        for key in self.loc.keys():
+            self.loc.pop(key)
 
         # update global Raster object attributes with new values
         names = [i.name for i in layers]
@@ -586,7 +560,6 @@ class Raster(RasterStats, RasterPlot):
             self.files.append(layer.file)
             layer.name = name
             self.loc[name] = layer
-            setattr(self, name, self.loc[name])
 
         self.meta = dict(
             crs=meta["crs"],
@@ -617,35 +590,8 @@ class Raster(RasterStats, RasterPlot):
         accumulated during an analysis session.
         """
 
-        for layer in self.iloc:
+        for layer in self.loc.values():
             layer.close()
-
-    def block_shapes(self, rows, cols):
-        """Generator for windows for optimal reading and writing based on the raster
-        format Windows and returns as a tuple with xoff, yoff, width, height.
-
-        Parameters
-        ----------
-        rows : int
-            Height of window in rows.
-
-        cols : int
-            Width of window in columns.
-        """
-
-        for i, col in enumerate(range(0, self.width, cols)):
-            if col + cols < self.width:
-                num_cols = cols
-            else:
-                num_cols = self.width - col
-
-            for j, row in enumerate(range(0, self.height, rows)):
-                if row + rows < self.height:
-                    num_rows = rows
-                else:
-                    num_rows = self.height - row
-
-                yield Window(col, row, num_cols, num_rows)
 
     def _check_supported_dtype(self, dtype=None):
         """Method to check that a dtype is compatible with GDAL or generate a compatible
@@ -695,6 +641,120 @@ class Raster(RasterStats, RasterPlot):
             tfile = None
 
         return file_path, tfile
+
+    def _copy(self, src, names=None):
+        """Return a new Raster object from a list of files but retaining the attributes
+        of the parent Raster.
+
+        Designed to be used internally to copy a Raster object.
+
+        Parameters
+        ----------
+        src : List of RasterLayers or file paths
+            List of RasterLayers or file paths used create the new Raster object.
+
+        names : list (optional, default None)
+            List to name the RasterLayer objects in the stack. If not supplied then the
+            names will be generated from the file names.
+
+        Returns
+        -------
+        pyspatialml.Raster
+        """
+
+        if not isinstance(src, (list, ValuesView)):
+            src = [src]
+
+        is_file = [isinstance(i, str) or hasattr(i, "file") for i in src]
+
+        if all(is_file):
+            raster = Raster(src)
+        else:
+            copied_layers = list()
+            for i, layer in enumerate(src):
+                if layer.in_memory is False:
+                    copied_layers.append(layer)
+                else:
+                    meta = self.meta.copy()
+                    meta["count"] = 1
+                    meta["driver"] = "GTiff"
+                    meta["nodata"] = layer.nodata
+                    meta["dtype"] = layer.dtype
+
+                    with rasterio.MemoryFile() as memfile:
+                        dst = memfile.open(**meta)
+                        arr = layer.read(masked=True)
+                        dst.write(arr, 1)
+                    band = rasterio.band(dst, 1)
+                    copied_layers.append(RasterLayer(band))
+
+            raster = Raster(copied_layers)
+
+        # rename and copy attributes
+        if names is not None:
+            for (old, new) in zip(raster.names, names):
+                raster._rename_inplace(old, new)
+
+        for old_layer, new_layer in zip(self.loc.values(), list(raster.loc.values())):
+            new_layer.cmap = old_layer.cmap
+            new_layer.norm = old_layer.norm
+            new_layer.categorical = old_layer.categorical
+
+        raster.block_shape = self.block_shape
+
+        return raster
+
+    def copy(self, subset=None):
+        """Creates a shallow copy of a Raster object
+
+        Note that shallow in the context of a Raster object means that an immutable copy
+        of the object is made, however the on-disk file locations remain the same.
+
+        Parameters
+        ----------
+        subset : opt
+            A list of layer names to subset while copying.
+
+        Returns
+        -------
+        Raster
+        """
+
+        if subset is not None:
+            if isinstance(subset, str):
+                subset = [subset]
+            layers = list(self.loc[subset].values())
+        else:
+            layers = list(self.loc.values())
+
+        return self._copy(layers)
+
+    def block_shapes(self, rows, cols):
+        """Generator for windows for optimal reading and writing based on the raster
+        format Windows and returns as a tuple with xoff, yoff, width, height.
+
+        Parameters
+        ----------
+        rows : int
+            Height of window in rows.
+
+        cols : int
+            Width of window in columns.
+        """
+
+        for i, col in enumerate(range(0, self.width, cols)):
+            if col + cols < self.width:
+                num_cols = cols
+            else:
+                num_cols = self.width - col
+
+            for j, row in enumerate(range(0, self.height, rows)):
+                if row + rows < self.height:
+                    num_rows = rows
+                else:
+                    num_rows = self.height - row
+
+                yield Window(col, row, num_cols, num_rows)
 
     def read(self, masked=False, window=None, out_shape=None, resampling="nearest",
              as_df=False, **kwargs):
@@ -751,7 +811,7 @@ class Raster(RasterStats, RasterPlot):
         else:
             arr = np.zeros((self.count, height, width), dtype=dtype)
 
-        for i, layer in enumerate(self.iloc):
+        for i, layer in enumerate(self.loc.values()):
             arr[i, :, :] = layer.read(
                 masked=masked,
                 window=window,
@@ -823,7 +883,7 @@ class Raster(RasterStats, RasterPlot):
 
         with rasterio.open(file_path, mode="w", **meta) as dst:
 
-            for i, layer in enumerate(self.iloc):
+            for i, layer in enumerate(self.loc.values()):
                 arr = layer.read()
                 arr[arr == layer.nodata] = nodata
                 dst.write(arr.astype(dtype), i + 1)
@@ -1155,7 +1215,7 @@ class Raster(RasterStats, RasterPlot):
                 raise AttributeError(new_raster + " is not a pyspatialml.Raster object")
 
             # check that other raster does not result in duplicated names
-            combined_names = combined_names + new_raster.names
+            combined_names = list(combined_names) + list(new_raster.names)
             combined_names = _fix_names(combined_names)
 
             # update layers and names
@@ -1166,6 +1226,7 @@ class Raster(RasterStats, RasterPlot):
 
         if in_place is True:
             self._layers = combined_layers
+            self.names = OrderedSet(combined_names)
         else:
             new_raster = self._copy(self.files, self.names)
             new_raster._layers = combined_layers
@@ -1207,7 +1268,7 @@ class Raster(RasterStats, RasterPlot):
             subset_layers = [
                 v
                 for (i, v) in enumerate(list(self.loc.values()))
-                if self.names[i] not in labels
+                if list(self.names)[i] not in labels
             ]
 
         else:
@@ -1243,109 +1304,14 @@ class Raster(RasterStats, RasterPlot):
 
         if in_place is True:
             for old_name, new_name in names.items():
-                # change internal name of RasterLayer
-                self.loc[old_name].name = new_name
-
-                # change name of layer in stack
-                self.loc.rename(old_name, new_name)
+                self._rename_inplace(old_name, new_name)
         else:
             new_raster = self._copy(self.files, self.names)
-            for old_name, new_name in names.items():
-                # change internal name of RasterLayer
-                new_raster.loc[old_name].name = new_name
 
-                # change name of layer in stack
-                new_raster.loc.rename(old_name, new_name)
+            for old_name, new_name in names.items():
+                new_raster._rename_inplace(old_name, new_name)
 
             return new_raster
-
-    def _copy(self, src, names=None):
-        """Return a new Raster object from a list of files but retaining the attributes
-        of the parent Raster.
-
-        Designed to be used internally to copy a Raster object.
-
-        Parameters
-        ----------
-        src : List of RasterLayers or file paths
-            List of RasterLayers or file paths used create the new Raster object.
-
-        names : list (optional, default None)
-            List to name the RasterLayer objects in the stack. If not supplied then the
-            names will be generated from the file names.
-
-        Returns
-        -------
-        pyspatialml.Raster
-        """
-
-        if not isinstance(src, list):
-            src = [src]
-
-        is_file = [isinstance(i, str) for i in src]
-
-        if all(is_file):
-            raster = Raster(src)
-        else:
-            copied_layers = list()
-            for i, layer in enumerate(src):
-                if layer.in_memory is False:
-                    copied_layers.append(layer)
-                else:
-                    meta = self.meta.copy()
-                    meta["count"] = 1
-                    meta["driver"] = "GTiff"
-                    meta["nodata"] = layer.nodata
-                    meta["dtype"] = layer.dtype
-
-                    with rasterio.MemoryFile() as memfile:
-                        dst = memfile.open(**meta)
-                        arr = layer.read(masked=True)
-                        dst.write(arr, 1)
-                    band = rasterio.band(dst, 1)
-                    copied_layers.append(RasterLayer(band))
-
-            raster = Raster(copied_layers)
-
-        # rename and copy attributes
-        if names is not None:
-            rename = {old: new for old, new in zip(raster.names, names)}
-            raster.rename(rename, in_place=True)
-
-        for old_layer, new_layer in zip(self.iloc, list(raster.loc.values())):
-            new_layer.cmap = old_layer.cmap
-            new_layer.norm = old_layer.norm
-            new_layer.categorical = old_layer.categorical
-
-        raster.block_shape = self.block_shape
-
-        return raster
-
-    def copy(self, subset=None):
-        """Creates a shallow copy of a Raster object
-
-        Note that shallow in the context of a Raster object means that an immutable copy
-        of the object is made, however the on-disk file locations remain the same.
-
-        Parameters
-        ----------
-        subset : opt
-            A list of layer names to subset while copying.
-
-        Returns
-        -------
-        Raster
-        """
-
-        if isinstance(subset, str):
-            subset = [subset]
-
-        if subset:
-            layers = list(self.loc[subset].loc.values())
-        else:
-            layers = list(self.loc.values())
-
-        return self._copy(layers)
 
     def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None,
              in_memory=False, driver="GTiff", dtype=None, nodata=None, **kwargs):
@@ -1413,7 +1379,7 @@ class Raster(RasterStats, RasterPlot):
 
         masked_ndarrays = []
 
-        for layer in self.iloc:
+        for layer in self.loc.values():
             # set pixels outside of mask to raster band's nodata value
             masked_arr, transform = rasterio.mask.mask(
                 dataset=layer.ds,
@@ -1777,7 +1743,7 @@ class Raster(RasterStats, RasterPlot):
 
         if in_memory is False:
             with rasterio.open(file_path, "w", driver=driver, **meta) as dst:
-                for i, layer in enumerate(self.iloc):
+                for i, layer in enumerate(self.loc.values()):
                     reproject(
                         source=rasterio.band(layer.ds, layer.bidx),
                         destination=rasterio.band(dst, i + 1),
@@ -1793,7 +1759,7 @@ class Raster(RasterStats, RasterPlot):
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(driver=driver, **meta)
-                for i, layer in enumerate(self.iloc):
+                for i, layer in enumerate(self.loc.values()):
                     reproject(
                         source=rasterio.band(layer.ds, layer.bidx),
                         destination=rasterio.band(dst, i + 1),
@@ -2250,11 +2216,10 @@ class Raster(RasterStats, RasterPlot):
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
         for i, (layer, pbar) in enumerate(
-            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=not progress))
-        ):
-            sampler = sample_gen(
-                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
-            )
+            zip(self.loc.values(), tqdm(self.loc.values(), total=self.count,
+                                        disable=not progress))):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
+                                 masked=True)
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
@@ -2268,7 +2233,7 @@ class Raster(RasterStats, RasterPlot):
 
         return X
 
-    def extract_vector(self, gdf, return_array=False, progress=False):
+    def extract_vector(self, gdf, progress=False):
         """Sample a Raster/RasterLayer using a geopandas GeoDataframe containing points,
         lines or polygon features.
 
@@ -2277,11 +2242,6 @@ class Raster(RasterStats, RasterPlot):
         gdf: geopandas.GeoDataFrame
             Containing either point, line or polygon geometries. Overlapping geometries
             will cause the same pixels to be sampled.
-
-        return_array : bool (opt), default=False
-            By default the extracted pixel values are returned as a
-             geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
-             values are returned as a tuple of numpy.ndarrays.
 
         progress : bool (opt), default=False
             Show a progress bar for extraction.
@@ -2311,11 +2271,6 @@ class Raster(RasterStats, RasterPlot):
                 right_on="id",
                 right_index=True
             )
-
-        tuple
-            A tuple (geodataframe index, extracted values, coordinates) of the extracted
-            raster values as a masked array and the  coordinates of the extracted pixels
-            if `as_gdf=False`.
         """
 
         # rasterize polygon and line geometries
@@ -2347,29 +2302,29 @@ class Raster(RasterStats, RasterPlot):
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
-        for i, (layer, pbar) in enumerate(
-            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=not progress))
-        ):
-            sampler = sample_gen(
-                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
-            )
+        for i, (layer, pbar) in enumerate(zip(self.loc.values(),
+                                              tqdm(self.loc.values(), total=self.count,
+                                                   disable=not progress))):
+
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
+                                 masked=True)
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
         # return as geopandas array as default (or numpy arrays)
-        if return_array is False:
-            X = pd.DataFrame(
-                data=X, columns=self.names, index=[pd.RangeIndex(0, X.shape[0]), ids]
-            )
-            X.index.set_names(["pixel_idx", "geometry_idx"], inplace=True)
-            X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
-            X["geometry"] = X["geometry"].apply(Point)
-            X = gpd.GeoDataFrame(X, geometry="geometry", crs=self.crs)
-            return X
+        X = pd.DataFrame(
+            data=X,
+            columns=list(self.names),
+            index=[pd.RangeIndex(0, X.shape[0]), ids]
+        )
+        X.index.set_names(["pixel_idx", "geometry_idx"], inplace=True)
+        X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
+        X["geometry"] = X["geometry"].apply(Point)
+        X = gpd.GeoDataFrame(X, geometry="geometry", crs=self.crs)
 
-        return ids, X, xys
+        return X
 
-    def extract_raster(self, src, return_array=False, progress=False):
+    def extract_raster(self, src, progress=False):
         """Sample a Raster object by an aligned raster of labelled pixels.
 
         Parameters
@@ -2377,11 +2332,6 @@ class Raster(RasterStats, RasterPlot):
         src: rasterio DatasetReader
             Single band raster containing labelled pixels as an open rasterio
             DatasetReader object.
-
-        return_array : bool (opt), default=False
-            By default the extracted pixel values are returned as a
-             geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel
-             values are returned as a tuple of numpy.ndarrays.
 
         progress : bool (opt), default=False
             Show a progress bar for extraction.
@@ -2391,15 +2341,6 @@ class Raster(RasterStats, RasterPlot):
         geopandas.GeoDataFrame
             Geodataframe containing extracted data as point features if
             `return_array=False`
-
-        tuple with three items if `return_array is True
-            - numpy.ndarray
-                Numpy masked array of extracted raster values, typically 2d.
-            - numpy.ndarray
-                1d numpy masked array of labelled sampled.
-            - numpy.ndarray
-                2d numpy masked array of row and column indexes of training
-                pixels.
         """
 
         # open response raster and get labelled pixel indices and values
@@ -2413,24 +2354,22 @@ class Raster(RasterStats, RasterPlot):
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
 
         for i, (layer, pbar) in enumerate(
-            zip(self.iloc, tqdm(self.iloc, total=self.count, disable=not progress))
-        ):
-            sampler = sample_gen(
-                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
-            )
+            zip(self.loc.values(), tqdm(self.loc.values(), total=self.count,
+                                        disable=not progress))):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
+                                 masked=True)
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
         # summarize data
-        if return_array is False:
-            column_names = ["value"] + self.names
-            gdf = pd.DataFrame(data=np.ma.column_stack((ys, X)), columns=column_names)
-            gdf["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
-            gdf["geometry"] = gdf["geometry"].apply(Point)
-            gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
-            return gdf
+        column_names = ["value"] + list(self.names)
+        gdf = pd.DataFrame(data=np.ma.column_stack((ys, X)), columns=column_names)
+        gdf["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
+        gdf["geometry"] = gdf["geometry"].apply(Point)
+        gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
 
-        return X, ys, xys
+        return gdf
+
 
     def scale(self, centre=True, scale=True, file_path=None, in_memory=False,
               driver="GTiff", dtype=None, nodata=None, progress=False):

@@ -8,8 +8,7 @@ from pyspatialml import Raster
 
 class TestCalc(TestCase):
     def setUp(self) -> None:
-        predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                      nc.band7]
+        predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
         self.stack = Raster(predictors)
         self.result = None
 
@@ -23,7 +22,7 @@ class TestCalc(TestCase):
         def compute_outputs_2d_array(arr):
             return arr[0, :, :] + arr[1, :, :]
 
-        self.result = self.stack.apply(compute_outputs_2d_array, n_jobs=1)
+        self.result = self.stack.apply(compute_outputs_2d_array)
         self.assertIsInstance(self.result, Raster)
         self.assertEqual(self.result.count, 1)
         self.assertEqual(self.result.read(masked=True).count(), 183418)
@@ -32,22 +31,17 @@ class TestCalc(TestCase):
         def compute_outputs_2d_array(arr):
             return arr[0, :, :] + arr[1, :, :]
 
-        self.result = self.stack.apply(
-            compute_outputs_2d_array, dtype=np.int16, n_jobs=1)
+        self.result = self.stack.apply(compute_outputs_2d_array, dtype=np.int16)
         self.assertIsInstance(self.result, Raster)
         self.assertEqual(self.result.count, 1)
         self.assertEqual(self.result.read(masked=True).count(), 183418)
-
-        # test that nodata value is properly recognised
-        self.assertEqual(self.result.read(masked=True).min(), 94)
-        self.assertEqual(self.result.read(masked=True).max(), 510)
 
     def test_calc_with_3d_output(self):
         def compute_outputs_3d_array(arr):
             arr[0, :, :] = arr[0, :, :] + arr[1, ::]
             return arr
 
-        self.result = self.stack.apply(compute_outputs_3d_array, n_jobs=1)
+        self.result = self.stack.apply(compute_outputs_3d_array)
         self.assertIsInstance(self.result, Raster)
         self.assertEqual(self.result.count, 6)
         self.assertEqual(self.result.read(masked=True).count(), 1052182)
@@ -56,7 +50,7 @@ class TestCalc(TestCase):
         def compute_outputs_2d_array(arr):
             return arr[0, :, :] + arr[1, :, :]
 
-        self.result = self.stack.apply(compute_outputs_2d_array, n_jobs=-1)
+        self.result = self.stack.apply(compute_outputs_2d_array)
         self.assertIsInstance(self.result, Raster)
         self.assertEqual(self.result.count, 1)
         self.assertEqual(self.result.read(masked=True).count(), 183418)
@@ -65,8 +59,7 @@ class TestCalc(TestCase):
         def compute_outputs_2d_array(arr):
             return arr[0, :, :] + arr[1, :, :]
 
-        self.result = self.stack.apply(
-            compute_outputs_2d_array, n_jobs=1, in_memory=True)
+        self.result = self.stack.apply(compute_outputs_2d_array, in_memory=True)
         self.assertIsInstance(self.result, Raster)
         self.assertEqual(self.result.count, 1)
         self.assertEqual(self.result.read(masked=True).count(), 183418)

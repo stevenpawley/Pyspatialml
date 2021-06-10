@@ -229,7 +229,7 @@ class RasterPlot(object):
             arr = self.iloc[0].read(masked=True, out_shape=out_shape)
             cmap = cmaps[0]
             norm = norms[0]
-            axs.set_title(names[0], fontsize=title_fontsize, y=1.00)
+            axs.set_title(list(names)[0], fontsize=title_fontsize, y=1.00)
             im = axs.imshow(
                 arr,
                 extent=[

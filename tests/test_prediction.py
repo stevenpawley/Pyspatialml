@@ -9,8 +9,7 @@ from pyspatialml.datasets import nc
 
 
 class TestPrediction(TestCase):
-    nc_predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                     nc.band7]
+    nc_predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
     stack_nc = Raster(nc_predictors)
     stack_meuse = Raster(ms.predictors)
 
@@ -36,7 +35,7 @@ class TestPrediction(TestCase):
         self.assertIsInstance(cla, Raster)
         self.assertEqual(probs.count, 7)
 
-        for _, layer in probs:
+        for layer in probs.values():
             self.assertEqual(layer.read(masked=True).count(), 135092)
 
     def test_classification_in_memory(self):
@@ -63,7 +62,7 @@ class TestPrediction(TestCase):
         self.assertIsInstance(cla, Raster)
         self.assertEqual(probs.count, 7)
 
-        for _, layer in probs:
+        for layer in probs.values():
             self.assertEqual(layer.read(masked=True).count(), 135092)
 
         probs.close()

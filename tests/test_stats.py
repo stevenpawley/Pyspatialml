@@ -6,10 +6,9 @@ from pyspatialml import Raster
 
 class TestStats(unittest.TestCase):
     def setUp(self) -> None:
-        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                           nc.band7]
-
-        self.stack = Raster(self.predictors)
+        predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+        self.predictors = predictors
+        self.stack = Raster(predictors)
 
     def test_rasterstats(self):
         self.assertEqual(len(self.stack.min()), len(self.predictors))

@@ -15,8 +15,8 @@ class TestAppend(TestCase):
         band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()
         stack.append(Raster(nc.band7), in_place=True)
 
-        self.assertEqual(stack.names[5], "lsat7_2000_70_1")
-        self.assertEqual(stack.names[-1], "lsat7_2000_70_2")
+        self.assertEqual(list(stack.names)[5], "lsat7_2000_70_1")
+        self.assertEqual(list(stack.names)[-1], "lsat7_2000_70_2")
         self.assertEqual(
             stack.lsat7_2000_70_1.read(masked=True).mean(),
             stack.lsat7_2000_70_2.read(masked=True).mean(),
@@ -26,7 +26,7 @@ class TestAppend(TestCase):
         # append a multiband raster
         stack = Raster(self.predictors)
         stack.append(Raster(nc.multiband), in_place=True)
-        self.assertEqual(stack.names[6], "landsat_multiband_1")
+        self.assertEqual(list(stack.names)[6], "landsat_multiband_1")
         stack.close()
 
         # append multiple rasters
@@ -44,8 +44,8 @@ class TestAppend(TestCase):
         self.assertEqual(stack.count, 6)
 
         # check that result contains appended raster
-        self.assertEqual(result.names[5], "lsat7_2000_70_1")
-        self.assertEqual(result.names[-1], "lsat7_2000_70_2")
+        self.assertEqual(list(result.names)[5], "lsat7_2000_70_1")
+        self.assertEqual(list(result.names)[-1], "lsat7_2000_70_2")
 
         # check that band 7 stats are the same after appending
         self.assertEqual(
@@ -56,7 +56,7 @@ class TestAppend(TestCase):
 
         # append a multiband raster
         result = stack.append(Raster(nc.multiband), in_place=False)
-        self.assertEqual(result.names[6], "landsat_multiband_1")
+        self.assertEqual(list(result.names)[6], "landsat_multiband_1")
         stack.close()
 
         # append multiple rasters
