@@ -7,8 +7,8 @@ def predict_output(img, estimator):
     Parameters
     ----
     img : tuple (window, numpy.ndarray)
-        A window object, and a 3d ndarray of raster data with the dimensions in
-        order of (band, rows, columns).
+        A window object, and a 3d ndarray of raster data with the
+        dimensions in order of (band, rows, columns).
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
@@ -48,8 +48,8 @@ def predict_prob(img, estimator):
     Parameters
     ----------
     img : tuple (window, numpy.ndarray)
-        A window object, and a 3d ndarray of raster data with the dimensions in
-        order of (band, rows, columns).
+        A window object, and a 3d ndarray of raster data with the
+        dimensions in order of (band, rows, columns).
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
@@ -57,9 +57,9 @@ def predict_prob(img, estimator):
     Returns
     -------
     numpy.ndarray
-        Multi band raster as a 3d numpy array containing the probabilities
-        associated with each class. ndarray dimensions are in the order of
-        (class, row, column).
+        Multi band raster as a 3d numpy array containing the
+        probabilities associated with each class. ndarray dimensions
+        are in the order of (class, row, column).
     """
     window, img = img
 
@@ -100,8 +100,8 @@ def predict_multioutput(img, estimator):
     Parameters
     ----------
     img : tuple (window, numpy.ndarray)
-        A window object, and a 3d ndarray of raster data with the dimensions in
-        order of (band, rows, columns).
+        A window object, and a 3d ndarray of raster data with the
+        dimensions in order of (band, rows, columns).
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
@@ -109,8 +109,8 @@ def predict_multioutput(img, estimator):
     Returns
     -------
     numpy.ndarray
-        3d numpy array representing the multi-target prediction result with the
-        dimensions in the order of (target, row, column).
+        3d numpy array representing the multi-target prediction result
+        with the dimensions in the order of (target, row, column).
     """
     window, img = img
 

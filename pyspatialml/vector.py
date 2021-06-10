@@ -16,7 +16,8 @@ def filter_points(gdf, min_dist=0, remove="first"):
         Minimum distance by which to filter out closely spaced points.
 
     remove : str, optional (default='first')
-        Optionally choose to remove 'first' occurrences or 'last' occurrences.
+        Optionally choose to remove 'first' occurrences or 'last'
+        occurrences.
 
     Returns
     -------

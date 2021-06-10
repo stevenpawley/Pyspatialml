@@ -58,14 +58,16 @@ class RasterPlot(object):
             This overides the cmap attribute of each RasterLayer.
 
         norm :  matplotlib.colors.Normalize (opt), default=None
-            A matplotlib.colors.Normalize to apply to all of the RasterLayers.
-            This overides the norm attribute of each RasterLayer.
+            A matplotlib.colors.Normalize to apply to all of the
+            RasterLayers. This overides the norm attribute of each
+            RasterLayer.
 
         figsize : tuple (opt), default=None
             Size of the resulting matplotlib.figure.Figure.
 
         out_shape : tuple, default=(500, 500)
-            Number of rows, cols to read from the raster datasets for plotting.
+            Number of rows, cols to read from the raster datasets for
+            plotting.
 
         title_fontsize : any number, default=8
             Size in pts of titles.
@@ -77,29 +79,32 @@ class RasterPlot(object):
             Size in pts of legend ticklabels.
 
         names : list (opt), default=None
-            Optionally supply a list of names for each RasterLayer to override the
-            default layer names for the titles.
+            Optionally supply a list of names for each RasterLayer to
+            override the default layer names for the titles.
 
         fig_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.figure call when
-            creating the figure object.
+            Additional arguments to pass to the
+            matplotlib.pyplot.figure call when creating the figure
+            object.
 
         legend_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.colorbar call when
-            creating the colorbar object.
+            Additional arguments to pass to the
+            matplotlib.pyplot.colorbar call when creating the colorbar
+            object.
 
         subplots_kwds : dict (opt), default=None
-            Additional arguments to pass to the matplotlib.pyplot.subplots_adjust
-            function. These are used to control the spacing and position of each
-            subplot, and can include
-            {left=None, bottom=None, right=None, top=None, wspace=None, hspace=None}.
+            Additional arguments to pass to the
+            matplotlib.pyplot.subplots_adjust function. These are used to
+            control the spacing and position of each subplot, and can
+            include{left=None, bottom=None, right=None, top=None,
+            wspace=None, hspace=None}.
 
         Returns
         -------
         axs : numpy.ndarray
             array of matplotlib.axes._subplots.AxesSubplot or a single
-            matplotlib.axes._subplots.AxesSubplot if Raster object contains only a
-            single layer.
+            matplotlib.axes._subplots.AxesSubplot if Raster object
+            contains only a single layer.
         """
 
         # some checks
@@ -124,7 +129,8 @@ class RasterPlot(object):
         else:
             if len(names) != self.count:
                 raise AttributeError(
-                    "arguments 'names' needs to be the same length as the number of RasterLayer objects"
+                    "arguments 'names' needs to be the same length as the number of "
+                    "RasterLayer objects "
                 )
 
         if fig_kwds is None:

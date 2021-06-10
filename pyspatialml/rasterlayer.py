@@ -11,16 +11,18 @@ from ._rasterbase import get_nodata_value, _make_name
 
 
 class RasterLayer:
-    """Represents a single raster band derived from a single or multi-band
-    raster dataset
+    """Represents a single raster band derived from a single or
+    multi-band raster dataset
 
-    Simple wrapper around a rasterio.Band object with additional methods. Used
-    because the Rasterio.Band.ds.read method reads all bands from a multi-band
-    dataset, whereas the RasterLayer read method only reads a single band.
+    Simple wrapper around a rasterio.Band object with additional
+    methods. Used because the Rasterio.Band.ds.read method reads
+    all bands from a multi-band dataset, whereas the RasterLayer read
+    method only reads a single band.
 
-    Methods encapsulated in RasterLayer objects represent those that typically
-    would only be applied to a single-band of a raster, i.e. sieve-clump,
-    distance to non-NaN pixels, or arithmetic operations on individual layers.
+    Methods encapsulated in RasterLayer objects represent those that
+    typically would only be applied to a single-band of a raster, i.e.
+    sieve-clump, distance to non-NaN pixels, or arithmetic operations
+    on individual layers.
 
     Attributes
     ----------
@@ -40,7 +42,8 @@ class RasterLayer:
         The file path to the dataset.
 
     nodata : any number
-        The number that is used to represent nodata pixels in the RasterLayer.
+        The number that is used to represent nodata pixels in the
+        RasterLayer.
 
     driver : str
         The name of the GDAL format driver.
@@ -61,8 +64,8 @@ class RasterLayer:
         The width (cols) and height (rows) of the dataset.
 
     bounds : BoundingBox named tuple
-        A named tuple with left, bottom, right and top coordinates of the
-        dataset.
+        A named tuple with left, bottom, right and top coordinates of
+        the dataset.
 
     cmap : str
         The name of matplotlib map, or a custom
@@ -111,26 +114,27 @@ class RasterLayer:
         self.ds.close()
 
     def _arith(self, function, other=None):
-        """General method for performing arithmetic operations on RasterLayer
-        objects
+        """General method for performing arithmetic operations on
+        RasterLayer objects
 
         Parameters
         ----------
         function : function
-            Custom function that takes either one or two arrays, and returns a
-            single array following a pre-defined calculation.
+            Custom function that takes either one or two arrays, and
+            returns a single array following a pre-defined calculation.
 
         other : pyspatialml.RasterLayer (optional, default None)
             If not specified, then a `function` should be provided that
-            performs a calculation using only the selected RasterLayer. If
-            `other` is specified, then a `function` should be supplied that
-            takes to ndarrays as arguments and performs a calculation using
-            both layers, i.e. layer1 - layer2.
+            performs a calculation using only the selected RasterLayer.
+            If `other` is specified, then a `function` should be
+            supplied that takes to ndarrays as arguments and performs a
+            calculation using both layers, i.e. layer1 - layer2.
 
         Returns
         -------
         pyspatialml.RasterLayer
-            Returns a single RasterLayer containing the calculated result.
+            Returns a single RasterLayer containing the calculated
+            result.
         """
 
         driver = self.driver
@@ -305,7 +309,8 @@ class RasterLayer:
         return self._arith(func)
 
     def _stats(self, max_pixels):
-        """Take a sample of pixels from which to derive per-band statistics."""
+        """Take a sample of pixels from which to derive per-band
+        statistics."""
 
         rel_width = self.shape[1] / max_pixels
 
@@ -404,8 +409,8 @@ class RasterLayer:
     def read(self, **kwargs):
         """Read method for a single RasterLayer.
 
-        Reads the pixel values from a RasterLayer into a ndarray that always
-        will have two dimensions in the order of (rows, columns).
+        Reads the pixel values from a RasterLayer into a ndarray that
+        always will have two dimensions in the order of (rows, columns).
 
         Parameters
         ----------
@@ -437,16 +442,17 @@ class RasterLayer:
             GDAL-compatible driver used for the file format.
 
         dtype : str (opt)
-            Numpy dtype used for the file. If omitted then the RasterLayer's
-            dtype is used.
+            Numpy dtype used for the file. If omitted then the
+            RasterLayer's dtype is used.
 
         nodata : any number (opt)
-            A value used to represent the nodata pixels. If omitted then the
-            RasterLayer's nodata value is used (if assigned already).
+            A value used to represent the nodata pixels. If omitted
+            then the RasterLayer's nodata value is used (if assigned
+            already).
 
         kwargs : opt
-            Optional named arguments to pass to the format drivers. For example
-            can be `compress="deflate"` to add compression.
+            Optional named arguments to pass to the format drivers.
+            For example can be `compress="deflate"` to add compression.
 
         Returns
         -------
@@ -520,32 +526,34 @@ class RasterLayer:
             axes on which to draw the legend.
 
         figsize : tuple of integers (optional, default None)
-            Size of the matplotlib.figure.Figure. If the ax argument is given
-            explicitly, figsize is ignored.
+            Size of the matplotlib.figure.Figure. If the ax argument is
+            given explicitly, figsize is ignored.
 
         out_shape : tuple, default=(500, 500)
-            Number of rows, cols to read from the raster datasets for plotting.
+            Number of rows, cols to read from the raster datasets for
+            plotting.
 
         categorical : bool (optional, default False)
-            if True then the raster values will be considered to represent
-            discrete values, otherwise they are considered to represent
-            continuous values. This overrides the  RasterLayer 'categorical'
-            attribute. Setting the argument categorical to True is ignored if
-            the RasterLayer.categorical is already True.
+            if True then the raster values will be considered to
+            represent discrete values, otherwise they are considered to
+            represent continuous values. This overrides the
+            RasterLayer 'categorical' attribute. Setting the argument
+            categorical to True is ignored if the
+            RasterLayer.categorical is already True.
 
         legend : bool (optional, default False)
             Whether to plot the legend.
 
         vmin, xmax : scale (optional, default None)
-            vmin and vmax define the data range that the colormap covers. By
-            default, the colormap covers the complete value range of the
-            supplied data. vmin, vmax are ignored if the norm parameter is
-            used.
+            vmin and vmax define the data range that the colormap
+            covers. By default, the colormap covers the complete value
+            range of the supplied data. vmin, vmax are ignored if the
+            norm parameter is used.
 
         fig_kwds : dict (optional, default None)
-            Additional arguments to pass to the matplotlib.pyplot.figure call
-            when creating the figure object. Ignored if ax is passed to the
-            plot function.
+            Additional arguments to pass to the
+            matplotlib.pyplot.figure call when creating the figure
+            object. Ignored if ax is passed to the plot function.
 
         legend_kwds : dict (optional, default None)
             Keyword arguments to pass to matplotlib.pyplot.colorbar().
