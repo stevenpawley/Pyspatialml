@@ -37,8 +37,9 @@ setup(
         'shapely>=1.6',
         'geopandas>=0.3',
         'matplotlib>=2.2.4',
-        'scikit-learn>=0.22'],
-    python_requires='>=3.5',
+        'scikit-learn>=0.22'
+        'ordered-set>=4.0.0'],
+    python_requires='>=3.6',
 
     # testing
     setup_requires=['pytest-runner'],
