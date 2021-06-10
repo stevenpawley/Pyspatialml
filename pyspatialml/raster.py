@@ -31,36 +31,26 @@ class _LocIndexer(MutableMapping):
 
     Represents a structure similar to a dict but allows access using a list of
     keys (not just a single key).
-
-    Methods
-    -------
-    __get_item__ : str, or iterable of str
-        Defines the subset method for the _LocIndexer. Allows the contained
-        RasterLayer objects to be subset using a either single, or multiple
-        labels corresponding to the names of each RasterLayer. Returns a
-        RasterLayer if only a single item is subset, or a Raster if multiple
-        items are subset.
-
-    __set_item__ : key, value
-        Allows a RasterLayer object to be assigned to a name within a Raster
-        object. This automatically updates the indexer with the layer, and
-        adds the RasterLayer's name as an attribute in the Raster.
-
-    pop: key
-        Return a single RasterLayer and delete it from the indexer. This
-        also removes the attribute from the parent raster object that refers
-        to the layer.
-
-    rename : old, new
-        Rename a RasterLayer from `old` to `new. This method renames the
-        layer in the indexer and renames the equivalent attribute in the
-        parent Raster object.
     """
 
     def __init__(self, *args, **kw):
         self.__dict__.update(*args, **kw)
 
     def __getitem__(self, key):
+        """Defines the subset method for the _LocIndexer. Allows the contained
+        RasterLayer objects to be subset using a either single, or multiple
+        labels corresponding to the names of each RasterLayer.
+
+        Parameters
+        ----------
+        key : a single str, or a list of str
+
+        Returns
+        -------
+        Returns a RasterLayer if only a single item is subset, or a Raster if multiple
+        items are subset.
+
+        """
         if isinstance(key, str):
             new = self.__dict__[key]
         else:
@@ -76,23 +66,50 @@ class _LocIndexer(MutableMapping):
         return new
 
     def __setitem__(self, key, value):
+        """Allows a RasterLayer object to be assigned to a name within a Raster
+        object. This automatically updates the indexer with the layer, and
+        adds the RasterLayer's name as an attribute in the Raster.
+
+        Parameters
+        ----------
+        key : str
+            The key to use for the assignment:
+
+        value : pyspatialml.RasterLayer
+            A single RasterLayer object to assign to the key.
+        """
         if isinstance(value, RasterLayer):
             self.__dict__[key] = value
         else:
             raise ValueError("value is not a RasterLayer object")
 
     def __iter__(self):
+        """Iterates through keys"""
         keys = OrderedSet(list(self.__dict__.keys()))
         keys = keys.difference(self._internal)
         return iter(keys)
 
     def __len__(self):
+        """Number of layers in the indexer"""
         return len(self.__dict__) - len(self._internal)
 
     def __delitem__(self, key):
+        """Delete a key:value pair"""
         self.__dict__.pop(key)
 
     def _rename_inplace(self, old, new):
+        """Rename a RasterLayer from `old` to `new. This method renames the
+        layer in the indexer and renames the equivalent attribute in the
+        parent Raster object.
+
+        Parameters
+        ----------
+        old : str
+            Name of the existing key.
+
+        new : str
+            Name to use to rename the existing key.
+        """
         # rename the index by rebuilding the dict
         old_keys = list(self.__dict__.keys())
         new_keys = [new if i == old else i for i in old_keys]
@@ -104,14 +121,18 @@ class _LocIndexer(MutableMapping):
 
     @property
     def loc(self):
+        """Alias for the getter method of the indexer"""
         return self
 
     @loc.setter
     def loc(self, key, value):
+        """Alias for the setter method if the indexer"""
         self.__dict__[key] = value
 
     @property
     def iloc(self):
+        """Reference to an integer-based indexer to access the layers by integer
+        position rather than label"""
         return _iLocIndexer(self)
 
 
@@ -136,7 +157,6 @@ class _iLocIndexer(object):
         attributes with the names of the new RasterLayers that were passed
         as the value.
     """
-
     def __init__(self, loc_indexer):
         """Initiate a _iLocIndexer
 
@@ -237,7 +257,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         The default block_shape in (rows, cols) for reading windows of data
         in the Raster for out-of-memory processing.
     """
-
     def __init__(self, src, crs=None, transform=None, nodata=None, mode="r", file_path=None,
                  driver=None, tempdir=tempfile.tempdir, in_memory=False):
         """Initiate a new Raster object
@@ -288,7 +307,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         pyspatialml.Raster
             Raster object containing the src layers stacked into a single object
         """
-
         self.files = list()
         self.meta = None
         self._block_shape = (256, 256)
@@ -589,7 +607,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         This is intended as a method of clearing temporary files that may have
         accumulated during an analysis session.
         """
-
         for layer in self.loc.values():
             layer.close()
 
@@ -609,7 +626,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         dtype : dtype
             GDAL compatible dtype
         """
-
         if dtype is None:
             dtype = self.meta["dtype"]
 
@@ -628,7 +644,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         """Returns a TemporaryFileWrapper and file path if a file_path parameter is
         None
         """
-
         if file_path is None:
             if os.name != "nt":
                 tfile = tempfile.NamedTemporaryFile(dir=self.tempdir, suffix=".tif")
@@ -661,7 +676,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         -------
         pyspatialml.Raster
         """
-
         if not isinstance(src, (list, ValuesView)):
             src = [src]
 
@@ -719,7 +733,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         -------
         Raster
         """
-
         if subset is not None:
             if isinstance(subset, str):
                 subset = [subset]
@@ -741,7 +754,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         cols : int
             Width of window in columns.
         """
-
         for i, col in enumerate(range(0, self.width, cols)):
             if col + cols < self.width:
                 num_cols = cols
@@ -790,7 +802,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             Raster values in 3d ndarray  with the dimensions in order of (band, row,
             and column).
         """
-
         dtype = self.meta["dtype"]
 
         # get window to read from window or height/width of dataset
@@ -869,7 +880,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             New Raster object from saved file.
         """
-
         dtype = self._check_supported_dtype(dtype)
 
         if nodata is None:
@@ -943,7 +953,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             of 1, 3, and 5 would result in three RasterLayers named 'prob_1', 'prob_2'
             and 'prob_3'.
         """
-        
         # some checks
         tfile = None
 
@@ -1085,7 +1094,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             RasterLayer, unless the model is multi-class or multi-target. Layers are
             named automatically as `pred_raw_n` with n = 1, 2, 3 ..n.
         """
-
         tfile = None
 
         if in_memory is False:
@@ -1203,7 +1211,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             Returned only if `in_place` is False
         """
-
         if isinstance(other, Raster):
             other = [other]
 
@@ -1252,7 +1259,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         pyspatialml.Raster
             Returned only if `in_place` is True
         """
-
         # convert single label to list
         if isinstance(labels, (str, int)):
             labels = [labels]
@@ -1301,7 +1307,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         pyspatialml.Raster
             Returned only if `in_place` is False
         """
-
         if in_place is True:
             for old_name, new_name in names.items():
                 self._rename_inplace(old_name, new_name)
@@ -1359,7 +1364,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             Optional named arguments to pass to the format drivers. For example can be
             `compress="deflate"` to add compression.
         """
-
         # some checks
         if invert is True:
             crop = False
@@ -1477,7 +1481,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             Raster with layers that are masked based on a union of all masks in the suite
             of RasterLayers.
         """
-        
         tfile = None
 
         if in_memory is False:
@@ -1570,7 +1573,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             Raster cropped to new extent.
         """
-
         tfile = None
 
         if in_memory is False:
@@ -1704,7 +1706,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             Raster following reprojection.
         """
-
         tfile = None
 
         if in_memory is False:
@@ -1831,7 +1832,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             Raster object aggregated to a new pixel size.
         """
-
         tfile = None
 
         if in_memory is False:
@@ -1931,7 +1931,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Raster
             Raster containing the calculated result.
         """
-
         tfile = None
 
         if in_memory is False:
@@ -2087,7 +2086,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             - numpy.ndarray
                 2D numpy array of xy coordinates of extracted values.
         """
-
         # set the seed
         np.random.seed(seed=random_state)
 
@@ -2210,7 +2208,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             2d masked array containing sampled raster values (sample, bands) at the x,y
             locations.
         """
-
         # extract pixel values
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
@@ -2272,7 +2269,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 right_index=True
             )
         """
-
         # rasterize polygon and line geometries
         if all(gdf.geom_type == "Polygon") or all(gdf.geom_type == "LineString"):
 
@@ -2342,7 +2338,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             Geodataframe containing extracted data as point features if
             `return_array=False`
         """
-
         # open response raster and get labelled pixel indices and values
         arr = src.read(1, masked=True)
         rows, cols = np.nonzero(~arr.mask)
@@ -2413,7 +2408,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         -------
         Pyspatialml.Raster object with rescaled data.
         """
-
         def scaler(x, means, sds):
             for i, m, z in zip(range(x.shape[0]), means, sds):
                 x[i, :, :] = (x[i, :, :] - m) / z
