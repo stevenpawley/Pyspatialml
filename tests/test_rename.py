@@ -18,7 +18,7 @@ class TestRename(TestCase):
         stack.rename(names={"lsat7_2000_30": "new_name"}, in_place=True)
 
         # check that renaming occurred in Raster
-        self.assertEqual(stack.names[2], "new_name")
+        self.assertEqual(list(stack.names)[2], "new_name")
         self.assertNotIn("lsat7_2000_30", stack.names)
 
         # check that Raster layer properties also renamed
@@ -41,7 +41,7 @@ class TestRename(TestCase):
 
     def test_rename_with_copy(self):
         stack = Raster(self.predictors)
-        names = deepcopy(stack.names)
+        names = list(stack.names)
         band3_stats = stack.lsat7_2000_30.mean()
 
         # rename band 3
@@ -49,10 +49,10 @@ class TestRename(TestCase):
                               in_place=False)
 
         # check that original is untouched
-        self.assertEqual(stack.names, names)
+        self.assertEqual(list(stack.names), names)
 
         # check that renaming occurred in Raster
-        self.assertEqual(result.names[2], "new_name")
+        self.assertEqual(list(result.names)[2], "new_name")
         self.assertNotIn("lsat7_2000_30", result.names)
 
         # check that Raster layer properties also renamed
