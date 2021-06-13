@@ -7,4 +7,3 @@ shapely
 pandas
 matplotlib
 scikit-learn
-Ordered-set

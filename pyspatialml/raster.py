@@ -17,7 +17,6 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
 from shapely.geometry import Point
 from tqdm import tqdm
-from ordered_set import OrderedSet
 
 from ._plotting import RasterPlot
 from ._prediction import predict_multioutput, predict_output, predict_prob
@@ -87,9 +86,7 @@ class _LocIndexer(MutableMapping):
 
     def __iter__(self):
         """Iterates through keys"""
-        keys = OrderedSet(list(self.__dict__.keys()))
-        keys = keys.difference(self._internal)
-        return iter(keys)
+        return iter(self._keys)
 
     def __len__(self):
         """Number of layers in the indexer"""
@@ -99,7 +96,15 @@ class _LocIndexer(MutableMapping):
         """Delete a key:value pair"""
         self.__dict__.pop(key)
 
-    def _rename_inplace(self, old, new):
+    def __repr__(self):
+        return str(self._keys)
+
+    @property
+    def _keys(self):
+        d = {k: v for (k, v) in self.__dict__.items() if k not in self._internal}
+        return d.keys()
+
+    def _rename(self, old, new):
         """Rename a RasterLayer from `old` to `new. This method renames
         the layer in the indexer and renames the equivalent attribute
         in the parent Raster object.
@@ -136,6 +141,23 @@ class _LocIndexer(MutableMapping):
         """Reference to an integer-based indexer to access the layers
         by integer position rather than label"""
         return _iLocIndexer(self)
+
+    @property
+    def names(self):
+        return self._keys
+
+    @names.setter
+    def names(self, value):
+        if isinstance(value, str):
+            value = [value]
+
+        if len(value) != self.count:
+            raise ValueError(
+                "Length of new names has to equal the number of layers in the Raster"
+            )
+
+        renamer = {old: new for (old, new) in zip(self.names, value)}
+        self.rename(renamer, in_place=True)
 
 
 class _iLocIndexer(object):
@@ -448,24 +470,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         self._layers = src_layers
 
     @property
-    def names(self):
-        all_names = OrderedSet(list(self.__dict__))
-        return all_names.difference(self._internal)
-
-    @names.setter
-    def names(self, value):
-        if isinstance(value, str):
-            value = [value]
-
-        if len(value) != self.count:
-            raise ValueError(
-                "Length of new names has to equal the number of layers in the Raster"
-            )
-
-        renamer = {old: new for (old, new) in zip(self.names, value)}
-        self.rename(renamer, in_place=True)
-
-    @property
     def block_shape(self):
         """Return the block shape in (height, width) used to read windows from the
         Raster
@@ -726,7 +730,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # rename and copy attributes
         if names is not None:
             for (old, new) in zip(raster.names, names):
-                raster._rename_inplace(old, new)
+                raster._rename(old, new)
 
         for old_layer, new_layer in zip(self.loc.values(), list(raster.loc.values())):
             new_layer.cmap = old_layer.cmap
@@ -1268,7 +1272,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         if in_place is True:
             self._layers = combined_layers
-            self.names = OrderedSet(combined_names)
+            self.names = combined_names
         else:
             new_raster = self._copy(self.files, self.names)
             new_raster._layers = combined_layers
@@ -1344,12 +1348,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         """
         if in_place is True:
             for old_name, new_name in names.items():
-                self._rename_inplace(old_name, new_name)
+                self._rename(old_name, new_name)
         else:
             new_raster = self._copy(self.files, self.names)
 
             for old_name, new_name in names.items():
-                new_raster._rename_inplace(old_name, new_name)
+                new_raster._rename(old_name, new_name)
 
             return new_raster
 
