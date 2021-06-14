@@ -491,6 +491,20 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             )
         self._block_shape = (rows, cols)
 
+    def set_block_shape(self, value):
+        """Set the block shape of the raster, i.e. the height and width
+        of windows to read in chunks for the predict, predict_proba,
+        apply, and other supported-methods.
+
+        Note block shape can also be set with `myraster.block_shape = (500, 500)`
+
+        Parameters
+        ----------
+        value : tuple
+            A tuple of (height, width) for the block window
+        """
+        self.block_shape = value
+
     @property
     def count(self):
         """Return the number of layers in the Raster"""
@@ -501,10 +515,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         """Return to crs of the Raster"""
         return self.meta["crs"]
 
+    @crs.setter
+    def crs(self, value):
+        self.meta["crs"] = value
+
     @property
     def transform(self):
         """Return the transform of the Raster"""
         return self.meta["transform"]
+
+    @transform.setter
+    def transform(self, value):
+        self.meta["transform"] = value
 
     @property
     def width(self):
