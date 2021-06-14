@@ -11,10 +11,8 @@ from pyspatialml.datasets import nc
 
 class TestExtract(TestCase):
     def setUp(self) -> None:
-        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                           nc.band7]
-        self.extracted_grass = pd.read_table(
-            nc.extracted_pixels, delimiter=" ")
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+        self.extracted_grass = pd.read_table(nc.extracted_pixels, delimiter=" ")
 
         self.stack = Raster(self.predictors)
 
@@ -24,51 +22,29 @@ class TestExtract(TestCase):
     def test_extract_points(self):
         training_pt = geopandas.read_file(nc.points)
 
-        # check that extracted training data as array match known values
-        ids, X, xys = self.stack.extract_vector(gdf=training_pt,
-                                                return_array=True)
-        self.assertTrue(
-            (X[~X[:, 0].mask, 0].data == training_pt[
-                "b1"].dropna().values).all()
-        )
-        self.assertTrue(
-            (X[~X[:, 1].mask, 1].data == training_pt[
-                "b2"].dropna().values).all()
-        )
-        self.assertTrue(
-            (X[~X[:, 2].mask, 2].data == training_pt[
-                "b3"].dropna().values).all()
-        )
-        self.assertTrue(
-            (X[~X[:, 3].mask, 3].data == training_pt[
-                "b4"].dropna().values).all()
-        )
-        self.assertTrue(
-            (X[~X[:, 4].mask, 4].data == training_pt[
-                "b5"].dropna().values).all()
-        )
-        self.assertTrue(
-            (X[~X[:, 5].mask, 5].data == training_pt[
-                "b7"].dropna().values).all()
-        )
-
         # check that extracted training data as a DataFrame match known values
         df = self.stack.extract_vector(gdf=training_pt)
         df = df.dropna()
         training_pt = training_pt.dropna()
 
         self.assertTrue(
-            (df["lsat7_2000_10"].values == training_pt["b1"].values).all())
+            (df["lsat7_2000_10"].values == training_pt["b1"].values).all()
+        )
         self.assertTrue(
-            (df["lsat7_2000_20"].values == training_pt["b2"].values).all())
+            (df["lsat7_2000_20"].values == training_pt["b2"].values).all()
+        )
         self.assertTrue(
-            (df["lsat7_2000_30"].values == training_pt["b3"].values).all())
+            (df["lsat7_2000_30"].values == training_pt["b3"].values).all()
+        )
         self.assertTrue(
-            (df["lsat7_2000_40"].values == training_pt["b4"].values).all())
+            (df["lsat7_2000_40"].values == training_pt["b4"].values).all()
+        )
         self.assertTrue(
-            (df["lsat7_2000_50"].values == training_pt["b5"].values).all())
+            (df["lsat7_2000_50"].values == training_pt["b5"].values).all()
+        )
         self.assertTrue(
-            (df["lsat7_2000_70"].values == training_pt["b7"].values).all())
+            (df["lsat7_2000_70"].values == training_pt["b7"].values).all()
+        )
 
     def test_extract_polygons(self):
         # extract training data from polygons

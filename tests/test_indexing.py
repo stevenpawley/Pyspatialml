@@ -6,8 +6,7 @@ from pyspatialml.datasets import nc
 
 class TestIndexing(TestCase):
     def setUp(self) -> None:
-        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                           nc.band7]
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
 
     def test_naming(self):
         stack = Raster(self.predictors + [nc.multiband])
@@ -27,7 +26,7 @@ class TestIndexing(TestCase):
             "landsat_multiband_4",
             "landsat_multiband_5",
         ]
-        self.assertListEqual(stack.names, expected_names)
+        self.assertListEqual(list(stack.names), expected_names)
         stack.close()
 
     def test_subset_single_layer(self):
@@ -70,14 +69,14 @@ class TestIndexing(TestCase):
         subset_raster = stack[["lsat7_2000_10", "lsat7_2000_70"]]
         self.assertIsInstance(subset_raster, Raster)
         self.assertListEqual(
-            subset_raster.names,
+            list(subset_raster.names),
             ["lsat7_2000_10", "lsat7_2000_70"]
         )
 
         # Check that label and integer subset return the same layers
         self.assertListEqual(
-            stack.iloc[0:3].names,
-            stack[["lsat7_2000_10", "lsat7_2000_20", "lsat7_2000_30"]].names,
+            list(stack.iloc[0:3].names),
+            list(stack[["lsat7_2000_10", "lsat7_2000_20", "lsat7_2000_30"]].names),
         )
 
         stack.close()

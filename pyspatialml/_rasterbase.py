@@ -50,8 +50,8 @@ def get_num_workers(n_jobs):
 
 
 def _check_alignment(layers):
-    """Check that a list of raster datasets are aligned with the same pixel
-    dimensions and geotransforms.
+    """Check that a list of raster datasets are aligned with the same
+    pixel dimensions and geotransforms.
 
     Parameters
     ----------
@@ -71,7 +71,7 @@ def _check_alignment(layers):
 
     if not all(i["crs"] == src_meta[0]["crs"] for i in src_meta):
         Warning(
-            "crs of all rasters does not match, possible unintended " "consequences"
+            "crs of all rasters does not match, possible unintended consequences"
         )
 
     if not all(
@@ -117,11 +117,11 @@ def _make_name(name):
 
 
 def _fix_names(combined_names):
-    """Adjusts the names of pyspatialml.RasterLayer objects within the Raster
-    when appending new layers.
+    """Adjusts the names of pyspatialml.RasterLayer objects within the
+    Raster when appending new layers.
 
-    This avoids the Raster object containing duplicated names in the case that
-    multiple RasterLayers are appended with the same name.
+    This avoids the Raster object containing duplicated names in the
+    case that multiple RasterLayers are appended with the same name.
 
     In the case of duplicated names, the RasterLayer names are appended
     with a `_n` with n = 1, 2, 3 .. n.
@@ -129,8 +129,8 @@ def _fix_names(combined_names):
     Parameters
     ----------
     combined_names : list
-        List of str representing names of RasterLayers. Any duplicates will
-        have a suffix appended to them.
+        List of str representing names of RasterLayers. Any duplicates
+        will have a suffix appended to them.
 
     Returns
     -------
@@ -155,8 +155,8 @@ def _fix_names(combined_names):
 
 
 class TempRasterLayer:
-    """Create a NamedTemporaryFile like object on Windows that has a close
-    method
+    """Create a NamedTemporaryFile like object on Windows that has a
+    close method
 
     Workaround used on Windows which cannot open the file a second time
     """

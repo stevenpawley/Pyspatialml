@@ -8,17 +8,18 @@ from sklearn.utils.extmath import weighted_mode
 
 
 class KNNTransformer(BaseEstimator, TransformerMixin):
-    """Transformer to generate new lag features by weighted aggregation of
-    K-neighboring observations.
+    """Transformer to generate new lag features by weighted aggregation
+    of K-neighboring observations.
 
     A lag transformer uses a weighted mean/mode of the values of the
-    K-neighboring observations to generate new lagged features. The weighted
-    mean/mode of the surrounding observations are appended as a new feature to
-    the right-most column in the training data.
+    K-neighboring observations to generate new lagged features. The
+    weighted mean/mode of the surrounding observations are appended
+    as a new feature to the right-most column in the training data.
 
-    The K-neighboring observations are determined using the distance metric
-    specified in the `metric` argument. The default metric is minkowski, and
-    with p=2 is equivalent to the standard Euclidean metric.
+    The K-neighboring observations are determined using the distance
+    metric specified in the `metric` argument. The default metric is
+    minkowski, and with p=2 is equivalent to the standard Euclidean
+    metric.
 
     Parameters
     ----------
@@ -28,19 +29,20 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
     weights : {‘uniform’, ‘distance’} or callable, default=’distance’
         Weight function used in prediction. Possible values:
 
-            - ‘uniform’ : uniform weights. All points in each neighborhood are
-                weighted equally.
-            - ‘distance’ : weight points by the inverse of their distance. In
-                this case, closer neighbors of a query point will have a
-                greater influence than neighbors which are further away.
-            - [callable] : a user-defined function which accepts an array of
-                distances, and returns an array of the same shape containing
-                the weights.
+            - ‘uniform’ : uniform weights. All points in each
+              neighborhood are weighted equally.
+            - ‘distance’ : weight points by the inverse of their
+               distance. In this case, closer neighbors of a query
+               point will have a greater influence than neighbors
+               which are further away.
+            - [callable] : a user-defined function which accepts an
+              array of distances, and returns an array of the same
+              shape containing the weights.
 
     measure : {'mean', 'mode'}
-        Function that is used to apply the weights to `y`. Use 'mean' if the
-        target variable is continuous and 'mode' if the target variable is
-        discrete.
+        Function that is used to apply the weights to `y`. Use 'mean'
+        if the target variable is continuous and 'mode' if the target
+        variable is discrete.
 
     radius : float, default=1.0
         Range of parameter space to use by default for radius_neighbors
@@ -52,29 +54,32 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             - ‘ball_tree’ will use BallTree
             - ‘kd_tree’ will use KDTree
             - ‘brute’ will use a brute-force search.
-            - ‘auto’ will attempt to decide the most appropriate algorithm
-                based on the values passed to fit method.
-            - Note: fitting on sparse input will override the setting of this
-                parameter, using brute force.
+            - ‘auto’ will attempt to decide the most appropriate
+               algorithm based on the values passed to fit method.
+            - Note: fitting on sparse input will override the setting
+              of this parameter, using brute force.
 
     leaf_size : int, default=30
-        Leaf size passed to BallTree or KDTree. This can affect the speed of
-        the construction and query, as well as the memory required to store the
-        tree. The optimal value depends on the nature of the problem.
+        Leaf size passed to BallTree or KDTree. This can affect the
+        speed of the construction and query, as well as the memory
+        required to store the tree. The optimal value depends on the
+        nature of the problem.
 
     metric : str or callable, default=’minkowski’
         The distance metric to use for the tree. The default metric is
-        minkowski, and with p=2 is equivalent to the standard Euclidean metric.
-        See the documentation of DistanceMetric for a list of available
-        metrics. If metric is “precomputed”, X is assumed to be a distance
-        matrix and must be square during fit. X may be a sparse graph, in which
-        case only “nonzero” elements may be considered neighbors.
+        minkowski, and with p=2 is equivalent to the standard
+        Euclidean metric. See the documentation of DistanceMetric for
+        a list of available metrics. If metric is “precomputed”, X is
+        assumed to be a distance matrix and must be square during fit.
+        X may be a sparse graph, in which case only “nonzero” elements
+        may be considered neighbors.
 
     p : int, default=2
         Parameter for the Minkowski metric from
-        sklearn.metrics.pairwise.pairwise_distances. When p = 1, this is
-        equivalent to using manhattan_distance (l1), and euclidean_distance
-        (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.
+        sklearn.metrics.pairwise.pairwise_distances. When p = 1, this
+        is equivalent to using manhattan_distance (l1), and
+        euclidean_distance (l2) for p = 2. For arbitrary p,
+        minkowski_distance (l_p) is used.
 
     normalize : bool, default=True
         Whether to normalize the inputs using
@@ -84,12 +89,13 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         Additional keyword arguments for the metric function.
 
     kernel_params : dict, default=None
-        Additional keyword arguments to pass to a custom kernel function.
+        Additional keyword arguments to pass to a custom kernel
+        function.
 
     n_jobs : int, default=None
-        The number of parallel jobs to run for neighbors search. None means 1
-        unless in a joblib.parallel_backend context. -1 means using all
-        processors. See Glossary for more details.
+        The number of parallel jobs to run for neighbors search. None
+        means 1 unless in a joblib.parallel_backend context. -1 means
+        using all processors. See Glossary for more details.
     """
 
     def __init__(
@@ -135,14 +141,14 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         self.y_ = None
 
     def fit(self, X, y=None):
-        """Fit the base_estimator with features from X {n_samples, n_features}
-        and with an additional spatially lagged variable added to the
-        right-most column of the training data.
+        """Fit the base_estimator with features from X
+        {n_samples, n_features} and with an additional spatially lagged
+        variable added to the right-most column of the training data.
 
-        During fitting, the k-neighbors to each training point are used to
-        estimate the spatial lag component. The training point is not included
-        in the calculation, i.e. the training point is not considered its own
-        neighbor.
+        During fitting, the k-neighbors to each training point are
+        used to estimate the spatial lag component. The training point
+        is not included in the calculation, i.e. the training point is
+        not considered its own neighbor.
 
         Parameters
         ----------
@@ -150,8 +156,8 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             fitting The training input samples
 
         y : array-like of shape (n_samples,)
-            The target values (class labels in classification, real numbers in
-            regression).
+            The target values (class labels in classification, real
+            numbers in regression).
         """
         # some checks
         if self.kernel_params is None:
@@ -176,9 +182,9 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         """Transform method for spatial lag models.
 
-        Augments new observations with a spatial lag variable created from a
-        weighted mean/mode (regression/classification) of k-neighboring
-        observations.
+        Augments new observations with a spatial lag variable created
+        from a weighted mean/mode (regression/classification) of
+        k-neighboring observations.
 
         Parameters
         ----------
@@ -278,16 +284,17 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
 
 
 class GeoDistTransformer(BaseEstimator, TransformerMixin):
-    """Transformer to add new features based on geographical distances to
-    reference locations.
+    """Transformer to add new features based on geographical distances
+    to reference locations.
 
     Parameters
     ----------
     refs : ndarray
-        Array of coordinates of reference locations in (m, n-dimensional)
-        order, such as {n_locations, x_coordinates, y_coordinates, ...}
-        for as many dimensions as required. For example to calculate distances
-        to a single x,y,z location:
+        Array of coordinates of reference locations in
+        (m, n-dimensional) order, such as {n_locations,
+        x_coordinates, y_coordinates, ...} for as many dimensions as
+        required. For example to calculate distances to a single x,y,z
+        location:
 
         refs = [-57.345, -110.134, 1012]
 
@@ -303,9 +310,10 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         (1, 2) shape for a single location.
 
     minimum : bool, default is False
-        Optionally calculate the minimum distance to the combined reference
-        locations, resulting in a single new feature, rather than a new
-        feature for each individual reference location.
+        Optionally calculate the minimum distance to the combined
+        reference locations, resulting in a single new feature,
+        rather than a new feature for each individual reference
+        location.
 
     log : bool (opt), default=False
         Optionally log-transform the distance measures.
@@ -313,8 +321,8 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
     Returns
     -------
     X_new : ndarray
-        Array of shape (n_samples, n_features) with new geodistance features
-        appended to the right-most columns of the array.
+        Array of shape (n_samples, n_features) with new geodistance
+        features appended to the right-most columns of the array.
     """
 
     def __init__(self, refs, minimum=False, log=False):
@@ -328,8 +336,7 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
 
         if self.refs_.ndim < 2:
             raise ValueError(
-                "`refs` has to be a m,n-dimensional array with \
-                             at least two dimensions"
+                "`refs` has to be a m,n-dimensional array with  at least two dimensions"
             )
 
         return self

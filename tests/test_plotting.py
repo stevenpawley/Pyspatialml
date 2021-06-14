@@ -9,8 +9,7 @@ from pyspatialml import Raster
 
 class TestPlotting(TestCase):
     def setUp(self) -> None:
-        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5,
-                           nc.band7]
+        self.predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
         self.stack = Raster(self.predictors)
         self.stack_single = Raster(self.predictors[0])
 
