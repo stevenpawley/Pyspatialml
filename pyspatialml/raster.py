@@ -1021,6 +1021,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # perform test prediction
         window = Window(0, 0, 1, 1)
         img = self.read(masked=True, window=window)
+        img = np.ma.masked_invalid(img)
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
@@ -1165,6 +1166,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # determine output count for multi-class or multi-target cases
         window = Window(0, 0, 1, 1)
         img = self.read(masked=True, window=window)
+        img = np.ma.masked_invalid(img)
         n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))

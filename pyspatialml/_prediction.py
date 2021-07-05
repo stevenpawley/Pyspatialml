@@ -20,6 +20,7 @@ def predict_output(img, estimator):
         classification or regression result.
     """
     window, img = img
+    img = np.ma.masked_invalid(img)
 
     # reorder into rows, cols, bands(transpose)
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
@@ -28,18 +29,23 @@ def predict_output(img, estimator):
     n_samples = rows * cols
     flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
 
-    # create mask for NaN values and replace with number
+    # create mask for NaN values
     flat_pixels_mask = flat_pixels.mask.copy()
+
+    # fill nans for prediction
     flat_pixels = flat_pixels.filled(0)
 
     # predict and replace mask
-    result_cla = estimator.predict(flat_pixels)
-    result_cla = np.ma.masked_array(data=result_cla, mask=flat_pixels_mask.any(axis=1))
+    result = estimator.predict(flat_pixels)
+    result = np.ma.masked_array(
+        data=result,
+        mask=flat_pixels_mask.any(axis=1)
+    )
 
     # reshape the prediction from a 1D into 3D array [band, row, col]
-    result_cla = result_cla.reshape((1, window.height, window.width))
+    result = result.reshape((1, window.height, window.width))
 
-    return result_cla
+    return result
 
 
 def predict_prob(img, estimator):
@@ -65,11 +71,14 @@ def predict_prob(img, estimator):
 
     # reorder into rows, cols, bands (transpose)
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+    img = np.ma.masked_invalid(img)
     mask2d = img.mask.any(axis=0)
 
     # then resample into 2D array (rows=sample_n, cols=band_values)
     n_samples = rows * cols
     flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
+
+    # fill mask with zeros for prediction
     flat_pixels = flat_pixels.filled(0)
 
     # predict probabilities
@@ -85,7 +94,9 @@ def predict_prob(img, estimator):
 
     # repeat mask for n_bands
     mask3d = np.repeat(
-        a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0
+        a=mask2d[np.newaxis, :, :],
+        repeats=result_proba.shape[0],
+        axis=0
     )
 
     # convert proba to masked array
@@ -116,6 +127,7 @@ def predict_multioutput(img, estimator):
 
     # reorder into rows, cols, bands(transpose)
     n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+    img = np.ma.masked_invalid(img)
     mask2d = img.mask.any(axis=0)
 
     # reshape into 2D array (rows=sample_n, cols=band_values)
