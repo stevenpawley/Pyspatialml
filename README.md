@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/pyspatialml/badge/?version=latest)](https://pyspatialml.readthedocs.io/en/latest/?badge=latest)
+[![Codecov test coverage](https://codecov.io/gh/stevenpawley/pyspatialml/branch/master/graph/badge.svg)](https://codecov.io/gh/stevenpawley/pyspatialml?branch=master)
 
 # Pyspatialml
 Machine learning classification and regression modelling for spatial raster data.
