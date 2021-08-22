@@ -1374,7 +1374,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             for old_name, new_name in names.items():
                 self._rename(old_name, new_name)
         else:
-            new_raster = self._copy(self.files, self.names)
+            new_raster = self._copy(list(np.unique(self.files)), self.names)
 
             for old_name, new_name in names.items():
                 new_raster._rename(old_name, new_name)

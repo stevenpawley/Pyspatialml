@@ -1,8 +1,11 @@
-from copy import deepcopy
 from unittest import TestCase
 
 import pyspatialml.datasets.nc as nc
 from pyspatialml import Raster
+import rasterio
+import numpy as np
+import os
+from tempfile import NamedTemporaryFile
 
 
 class TestRename(TestCase):
@@ -72,3 +75,33 @@ class TestRename(TestCase):
         # have the right names
         new_raster = Raster(src=result.iloc[2])
         self.assertIn("new_name", new_raster.names)
+
+    def rename_multiband(self):
+        # Create a fake 3-band image for testing
+        arr = np.random.rand(3, 64, 64)
+        file = NamedTemporaryFile(prefix="test", suffix=".tif").name
+        layer_name = os.path.basename(file).split(".")[0]
+        layer_names = ["_".join([layer_name, str(i)]) for i in [1, 2 ,3]]
+
+        with rasterio.open(file, "w", width=64, height=64, count=3, dtype=np.float32) as dst:
+            dst.write(arr)
+
+        r = Raster(file)
+        self.assertListEqual(list(r.names), layer_names)
+
+        renamed = r.rename(dict(zip(r.names, ["Red", "Green", "Blue"])))
+        self.assertListEqual(list(renamed.names), ["Red", "Green", "Blue"])
+
+    def rename_in_memory(self):
+        # Create a fake 3-band image for testing
+        arr = np.random.rand(3, 64, 64)
+        file = NamedTemporaryFile(prefix="test", suffix=".tif").name
+
+        with rasterio.open(file, "w", width=64, height=64, count=3, dtype=np.float32) as dst:
+            dst.write(arr)
+
+        r = Raster(file)
+        in_memory = r.aggregate((32, 32), in_memory=True)
+
+        renamed = r.rename(dict(zip(in_memory.names, ["Red", "Green", "Blue"])))
+        self.assertListEqual(list(renamed.names), ["Red", "Green", "Blue"])
