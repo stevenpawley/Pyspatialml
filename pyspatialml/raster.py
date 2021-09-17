@@ -364,7 +364,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             raise ValueError("mode must be 'w' or 'w+' to initiate from an ndarray")
 
         # get temporary file name if file_path is None
-        if file_path is None:
+        if file_path is None and isinstance(src, np.ndarray):
             file_path, tfile = self._tempfile(file_path)
             driver = "GTiff"
 
