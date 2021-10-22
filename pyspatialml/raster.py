@@ -1142,6 +1142,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         progress : bool (default False)
             Show progress bar for prediction.
+            
+        constants: dict {default None}
+            categorical features for catboost model or constant values if no raster is given.
 
         kwargs : opt
             Optional named arguments to pass to the format drivers.
@@ -1171,6 +1174,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
         flat_pixels = flat_pixels.filled(0)
+        if constants is not None:
+            flat_pixels = pd.DataFrame(flat_pixels, columns=list(self.names))
+            for key, value in constants.items():
+                flat_pixels[key] = value
         result = estimator.predict(flat_pixels)
 
         if result.ndim > 1:
@@ -1182,7 +1189,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         # chose prediction function
         if len(indexes) == 1:
-            predfun = partial(predict_output, estimator=estimator)
+            if constants is not None:
+                predfun = partial(predict_output, estimator=estimator,
+                                  columns=list(self.names),
+                                  constants=constants)
+            else:
+                predfun = partial(predict_output, estimator=estimator)
         else:
             predfun = partial(predict_multioutput, estimator=estimator)
 
