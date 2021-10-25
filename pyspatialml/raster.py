@@ -1105,7 +1105,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return new_raster
 
     def predict(self, estimator, file_path=None, in_memory=False, driver="GTiff",
-                dtype=None, nodata=None, progress=False, **kwargs):
+                dtype=None, nodata=None, progress=False,constants=None, **kwargs):
         """Apply prediction of a scikit learn model to a Raster.
 
         The model can represent any scikit learn model or compatible
