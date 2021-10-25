@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 def predict_output(img, estimator, columns=None, constants=None):
     """Prediction function for classification or regression response.
