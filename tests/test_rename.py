@@ -33,7 +33,6 @@ class TestRename(TestCase):
 
         # check that the RasterLayer attached to the new name is the same
         self.assertEqual(stack["new_name"].mean(), band3_stats)
-        self.assertEqual(stack["new_name"].mean(), band3_stats)
         self.assertEqual(stack.new_name.mean(), band3_stats)
         self.assertEqual(stack.iloc[2].mean(), band3_stats)
 

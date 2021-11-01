@@ -1,6 +1,8 @@
 from unittest import TestCase
 
+import os
 import rasterio
+import numpy as np
 
 from pyspatialml import Raster, RasterLayer
 from pyspatialml.datasets import nc
@@ -83,3 +85,24 @@ class TestInit(TestCase):
         self.stack = Raster(layers)
         self.assertIsInstance(self.stack, Raster)
         self.assertEqual(self.stack.count, 6)
+
+    def test_initiation_array(self):
+        # check initiation of single-band raster from file
+        arr = np.zeros((100, 100))
+        self.stack = Raster(arr)
+        
+        # check output is written to tempfile
+        self.assertTrue(os.path.exists(self.stack.iloc[0].file))
+
+        # check some operations on the created raster
+        layer_name = list(self.stack.names)[0]
+        self.stack = self.stack.rename({layer_name: 'new_layer'})
+        self.assertEqual(list(self.stack.names)[0], 'new_layer')
+
+        # check initiation from array in memory
+        arr = np.zeros((100, 100))
+        self.stack = Raster(arr, in_memory=True)
+        layer_name = list(self.stack.names)[0]
+
+        self.stack = self.stack.rename({layer_name: 'new_layer'})
+        self.assertEqual(list(self.stack.names)[0], 'new_layer')

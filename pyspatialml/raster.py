@@ -104,7 +104,7 @@ class _LocIndexer(MutableMapping):
         d = {k: v for (k, v) in self.__dict__.items() if k not in self._internal}
         return d.keys()
 
-    def _rename(self, old, new):
+    def _rename_inplace(self, old, new):
         """Rename a RasterLayer from `old` to `new. This method renames
         the layer in the indexer and renames the equivalent attribute
         in the parent Raster object.
@@ -118,8 +118,8 @@ class _LocIndexer(MutableMapping):
             Name to use to rename the existing key.
         """
         # rename the index by rebuilding the dict
-        old_keys = list(self.__dict__.keys())
-        new_keys = [new if i == old else i for i in old_keys]
+        original_keys = list(self.__dict__.keys())
+        new_keys = [new if i == old else i for i in original_keys]
         new_dict = dict(zip(new_keys, self.__dict__.values()))
         self.__dict__ = new_dict
 
@@ -284,7 +284,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         The default block_shape in (rows, cols) for reading windows of data
         in the Raster for out-of-memory processing.
     """
-    def __init__(self, src, crs=None, transform=None, nodata=None, mode="r",
+    def __init__(self, src, crs=None, transform=None, nodata=None,
                  file_path=None, driver=None, tempdir=tempfile.tempdir,
                  in_memory=False):
         """Initiate a new Raster object
@@ -304,21 +304,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         crs : rasterio.crs.CRS object (optional, default is None)
             CRS object containing projection information for data if
-            provided by the associated `arr` parameter.
+            provided as an array.
 
         transform : affine.Affine object (optional, default is None)
             Affine object containing transform information for data if
-            provided by the associated `arr` parameter.
+            provided as an array.
 
         nodata : any number (optional, default is None)
             Assign a nodata value to the Raster dataset when `src` is
             a ndarray. If a nodata value is not specified then it is
             determined based on the minimum permissible value for the
             array's data type.
-
-        mode : str (default 'r')
-            Mode used to open the raster datasets. Can be one of 'r',
-            'r+' or 'w+'.
 
         file_path : str (optional, default None)
             Path to save new Raster object if created from an array.
@@ -355,21 +351,13 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         src_layers = []
 
-        # check mode
-        if mode not in ["r", "r+", "w", "w+"]:
-            raise ValueError("mode must be one of 'r', 'r+', 'w', or 'w+'")
-
-        # check mode for writing to file from ndarray
-        if isinstance(src, np.ndarray) and in_memory is False and mode != "w+":
-            raise ValueError("mode must be 'w' or 'w+' to initiate from an ndarray")
-
         # get temporary file name if file_path is None
         if file_path is None and isinstance(src, np.ndarray):
             file_path, tfile = self._tempfile(file_path)
             driver = "GTiff"
 
         # initiate from numpy array
-        if isinstance(src, np.ndarray):
+        try:
             if src.ndim == 2:
                 src = src[np.newaxis]
 
@@ -385,24 +373,26 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     dtype=src.dtype,
                     crs=crs,
                     transform=transform,
-                    nodata=nodata,
+                    nodata=nodata
                 )
                 dst.write(src)
 
             else:
-                dst = rasterio.open(
+                with rasterio.open(
                     file_path,
-                    mode=mode,
+                    mode='w',
                     driver=driver,
                     height=height,
-                    width=width,
-                    count=count,
-                    dtype=src.dtype,
-                    crs=crs,
-                    transform=transform,
-                    nodata=nodata,
-                )
-                dst.write(src)
+                     width=width,
+                     count=count,
+                     dtype=src.dtype,
+                     crs=crs,
+                     transform=transform,
+                     nodata=nodata
+                ) as dst:
+                    dst.write(src)
+                
+                dst = rasterio.open(file_path, 'r')
 
             for i in range(dst.count):
                 band = rasterio.band(dst, i + 1)
@@ -417,57 +407,123 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 for layer in src_layers:
                     layer._close = tfile.close
 
+            self._layers = src_layers
+            return
+
+        except:
+            pass
+
         # from a single file path
-        elif isinstance(src, str):
-            r = rasterio.open(src, mode=mode, driver=driver)
+        try:
+            src_layers = []
+            r = rasterio.open(src, mode='r', driver=driver)
+
             for i in range(r.count):
                 band = rasterio.band(r, i + 1)
                 src_layers.append(RasterLayer(band))
+            
+            self._layers = src_layers
+            return
+
+        except:
+            pass
 
         # from a list of file paths
-        elif isinstance(src, list) and all(isinstance(x, str) for x in src):
+        try:
+            src_layers = []
+
             for f in src:
-                r = rasterio.open(f, mode=mode, driver=driver)
+                r = rasterio.open(f, mode='r', driver=driver)
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
+            
+            self._layers = src_layers
+            return
 
-        # from a single RasterLayer
-        elif isinstance(src, RasterLayer):
-            src_layers = src
+        except:
+            pass
 
-        # from a single or list of RasterLayer objects
-        elif isinstance(src, list) and all(isinstance(x, RasterLayer) for x in src):
-            src_layers = src
+        # from a RasterLayer
+        try:
+            self._layers = src
+            self._rename_inplace(list(self.names)[0], src.name)
+            return
+
+        except:
+            pass
+
+        # from a list of RasterLayers
+        try:
+            self._layers = src
+
+            for old, new in zip(self.names, src):
+                self._rename_inplace(old, new.name)
+            return
+        
+        except:
+            pass
+
+        # from a Raster
+        try:
+            self._layers = [i for i in src.values()]
+
+            for old, new in zip(self.names, list(src.names)):
+                self._rename_inplace(old, new)
+            return
+
+        except:
+            pass
+
 
         # from a single rasterio.io.datasetreader/writer
-        elif isinstance(src, (rasterio.io.DatasetReader, rasterio.io.DatasetWriter)):
+        try:
+            src_layers = []
+
             for i in range(src.count):
                 band = rasterio.band(src, i + 1)
                 src_layers.append(RasterLayer(band))
+            
+            self._layers = src_layers
+            return
+
+        except:
+            pass
 
         # from a list of rasterio.io.datasetreader
-        elif isinstance(src, list) and all(
-            isinstance(x, (rasterio.io.DatasetReader, rasterio.io.DatasetWriter))
-            for x in src
-        ):
+        try:
+            src_layers = []
+
             for r in src:
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
+            
+            self._layers = src_layers
+            return
+
+        except:
+            pass
 
         # from a single rasterio.band objects
-        elif isinstance(src, rasterio.Band):
-            src_layers = RasterLayer(src)
+        try:
+            self._layers = RasterLayer(src)
+            return
 
-        elif isinstance(src, list) and all(isinstance(x, rasterio.Band) for x in src):
+        except:
+            pass
+
+        try:
+            src_layers = []
+
             for band in src:
                 src_layers.append(RasterLayer(band))
+            
+            self._layers = src_layers
+            return
 
-        else:
-            raise ValueError("Cannot initiated a Raster from `src`")
-
-        self._layers = src_layers
+        except:
+            pass
 
     @property
     def block_shape(self):
@@ -724,35 +780,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         if not isinstance(src, (list, ValuesView)):
             src = [src]
 
-        is_file = [isinstance(i, str) or hasattr(i, "file") for i in src]
-
-        if all(is_file):
-            raster = Raster(src)
-        else:
-            copied_layers = list()
-            for i, layer in enumerate(src):
-                if layer.in_memory is False:
-                    copied_layers.append(layer)
-                else:
-                    meta = self.meta.copy()
-                    meta["count"] = 1
-                    meta["driver"] = "GTiff"
-                    meta["nodata"] = layer.nodata
-                    meta["dtype"] = layer.dtype
-
-                    with rasterio.MemoryFile() as memfile:
-                        dst = memfile.open(**meta)
-                        arr = layer.read(masked=True)
-                        dst.write(arr, 1)
-                    band = rasterio.band(dst, 1)
-                    copied_layers.append(RasterLayer(band))
-
-            raster = Raster(copied_layers)
+        raster = Raster(src)
 
         # rename and copy attributes
         if names is not None:
             for (old, new) in zip(raster.names, names):
-                raster._rename(old, new)
+                raster._rename_inplace(old, new)
 
         for old_layer, new_layer in zip(self.loc.values(), list(raster.loc.values())):
             new_layer.cmap = old_layer.cmap
@@ -767,8 +800,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         """Creates a shallow copy of a Raster object
 
         Note that shallow in the context of a Raster object means that
-        an immutable copy of the object is made, however the on-disk
-        file locations remain the same.
+        an immutable copy of the object is made, however the on-disk and
+        in-memory file locations remain the same.
 
         Parameters
         ----------
@@ -1372,12 +1405,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         """
         if in_place is True:
             for old_name, new_name in names.items():
-                self._rename(old_name, new_name)
+                self._rename_inplace(old_name, new_name)
         else:
-            new_raster = self._copy(list(np.unique(self.files)), self.names)
+            new_raster = self._copy(src=[v for (_, v) in self.items()])
 
             for old_name, new_name in names.items():
-                new_raster._rename(old_name, new_name)
+                new_raster._rename_inplace(old_name, new_name)
 
             return new_raster
 
