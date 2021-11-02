@@ -97,7 +97,28 @@ class _LocIndexer(MutableMapping):
         self.__dict__.pop(key)
 
     def __repr__(self):
-        return str(self._keys)
+        print("Raster Object Containing {n} Layers".format(n=self.count))
+        meta = pd.DataFrame({
+            'attribute': [
+                'names', 
+                'files', 
+                'rows', 
+                'cols', 
+                'res', 
+                'nodatavals'
+            ],
+            'values': [
+                list(self.names), 
+                self.files, 
+                self.shape[0], 
+                self.shape[1], 
+                self.res,
+                self.nodatavals
+            ]
+        })
+        print(meta)
+
+        return ''
 
     @property
     def _keys(self):
