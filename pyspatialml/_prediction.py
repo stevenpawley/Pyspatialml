@@ -1,7 +1,7 @@
 import numpy as np
+import pandas as pd
 
-
-def predict_output(img, estimator):
+def predict_output(img, estimator, columns=None, constants=None):
     """Prediction function for classification or regression response.
 
     Parameters
@@ -12,7 +12,12 @@ def predict_output(img, estimator):
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
-
+        
+    columns: names of features needed for returning predictions
+    
+    constants: dict {default None}
+            categorical features for catboost model or constant values if no raster is given.
+    
     Returns
     -------
     numpy.ndarray
@@ -34,7 +39,13 @@ def predict_output(img, estimator):
 
     # fill nans for prediction
     flat_pixels = flat_pixels.filled(0)
-
+    
+    # Add constants
+    if (constants is not None):
+        flat_pixels = pd.DataFrame(flat_pixels, columns=columns)
+        for key, value in constants.items():
+            flat_pixels[key] = value
+    
     # predict and replace mask
     result = estimator.predict(flat_pixels)
     result = np.ma.masked_array(
