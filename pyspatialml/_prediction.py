@@ -1,7 +1,34 @@
 import numpy as np
 import pandas as pd
 
-def predict_output(img, estimator, columns=None, constants=None):
+def stack_constants(flat_pixels, constants):
+    """Column stack any constant values into the flat_pixels array.
+
+    Used to add additional constant features to the Raster object.
+
+    Parameters
+    ----------
+    flat_pixels : list-like or 1d numpy.ndarray
+        2d numpy array representing the flattened raster data in 
+        (sample_n, band_values) format.
+    
+    constants : numpy.ndarray (optional)
+        Array of constant values to be added to the flat_pixels array
+        as additional features.
+    """
+    if isinstance(constants, (int, float)):
+        constants = np.asarray([constants])
+    elif isinstance(constants, list):
+        constants = np.asarray(constants)
+    elif isinstance(constants, np.ndarray):
+        raise ValueError('constants must be a list or a numpy.ndarray')
+
+    constants = np.broadcast_to(constants, (flat_pixels.shape[0], constants.shape[0]))
+    flat_pixels = np.column_stack((flat_pixels, constants))
+    return flat_pixels
+
+
+def predict_output(img, estimator, constants=None):
     """Prediction function for classification or regression response.
 
     Parameters
@@ -12,11 +39,9 @@ def predict_output(img, estimator, columns=None, constants=None):
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
-        
-    columns: names of features needed for returning predictions
-    
-    constants: dict {default None}
-            categorical features for catboost model or constant values if no raster is given.
+            
+    constants: numpy.ndarray (optional)
+        1d array of constant values to be added as features.
     
     Returns
     -------
@@ -40,11 +65,9 @@ def predict_output(img, estimator, columns=None, constants=None):
     # fill nans for prediction
     flat_pixels = flat_pixels.filled(0)
     
-    # Add constants
-    if (constants is not None):
-        flat_pixels = pd.DataFrame(flat_pixels, columns=columns)
-        for key, value in constants.items():
-            flat_pixels[key] = value
+    # add constants
+    if constants is not None:
+        flat_pixels = stack_constants(flat_pixels, constants)
     
     # predict and replace mask
     result = estimator.predict(flat_pixels)
@@ -59,7 +82,7 @@ def predict_output(img, estimator, columns=None, constants=None):
     return result
 
 
-def predict_prob(img, estimator):
+def predict_prob(img, estimator, constants=None):
     """Class probabilities function.
 
     Parameters
@@ -70,6 +93,9 @@ def predict_prob(img, estimator):
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
+
+    constants: numpy.ndarray (optional)
+        1d array of constant values to be added as features.
 
     Returns
     -------
@@ -91,6 +117,10 @@ def predict_prob(img, estimator):
 
     # fill mask with zeros for prediction
     flat_pixels = flat_pixels.filled(0)
+
+    # add constants
+    if constants is not None:
+        flat_pixels = stack_constants(flat_pixels, constants)
 
     # predict probabilities
     result_proba = estimator.predict_proba(flat_pixels)
@@ -116,7 +146,7 @@ def predict_prob(img, estimator):
     return result_proba
 
 
-def predict_multioutput(img, estimator):
+def predict_multioutput(img, estimator, constants=None):
     """Multi-target prediction function.
 
     Parameters
@@ -127,6 +157,9 @@ def predict_multioutput(img, estimator):
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
+
+    constants: numpy.ndarray (optional)
+        1d array of constant values to be added as features.
 
     Returns
     -------
@@ -145,6 +178,10 @@ def predict_multioutput(img, estimator):
     n_samples = rows * cols
     flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
     flat_pixels = flat_pixels.filled(0)
+
+    # add constants
+    if constants is not None:
+        flat_pixels = stack_constants(flat_pixels, constants)
 
     # predict probabilities
     result = estimator.predict(flat_pixels)

@@ -6,6 +6,7 @@ from functools import partial
 
 import geopandas as gpd
 import numpy as np
+from numpy.core.shape_base import stack
 import pandas as pd
 import rasterio
 import rasterio.mask
@@ -19,7 +20,7 @@ from shapely.geometry import Point
 from tqdm import tqdm
 
 from ._plotting import RasterPlot
-from ._prediction import predict_multioutput, predict_output, predict_prob
+from ._prediction import predict_multioutput, predict_output, predict_prob, stack_constants
 from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
@@ -1006,8 +1007,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return self._copy(file_path, self.names)
 
     def predict_proba(self, estimator, file_path=None, in_memory=False, indexes=None,
-                      driver="GTiff", dtype=None, nodata=None, progress=False,
-                      **kwargs):
+                      driver="GTiff", dtype=None, nodata=None, constants=None,
+                      progress=False, **kwargs):
         """Apply class probability prediction of a scikit learn model to a Raster.
 
         Parameters
@@ -1046,6 +1047,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         progress : bool (default False)
             Show progress bar for prediction.
 
+        constants: list-like (list, 1d ndarray) (optional, default None)
+            Constant features to add to the Raster object with each value
+            in a list or 1d ndarray representing an additional feature.
+            
+            Note that these features will be added as the last columns
+            to the features in the Raster object. Pyspatialml relies upon
+            numpy and does not magically match features in the Raster to
+            those that the model was trained on. It is important that all
+            features including constant features are present in the same
+            order as what was used to train the model.
+
         kwargs : opt
             Optional named arguments to pass to the format drivers.
             For example can be `compress="deflate"` to add compression.
@@ -1070,7 +1082,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             file_path, tfile = self._tempfile(file_path)
 
         # n_jobs = get_num_workers(n_jobs)
-        probfun = partial(predict_prob, estimator=estimator)
+        probfun = partial(predict_prob, estimator=estimator, constants=constants)
 
         # perform test prediction
         window = Window(0, 0, 1, 1)
@@ -1080,6 +1092,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
         flat_pixels = flat_pixels.filled(0)
+
+        if constants is not None:
+            flat_pixels = stack_constants(flat_pixels, constants)
+
         result = estimator.predict_proba(flat_pixels)
 
         if isinstance(indexes, int):
@@ -1159,7 +1175,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return new_raster
 
     def predict(self, estimator, file_path=None, in_memory=False, driver="GTiff",
-                dtype=None, nodata=None, progress=False,constants=None, **kwargs):
+                dtype=None, nodata=None, progress=False, constants=None, **kwargs):
         """Apply prediction of a scikit learn model to a Raster.
 
         The model can represent any scikit learn model or compatible
@@ -1197,8 +1213,16 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         progress : bool (default False)
             Show progress bar for prediction.
             
-        constants: dict {default None}
-            categorical features for catboost model or constant values if no raster is given.
+        constants: list-like (list, 1d ndarray) (optional, default None)
+            Constant features to add to the Raster object with each value
+            in a list or 1d ndarray representing an additional feature.
+            
+            Note that these features will be added as the last columns
+            to the features in the Raster object. Pyspatialml relies upon
+            numpy and does not magically match features in the Raster to
+            those that the model was trained on. It is important that all
+            features including constant features are present in the same
+            order as what was used to train the model.
 
         kwargs : opt
             Optional named arguments to pass to the format drivers.
@@ -1228,10 +1252,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         n_samples = rows * cols
         flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
         flat_pixels = flat_pixels.filled(0)
+
         if constants is not None:
-            flat_pixels = pd.DataFrame(flat_pixels, columns=list(self.names))
-            for key, value in constants.items():
-                flat_pixels[key] = value
+            flat_pixels = stack_constants(flat_pixels, constants)
+        
         result = estimator.predict(flat_pixels)
 
         if result.ndim > 1:
@@ -1245,12 +1269,13 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         if len(indexes) == 1:
             if constants is not None:
                 predfun = partial(predict_output, estimator=estimator,
-                                  columns=list(self.names),
                                   constants=constants)
             else:
-                predfun = partial(predict_output, estimator=estimator)
+                predfun = partial(predict_output, estimator=estimator,
+                                  constants=constants)
         else:
-            predfun = partial(predict_multioutput, estimator=estimator)
+            predfun = partial(predict_multioutput, estimator=estimator,
+                              constants=constants)
 
         # check dtype and nodata
         if dtype is None:
