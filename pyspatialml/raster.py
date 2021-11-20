@@ -1047,16 +1047,20 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         progress : bool (default False)
             Show progress bar for prediction.
 
-        constants: list-like (list, 1d ndarray) (optional, default None)
+        constants: list-like object or a dict (optional, default None)
             Constant features to add to the Raster object with each value
             in a list or 1d ndarray representing an additional feature.
             
-            Note that these features will be added as the last columns
-            to the features in the Raster object. Pyspatialml relies upon
-            numpy and does not magically match features in the Raster to
-            those that the model was trained on. It is important that all
+            If a list-like object of values os passed, then each numeric 
+            value will be appended as constant features to the last 
+            columns in the data. It is therefore important that all
             features including constant features are present in the same
             order as what was used to train the model.
+
+            If a dict is passed, then the keys of the dict must refer to 
+            the names of raster layers in the Raster object. In this case,
+            the values of the dict will replace the values of the raster
+            layers in the Raster object.
 
         kwargs : opt
             Optional named arguments to pass to the format drivers.
@@ -1082,7 +1086,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             file_path, tfile = self._tempfile(file_path)
 
         # n_jobs = get_num_workers(n_jobs)
-        probfun = partial(predict_prob, estimator=estimator, constants=constants)
+        probfun = partial(predict_prob, estimator=estimator, constants=constants,
+                          names=list(self.names))
 
         # perform test prediction
         window = Window(0, 0, 1, 1)
@@ -1094,7 +1099,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         flat_pixels = flat_pixels.filled(0)
 
         if constants is not None:
-            flat_pixels = stack_constants(flat_pixels, constants)
+            flat_pixels = stack_constants(flat_pixels, constants, list(self.names))
 
         result = estimator.predict_proba(flat_pixels)
 
@@ -1213,16 +1218,20 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         progress : bool (default False)
             Show progress bar for prediction.
             
-        constants: list-like (list, 1d ndarray) (optional, default None)
+        constants: list-like object or a dict (optional, default None)
             Constant features to add to the Raster object with each value
             in a list or 1d ndarray representing an additional feature.
             
-            Note that these features will be added as the last columns
-            to the features in the Raster object. Pyspatialml relies upon
-            numpy and does not magically match features in the Raster to
-            those that the model was trained on. It is important that all
+            If a list-like object of values os passed, then each numeric 
+            value will be appended as constant features to the last 
+            columns in the data. It is therefore important that all
             features including constant features are present in the same
             order as what was used to train the model.
+
+            If a dict is passed, then the keys of the dict must refer to 
+            the names of raster layers in the Raster object. In this case,
+            the values of the dict will replace the values of the raster
+            layers in the Raster object.
 
         kwargs : opt
             Optional named arguments to pass to the format drivers.
@@ -1254,7 +1263,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         flat_pixels = flat_pixels.filled(0)
 
         if constants is not None:
-            flat_pixels = stack_constants(flat_pixels, constants)
+            flat_pixels = stack_constants(flat_pixels, constants, list(self.names))
         
         result = estimator.predict(flat_pixels)
 
@@ -1269,13 +1278,13 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         if len(indexes) == 1:
             if constants is not None:
                 predfun = partial(predict_output, estimator=estimator,
-                                  constants=constants)
+                                  constants=constants, names=list(self.names))
             else:
                 predfun = partial(predict_output, estimator=estimator,
-                                  constants=constants)
+                                  constants=constants, names=list(self.names))
         else:
             predfun = partial(predict_multioutput, estimator=estimator,
-                              constants=constants)
+                              constants=constants, names=list(self.names))
 
         # check dtype and nodata
         if dtype is None:

@@ -123,7 +123,7 @@ class TestPrediction(TestCase):
         self.assertEqual(multi_regr.count, 4)
         multi_regr.close()
 
-    def test_classification_with_constants(self):
+    def test_classification_with_single_constant(self):
         training_pt = gpd.read_file(nc.points)
         df_points = self.stack_nc.extract_vector(gdf=training_pt)
         df_points["class_id"] = training_pt["id"].values
@@ -154,7 +154,12 @@ class TestPrediction(TestCase):
         for layer in probs.values():
             self.assertEqual(layer.read(masked=True).count(), 135092)
 
-        # classification with a list of constants
+    def test_classification_with_list_constants(self):
+        training_pt = gpd.read_file(nc.points)
+        df_points = self.stack_nc.extract_vector(gdf=training_pt)
+        df_points["class_id"] = training_pt["id"].values
+        df_points = df_points.dropna()
+
         df_points["constant"] = 1
         df_points["constant2"] = 2
 
@@ -174,6 +179,35 @@ class TestPrediction(TestCase):
         self.assertEqual(cla.read(masked=True).count(), 135092)
 
         probs = self.stack_nc.predict_proba(estimator=clf, constants=[1, 2])
+        self.assertIsInstance(cla, Raster)
+        self.assertEqual(probs.count, 7)
+
+        for layer in probs.values():
+            self.assertEqual(layer.read(masked=True).count(), 135092)
+
+    def test_classification_with_dict_constants(self):
+        # classification using constant to replace an existing layer
+        training_pt = gpd.read_file(nc.points)
+        df_points = self.stack_nc.extract_vector(gdf=training_pt)
+        df_points["class_id"] = training_pt["id"].values
+        df_points = df_points.dropna()
+
+        clf = RandomForestClassifier(n_estimators=50)
+        X = df_points.drop(columns=["class_id", "geometry"]).values
+        y = df_points.class_id.values
+        clf.fit(X, y)
+
+        cla = self.stack_nc.predict(
+            estimator=clf, 
+            dtype="int16", 
+            nodata=0,
+            constants={"lsat7_2000_10": 150}
+        )
+        self.assertIsInstance(cla, Raster)
+        self.assertEqual(cla.count, 1)
+        self.assertEqual(cla.read(masked=True).count(), 135092)
+
+        probs = self.stack_nc.predict_proba(estimator=clf, constants={"lsat7_2000_10": 150})
         self.assertIsInstance(cla, Raster)
         self.assertEqual(probs.count, 7)
 

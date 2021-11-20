@@ -1,34 +1,61 @@
 import numpy as np
 import pandas as pd
 
-def stack_constants(flat_pixels, constants):
+def stack_constants(flat_pixels, constants, names=None):
     """Column stack any constant values into the flat_pixels array.
 
     Used to add additional constant features to the Raster object.
 
     Parameters
     ----------
-    flat_pixels : list-like or 1d numpy.ndarray
+    flat_pixels : ndarray
         2d numpy array representing the flattened raster data in 
         (sample_n, band_values) format.
     
-    constants : numpy.ndarray (optional)
+    constants : list-like object, 1d array, or dict
         Array of constant values to be added to the flat_pixels array
         as additional features.
+
+        If a dict is passed, the dict keys must refer to names of the
+        features in the flat_pixels array, and the values will replace
+        these features with constant values.
+    
+    names : list-like object (optional, default=None)
+        Names of the raster layers.
     """
     if isinstance(constants, (int, float)):
-        constants = np.asarray([constants])
-    elif isinstance(constants, list):
+        constants = [constants]
+
+    if isinstance(constants, list):
         constants = np.asarray(constants)
+        constants = np.broadcast_to(constants, (flat_pixels.shape[0], constants.shape[0]))
+        flat_pixels = np.column_stack((flat_pixels, constants))
+
+    elif isinstance(constants, dict):
+
+        keys_not_in_raster = [i for i in constants.keys() if i not in names]
+        
+        if len(keys_not_in_raster) > 0:
+            raise ValueError(
+                "The following keys are not in the raster: {x}".format(
+                    x = keys_not_in_raster
+                )
+            )
+
+        flat_pixels = pd.DataFrame(flat_pixels, columns=names)
+
+        for key, value in constants.items():
+            flat_pixels[key] = value
+        
+        flat_pixels = flat_pixels.values
+
     elif isinstance(constants, np.ndarray):
         raise ValueError('constants must be a list or a numpy.ndarray')
 
-    constants = np.broadcast_to(constants, (flat_pixels.shape[0], constants.shape[0]))
-    flat_pixels = np.column_stack((flat_pixels, constants))
     return flat_pixels
 
 
-def predict_output(img, estimator, constants=None):
+def predict_output(img, estimator, constants=None, names=None):
     """Prediction function for classification or regression response.
 
     Parameters
@@ -40,8 +67,16 @@ def predict_output(img, estimator, constants=None):
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
             
-    constants: numpy.ndarray (optional)
-        1d array of constant values to be added as features.
+    constants : list-like object, 1d array, or dict
+        Array of constant values to be added to the flat_pixels array
+        as additional features.
+
+        If a dict is passed, the dict keys must refer to names of the
+        features in the flat_pixels array, and the values will replace
+        these features with constant values.
+
+    names : list-like object (optional, default=None)
+        Names of the raster layers.
     
     Returns
     -------
@@ -67,7 +102,7 @@ def predict_output(img, estimator, constants=None):
     
     # add constants
     if constants is not None:
-        flat_pixels = stack_constants(flat_pixels, constants)
+        flat_pixels = stack_constants(flat_pixels, constants, names)
     
     # predict and replace mask
     result = estimator.predict(flat_pixels)
@@ -82,7 +117,7 @@ def predict_output(img, estimator, constants=None):
     return result
 
 
-def predict_prob(img, estimator, constants=None):
+def predict_prob(img, estimator, constants=None, names=None):
     """Class probabilities function.
 
     Parameters
@@ -94,8 +129,16 @@ def predict_prob(img, estimator, constants=None):
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
 
-    constants: numpy.ndarray (optional)
-        1d array of constant values to be added as features.
+    constants : list-like object, 1d array, or dict
+        Array of constant values to be added to the flat_pixels array
+        as additional features.
+
+        If a dict is passed, the dict keys must refer to names of the
+        features in the flat_pixels array, and the values will replace
+        these features with constant values.
+
+    names : list-like object (optional, default=None)
+        Names of the raster layers.
 
     Returns
     -------
@@ -120,7 +163,7 @@ def predict_prob(img, estimator, constants=None):
 
     # add constants
     if constants is not None:
-        flat_pixels = stack_constants(flat_pixels, constants)
+        flat_pixels = stack_constants(flat_pixels, constants, names)
 
     # predict probabilities
     result_proba = estimator.predict_proba(flat_pixels)
@@ -146,7 +189,7 @@ def predict_prob(img, estimator, constants=None):
     return result_proba
 
 
-def predict_multioutput(img, estimator, constants=None):
+def predict_multioutput(img, estimator, constants=None, names=None):
     """Multi-target prediction function.
 
     Parameters
@@ -158,8 +201,16 @@ def predict_multioutput(img, estimator, constants=None):
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
 
-    constants: numpy.ndarray (optional)
-        1d array of constant values to be added as features.
+    constants : list-like object, 1d array, or dict
+        Array of constant values to be added to the flat_pixels array
+        as additional features.
+
+        If a dict is passed, the dict keys must refer to names of the
+        features in the flat_pixels array, and the values will replace
+        these features with constant values.
+
+    names : list-like object (optional, default=None)
+        Names of the raster layers.
 
     Returns
     -------
@@ -181,7 +232,7 @@ def predict_multioutput(img, estimator, constants=None):
 
     # add constants
     if constants is not None:
-        flat_pixels = stack_constants(flat_pixels, constants)
+        flat_pixels = stack_constants(flat_pixels, constants, names)
 
     # predict probabilities
     result = estimator.predict(flat_pixels)

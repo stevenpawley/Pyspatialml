@@ -10,7 +10,17 @@ class TestAppend(TestCase):
                            nc.band7]
 
     def test_append_inplace(self):
-        # append another Raster containing a single layer with identical name
+        """Append another Raster containing a single layer with identical name
+
+        This test should cause the Raster object to automatically rename the
+        duplicated names as "lsat7_2000_70_1", "lsat7_2000_70_2", etc.
+
+        Appending a multi-band raster should result in a new layer with the
+        multi-band name "landsat_multiband_1", "landsat_multiband_2", etc.
+
+        A list of Rasters can be passed to append() to append multiple rasters
+        """
+        # append a single band raster with the same name
         stack = Raster(self.predictors)
         band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()
         stack.append(Raster(nc.band7), in_place=True)
@@ -35,6 +45,9 @@ class TestAppend(TestCase):
         self.assertEqual(stack.count, 8)
 
     def test_append_with_copy(self):
+        """Same tests as above but create a new Raster rather than append
+        in place
+        """
         # append another Raster containing a single layer with identical name
         stack = Raster(self.predictors)
         band7_mean = stack["lsat7_2000_70"].read(masked=True).mean()
