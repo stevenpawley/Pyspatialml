@@ -6,7 +6,6 @@ from functools import partial
 
 import geopandas as gpd
 import numpy as np
-from numpy.core.shape_base import stack
 import pandas as pd
 import rasterio
 import rasterio.mask
@@ -16,6 +15,7 @@ from rasterio.io import MemoryFile
 from rasterio.sample import sample_gen
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.windows import Window
+from rasterio.transform import rowcol
 from shapely.geometry import Point
 from tqdm import tqdm
 
@@ -24,6 +24,7 @@ from ._prediction import predict_multioutput, predict_output, predict_prob, stac
 from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
+from ._extraction import extract_by_chunk
 
 
 class _LocIndexer(MutableMapping):
@@ -650,7 +651,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         nodatavals = list()
 
         for layer in self.loc.values():
-            nodatavals.append(layer.nodata)
+            try:
+                nodatavals.append(layer.nodata)
+            except:
+                nodatavals.append(None)
 
         return nodatavals
 
@@ -1127,17 +1131,15 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # get windows
         windows = [w for w in self.block_shapes(*self.block_shape)]
         data_gen = ((w, self.read(window=w, masked=True)) for w in windows)
+        counter = tqdm(windows, disable=not progress, total=len(windows))
 
         # apply prediction function
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                for w, res, pbar in zip(
-                    windows,
-                    map(probfun, data_gen),
-                    tqdm(windows, disable=not progress, total=len(windows)),
-                ):
+                for w, res, pbar in zip(windows, map(probfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
+            
             output_dst = file_path
 
         else:
@@ -1153,17 +1155,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     driver=driver,
                 )
 
-                for w, res, pbar in zip(
-                    windows,
-                    map(probfun, data_gen),
-                    tqdm(windows, disable=not progress, total=len(windows)),
-                ):
+                for w, res, pbar in zip(windows, map(probfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
+            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+
             for i in output_dst:
                 i.in_memory = True
 
@@ -1304,16 +1301,14 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # get windows
         windows = [w for w in self.block_shapes(*self.block_shape)]
         data_gen = ((w, self.read(window=w, masked=True)) for w in windows)
+        counter = tqdm(windows, disable=not progress, total=len(windows))
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                for w, res, pbar in zip(
-                    windows,
-                    map(predfun, data_gen),
-                    tqdm(windows, disable=not progress, total=len(windows)),
-                ):
+                for w, res, pbar in zip(windows, map(predfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
+            
             output_dst = file_path
 
         else:
@@ -1329,17 +1324,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     nodata=meta["nodata"],
                 )
 
-                for w, res, pbar in zip(
-                    windows,
-                    map(predfun, data_gen),
-                    tqdm(windows, disable=not progress, total=len(windows)),
-                ):
+                for w, res, pbar in zip(windows, map(predfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
+            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+            
             for i in output_dst:
                 i.in_memory = True
 
@@ -1929,6 +1919,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
                     if progress is True:
                         t.update()
+            
             output_dst = file_path
 
         else:
@@ -1946,9 +1937,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     if progress is True:
                         t.update()
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
+            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+
             for i in output_dst:
                 i.in_memory = True
 
@@ -2143,31 +2133,25 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # get windows
         windows = [w for w in self.block_shapes(*self.block_shape)]
         data_gen = (self.read(window=w, masked=True) for w in windows)
+        counter = tqdm(windows, total=len(windows) ,disable=not progress)
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
-                for w, res, pbar in zip(
-                    windows,
-                    map(function, data_gen),
-                    tqdm(windows, disable=not progress),
-                ):
+                for w, res, pbar in zip(windows, map(function, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res.astype(dtype), window=w, indexes=indexes)
+            
             output_dst = file_path
+
         else:
             with MemoryFile() as memfile:
                 dst = memfile.open(**meta)
-                for w, res, pbar in zip(
-                    windows,
-                    map(function, data_gen),
-                    tqdm(windows, disable=not progress),
-                ):
+                for w, res, pbar in zip(windows, map(function, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res.astype(dtype), window=w, indexes=indexes)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
+            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+            
             for i in output_dst:
                 i.in_memory = True
 
@@ -2399,12 +2383,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # extract pixel values
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
+        t = tqdm(self.loc.values(), total=self.count, disable=not progress)
 
-        for i, (layer, pbar) in enumerate(
-            zip(self.loc.values(), tqdm(self.loc.values(), total=self.count,
-                                        disable=not progress))):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
-                                 masked=True)
+        for i, (layer, pbar) in enumerate(zip(self.loc.values(), t)):
+            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
@@ -2417,6 +2399,50 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             return gdf
 
         return X
+    
+    def extract_xy_chunked(self, xs, ys, progress=False):
+        rows, cols = rowcol(self.transform, xs, ys)
+        rowcol_idx = np.column_stack((rows, cols))
+        pixel_index = np.arange(rowcol_idx.shape[0])
+
+        # get row, col positions that are outside of the raster
+        negative_idx = (rowcol_idx < 0).any(axis=1)
+        outside_idx = (
+            (rowcol_idx[:, 0] >= self.shape[0]) |
+            (rowcol_idx[:, 1] >= self.shape[1])
+        )
+
+        outsiders = np.logical_or(negative_idx, outside_idx)
+        valid = np.nonzero(outsiders == False)[0]
+        invalid = np.nonzero(outsiders == True)[0]
+
+        # remove row, col > shape
+        rowcol_idx = rowcol_idx[~outsiders, :]
+        pixel_index = pixel_index[~outsiders]
+
+        # lookup pixel values at row, col positons by chunk
+        windows = [w for w in self.block_shapes(*self.block_shape)]
+        data_gen = (self.read(window=w, masked=True) for w in windows)
+        t = tqdm(windows, total=len(windows), disable=not progress)
+
+        dtype = np.find_common_type([np.float32], self.dtypes)
+        X = np.ma.zeros((self.count, 0), dtype=dtype)
+        pixel_indices = np.zeros(0, dtype=np.int)
+
+        for w, data, pbar in zip(windows, data_gen, t):
+            res, chunk_pixels = extract_by_chunk(data, w, rowcol_idx, pixel_index)
+            X = np.ma.concatenate((X, res), axis=1)
+            pixel_indices = np.concatenate((pixel_indices, chunk_pixels))
+
+        X = X.transpose((1, 0))
+
+        # insert empty rows to make input dimensions match output
+        output_arr = np.ma.zeros((len(rows), self.count))
+        output_arr[pixel_indices, :] = X
+        output_arr[invalid, :].mask = True
+        output_arr[invalid, :] = None
+
+        return output_arr
 
     def extract_vector(self, gdf, progress=False):
         """Sample a Raster/RasterLayer using a geopandas GeoDataframe
@@ -2486,17 +2512,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             xys = gdf.bounds.iloc[:, 2:].values
 
         # extract raster pixels
-        dtype = np.find_common_type([np.float32], self.dtypes)
-        X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
-
-        for i, (layer, pbar) in enumerate(zip(self.loc.values(),
-                                              tqdm(self.loc.values(), total=self.count,
-                                                   disable=not progress))):
-
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
-                                 masked=True)
-            v = np.ma.asarray([i for i in sampler])
-            X[:, i] = v.flatten()
+        X = self.extract_xy_chunked(xs=xys[:, 0], ys=xys[:, 1], progress=progress)
 
         # return as geopandas array as default (or numpy arrays)
         X = pd.DataFrame(
@@ -2536,16 +2552,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         ys = arr.data[rows, cols]
 
         # extract Raster object values at row, col indices
-        dtype = np.find_common_type([np.float32], self.dtypes)
-        X = np.ma.zeros((xys.shape[0], self.count), dtype=dtype)
-
-        for i, (layer, pbar) in enumerate(
-            zip(self.loc.values(), tqdm(self.loc.values(), total=self.count,
-                                        disable=not progress))):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx,
-                                 masked=True)
-            v = np.ma.asarray([i for i in sampler])
-            X[:, i] = v.flatten()
+        X = self.extract_xy_chunked(xs=xys[:, 0], ys=xys[:, 1], progress=progress)
 
         # summarize data
         column_names = ["value"] + list(self.names)
