@@ -2214,7 +2214,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         arr = arr.transpose()
         df = pd.DataFrame(
             data=np.column_stack((xs.flatten(), ys.flatten(), arr)),
-            columns=["x", "y"] + self.names,
+            columns=["x", "y"] + list(self.names),
         )
 
         # set nodata values to nan
