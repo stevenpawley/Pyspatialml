@@ -2359,8 +2359,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         Returns
         -------
+        pandas.DataFrame
+            DataFrame containing values of names of RasterLayers in the Raster
+            if `return_array` is False.
+        
         tuple
-            A tuple containing two elements:
+            A tuple containing two elements if `return_array` is True:
 
             - numpy.ndarray
                 Numpy array of extracted raster values, typically 2d.
