@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def stack_constants(flat_pixels, constants, names=None):
     """Column stack any constant values into the flat_pixels array.
 
@@ -9,9 +10,9 @@ def stack_constants(flat_pixels, constants, names=None):
     Parameters
     ----------
     flat_pixels : ndarray
-        2d numpy array representing the flattened raster data in 
+        2d numpy array representing the flattened raster data in
         (sample_n, band_values) format.
-    
+
     constants : list-like object, 1d array, or dict
         Array of constant values to be added to the flat_pixels array
         as additional features.
@@ -19,7 +20,7 @@ def stack_constants(flat_pixels, constants, names=None):
         If a dict is passed, the dict keys must refer to names of the
         features in the flat_pixels array, and the values will replace
         these features with constant values.
-    
+
     names : list-like object (optional, default=None)
         Names of the raster layers.
     """
@@ -28,17 +29,19 @@ def stack_constants(flat_pixels, constants, names=None):
 
     if isinstance(constants, list):
         constants = np.asarray(constants)
-        constants = np.broadcast_to(constants, (flat_pixels.shape[0], constants.shape[0]))
+        constants = np.broadcast_to(
+            constants, (flat_pixels.shape[0], constants.shape[0])
+        )
         flat_pixels = np.column_stack((flat_pixels, constants))
 
     elif isinstance(constants, dict):
 
         keys_not_in_raster = [i for i in constants.keys() if i not in names]
-        
+
         if len(keys_not_in_raster) > 0:
             raise ValueError(
                 "The following keys are not in the raster: {x}".format(
-                    x = keys_not_in_raster
+                    x=keys_not_in_raster
                 )
             )
 
@@ -46,11 +49,11 @@ def stack_constants(flat_pixels, constants, names=None):
 
         for key, value in constants.items():
             flat_pixels[key] = value
-        
+
         flat_pixels = flat_pixels.values
 
     elif isinstance(constants, np.ndarray):
-        raise ValueError('constants must be a list or a numpy.ndarray')
+        raise ValueError("constants must be a list or a numpy.ndarray")
 
     return flat_pixels
 
@@ -66,7 +69,7 @@ def predict_output(img, estimator, constants=None, names=None):
 
     estimator : estimator object implementing 'fit'
         The object to use to fit the data.
-            
+
     constants : list-like object, 1d array, or dict
         Array of constant values to be added to the flat_pixels array
         as additional features.
@@ -77,7 +80,7 @@ def predict_output(img, estimator, constants=None, names=None):
 
     names : list-like object (optional, default=None)
         Names of the raster layers.
-    
+
     Returns
     -------
     numpy.ndarray
@@ -99,17 +102,14 @@ def predict_output(img, estimator, constants=None, names=None):
 
     # fill nans for prediction
     flat_pixels = flat_pixels.filled(0)
-    
+
     # add constants
     if constants is not None:
         flat_pixels = stack_constants(flat_pixels, constants, names)
-    
+
     # predict and replace mask
     result = estimator.predict(flat_pixels)
-    result = np.ma.masked_array(
-        data=result,
-        mask=flat_pixels_mask.any(axis=1)
-    )
+    result = np.ma.masked_array(data=result, mask=flat_pixels_mask.any(axis=1))
 
     # reshape the prediction from a 1D into 3D array [band, row, col]
     result = result.reshape((1, window.height, window.width))
@@ -178,9 +178,7 @@ def predict_prob(img, estimator, constants=None, names=None):
 
     # repeat mask for n_bands
     mask3d = np.repeat(
-        a=mask2d[np.newaxis, :, :],
-        repeats=result_proba.shape[0],
-        axis=0
+        a=mask2d[np.newaxis, :, :], repeats=result_proba.shape[0], axis=0
     )
 
     # convert proba to masked array

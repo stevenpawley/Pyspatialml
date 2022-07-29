@@ -15,13 +15,10 @@ def extract_by_chunk(arr, w, idx, pixel_idx):
     pixel_idx = pixel_idx[pos]
 
     # remove row, col > shape
-    within_range = (
-        (d[:, 0] < arr.shape[1]) &
-        (d[:, 1] < arr.shape[2])
-    )
+    within_range = (d[:, 0] < arr.shape[1]) & (d[:, 1] < arr.shape[2])
     d = d[within_range, :]
     pixel_idx = pixel_idx[within_range]
 
     extracted_data = arr[:, d[:, 0], d[:, 1]]
-    
+
     return (extracted_data, pixel_idx)
