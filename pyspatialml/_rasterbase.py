@@ -70,9 +70,7 @@ def _check_alignment(layers):
         src_meta.append(layer.ds.meta.copy())
 
     if not all(i["crs"] == src_meta[0]["crs"] for i in src_meta):
-        Warning(
-            "crs of all rasters does not match, possible unintended consequences"
-        )
+        Warning("crs of all rasters does not match, possible unintended consequences")
 
     if not all(
         [

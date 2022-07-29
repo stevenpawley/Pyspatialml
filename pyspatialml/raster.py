@@ -20,7 +20,12 @@ from shapely.geometry import Point
 from tqdm import tqdm
 
 from ._plotting import RasterPlot
-from ._prediction import predict_multioutput, predict_output, predict_prob, stack_constants
+from ._prediction import (
+    predict_multioutput,
+    predict_output,
+    predict_prob,
+    stack_constants,
+)
 from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
@@ -100,27 +105,22 @@ class _LocIndexer(MutableMapping):
 
     def __repr__(self):
         print("Raster Object Containing {n} Layers".format(n=self.count))
-        meta = pd.DataFrame({
-            'attribute': [
-                'names', 
-                'files', 
-                'rows', 
-                'cols', 
-                'res', 
-                'nodatavals'
-            ],
-            'values': [
-                list(self.names), 
-                self.files, 
-                self.shape[0], 
-                self.shape[1], 
-                self.res,
-                self.nodatavals
-            ]
-        })
+        meta = pd.DataFrame(
+            {
+                "attribute": ["names", "files", "rows", "cols", "res", "nodatavals"],
+                "values": [
+                    list(self.names),
+                    self.files,
+                    self.shape[0],
+                    self.shape[1],
+                    self.res,
+                    self.nodatavals,
+                ],
+            }
+        )
         print(meta)
 
-        return ''
+        return ""
 
     @property
     def _keys(self):
@@ -205,6 +205,7 @@ class _iLocIndexer(object):
         updates the parent Raster object's attributes with the names
         of the new RasterLayers that were passed as the value.
     """
+
     def __init__(self, loc_indexer):
         """Initiate a _iLocIndexer
 
@@ -307,9 +308,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         The default block_shape in (rows, cols) for reading windows of data
         in the Raster for out-of-memory processing.
     """
-    def __init__(self, src, crs=None, transform=None, nodata=None,
-                 file_path=None, driver=None, tempdir=tempfile.tempdir,
-                 in_memory=False):
+
+    def __init__(
+        self,
+        src,
+        crs=None,
+        transform=None,
+        nodata=None,
+        file_path=None,
+        driver=None,
+        tempdir=tempfile.tempdir,
+        in_memory=False,
+    ):
         """Initiate a new Raster object
 
         Parameters
@@ -364,13 +374,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         self.meta = None
         self._block_shape = (256, 256)
         self.tempdir = tempdir
-        self._internal = frozenset([
-            "_internal",
-            "files",
-            "meta",
-            "_block_shape",
-            "tempdir"
-        ])
+        self._internal = frozenset(
+            ["_internal", "files", "meta", "_block_shape", "tempdir"]
+        )
 
         src_layers = []
 
@@ -396,26 +402,26 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     dtype=src.dtype,
                     crs=crs,
                     transform=transform,
-                    nodata=nodata
+                    nodata=nodata,
                 )
                 dst.write(src)
 
             else:
                 with rasterio.open(
                     file_path,
-                    mode='w',
+                    mode="w",
                     driver=driver,
                     height=height,
-                     width=width,
-                     count=count,
-                     dtype=src.dtype,
-                     crs=crs,
-                     transform=transform,
-                     nodata=nodata
+                    width=width,
+                    count=count,
+                    dtype=src.dtype,
+                    crs=crs,
+                    transform=transform,
+                    nodata=nodata,
                 ) as dst:
                     dst.write(src)
-                
-                dst = rasterio.open(file_path, 'r')
+
+                dst = rasterio.open(file_path, "r")
 
             for i in range(dst.count):
                 band = rasterio.band(dst, i + 1)
@@ -439,12 +445,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # from a single file path
         try:
             src_layers = []
-            r = rasterio.open(src, mode='r', driver=driver)
+            r = rasterio.open(src, mode="r", driver=driver)
 
             for i in range(r.count):
                 band = rasterio.band(r, i + 1)
                 src_layers.append(RasterLayer(band))
-            
+
             self._layers = src_layers
             return
 
@@ -456,11 +462,11 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             src_layers = []
 
             for f in src:
-                r = rasterio.open(f, mode='r', driver=driver)
+                r = rasterio.open(f, mode="r", driver=driver)
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
-            
+
             self._layers = src_layers
             return
 
@@ -483,7 +489,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             for old, new in zip(self.names, src):
                 self._rename_inplace(old, new.name)
             return
-        
+
         except:
             pass
 
@@ -498,7 +504,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         except:
             pass
 
-
         # from a single rasterio.io.datasetreader/writer
         try:
             src_layers = []
@@ -506,7 +511,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             for i in range(src.count):
                 band = rasterio.band(src, i + 1)
                 src_layers.append(RasterLayer(band))
-            
+
             self._layers = src_layers
             return
 
@@ -521,7 +526,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 for i in range(r.count):
                     band = rasterio.band(r, i + 1)
                     src_layers.append(RasterLayer(band))
-            
+
             self._layers = src_layers
             return
 
@@ -541,7 +546,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
             for band in src:
                 src_layers.append(RasterLayer(band))
-            
+
             self._layers = src_layers
             return
 
@@ -630,8 +635,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
     @property
     def bounds(self):
         """Return the bounding box of the raster in (left, bottom, right, top)"""
-        bounds = rasterio.transform.array_bounds(self.height, self.width,
-                                                 self.transform)
+        bounds = rasterio.transform.array_bounds(
+            self.height, self.width, self.transform
+        )
         BoundingBox = namedtuple("BoundingBox", ["left", "bottom", "right", "top"])
         return BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
@@ -685,7 +691,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         if meta is False:
             raise ValueError(
-                "Raster datasets do not have the same dimensions/transform")
+                "Raster datasets do not have the same dimensions/transform"
+            )
 
         # reset locindexer
         self.files = list()
@@ -874,8 +881,15 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
                 yield Window(col, row, num_cols, num_rows)
 
-    def read(self, masked=False, window=None, out_shape=None, resampling="nearest",
-             as_df=False, **kwargs):
+    def read(
+        self,
+        masked=False,
+        window=None,
+        out_shape=None,
+        resampling="nearest",
+        as_df=False,
+        **kwargs
+    ):
         """Reads data from the Raster object into a numpy array.
 
         Parameters
@@ -1010,9 +1024,19 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return self._copy(file_path, self.names)
 
-    def predict_proba(self, estimator, file_path=None, in_memory=False, indexes=None,
-                      driver="GTiff", dtype=None, nodata=None, constants=None,
-                      progress=False, **kwargs):
+    def predict_proba(
+        self,
+        estimator,
+        file_path=None,
+        in_memory=False,
+        indexes=None,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        constants=None,
+        progress=False,
+        **kwargs
+    ):
         """Apply class probability prediction of a scikit learn model to a Raster.
 
         Parameters
@@ -1054,14 +1078,14 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         constants: list-like object or a dict (optional, default None)
             Constant features to add to the Raster object with each value
             in a list or 1d ndarray representing an additional feature.
-            
-            If a list-like object of values os passed, then each numeric 
-            value will be appended as constant features to the last 
+
+            If a list-like object of values os passed, then each numeric
+            value will be appended as constant features to the last
             columns in the data. It is therefore important that all
             features including constant features are present in the same
             order as what was used to train the model.
 
-            If a dict is passed, then the keys of the dict must refer to 
+            If a dict is passed, then the keys of the dict must refer to
             the names of raster layers in the Raster object. In this case,
             the values of the dict will replace the values of the raster
             layers in the Raster object.
@@ -1090,8 +1114,12 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             file_path, tfile = self._tempfile(file_path)
 
         # n_jobs = get_num_workers(n_jobs)
-        probfun = partial(predict_prob, estimator=estimator, constants=constants,
-                          names=list(self.names))
+        probfun = partial(
+            predict_prob,
+            estimator=estimator,
+            constants=constants,
+            names=list(self.names),
+        )
 
         # perform test prediction
         window = Window(0, 0, 1, 1)
@@ -1139,7 +1167,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 for w, res, pbar in zip(windows, map(probfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
-            
+
             output_dst = file_path
 
         else:
@@ -1159,7 +1187,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+            output_dst = [
+                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
+            ]
 
             for i in output_dst:
                 i.in_memory = True
@@ -1176,8 +1206,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def predict(self, estimator, file_path=None, in_memory=False, driver="GTiff",
-                dtype=None, nodata=None, progress=False, constants=None, **kwargs):
+    def predict(
+        self,
+        estimator,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        progress=False,
+        constants=None,
+        **kwargs
+    ):
         """Apply prediction of a scikit learn model to a Raster.
 
         The model can represent any scikit learn model or compatible
@@ -1214,18 +1254,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         progress : bool (default False)
             Show progress bar for prediction.
-            
+
         constants: list-like object or a dict (optional, default None)
             Constant features to add to the Raster object with each value
             in a list or 1d ndarray representing an additional feature.
-            
-            If a list-like object of values os passed, then each numeric 
-            value will be appended as constant features to the last 
+
+            If a list-like object of values os passed, then each numeric
+            value will be appended as constant features to the last
             columns in the data. It is therefore important that all
             features including constant features are present in the same
             order as what was used to train the model.
 
-            If a dict is passed, then the keys of the dict must refer to 
+            If a dict is passed, then the keys of the dict must refer to
             the names of raster layers in the Raster object. In this case,
             the values of the dict will replace the values of the raster
             layers in the Raster object.
@@ -1261,7 +1301,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         if constants is not None:
             flat_pixels = stack_constants(flat_pixels, constants, list(self.names))
-        
+
         result = estimator.predict(flat_pixels)
 
         if result.ndim > 1:
@@ -1274,14 +1314,26 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # chose prediction function
         if len(indexes) == 1:
             if constants is not None:
-                predfun = partial(predict_output, estimator=estimator,
-                                  constants=constants, names=list(self.names))
+                predfun = partial(
+                    predict_output,
+                    estimator=estimator,
+                    constants=constants,
+                    names=list(self.names),
+                )
             else:
-                predfun = partial(predict_output, estimator=estimator,
-                                  constants=constants, names=list(self.names))
+                predfun = partial(
+                    predict_output,
+                    estimator=estimator,
+                    constants=constants,
+                    names=list(self.names),
+                )
         else:
-            predfun = partial(predict_multioutput, estimator=estimator,
-                              constants=constants, names=list(self.names))
+            predfun = partial(
+                predict_multioutput,
+                estimator=estimator,
+                constants=constants,
+                names=list(self.names),
+            )
 
         # check dtype and nodata
         if dtype is None:
@@ -1308,7 +1360,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 for w, res, pbar in zip(windows, map(predfun, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
-            
+
             output_dst = file_path
 
         else:
@@ -1328,8 +1380,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
-            
+            output_dst = [
+                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
+            ]
+
             for i in output_dst:
                 i.in_memory = True
 
@@ -1471,8 +1525,19 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
             return new_raster
 
-    def mask(self, shapes, invert=False, crop=True, pad=False, file_path=None,
-             in_memory=False, driver="GTiff", dtype=None, nodata=None, **kwargs):
+    def mask(
+        self,
+        shapes,
+        invert=False,
+        crop=True,
+        pad=False,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        **kwargs
+    ):
         """Mask a Raster object based on the outline of shapes in a
         geopandas.GeoDataFrame
 
@@ -1595,8 +1660,15 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def intersect(self, file_path=None, in_memory=False, driver="GTiff", dtype=None,
-                  nodata=None, **kwargs):
+    def intersect(
+        self,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        **kwargs
+    ):
         """Perform a intersect operation on the Raster object.
 
         Computes the geometric intersection of the RasterLayers with
@@ -1689,9 +1761,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 layer._close = tfile.close
 
         return new_raster
-    
-    def crop(self, bounds, file_path=None, in_memory=False, driver="GTiff", dtype=None,
-             nodata=None, **kwargs):
+
+    def crop(
+        self,
+        bounds,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        **kwargs
+    ):
         """Crops a Raster object by the supplied bounds.
 
         Parameters
@@ -1805,9 +1885,19 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def to_crs(self, crs, resampling="nearest", file_path=None, in_memory=False,
-               driver="GTiff", nodata=None, n_jobs=1, warp_mem_lim=0, progress=False,
-               **kwargs):
+    def to_crs(
+        self,
+        crs,
+        resampling="nearest",
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        nodata=None,
+        n_jobs=1,
+        warp_mem_lim=0,
+        progress=False,
+        **kwargs
+    ):
         """Reprojects a Raster object to a different crs.
 
         Parameters
@@ -1919,7 +2009,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
                     if progress is True:
                         t.update()
-            
+
             output_dst = file_path
 
         else:
@@ -1937,7 +2027,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     if progress is True:
                         t.update()
 
-            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
+            output_dst = [
+                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
+            ]
 
             for i in output_dst:
                 i.in_memory = True
@@ -1950,8 +2042,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def aggregate(self, out_shape, resampling="nearest", file_path=None,
-                  in_memory=False, driver="GTiff", dtype=None, nodata=None, **kwargs):
+    def aggregate(
+        self,
+        out_shape,
+        resampling="nearest",
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        **kwargs
+    ):
         """Aggregates a raster to (usually) a coarser grid cell size.
 
         Parameters
@@ -2054,8 +2155,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def apply(self, function, file_path=None, in_memory=False, driver="GTiff",
-              dtype=None, nodata=None, progress=False, function_args={}, **kwargs):
+    def apply(
+        self,
+        function,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        progress=False,
+        function_args={},
+        **kwargs
+    ):
         """Apply user-supplied function to a Raster object.
 
         Parameters
@@ -2133,14 +2244,14 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         # get windows
         windows = [w for w in self.block_shapes(*self.block_shape)]
         data_gen = (self.read(window=w, masked=True) for w in windows)
-        counter = tqdm(windows, total=len(windows) ,disable=not progress)
+        counter = tqdm(windows, total=len(windows), disable=not progress)
 
         if in_memory is False:
             with rasterio.open(file_path, "w", **meta) as dst:
                 for w, res, pbar in zip(windows, map(function, data_gen), counter):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res.astype(dtype), window=w, indexes=indexes)
-            
+
             output_dst = file_path
 
         else:
@@ -2150,8 +2261,10 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     res = np.ma.filled(res, fill_value=nodata)
                     dst.write(res.astype(dtype), window=w, indexes=indexes)
 
-            output_dst = [RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)]
-            
+            output_dst = [
+                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
+            ]
+
             for i in output_dst:
                 i.in_memory = True
 
@@ -2386,7 +2499,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         t = tqdm(self.loc.values(), total=self.count, disable=not progress)
 
         for i, (layer, pbar) in enumerate(zip(self.loc.values(), t)):
-            sampler = sample_gen(dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True)
+            sampler = sample_gen(
+                dataset=layer.ds, xy=xys, indexes=layer.bidx, masked=True
+            )
             v = np.ma.asarray([i for i in sampler])
             X[:, i] = v.flatten()
 
@@ -2399,7 +2514,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             return gdf
 
         return X
-    
+
     def extract_xy_chunked(self, xs, ys, progress=False):
         rows, cols = rowcol(self.transform, xs, ys)
         rowcol_idx = np.column_stack((rows, cols))
@@ -2407,9 +2522,8 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         # get row, col positions that are outside of the raster
         negative_idx = (rowcol_idx < 0).any(axis=1)
-        outside_idx = (
-            (rowcol_idx[:, 0] >= self.shape[0]) |
-            (rowcol_idx[:, 1] >= self.shape[1])
+        outside_idx = (rowcol_idx[:, 0] >= self.shape[0]) | (
+            rowcol_idx[:, 1] >= self.shape[1]
         )
 
         outsiders = np.logical_or(negative_idx, outside_idx)
@@ -2516,9 +2630,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         # return as geopandas array as default (or numpy arrays)
         X = pd.DataFrame(
-            data=X,
-            columns=list(self.names),
-            index=[pd.RangeIndex(0, X.shape[0]), ids]
+            data=X, columns=list(self.names), index=[pd.RangeIndex(0, X.shape[0]), ids]
         )
         X.index.set_names(["pixel_idx", "geometry_idx"], inplace=True)
         X["geometry"] = list(zip(xys[:, 0], xys[:, 1]))
@@ -2563,9 +2675,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return gdf
 
-
-    def scale(self, centre=True, scale=True, file_path=None, in_memory=False,
-              driver="GTiff", dtype=None, nodata=None, progress=False):
+    def scale(
+        self,
+        centre=True,
+        scale=True,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        progress=False,
+    ):
         """Standardize (centre and scale) a Raster object by
         subtracting the mean and dividing by the standard deviation for
         each layer in the object.
@@ -2611,6 +2731,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         -------
         Pyspatialml.Raster object with rescaled data.
         """
+
         def scaler(x, means, sds):
             for i, m, z in zip(range(x.shape[0]), means, sds):
                 x[i, :, :] = (x[i, :, :] - m) / z
