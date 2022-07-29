@@ -2344,15 +2344,14 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         ----------
         size : int
             Number of random samples or number of samples per strata if
-            strategy='stratified'.
+            a `strata` object is supplied.
 
-        strata : rasterio DatasetReader (opt)
+        strata : pyspatialml Raster object (opt)
             Whether to use stratified instead of random sampling. Strata
-            can be supplied using an open rasterio DatasetReader
-            object.
+            can be supplied using another pyspatialml.Raster object.
 
         return_array : bool (opt), default=False
-            Optionally return extracted data as separate X, y and xy
+            Optionally return extracted data as separate X and xy
             masked numpy arrays.
 
         random_state : int (opt)
@@ -2398,7 +2397,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 xy = np.transpose(rasterio.transform.xy(self.transform, rows, cols))
 
                 # sample at random point locations
-                samples = self.extract_xy(xy, return_array=True)
+                samples = self.extract_xy_chunked(xs=xy[:, 0], ys=xy[:, 1])
 
                 # append only non-masked data to each row of X_random
                 samples = samples.astype("float32").filled(np.nan)
@@ -2416,11 +2415,15 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     n = size - len(valid_samples)
 
         else:
+            if strata.count != 1:
+                raise AttributeError(
+                    "Strata must be a Raster object with a single band."
+                )
+
             # get number of unique categories
-            strata_arr = strata.read(1)
-            categories = np.unique(strata_arr)
-            categories = categories[np.nonzero(categories != strata.nodata)]
-            categories = categories[~np.isnan(categories)]
+            strata_arr = strata.iloc[0].read(masked=True)
+            categories = np.unique(strata_arr.flatten())
+            categories = categories[~categories.mask]
 
             # store selected coordinates
             selected = np.zeros((0, 2))
@@ -2451,7 +2454,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             valid_coordinates = np.column_stack((x, y))
 
             # extract data
-            valid_samples = self.extract_xy(valid_coordinates)
+            valid_samples = self.extract_xy_chunked(
+                xs=valid_coordinates[:, 0], ys=valid_coordinates[:, 1]
+            )
 
         # return as geopandas array as default (or numpy arrays)
         if return_array is False:
