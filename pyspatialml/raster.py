@@ -3,6 +3,8 @@ import tempfile
 from collections import namedtuple
 from collections.abc import MutableMapping, ValuesView
 from functools import partial
+from typing import Tuple
+import affine
 
 import geopandas as gpd
 import numpy as np
@@ -555,14 +557,14 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             pass
 
     @property
-    def block_shape(self):
+    def block_shape(self) -> Tuple[int, int]:
         """Return the block shape in (height, width) used to read windows from the
         Raster
         """
         return self._block_shape
 
     @block_shape.setter
-    def block_shape(self, value):
+    def block_shape(self, value) -> None:
         if not isinstance(value, tuple):
             raise ValueError(
                 "block_shape must be set using an integer tuple as (rows, " "cols)"
@@ -576,7 +578,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             )
         self._block_shape = (rows, cols)
 
-    def set_block_shape(self, value):
+    def set_block_shape(self, value) -> None:
         """Set the block shape of the raster, i.e. the height and width
         of windows to read in chunks for the predict, predict_proba,
         apply, and other supported-methods.
@@ -591,50 +593,50 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         self.block_shape = value
 
     @property
-    def count(self):
+    def count(self) -> int:
         """Return the number of layers in the Raster"""
         return len(self.loc)
 
     @property
-    def crs(self):
+    def crs(self) -> rasterio.crs.CRS:
         """Return to crs of the Raster"""
         return self.meta["crs"]
 
     @crs.setter
-    def crs(self, value):
+    def crs(self, value) -> None:
         self.meta["crs"] = value
 
     @property
-    def transform(self):
+    def transform(self) -> affine.Affine:
         """Return the transform of the Raster"""
         return self.meta["transform"]
 
     @transform.setter
-    def transform(self, value):
+    def transform(self, value) -> None:
         self.meta["transform"] = value
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Return the width (number of columns) in the Raster"""
         return self.meta["width"]
 
     @property
-    def height(self):
+    def height(self) -> int:
         """Return the height (number of rows) in the Raster"""
         return self.meta["height"]
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         """Return the shape (height, width) of the Raster"""
         return self.height, self.width
 
     @property
-    def res(self):
+    def res(self) -> Tuple[float, float]:
         """Return a tuple of the resolution of the Raster in (width, height)"""
         return abs(self.meta["transform"].a), abs(self.meta["transform"].e)
 
     @property
-    def bounds(self):
+    def bounds(self) -> namedtuple:
         """Return the bounding box of the raster in (left, bottom, right, top)"""
         bounds = rasterio.transform.array_bounds(
             self.height, self.width, self.transform
@@ -643,7 +645,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return BoundingBox(bounds[0], bounds[1], bounds[2], bounds[3])
 
     @property
-    def dtypes(self):
+    def dtypes(self) -> list:
         """Return the dtype of each layer in the Raster as a list"""
         dtypes = list()
 
@@ -653,7 +655,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return dtypes
 
     @property
-    def nodatavals(self):
+    def nodatavals(self) -> list:
         """Return the nodata value of each layer in the Raster as a list"""
         nodatavals = list()
 
@@ -666,11 +668,11 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         return nodatavals
 
     @property
-    def _layers(self):
+    def _layers(self) -> dict:
         return self.loc
 
     @_layers.setter
-    def _layers(self, layers):
+    def _layers(self, layers) -> None:
         """Assign RasterLayer objects to the Raster
 
         The function assigns the layers to the loc indexer, updates
@@ -719,19 +721,19 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             dtype=np.find_common_type(self.dtypes, []),
         )
 
-    def head(self):
+    def head(self) -> np.ndarray:
         """Return the first 10 rows from the Raster as a ndarray"""
         window = Window(col_off=0, row_off=0, width=20, height=10)
         return self.read(window=window)
 
-    def tail(self):
+    def tail(self) -> np.ndarray:
         """Return the last 10 rows from the Raster as a ndarray"""
         window = Window(
             col_off=self.width - 20, row_off=self.height - 10, width=20, height=10
         )
         return self.read(window=window)
 
-    def close(self):
+    def close(self) -> None:
         """Close all of the RasterLayer objects in the Raster.
 
         Note that this will cause any rasters based on temporary files
@@ -742,7 +744,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         for layer in self.loc.values():
             layer.close()
 
-    def _check_supported_dtype(self, dtype=None):
+    def _check_supported_dtype(self, dtype=None) -> str:
         """Method to check that a dtype is compatible with GDAL or
         generate a compatible dtype from an array
 
@@ -773,7 +775,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return dtype
 
-    def _tempfile(self, file_path):
+    def _tempfile(self, file_path) -> Tuple[str, str]:
         """Returns a TemporaryFileWrapper and file path if a file_path
         parameter is None
         """
@@ -890,7 +892,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         resampling="nearest",
         as_df=False,
         **kwargs
-    ):
+    ) -> np.ndarray:
         """Reads data from the Raster object into a numpy array.
 
         Parameters
@@ -968,7 +970,9 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return arr
 
-    def write(self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs):
+    def write(
+        self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs
+    ):
         """Write the Raster object to a file.
 
         Overrides the write RasterBase class method, which is a partial
@@ -1585,6 +1589,11 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         kwargs : opt
             Optional named arguments to pass to the format drivers.
             For example can be `compress="deflate"` to add compression.
+
+        Returns
+        -------
+        pyspatialml.Raster
+            Raster with masked layers.
         """
         # some checks
         if invert is True:
@@ -2279,7 +2288,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         return new_raster
 
-    def to_pandas(self, max_pixels=None, resampling="nearest"):
+    def to_pandas(self, max_pixels=None, resampling="nearest") -> pd.DataFrame:
         """Raster to pandas DataFrame.
 
         Parameters
@@ -2782,7 +2791,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
     ):
         """Apply a fitted scikit-learn transformer to a Raster object.
 
-        Can be used to transform a raster using methods such as StandardScaler, 
+        Can be used to transform a raster using methods such as StandardScaler,
         RobustScaler etc.
 
         Parameters
