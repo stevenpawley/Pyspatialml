@@ -30,6 +30,7 @@ from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_noda
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
 from ._extraction import extract_by_chunk
+from .transformers import _apply_transformer
 
 
 class _LocIndexer(MutableMapping):
@@ -2362,7 +2363,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         pandas.DataFrame
             DataFrame containing values of names of RasterLayers in the Raster
             if `return_array` is False.
-        
+
         tuple
             A tuple containing two elements if `return_array` is True:
 
@@ -2765,6 +2766,67 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             nodata=nodata,
             progress=progress,
             function_args=dict(means=means, sds=sds),
+        )
+
+        return res
+
+    def alter(
+        self,
+        transformer,
+        file_path=None,
+        in_memory=False,
+        driver="GTiff",
+        dtype=None,
+        nodata=None,
+        progress=False,
+    ):
+        """Apply a fitted scikit-learn transformer to a Raster object.
+
+        Can be used to transform a raster using methods such as StandardScaler, 
+        RobustScaler etc.
+
+        Parameters
+        ----------
+        transformer : a sklearn.preprocessing.Transformer object
+
+        file_path : str (optional, default None)
+            Path to a GeoTiff raster for the prediction results. If
+            not specified then the output is written to a temporary
+            file.
+
+        in_memory : bool, default is False
+            Whether to initiated the Raster from an array and store the
+            data in-memory using Rasterio's in-memory files.
+
+        driver : str (default 'GTiff')
+            Named of GDAL-supported driver for file export.
+
+        dtype : str (optional, default None)
+            Optionally specify a GDAL compatible data type when saving
+            to file. If not specified, a data type is set based on the
+            data type of the prediction.
+
+        nodata : any number (optional, default None)
+            Nodata value for file export. If not specified then the
+            nodata value is derived from the minimum permissible value
+            for the given data type.
+
+        progress : bool (default False)
+            Show progress bar for operation.
+
+        Returns
+        -------
+        Pyspatialml.Raster object with transformed data.
+        """
+        res = self.apply(
+            _apply_transformer,
+            file_path=file_path,
+            in_memory=in_memory,
+            driver=driver,
+            dtype=dtype,
+            nodata=nodata,
+            progress=progress,
+            function_args={"transformer": transformer},
         )
 
         return res
