@@ -394,17 +394,17 @@ df_rand.plot()
 
 The sample function also enables stratified random sampling based on passing a categorical raster dataset to the strata
 argument. The categorical raster should spatially overlap with the dataset to be sampled, but it does not need to be of
-the same grid resolution. This raster should be passed as a opened rasterio dataset:
+the same grid resolution. This raster should be passed as another `Raster` dataset containing a single categorical layer:
 
 ```
-with rasterio.open(nc.strata) as strata:
-    df_strata = stack.sample(size=5, strata=strata, random_state=1)
-    df_strata = df_strata.dropna()
+strata = Raster(nc.strata)
+df_strata = stack.sample(size=5, strata=strata, random_state=1)
+df_strata = df_strata.dropna()
 
-    fig, ax = plt.subplots()
-    ax.imshow(strata.read(1, masked=True), extent=rasterio.plot.plotting_extent(strata), cmap='tab10')
-    df_strata.plot(ax=ax, markersize=20, color='white')
-    plt.show()
+fig, ax = plt.subplots()
+ax.imshow(strata.read(1, masked=True), extent=rasterio.plot.plotting_extent(strata), cmap='tab10')
+df_strata.plot(ax=ax, markersize=20, color='white')
+plt.show()
 ```
 
 ## Vector Data Tools
