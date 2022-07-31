@@ -531,10 +531,20 @@ weighted mean/mode of the values of the K-neighboring observations. The
 weighted mean/mode of the surrounding observations are appended as a new
 feature to the right-most column in the training data. The <code>measure</code> parameter
 should be set to 'mode' for classification, and 'mean' for regression.</p>
-<pre><code>KNNTransformer(n_neighbors=7, weights=&quot;distance&quot;, measure=&quot;mean&quot;,
-                radius=1.0, algorithm=&quot;auto&quot;, leaf_size=30,
-                metric=&quot;minkowski&quot;, p=2, normalize=True, metric_params=None,
-                kernel_params=None, n_jobs=1)
+<pre><code>KNNTransformer(
+    n_neighbors=7,
+    weights=&quot;distance&quot;,
+    measure=&quot;mean&quot;,
+    radius=1.0,
+    algorithm=&quot;auto&quot;,
+    leaf_size=30,
+    metric=&quot;minkowski&quot;,
+    p=2,
+    normalize=True,
+    metric_params=None,
+    kernel_params=None,
+    n_jobs=1
+)
 </code></pre>
 <h2 id="geodisttransformer">GeoDistTransformer</h2>
 <p>A common spatial feature engineering task is to create new features that
