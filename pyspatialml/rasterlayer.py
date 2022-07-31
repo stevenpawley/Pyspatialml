@@ -88,8 +88,15 @@ class RasterLayer:
         self.ds = band.ds
 
         if len(band.ds.files) > 0:
-            self.name = _make_name(band.ds.files[0])
+            description = band.ds.descriptions[band.bidx-1]
+            if description is not None:
+                layer_name = _make_name(band.ds.descriptions[band.bidx-1])
+            else:
+                layer_name = _make_name(band.ds.files[0])
+
+            self.name = layer_name
             self.file = band.ds.files[0]
+
         else:
             self.name = "in_memory"
             self.file = None
