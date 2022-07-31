@@ -3,8 +3,6 @@
 # Pyspatialml
 Machine learning classification and regression modelling for spatial raster data.
 
-Note - this package is still under development and breaking changes are possible.
-
 ## Description
 `Pyspatialml` is a Python module for applying scikit-learn machine learning models to 'stacks' of raster datasets.
 Pyspatialml includes functions and classes for working with multiple raster datasets and performing a typical machine
