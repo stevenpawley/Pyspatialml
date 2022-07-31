@@ -1,4 +1,3 @@
-[![Documentation Status](https://readthedocs.org/projects/pyspatialml/badge/?version=latest)](https://pyspatialml.readthedocs.io/en/latest/?badge=latest)
 [![Codecov test coverage](https://codecov.io/gh/stevenpawley/pyspatialml/branch/master/graph/badge.svg)](https://codecov.io/gh/stevenpawley/pyspatialml?branch=master)
 
 # Pyspatialml
@@ -13,7 +12,7 @@ learning workflow consisting of extracting training data and applying the predic
 scikit-learn estimators to a stack of raster datasets. Pyspatialml is built upon the `rasterio` Python module for
 all of the heavy lifting, and is also designed for working with vector data using the `geopandas` module.
 
-For more information read the documents page at: https://pyspatialml.readthedocs.io/en/latest/
+For more information read the documents page at: https://stevenpawley.github.io/Pyspatialml/
 
 ## Rationale
 A typical supervised machine-learning workflow involving raster datasets consists of several steps:
