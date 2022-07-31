@@ -11,10 +11,20 @@ feature to the right-most column in the training data. The `measure` parameter
 should be set to 'mode' for classification, and 'mean' for regression.
 
 ```
-KNNTransformer(n_neighbors=7, weights="distance", measure="mean",
-                radius=1.0, algorithm="auto", leaf_size=30,
-                metric="minkowski", p=2, normalize=True, metric_params=None,
-                kernel_params=None, n_jobs=1)
+KNNTransformer(
+    n_neighbors=7,
+    weights="distance",
+    measure="mean",
+    radius=1.0,
+    algorithm="auto",
+    leaf_size=30,
+    metric="minkowski",
+    p=2,
+    normalize=True,
+    metric_params=None,
+    kernel_params=None,
+    n_jobs=1
+)
 ```
 
 ## GeoDistTransformer
