@@ -1,5 +1,7 @@
 # Transformers
 
+The transformers module contains classes that are used for spatial feature engineering.
+
 ## Spatial Lag Transformer
 
 A transformer to create spatial lag variables by using a
