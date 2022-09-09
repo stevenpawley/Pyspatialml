@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 setup(
     # package metadata
     name="pyspatialml",
-    version="0.13",
+    version="0.21",
     author="Steven Pawley",
     author_email="steven.pawley@gmail.com",
     description=("Machine learning for GIS spatial modelling"),
@@ -38,7 +38,7 @@ setup(
         'geopandas>=0.3',
         'matplotlib>=2.2.4',
         'scikit-learn>=0.22'],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 
     # testing
     setup_requires=['pytest-runner'],
