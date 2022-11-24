@@ -103,7 +103,10 @@ def xy_coordinates(layer, file_path, driver="GTiff"):
 
     new_raster = Raster(file_path)
     names = ["x_coordinates", "y_coordinates"]
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.rename(
+        {old: new for old, new in zip(new_raster.names, names)},
+        in_place=True
+    )
 
     return new_raster
 
@@ -148,7 +151,8 @@ def rotated_coordinates(layer, file_path, n_angles=8, driver="GTiff"):
 
     new_raster = Raster(file_path)
     names = ["angle_" + str(i + 1) for i in range(n_angles)]
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)},
+                      in_place=True)
 
     return new_raster
 
@@ -194,7 +198,8 @@ def distance_to_corners(layer, file_path, driver="GTiff"):
         dst.write(arr)
 
     new_raster = Raster(file_path)
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)},
+                      in_place=True)
 
     return new_raster
 
@@ -280,6 +285,7 @@ def distance_to_samples(layer, file_path, rows, cols, driver="GTiff"):
 
     names = ["dist_sample" + str(i + 1) for i in range(len(rows))]
     new_raster = Raster(file_path)
-    new_raster.rename({old: new for old, new in zip(new_raster.names, names)})
+    new_raster.rename({old: new for old, new in zip(new_raster.names, names)},
+                      in_place=True)
 
     return new_raster

@@ -149,7 +149,7 @@ class RasterLayer:
         if isinstance(other, RasterLayer):
             result = function(self.read(masked=True), other.read(masked=True))
         else:
-            result = function(self.read(masked=True))
+            result = function(self.read(masked=True), other)
 
         nodata = get_nodata_value(result.dtype)
 
@@ -436,6 +436,12 @@ class RasterLayer:
             kwargs["resampling"] = rasterio.enums.Resampling[kwargs["resampling"]]
 
         return self.ds.read(indexes=self.bidx, **kwargs)
+    
+    def seek(self, offset, whence=None):
+        return self
+    
+    def tell(self):
+        return self
 
     def write(self, file_path, driver="GTiff", dtype=None, nodata=None, **kwargs):
         """Write method for a single RasterLayer.

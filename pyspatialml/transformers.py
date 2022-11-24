@@ -370,5 +370,79 @@ def _apply_transformer(img, transformer):
     # reshape the prediction from a 1D into 3D array [band, row, col]
     result = result.reshape((n_features, rows, cols))
     result = np.ma.masked_array(data=result, mask=mask, copy=True)
-    
+
     return result
+
+
+class AspectTransformer(BaseEstimator, TransformerMixin):
+    """Transformer to decompose aspect maps into northerness and easterness"""
+
+    def __init__(self):
+        self._quadrants = None
+        self._reverse = np.array([0.0, 360.0])
+
+    def _dir_from_comp(self, X):
+        return np.rad2deg(np.arctan2(X[:, 1], X[:, 0]))
+
+    def fit(self, X, y=None):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return self.transform(X, y)
+
+    def transform(self, X, y=None):
+        """Takes a vector of floating point numbers, assumed to be aspect in degrees
+        and returns an array with two dimensions with the strength of the easterly and
+        northernly direction
+
+        Parameters
+        ----------
+        X : array-like of sample {n_samples, n_features}
+            New samples for the prediction.
+
+        y : None
+            Not used.
+
+        Returns
+        -------
+        ndarray : 2d array with the sin and cosine components of the original
+            data.
+        """
+        # ensure that X is a ndarray
+        if isinstance(X, list):
+            X = np.asarray(X)
+
+        # store quadrant so that inverse can be found
+        condlist = [np.logical_and(X >= 0, X <= 180), np.logical_and(X > 180, X < 360)]
+        choicelist = np.arange(0, 2)
+        self._quadrants = np.select(condlist, choicelist)
+
+        radians = np.deg2rad(X)
+        easterness = np.cos(radians)
+        northerness = np.sin(radians)
+
+        return np.column_stack([easterness, northerness])
+
+    def inverse_transform(self, X, y=None):
+        """Takes a vector with two columns containing the strength of the easterly and
+        northernly directions and returns a array with a single dimension with the
+        azimuth in degrees
+
+        Because the quadrant is not known, this function only returns the azimuth
+        relative to a northernly direction
+
+        Parameters
+        ----------
+        X : array-like of sample {n_samples, n_features}
+            New samples for the prediction.
+
+        y : None
+            Not used.
+
+        Returns
+        -------
+        ndarray : 2d array with the azimuth.
+        """
+        inverse = self._dir_from_comp(X)
+        inverse = np.abs(inverse + self._reverse[self._quadrants])
+        return inverse
