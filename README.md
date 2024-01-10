@@ -221,7 +221,7 @@ stack.plot()
 
 ### Integration with Pandas
 
-Data from a Raster object can converted into a Pandas dataframe, with each pixel representing by a row, and columns
+Data from a Raster object can be converted into a Pandas dataframe, with each pixel representing by a row, and columns
 reflecting the x, y coordinates and the values of each RasterLayer in the Raster object:
 
 ```
