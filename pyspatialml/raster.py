@@ -2560,7 +2560,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         dtype = np.find_common_type([np.float32], self.dtypes)
         X = np.ma.zeros((self.count, 0), dtype=dtype)
-        pixel_indices = np.zeros(0, dtype=np.int)
+        pixel_indices = np.zeros(0, dtype="int")
 
         for w, data, pbar in zip(windows, data_gen, t):
             res, chunk_pixels = extract_by_chunk(data, w, rowcol_idx, pixel_index)
