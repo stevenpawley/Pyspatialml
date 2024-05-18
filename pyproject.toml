@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyspatialml"
-version = "0.21.0"
+version = "0.22.0"
 description = "Machine learning classification and regression modelling for spatial raster data."
 authors = ["Steven Pawley <dr.stevenpawley@gmail.com>"]
 license = "GPL-3.0-or-later"
