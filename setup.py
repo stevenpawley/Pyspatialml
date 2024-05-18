@@ -29,16 +29,16 @@ setup(
 
     # package dependencies
     install_requires=[
-        'numpy>=1.10.0',
-        'scipy>1.0.0',
-        'tqdm>=4.20',
+        'numpy',
+        'scipy',
+        'tqdm',
         'rasterio>=1.0',
-        'pandas>=0.20',
-        'shapely>=1.6',
-        'geopandas>=0.3',
-        'matplotlib>=2.2.4',
-        'scikit-learn>=0.22'],
-    python_requires='>=3.7',
+        'pandas',
+        'shapely',
+        'geopandas',
+        'matplotlib',
+        'scikit-learn'],
+    python_requires='>=3.9',
 
     # testing
     setup_requires=['pytest-runner'],
