@@ -32,11 +32,9 @@ jobs:
   
       - name: Install the project
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-
-      - name: Install additional dependencies
-        run: poetry add quartodoc jupyter black pytest
-
+        run: |
+          poetry install --no-interaction --no-root
+        
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 

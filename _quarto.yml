@@ -1,6 +1,9 @@
 project:
   type: website
 
+execute:
+  freeze: auto
+
 website:
   title: "Pyspatialml: machine learning for raster datasets"
   description: "Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets"
