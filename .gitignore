@@ -9,3 +9,7 @@ build/
 *whl
 *.tar.gz
 **/*.ipynb_checkpoints/
+
+/.quarto/
+_site/
+site/

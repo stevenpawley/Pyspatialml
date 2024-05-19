@@ -1,0 +1,91 @@
+project:
+  type: website
+
+website:
+  title: "Pyspatialml: machine learning for raster datasets"
+  description: "Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets"
+  repo-url: https://github.com/stevenpawlely/pyspatialml
+  page-navigation: true
+
+  navbar:
+      title: false
+      background: primary
+      search: true
+      logo: docs/icon.png
+      logo-alt: Pyspatialml
+
+      left:
+        - text: Design
+          file: docs/design.qmd
+        
+        - text: Quickstart
+          file: docs/quickstart.qmd
+                
+        - text: Geoprocessing
+          file: docs/geoprocessing.qmd
+        
+        - text: Plotting
+          file: docs/plotting.qmd
+        
+        - text: Sampling
+          file: docs/sampling.qmd
+        
+        - text: Transformers
+          file: docs/transformers.qmd
+        
+        - text: Reference
+          file: reference/Raster.qmd
+  
+        - text: Tutorials
+          file: docs/tutorials/landcover.qmd
+
+  sidebar:
+    - title: "Design"
+      style: "docked"
+      contents:
+        - section: "Overview"
+          contents:
+            - docs/design.qmd
+    
+    - title: "Tutorials"
+      style: "docked"
+      contents:
+        - section: "Machine learning examples"
+          contents:
+            - docs/tutorials/landcover.qmd
+
+theme:
+  light: spacelab
+  dark: darkly
+
+metadata-files:
+  - _sidebar.yml
+
+quartodoc:
+  package: pyspatialml
+  sidebar: "_sidebar.yml"
+  sections:
+    - title: Raster datasets
+      desc: "Raster is a class for reading and writing raster datasets"
+      options:
+        children: embedded
+
+      contents:
+        - Raster
+        - RasterLayer
+
+    - title: Vector tools
+      desc: "Tools for working with vector datasets"
+      options:
+        children: embedded
+      
+      contents:
+        - vector
+    
+    - title: Preprocessing
+      desc: "Preprocessing tools for raster datasets"
+      options:
+        children: embedded
+      
+      contents:
+        - preprocessing

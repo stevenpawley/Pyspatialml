@@ -206,6 +206,7 @@ def distance_to_corners(layer, file_path, driver="GTiff"):
 
 def _grid_distance(shape, rows, cols):
     """Generate buffer distances to x,y coordinates.
+
     Parameters
     ----------
     shape : tuple
@@ -214,6 +215,7 @@ def _grid_distance(shape, rows, cols):
         array of row indexes.
     cols : 1d numpy array
         array of column indexes.
+
     Returns
     -------
     ndarray

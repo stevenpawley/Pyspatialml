@@ -1,0 +1,26 @@
+# Function reference {.doc .doc-index}
+
+## Raster datasets
+
+Raster is a class for reading and writing raster datasets
+
+| | |
+| --- | --- |
+| [Raster](Raster.qmd#pyspatialml.Raster) | Creates a collection of file-based GDAL-supported raster |
+| [RasterLayer](RasterLayer.qmd#pyspatialml.RasterLayer) | Represents a single raster band derived from a single or |
+
+## Vector tools
+
+Tools for working with vector datasets
+
+| | |
+| --- | --- |
+| [vector](vector.qmd#pyspatialml.vector) |  |
+
+## Preprocessing
+
+Preprocessing tools for raster datasets
+
+| | |
+| --- | --- |
+| [preprocessing](preprocessing.qmd#pyspatialml.preprocessing) |  |

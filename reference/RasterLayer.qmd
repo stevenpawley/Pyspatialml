@@ -1,0 +1,205 @@
+# RasterLayer { #pyspatialml.RasterLayer }
+
+`RasterLayer(self, band)`
+
+Represents a single raster band derived from a single or
+multi-band raster dataset
+
+Simple wrapper around a rasterio.Band object with additional
+methods. Used because the Rasterio.Band.ds.read method reads
+all bands from a multi-band dataset, whereas the RasterLayer read
+method only reads a single band.
+
+Methods encapsulated in RasterLayer objects represent those that
+typically would only be applied to a single-band of a raster, i.e.
+sieve-clump, distance to non-NaN pixels, or arithmetic operations
+on individual layers.
+
+## Attributes
+
+| Name          | Type                                                          | Description                                                                                                     |
+|---------------|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| bidx          | int                                                           | The band index of the RasterLayer within the file dataset.                                                      |
+| dtype         | str                                                           | The data type of the RasterLayer.                                                                               |
+| ds            | rasterio.rasterio.band                                        | The underlying rasterio.band object.                                                                            |
+| name          | str                                                           | A syntactically valid name for the RasterLayer.                                                                 |
+| file          | str                                                           | The file path to the dataset.                                                                                   |
+| nodata        | any number                                                    | The number that is used to represent nodata pixels in the RasterLayer.                                          |
+| driver        | str                                                           | The name of the GDAL format driver.                                                                             |
+| meta          | dict                                                          | A python dict storing the RasterLayer metadata.                                                                 |
+| transform     | affine.Affine object                                          | The affine transform parameters.                                                                                |
+| count         | int                                                           | Number of layers; always equal to 1.                                                                            |
+| shape         | tuple                                                         | Shape of RasterLayer in (rows, columns)                                                                         |
+| width, height | int                                                           | The width (cols) and height (rows) of the dataset.                                                              |
+| bounds        | BoundingBox named tuple                                       | A named tuple with left, bottom, right and top coordinates of the dataset.                                      |
+| cmap          | str                                                           | The name of matplotlib map, or a custom matplotlib.cm.LinearSegmentedColormap or ListedColormap object.         |
+| norm          | matplotlib.matplotlib.colors.matplotlib.colors.Normalize(opt) | A matplotlib.colors.Normalize to apply to the RasterLayer. This overides the norm attribute of the RasterLayer. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [max](#pyspatialml.RasterLayer.max) | Maximum value. |
+| [mean](#pyspatialml.RasterLayer.mean) | Mean value |
+| [median](#pyspatialml.RasterLayer.median) | Median value |
+| [min](#pyspatialml.RasterLayer.min) | Minimum value. |
+| [plot](#pyspatialml.RasterLayer.plot) | Plot a RasterLayer using matplotlib.pyplot.imshow |
+| [read](#pyspatialml.RasterLayer.read) | Read method for a single RasterLayer. |
+| [stddev](#pyspatialml.RasterLayer.stddev) | Standard deviation |
+| [write](#pyspatialml.RasterLayer.write) | Write method for a single RasterLayer. |
+
+### max { #pyspatialml.RasterLayer.max }
+
+`RasterLayer.max(max_pixels=10000)`
+
+Maximum value.
+
+#### Parameters
+
+| Name         | Type   | Description                                           | Default   |
+|--------------|--------|-------------------------------------------------------|-----------|
+| `max_pixels` | int    | Number of pixels used to inform statistical estimate. | `10000`   |
+
+#### Returns
+
+| Type                | Description                               |
+|---------------------|-------------------------------------------|
+| numpy.numpy.float32 | The maximum value of the object's pixels. |
+
+### mean { #pyspatialml.RasterLayer.mean }
+
+`RasterLayer.mean(max_pixels=10000)`
+
+Mean value
+
+#### Parameters
+
+| Name         | Type   | Description                                           | Default   |
+|--------------|--------|-------------------------------------------------------|-----------|
+| `max_pixels` | int    | Number of pixels used to inform statistical estimate. | `10000`   |
+
+#### Returns
+
+| Type                | Description                            |
+|---------------------|----------------------------------------|
+| numpy.numpy.float32 | The mean value of the object's pixels. |
+
+### median { #pyspatialml.RasterLayer.median }
+
+`RasterLayer.median(max_pixels=10000)`
+
+Median value
+
+#### Parameters
+
+| Name         | Type   | Description                                           | Default   |
+|--------------|--------|-------------------------------------------------------|-----------|
+| `max_pixels` | int    | Number of pixels used to inform statistical estimate. | `10000`   |
+
+#### Returns
+
+| Type                | Description                              |
+|---------------------|------------------------------------------|
+| numpy.numpy.float32 | The medium value of the object's pixels. |
+
+### min { #pyspatialml.RasterLayer.min }
+
+`RasterLayer.min(max_pixels=10000)`
+
+Minimum value.
+
+#### Parameters
+
+| Name         | Type   | Description                                           | Default   |
+|--------------|--------|-------------------------------------------------------|-----------|
+| `max_pixels` | int    | Number of pixels used to inform statistical estimate. | `10000`   |
+
+#### Returns
+
+| Type                | Description                     |
+|---------------------|---------------------------------|
+| numpy.numpy.float32 | The minimum value of the object |
+
+### plot { #pyspatialml.RasterLayer.plot }
+
+`RasterLayer.plot(cmap=None, norm=None, ax=None, cax=None, figsize=None, out_shape=(500, 500), categorical=None, legend=False, vmin=None, vmax=None, fig_kwds=None, legend_kwds=None)`
+
+Plot a RasterLayer using matplotlib.pyplot.imshow
+
+#### Parameters
+
+| Name          | Type                                                          | Description                                                                                                                                                                                                                                                                                               | Default      |
+|---------------|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| `cmap`        | str (default None)                                            | The name of a colormap recognized by matplotlib. Overrides the cmap attribute of the RasterLayer.                                                                                                                                                                                                         | `None`       |
+| `norm`        | matplotlib.matplotlib.colors.matplotlib.colors.Normalize(opt) | A matplotlib.colors.Normalize to apply to the RasterLayer. This overrides the norm attribute of the RasterLayer.                                                                                                                                                                                          | `None`       |
+| `ax`          | matplotlib.pyplot.Artist (optional                            | axes instance on which to draw to plot.                                                                                                                                                                                                                                                                   | `None)`      |
+| `cax`         | matplotlib.pyplot.Artist (optional                            | axes on which to draw the legend.                                                                                                                                                                                                                                                                         | `None)`      |
+| `figsize`     | tuple of integers (optional                                   | Size of the matplotlib.figure.Figure. If the ax argument is given explicitly, figsize is ignored.                                                                                                                                                                                                         | `None)`      |
+| `out_shape`   | tuple                                                         | Number of rows, cols to read from the raster datasets for plotting.                                                                                                                                                                                                                                       | `(500, 500)` |
+| `categorical` | bool (optional                                                | if True then the raster values will be considered to represent discrete values, otherwise they are considered to represent continuous values. This overrides the RasterLayer 'categorical' attribute. Setting the argument categorical to True is ignored if the RasterLayer.categorical is already True. | `False)`     |
+| `legend`      | bool (optional                                                | Whether to plot the legend.                                                                                                                                                                                                                                                                               | `False)`     |
+| `vmin`        | scale (optional                                               | vmin and vmax define the data range that the colormap covers. By default, the colormap covers the complete value range of the supplied data. vmin, vmax are ignored if the norm parameter is used.                                                                                                        | `None)`      |
+| `xmax`        | scale (optional                                               | vmin and vmax define the data range that the colormap covers. By default, the colormap covers the complete value range of the supplied data. vmin, vmax are ignored if the norm parameter is used.                                                                                                        | `None)`      |
+| `fig_kwds`    | dict (optional                                                | Additional arguments to pass to the matplotlib.pyplot.figure call when creating the figure object. Ignored if ax is passed to the plot function.                                                                                                                                                          | `None)`      |
+| `legend_kwds` | dict (optional                                                | Keyword arguments to pass to matplotlib.pyplot.colorbar().                                                                                                                                                                                                                                                | `None)`      |
+
+#### Returns
+
+| Type                     | Description   |
+|--------------------------|---------------|
+| matplotlib axes instance |               |
+
+### read { #pyspatialml.RasterLayer.read }
+
+`RasterLayer.read(**kwargs)`
+
+Read method for a single RasterLayer.
+
+Reads the pixel values from a RasterLayer into a ndarray that
+always will have two dimensions in the order of (rows, columns).
+
+#### Parameters
+
+| Name       | Type                                          | Description                         | Default   |
+|------------|-----------------------------------------------|-------------------------------------|-----------|
+| `**kwargs` | named arguments that can be passed to the the | rasterio.DatasetReader.read method. | `{}`      |
+
+### stddev { #pyspatialml.RasterLayer.stddev }
+
+`RasterLayer.stddev(max_pixels=10000)`
+
+Standard deviation
+
+#### Parameters
+
+| Name         | Type   | Description                                           | Default   |
+|--------------|--------|-------------------------------------------------------|-----------|
+| `max_pixels` | int    | Number of pixels used to inform statistical estimate. | `10000`   |
+
+#### Returns
+
+| Type                | Description                                    |
+|---------------------|------------------------------------------------|
+| numpy.numpy.float32 | The standard deviation of the object's pixels. |
+
+### write { #pyspatialml.RasterLayer.write }
+
+`RasterLayer.write(file_path, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Write method for a single RasterLayer.
+
+#### Parameters
+
+| Name        | Type             | Description                                                                                                                | Default    |
+|-------------|------------------|----------------------------------------------------------------------------------------------------------------------------|------------|
+| `file_path` | str(opt)         | File path to save the dataset.                                                                                             | _required_ |
+| `driver`    | str              | GDAL-compatible driver used for the file format.                                                                           | `'GTiff'`  |
+| `dtype`     | str(opt)         | Numpy dtype used for the file. If omitted then the RasterLayer's dtype is used.                                            | `None`     |
+| `nodata`    | any number (opt) | A value used to represent the nodata pixels. If omitted then the RasterLayer's nodata value is used (if assigned already). | `None`     |
+| `kwargs`    | opt              | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.        | `{}`       |
+
+#### Returns
+
+| Type                                | Description   |
+|-------------------------------------|---------------|
+| pyspatialml.pyspatialml.RasterLayer |               |

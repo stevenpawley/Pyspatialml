@@ -421,8 +421,8 @@ class RasterLayer:
 
         Parameters
         ----------
-        **kwargs : named arguments that can be passed to the the
-        rasterio.DatasetReader.read method.
+        **kwargs : named arguments that can be passed to the the 
+            rasterio.DatasetReader.read method.
         """
         if "resampling" in kwargs.keys():
             resampling_methods = [i.name for i in rasterio.enums.Resampling]
@@ -522,6 +522,7 @@ class RasterLayer:
         legend_kwds=None,
     ):
         """Plot a RasterLayer using matplotlib.pyplot.imshow
+
         Parameters
         ----------
         cmap : str (default None)
@@ -574,7 +575,6 @@ class RasterLayer:
         Returns
         -------
         ax : matplotlib axes instance
-
         """
 
         # some checks

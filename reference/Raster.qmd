@@ -1,0 +1,613 @@
+# Raster { #pyspatialml.Raster }
+
+`Raster(self, src, crs=None, transform=None, nodata=None, file_path=None, driver=None, tempdir=tempfile.tempdir, in_memory=False)`
+
+Creates a collection of file-based GDAL-supported raster
+datasets that share a common coordinate reference system and
+geometry.
+
+Raster objects encapsulate RasterLayer objects, which represent
+single band raster datasets that can physically be represented by
+either separate single-band raster files, multi-band raster files,
+or any combination of individual bands from multi-band raster and
+single-band raster datasets.
+
+## Attributes
+
+| Name        | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|-------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| files       | list   | A list of the raster dataset files that are used in the Raster. This does not have to be the same length as the number of RasterLayers because some files may have multiple bands.                                                                                                                                                                                                                                                        |
+| meta        | dict   | A dict containing the raster metadata. The dict contains the following keys/values:  crs : the crs object transform : the Affine.affine transform object width : width of the Raster in pixels height : height of the Raster in pixels count : number of RasterLayers within the Raster dtype : the numpy datatype that represents lowest common         denominator of the different dtypes for all of the layers         in the Raster. |
+| names       | list   | A list of the RasterLayer names.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| block_shape | tuple  | The default block_shape in (rows, cols) for reading windows of data in the Raster for out-of-memory processing.                                                                                                                                                                                                                                                                                                                           |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [aggregate](#pyspatialml.Raster.aggregate) | Aggregates a raster to (usually) a coarser grid cell size. |
+| [alter](#pyspatialml.Raster.alter) | Apply a fitted scikit-learn transformer to a Raster object. |
+| [append](#pyspatialml.Raster.append) | Method to add new RasterLayers to a Raster object. |
+| [apply](#pyspatialml.Raster.apply) | Apply user-supplied function to a Raster object. |
+| [block_shapes](#pyspatialml.Raster.block_shapes) | Generator for windows for optimal reading and writing based |
+| [close](#pyspatialml.Raster.close) | Close all of the RasterLayer objects in the Raster. |
+| [copy](#pyspatialml.Raster.copy) | Creates a shallow copy of a Raster object |
+| [crop](#pyspatialml.Raster.crop) | Crops a Raster object by the supplied bounds. |
+| [drop](#pyspatialml.Raster.drop) | Drop individual RasterLayers from a Raster object |
+| [extract_raster](#pyspatialml.Raster.extract_raster) | Sample a Raster object by an aligned raster of labelled pixels. |
+| [extract_vector](#pyspatialml.Raster.extract_vector) | Sample a Raster/RasterLayer using a geopandas GeoDataframe |
+| [extract_xy](#pyspatialml.Raster.extract_xy) | Samples pixel values using an array of xy locations. |
+| [head](#pyspatialml.Raster.head) | Return the first 10 rows from the Raster as a ndarray |
+| [intersect](#pyspatialml.Raster.intersect) | Perform a intersect operation on the Raster object. |
+| [mask](#pyspatialml.Raster.mask) | Mask a Raster object based on the outline of shapes in a |
+| [predict](#pyspatialml.Raster.predict) | Apply prediction of a scikit learn model to a Raster. |
+| [predict_proba](#pyspatialml.Raster.predict_proba) | Apply class probability prediction of a scikit learn model to a Raster. |
+| [read](#pyspatialml.Raster.read) | Reads data from the Raster object into a numpy array. |
+| [rename](#pyspatialml.Raster.rename) | Rename a RasterLayer within the Raster object. |
+| [sample](#pyspatialml.Raster.sample) | Generates a random sample of according to size, and samples |
+| [scale](#pyspatialml.Raster.scale) | Standardize (centre and scale) a Raster object by |
+| [set_block_shape](#pyspatialml.Raster.set_block_shape) | Set the block shape of the raster, i.e. the height and width |
+| [tail](#pyspatialml.Raster.tail) | Return the last 10 rows from the Raster as a ndarray |
+| [to_crs](#pyspatialml.Raster.to_crs) | Reprojects a Raster object to a different crs. |
+| [to_pandas](#pyspatialml.Raster.to_pandas) | Raster to pandas DataFrame. |
+| [write](#pyspatialml.Raster.write) | Write the Raster object to a file. |
+
+### aggregate { #pyspatialml.Raster.aggregate }
+
+`Raster.aggregate(out_shape, resampling='nearest', file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Aggregates a raster to (usually) a coarser grid cell size.
+
+#### Parameters
+
+| Name         | Type                    | Description                                                                                                                                                                                                                                                                         | Default     |
+|--------------|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `out_shape`  | tuple                   | New shape in (rows, cols).                                                                                                                                                                                                                                                          | _required_  |
+| `resampling` | str (default 'nearest') | Resampling method to use when applying decimated reads when out_shape is specified. Supported methods are: 'average', 'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'.                                                             | `'nearest'` |
+| `file_path`  | str (optional           | File path to save to cropped raster. If not supplied then the aggregated raster is saved to a temporary file.                                                                                                                                                                       | `None)`     |
+| `in_memory`  | bool                    | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                                        | `is False`  |
+| `driver`     | str (default 'GTiff')   | Named of GDAL-supported driver for file export.                                                                                                                                                                                                                                     | `'GTiff'`   |
+| `dtype`      | str (optional           | Coerce RasterLayers to the specified dtype. If not specified then the new intersected Raster is created using the dtype of the existing Raster dataset, which uses a dtype that can accommodate the data types of all of the individual RasterLayers.                               | `None)`     |
+| `nodata`     | any number (optional    | Nodata value for new dataset. If not specified then a nodata value is set based on the minimum permissible value of the Raster's dtype. Note that this does not change the pixel nodata values of the raster, it only changes the metadata of what value represents a nodata pixel. | `None)`     |
+| `kwargs`     | opt                     | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                 | `{}`        |
+
+#### Returns
+
+| Type                      | Description                                   |
+|---------------------------|-----------------------------------------------|
+| pyspatialml.raster.Raster | Raster object aggregated to a new pixel size. |
+
+### alter { #pyspatialml.Raster.alter }
+
+`Raster.alter(transformer, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, progress=False)`
+
+Apply a fitted scikit-learn transformer to a Raster object.
+
+Can be used to transform a raster using methods such as StandardScaler,
+RobustScaler etc.
+
+#### Parameters
+
+| Name          | Type                                       | Description                                                                                                                                        | Default    |
+|---------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `transformer` | a sklearn.preprocessing.Transformer object |                                                                                                                                                    | _required_ |
+| `file_path`   | str (optional                              | Path to a GeoTiff raster for the prediction results. If not specified then the output is written to a temporary file.                              | `None)`    |
+| `in_memory`   | bool                                       | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                       | `is False` |
+| `driver`      | str (default 'GTiff')                      | Named of GDAL-supported driver for file export.                                                                                                    | `'GTiff'`  |
+| `dtype`       | str (optional                              | Optionally specify a GDAL compatible data type when saving to file. If not specified, a data type is set based on the data type of the prediction. | `None)`    |
+| `nodata`      | any number (optional                       | Nodata value for file export. If not specified then the nodata value is derived from the minimum permissible value for the given data type.        | `None)`    |
+| `progress`    | bool (default False)                       | Show progress bar for operation.                                                                                                                   | `False`    |
+
+#### Returns
+
+| Type                                             | Description   |
+|--------------------------------------------------|---------------|
+| Pyspatialml.Raster object with transformed data. |               |
+
+### append { #pyspatialml.Raster.append }
+
+`Raster.append(other, in_place=False)`
+
+Method to add new RasterLayers to a Raster object.
+
+Note that this modifies the Raster object in-place by default.
+
+#### Parameters
+
+| Name       | Type                                     | Description                                                                                    | Default    |
+|------------|------------------------------------------|------------------------------------------------------------------------------------------------|------------|
+| `other`    | Raster object, or list of Raster objects | Object to append to the Raster.                                                                | _required_ |
+| `in_place` | bool (default False)                     | Whether to change the Raster object in-place or leave original and return a new Raster object. | `False`    |
+
+#### Returns
+
+| Type                      | Description                          |
+|---------------------------|--------------------------------------|
+| pyspatialml.raster.Raster | Returned only if `in_place` is False |
+
+### apply { #pyspatialml.Raster.apply }
+
+`Raster.apply(function, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, progress=False, function_args={}, **kwargs)`
+
+Apply user-supplied function to a Raster object.
+
+#### Parameters
+
+| Name            | Type                  | Description                                                                                                                                                                                                               | Default    |
+|-----------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `function`      | function              | Function that takes an numpy array as a single argument.                                                                                                                                                                  | _required_ |
+| `file_path`     | str (optional         | Optional path to save calculated Raster object. If not specified then a tempfile is used.                                                                                                                                 | `None)`    |
+| `in_memory`     | bool                  | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                              | `is False` |
+| `driver`        | str (default 'GTiff') | Named of GDAL-supported driver for file export.                                                                                                                                                                           | `'GTiff'`  |
+| `dtype`         | str (optional         | Coerce RasterLayers to the specified dtype. If not specified then the new Raster is created using the dtype of the calculation result.                                                                                    | `None)`    |
+| `nodata`        | any number (optional  | Nodata value for new dataset. If not specified then a nodata value is set based on the minimum permissible value of the Raster's data type. Note that this changes the values of the pixels that represent nodata pixels. | `None)`    |
+| `progress`      | bool (default False)  | Optionally show progress of transform operations.                                                                                                                                                                         | `False`    |
+| `function_args` | dict(optional)        | Optionally pass arguments to the `function` as a dict or keyword arguments.                                                                                                                                               | `{}`       |
+| `kwargs`        | opt                   | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                       | `{}`       |
+
+#### Returns
+
+| Type                      | Description                              |
+|---------------------------|------------------------------------------|
+| pyspatialml.raster.Raster | Raster containing the calculated result. |
+
+### block_shapes { #pyspatialml.Raster.block_shapes }
+
+`Raster.block_shapes(rows, cols)`
+
+Generator for windows for optimal reading and writing based
+on the raster format Windows and returns as a tuple with xoff,
+yoff, width, height.
+
+#### Parameters
+
+| Name   | Type   | Description                 | Default    |
+|--------|--------|-----------------------------|------------|
+| `rows` | int    | Height of window in rows.   | _required_ |
+| `cols` | int    | Width of window in columns. | _required_ |
+
+### close { #pyspatialml.Raster.close }
+
+`Raster.close()`
+
+Close all of the RasterLayer objects in the Raster.
+
+Note that this will cause any rasters based on temporary files
+to be removed. This is intended as a method of clearing
+temporary files that may have accumulated during an analysis
+session.
+
+### copy { #pyspatialml.Raster.copy }
+
+`Raster.copy(subset=None)`
+
+Creates a shallow copy of a Raster object
+
+Note that shallow in the context of a Raster object means that
+an immutable copy of the object is made, however the on-disk and
+in-memory file locations remain the same.
+
+#### Parameters
+
+| Name     | Type   | Description                                    | Default   |
+|----------|--------|------------------------------------------------|-----------|
+| `subset` | opt    | A list of layer names to subset while copying. | `None`    |
+
+#### Returns
+
+| Type                      | Description   |
+|---------------------------|---------------|
+| pyspatialml.raster.Raster |               |
+
+### crop { #pyspatialml.Raster.crop }
+
+`Raster.crop(bounds, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Crops a Raster object by the supplied bounds.
+
+#### Parameters
+
+| Name        | Type                                      | Description                                                                                                                                                                                                                                                                             | Default    |
+|-------------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `bounds`    | tuple                                     | A tuple containing the bounding box to clip by in the form of (xmin, ymin, xmax, ymax).                                                                                                                                                                                                 | _required_ |
+| `file_path` | str (optional                             | File path to save to cropped raster. If not supplied then the cropped raster is saved to a temporary file.                                                                                                                                                                              | `None)`    |
+| `in_memory` | bool                                      | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                                            | `is False` |
+| `driver`    | str (default 'GTiff'). Default is 'GTiff' | Named of GDAL-supported driver for file export.                                                                                                                                                                                                                                         | `'GTiff'`  |
+| `dtype`     | str (optional                             | Coerce RasterLayers to the specified dtype. If not specified then the new intersected Raster is created using the dtype of theexisting Raster dataset, which uses a dtype that can accommodate the data types of all of the individual RasterLayers.                                    | `None)`    |
+| `nodata`    | any number (optional                      | Nodata value for new dataset. If not specified then a nodata value is set based on the minimum permissible value of the Raster's data type. Note that this does not change the pixel nodata values of the raster, it only changes the metadata of what value represents a nodata pixel. | `None)`    |
+| `kwargs`    | opt                                       | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                     | `{}`       |
+
+#### Returns
+
+| Type                      | Description                   |
+|---------------------------|-------------------------------|
+| pyspatialml.raster.Raster | Raster cropped to new extent. |
+
+### drop { #pyspatialml.Raster.drop }
+
+`Raster.drop(labels, in_place=False)`
+
+Drop individual RasterLayers from a Raster object
+
+Note that this modifies the Raster object in-place by default.
+
+#### Parameters
+
+| Name       | Type                      | Description                                                                                           | Default    |
+|------------|---------------------------|-------------------------------------------------------------------------------------------------------|------------|
+| `labels`   | single label or list-like | Index (int) or layer name to drop. Can be a single integer or label, or a list of integers or labels. | _required_ |
+| `in_place` | bool (default False)      | Whether to change the Raster object in-place or leave original and return a new Raster object.        | `False`    |
+
+#### Returns
+
+| Type                           | Description                         |
+|--------------------------------|-------------------------------------|
+| pyspatialml.pyspatialml.Raster | Returned only if `in_place` is True |
+
+### extract_raster { #pyspatialml.Raster.extract_raster }
+
+`Raster.extract_raster(src, progress=False)`
+
+Sample a Raster object by an aligned raster of labelled pixels.
+
+#### Parameters
+
+| Name       | Type      | Description                                                                             | Default    |
+|------------|-----------|-----------------------------------------------------------------------------------------|------------|
+| `src`      |           | Single band raster containing labelled pixels as an open rasterio DatasetReader object. | _required_ |
+| `progress` | bool(opt) | Show a progress bar for extraction.                                                     | `False`    |
+
+#### Returns
+
+| Type                             | Description                                                                      |
+|----------------------------------|----------------------------------------------------------------------------------|
+| geopandas.geopandas.GeoDataFrame | Geodataframe containing extracted data as point features if `return_array=False` |
+
+### extract_vector { #pyspatialml.Raster.extract_vector }
+
+`Raster.extract_vector(gdf, progress=False)`
+
+Sample a Raster/RasterLayer using a geopandas GeoDataframe
+containing points, lines or polygon features.
+
+#### Parameters
+
+| Name       | Type      | Description                                                                                                           | Default    |
+|------------|-----------|-----------------------------------------------------------------------------------------------------------------------|------------|
+| `gdf`      |           | Containing either point, line or polygon geometries. Overlapping geometries will cause the same pixels to be sampled. | _required_ |
+| `progress` | bool(opt) | Show a progress bar for extraction.                                                                                   | `False`    |
+
+#### Returns
+
+| Type                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| geopandas.geopandas.GeoDataframe | Containing extracted data as point geometries (one point per pixel). The resulting GeoDataFrame is indexed using a named pandas.MultiIndex, with `pixel_idx` index referring to the index of each pixel that was sampled, and the `geometry_idx` index referring to the index of the each geometry in the supplied `gdf`. This makes it possible to keep track of how sampled pixel relates to the original geometries, i.e. multiple pixels being extracted within the area of a single polygon that can be referred to using the `geometry_idx`.  The extracted data can subsequently be joined with the attribute table of the supplied `gdf` using:  training_py = geopandas.read_file(nc.polygons) df = self.stack.extract_vector(gdf=training_py) df = df.dropna()  df = df.merge(     right=training_py.loc[:, ("id", "label")],     left_on="polygon_idx",     right_on="id",     right_index=True ) |
+
+### extract_xy { #pyspatialml.Raster.extract_xy }
+
+`Raster.extract_xy(xys, return_array=False, progress=False)`
+
+Samples pixel values using an array of xy locations.
+
+#### Parameters
+
+| Name           | Type          | Description                                                                                                                                                                       | Default    |
+|----------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `xys`          | 2d array-like | x and y coordinates from which to sample the raster (n_samples, xys).                                                                                                             | _required_ |
+| `return_array` | bool(opt)     | By default the extracted pixel values are returned as a geopandas.GeoDataFrame. If `return_array=True` then the extracted pixel values are returned as a tuple of numpy.ndarrays. | `False`    |
+| `progress`     | bool(opt)     | Show a progress bar for extraction.                                                                                                                                               | `False`    |
+
+#### Returns
+
+| Type                             | Description                                                                            |
+|----------------------------------|----------------------------------------------------------------------------------------|
+| geopandas.geopandas.GeoDataframe | Containing extracted data as point geometries if `return_array=False`.                 |
+| numpy.numpy.ndarray              | 2d masked array containing sampled raster values (sample, bands) at the x,y locations. |
+
+### head { #pyspatialml.Raster.head }
+
+`Raster.head()`
+
+Return the first 10 rows from the Raster as a ndarray
+
+### intersect { #pyspatialml.Raster.intersect }
+
+`Raster.intersect(file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Perform a intersect operation on the Raster object.
+
+Computes the geometric intersection of the RasterLayers with
+the Raster object. This will cause nodata values in any of
+the rasters to be propagated through all of the output rasters.
+
+#### Parameters
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                           | Default    |
+|-------------|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `file_path` | str (optional         | File path to save to resulting Raster. If not supplied then the resulting Raster is saved to a temporary file.                                                                                                                                        | `None)`    |
+| `in_memory` | bool                  | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                          | `is False` |
+| `driver`    | str (default 'GTiff') | Named of GDAL-supported driver for file export.                                                                                                                                                                                                       | `'GTiff'`  |
+| `dtype`     | str (optional         | Coerce RasterLayers to the specified dtype. If not specified then the new intersected Raster is created using the dtype of the existing Raster dataset, which uses a dtype that can accommodate the data types of all of the individual RasterLayers. | `None)`    |
+| `nodata`    | any number (optional  | Nodata value for new dataset. If not specified then a nodata value is set based on the minimum permissible value of the Raster's data type. Note that this changes the values of the pixels that represent nodata to the new value.                   | `None)`    |
+| `kwargs`    | opt                   | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                   | `{}`       |
+
+#### Returns
+
+| Type                      | Description                                                                                    |
+|---------------------------|------------------------------------------------------------------------------------------------|
+| pyspatialml.raster.Raster | Raster with layers that are masked based on a union of all masks in the suite of RasterLayers. |
+
+### mask { #pyspatialml.Raster.mask }
+
+`Raster.mask(shapes, invert=False, crop=True, pad=False, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Mask a Raster object based on the outline of shapes in a
+geopandas.GeoDataFrame
+
+#### Parameters
+
+| Name        | Type                             | Description                                                                                                                                                                                                                                                      | Default    |
+|-------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `shapes`    | geopandas.geopandas.GeoDataFrame | GeoDataFrame containing masking features.                                                                                                                                                                                                                        | _required_ |
+| `invert`    | bool (default False)             | If False then pixels outside shapes will be masked. If True then pixels inside shape will be masked.                                                                                                                                                             | `False`    |
+| `crop`      | bool (default True)              | Crop the raster to the extent of the shapes.                                                                                                                                                                                                                     | `True`     |
+| `pad`       | bool (default False)             | If True, the features will be padded in each direction by one half of a pixel prior to cropping raster.                                                                                                                                                          | `False`    |
+| `file_path` | str (optional                    | File path to save to resulting Raster. If not supplied then the resulting Raster is saved to a temporary file.                                                                                                                                                   | `None)`    |
+| `in_memory` | bool                             | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                     | `is False` |
+| `driver`    | str (default 'GTiff')            | Named of GDAL-supported driver for file export.                                                                                                                                                                                                                  | `'GTiff'`  |
+| `dtype`     | str (optional                    | Coerce RasterLayers to the specified dtype. If not specified then the cropped Raster is created using the existing dtype, which usesa dtype that can accommodate the data types of all of the individual RasterLayers.                                           | `None)`    |
+| `nodata`    | any number (optional             | Nodata value for cropped dataset. If not specified then a nodata value is set based on the minimum permissible value of the Raster's data type. Note that this changes the values of the pixels to the new nodata value, and changes the metadata of the raster. | `None)`    |
+| `kwargs`    | opt                              | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                              | `{}`       |
+
+#### Returns
+
+| Type                           | Description                |
+|--------------------------------|----------------------------|
+| pyspatialml.pyspatialml.Raster | Raster with masked layers. |
+
+### predict { #pyspatialml.Raster.predict }
+
+`Raster.predict(estimator, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, progress=False, constants=None, **kwargs)`
+
+Apply prediction of a scikit learn model to a Raster.
+
+The model can represent any scikit learn model or compatible
+api with a `fit` and `predict` method. These can consist of
+classification or regression models. Multi-class
+classifications and multi-target regressions are also
+supported.
+
+#### Parameters
+
+| Name        | Type                                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Default    |
+|-------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `estimator` | estimator object implementing 'fit' | The object to use to fit the data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | _required_ |
+| `file_path` | str (optional                       | Path to a GeoTiff raster for the prediction results. If not specified then the output is written to a temporary file.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `None)`    |
+| `in_memory` | bool                                | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `is False` |
+| `driver`    | str (default 'GTiff')               | Named of GDAL-supported driver for file export                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `'GTiff'`  |
+| `dtype`     | str (optional                       | Optionally specify a GDAL compatible data type when saving to file. If not specified, np.float32 is assumed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `None)`    |
+| `nodata`    | any number (optional                | Nodata value for file export. If not specified then the nodata value is derived from the minimum permissible value for the given data type.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `None)`    |
+| `progress`  | bool (default False)                | Show progress bar for prediction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `False`    |
+| `constants` |                                     | Constant features to add to the Raster object with each value in a list or 1d ndarray representing an additional feature.  If a list-like object of values os passed, then each numeric value will be appended as constant features to the last columns in the data. It is therefore important that all features including constant features are present in the same order as what was used to train the model.  If a dict is passed, then the keys of the dict must refer to the names of raster layers in the Raster object. In this case, the values of the dict will replace the values of the raster layers in the Raster object. | `None`     |
+| `kwargs`    | opt                                 | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `{}`       |
+
+#### Returns
+
+| Type                      | Description                                                                                                                                                                                                                                                                  |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| pyspatialml.raster.Raster | Raster object containing prediction results as a RasterLayers. For classification and regression models, the Raster will contain a single RasterLayer, unless the model is multi-class or multi-target. Layers are named automatically as `pred_raw_n` with n = 1, 2, 3 ..n. |
+
+### predict_proba { #pyspatialml.Raster.predict_proba }
+
+`Raster.predict_proba(estimator, file_path=None, in_memory=False, indexes=None, driver='GTiff', dtype=None, nodata=None, constants=None, progress=False, **kwargs)`
+
+Apply class probability prediction of a scikit learn model to a Raster.
+
+#### Parameters
+
+| Name        | Type                                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Default    |
+|-------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `estimator` | estimator object implementing 'fit' | The object to use to fit the data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | _required_ |
+| `file_path` | str (optional                       | Path to a GeoTiff raster for the prediction results. If not specified then the output is written to a temporary file.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `None)`    |
+| `in_memory` | bool                                | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `is False` |
+| `indexes`   | list of integers (optional          | List of class indices to export. In some circumstances, only a subset of the class probability estimations are desired, for instance when performing a binary classification only the probabilities for the positive class may be desired.                                                                                                                                                                                                                                                                                                                                                                                             | `None)`    |
+| `driver`    | str (default 'GTiff')               | Named of GDAL-supported driver for file export.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `'GTiff'`  |
+| `dtype`     | str (optional                       | Optionally specify a GDAL compatible data type when saving to file. If not specified, a data type is set based on the data type of the prediction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `None)`    |
+| `nodata`    | any number (optional                | Nodata value for file export. If not specified then the nodata value is derived from the minimum permissible value for the given data type.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `None)`    |
+| `progress`  | bool (default False)                | Show progress bar for prediction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `False`    |
+| `constants` |                                     | Constant features to add to the Raster object with each value in a list or 1d ndarray representing an additional feature.  If a list-like object of values os passed, then each numeric value will be appended as constant features to the last columns in the data. It is therefore important that all features including constant features are present in the same order as what was used to train the model.  If a dict is passed, then the keys of the dict must refer to the names of raster layers in the Raster object. In this case, the values of the dict will replace the values of the raster layers in the Raster object. | `None`     |
+| `kwargs`    | opt                                 | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `{}`       |
+
+#### Returns
+
+| Type                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| pyspatialml.raster.Raster | Raster containing predicted class probabilities. Each predicted class is represented by a RasterLayer object. The RasterLayers are named `prob_n` for 1,2,3..n, with `n` based on the index position of the classes, not the number of the class itself.  For example, a classification model predicting classes with integer values of 1, 3, and 5 would result in three RasterLayers named 'prob_1', 'prob_2' and 'prob_3'. |
+
+### read { #pyspatialml.Raster.read }
+
+`Raster.read(masked=False, window=None, out_shape=None, resampling='nearest', as_df=False, **kwargs)`
+
+Reads data from the Raster object into a numpy array.
+
+#### Parameters
+
+| Name         | Type                                    | Description                                                                                                                                                                                                             | Default     |
+|--------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `masked`     | bool (default False)                    | Read data into a masked array.                                                                                                                                                                                          | `False`     |
+| `window`     | rasterio.window.Window object (optional | Tuple of col_off, row_off, width, height of a window of data to read a chunk of data into a ndarray.                                                                                                                    | `None)`     |
+| `out_shape`  | tuple (optional                         | Shape of shape of array (rows, cols) to read data into using decimated reads.                                                                                                                                           | `None)`     |
+| `resampling` | str (default 'nearest')                 | Resampling method to use when applying decimated reads when out_shape is specified. Supported methods are: 'average', 'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'. | `'nearest'` |
+| `as_df`      | bool (default False)                    | Whether to return the data as a pandas.DataFrame with columns named by the RasterLayer names.                                                                                                                           | `False`     |
+| `**kwargs`   | dict                                    | Other arguments to pass to rasterio.DatasetReader.read method                                                                                                                                                           | `{}`        |
+
+#### Returns
+
+| Type    | Description                                                                           |
+|---------|---------------------------------------------------------------------------------------|
+| ndarray | Raster values in 3d ndarray  with the dimensions in order of (band, row, and column). |
+
+### rename { #pyspatialml.Raster.rename }
+
+`Raster.rename(names, in_place=False)`
+
+Rename a RasterLayer within the Raster object.
+
+#### Parameters
+
+| Name       | Type                 | Description                                                                                             | Default    |
+|------------|----------------------|---------------------------------------------------------------------------------------------------------|------------|
+| `names`    | dict                 | dict of old_name : new_name                                                                             | _required_ |
+| `in_place` | bool (default False) | Whether to change names of the Raster object in-place or leave original and return a new Raster object. | `False`    |
+
+#### Returns
+
+| Type                           | Description                          |
+|--------------------------------|--------------------------------------|
+| pyspatialml.pyspatialml.Raster | Returned only if `in_place` is False |
+
+### sample { #pyspatialml.Raster.sample }
+
+`Raster.sample(size, strata=None, return_array=False, random_state=None)`
+
+Generates a random sample of according to size, and samples
+the pixel values.
+
+#### Parameters
+
+| Name           | Type                            | Description                                                                                                           | Default    |
+|----------------|---------------------------------|-----------------------------------------------------------------------------------------------------------------------|------------|
+| `size`         | int                             | Number of random samples or number of samples per strata if a `strata` object is supplied.                            | _required_ |
+| `strata`       | pyspatialml Raster object (opt) | Whether to use stratified instead of random sampling. Strata can be supplied using another pyspatialml.Raster object. | `None`     |
+| `return_array` | bool(opt)                       | Optionally return extracted data as separate X and xy masked numpy arrays.                                            | `False`    |
+| `random_state` | int(opt)                        | integer to use within random.seed.                                                                                    | `None`     |
+
+#### Returns
+
+| Type                    | Description                                                                                                                                                                                                     |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| pandas.pandas.DataFrame | DataFrame containing values of names of RasterLayers in the Raster if `return_array` is False.                                                                                                                  |
+| tuple                   | A tuple containing two elements if `return_array` is True:  - numpy.ndarray     Numpy array of extracted raster values, typically 2d. - numpy.ndarray     2D numpy array of xy coordinates of extracted values. |
+
+### scale { #pyspatialml.Raster.scale }
+
+`Raster.scale(centre=True, scale=True, file_path=None, in_memory=False, driver='GTiff', dtype=None, nodata=None, progress=False)`
+
+Standardize (centre and scale) a Raster object by
+subtracting the mean and dividing by the standard deviation for
+each layer in the object.
+
+The mean and standard deviation statistics are calculated
+for each layer separately.
+
+#### Parameters
+
+| Name        | Type                  | Description                                                                                                                                        | Default    |
+|-------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `centre`    | bool                  | Whether to subtract the mean from each layer.                                                                                                      | `is True`  |
+| `scale`     | bool                  | Whether to divide each layer by the standard deviation of the layer.                                                                               | `is True`  |
+| `file_path` | str (optional         | Path to a GeoTiff raster for the prediction results. If not specified then the output is written to a temporary file.                              | `None)`    |
+| `in_memory` | bool                  | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                       | `is False` |
+| `driver`    | str (default 'GTiff') | Named of GDAL-supported driver for file export.                                                                                                    | `'GTiff'`  |
+| `dtype`     | str (optional         | Optionally specify a GDAL compatible data type when saving to file. If not specified, a data type is set based on the data type of the prediction. | `None)`    |
+| `nodata`    | any number (optional  | Nodata value for file export. If not specified then the nodata value is derived from the minimum permissible value for the given data type.        | `None)`    |
+| `progress`  | bool (default False)  | Show progress bar for operation.                                                                                                                   | `False`    |
+
+#### Returns
+
+| Type                                          | Description   |
+|-----------------------------------------------|---------------|
+| Pyspatialml.Raster object with rescaled data. |               |
+
+### set_block_shape { #pyspatialml.Raster.set_block_shape }
+
+`Raster.set_block_shape(value)`
+
+Set the block shape of the raster, i.e. the height and width
+of windows to read in chunks for the predict, predict_proba,
+apply, and other supported-methods.
+
+Note block shape can also be set with `myraster.block_shape = (500, 500)`
+
+#### Parameters
+
+| Name    | Type   | Description                                     | Default    |
+|---------|--------|-------------------------------------------------|------------|
+| `value` | tuple  | A tuple of (height, width) for the block window | _required_ |
+
+### tail { #pyspatialml.Raster.tail }
+
+`Raster.tail()`
+
+Return the last 10 rows from the Raster as a ndarray
+
+### to_crs { #pyspatialml.Raster.to_crs }
+
+`Raster.to_crs(crs, resampling='nearest', file_path=None, in_memory=False, driver='GTiff', nodata=None, n_jobs=1, warp_mem_lim=0, progress=False, **kwargs)`
+
+Reprojects a Raster object to a different crs.
+
+#### Parameters
+
+| Name           | Type                                   | Description                                                                                                                                                                                                                                                                                           | Default     |
+|----------------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `crs`          | rasterio.transform.CRS object, or dict | Example: CRS({'init': 'EPSG:4326'})                                                                                                                                                                                                                                                                   | _required_  |
+| `resampling`   | str (default 'nearest')                | Resampling method to use.  One of the following: nearest, bilinear, cubic, cubic_spline, lanczos, average, mode, max (GDAL >= 2.2), min (GDAL >= 2.2), med (GDAL >= 2.2), q1 (GDAL >= 2.2), q3 (GDAL >= 2.2)                                                                                          | `'nearest'` |
+| `file_path`    | str (optional                          | Optional path to save reprojected Raster object. If not specified then a tempfile is used.                                                                                                                                                                                                            | `None)`     |
+| `in_memory`    | bool                                   | Whether to initiated the Raster from an array and store the data in-memory using Rasterio's in-memory files.                                                                                                                                                                                          | `is False`  |
+| `driver`       | str (default 'GTiff')                  | Named of GDAL-supported driver for file export.                                                                                                                                                                                                                                                       | `'GTiff'`   |
+| `nodata`       | any number (optional                   | Nodata value for new dataset. If not specified then the existing nodata value of the Raster object is used, which can accommodate the dtypes of the individual layers in the Raster.                                                                                                                  | `None)`     |
+| `n_jobs`       | int (default 1)                        | The number of warp worker threads.                                                                                                                                                                                                                                                                    | `1`         |
+| `warp_mem_lim` | int (default 0)                        | The warp operation memory limit in MB. Larger values allow the warp operation to be carried out in fewer chunks. The amount of memory required to warp a 3-band uint8 2000 row x 2000 col raster to a destination of the same size is approximately 56 MB. The default (0) means 64 MB with GDAL 2.2. | `0`         |
+| `progress`     | bool (default False)                   | Optionally show progress of transform operations.                                                                                                                                                                                                                                                     | `False`     |
+| `kwargs`       | opt                                    | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                                   | `{}`        |
+
+#### Returns
+
+| Type                      | Description                    |
+|---------------------------|--------------------------------|
+| pyspatialml.raster.Raster | Raster following reprojection. |
+
+### to_pandas { #pyspatialml.Raster.to_pandas }
+
+`Raster.to_pandas(max_pixels=None, resampling='nearest')`
+
+Raster to pandas DataFrame.
+
+#### Parameters
+
+| Name         | Type                    | Description                                                                                                                                                                                                             | Default     |
+|--------------|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `max_pixels` |                         | Maximum number of pixels to sample. By default all pixels are used.                                                                                                                                                     | `None`      |
+| `resampling` | str (default 'nearest') | Resampling method to use when applying decimated reads when out_shape is specified. Supported methods are: 'average', 'bilinear', 'cubic', 'cubic_spline', 'gauss', 'lanczos', 'max', 'med', 'min', 'mode', 'q1', 'q3'. | `'nearest'` |
+
+#### Returns
+
+| Type                    | Description                                                                                              |
+|-------------------------|----------------------------------------------------------------------------------------------------------|
+| pandas.pandas.DataFrame | DataFrame containing values of names of RasterLayers in the Raster as columns, and pixel values as rows. |
+
+### write { #pyspatialml.Raster.write }
+
+`Raster.write(file_path, driver='GTiff', dtype=None, nodata=None, **kwargs)`
+
+Write the Raster object to a file.
+
+Overrides the write RasterBase class method, which is a partial
+function of the rasterio.DatasetReader.write method.
+
+#### Parameters
+
+| Name        | Type                      | Description                                                                                                                                                                                                                                                                                                                                   | Default    |
+|-------------|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| `file_path` | str                       | File path used to save the Raster object.                                                                                                                                                                                                                                                                                                     | _required_ |
+| `driver`    | str (default is 'GTiff'). | Name of GDAL driver used to save Raster data.                                                                                                                                                                                                                                                                                                 | `'GTiff'`  |
+| `dtype`     | str (opt                  | Optionally specify a numpy compatible data type when saving to file. If not specified, a data type is selected based on the data types of RasterLayers in the Raster object.                                                                                                                                                                  | `None)`    |
+| `nodata`    | any number (opt           | Optionally assign a new nodata value when saving to file. If not specified a nodata value based on the minimum permissible value for the data types of RasterLayers in the Raster object is used. Note that this does not change the pixel nodata values of the raster, it only changes the metadata of what value represents a nodata pixel. | `None)`    |
+| `kwargs`    | opt                       | Optional named arguments to pass to the format drivers. For example can be `compress="deflate"` to add compression.                                                                                                                                                                                                                           | `{}`       |
+
+#### Returns
+
+| Type                      | Description                        |
+|---------------------------|------------------------------------|
+| pyspatialml.raster.Raster | New Raster object from saved file. |

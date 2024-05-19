@@ -1,0 +1,119 @@
+# preprocessing { #pyspatialml.preprocessing }
+
+`preprocessing`
+
+
+
+## Functions
+
+| Name | Description |
+| --- | --- |
+| [distance_to_corners](#pyspatialml.preprocessing.distance_to_corners) | Generate buffer distances to corner and centre coordinates of raster |
+| [distance_to_samples](#pyspatialml.preprocessing.distance_to_samples) | Generate buffer distances to x,y coordinates. |
+| [one_hot_encode](#pyspatialml.preprocessing.one_hot_encode) | One-hot encoding of a RasterLayer. |
+| [rotated_coordinates](#pyspatialml.preprocessing.rotated_coordinates) | Generate 2d arrays with n_angles rotated coordinates. |
+| [xy_coordinates](#pyspatialml.preprocessing.xy_coordinates) | Fill 2d arrays with their x,y indices. |
+
+### distance_to_corners { #pyspatialml.preprocessing.distance_to_corners }
+
+`preprocessing.distance_to_corners(layer, file_path, driver='GTiff')`
+
+Generate buffer distances to corner and centre coordinates of raster
+extent.
+
+#### Parameters
+
+| Name        | Type                                               | Description                                      | Default    |
+|-------------|----------------------------------------------------|--------------------------------------------------|------------|
+| `layer`     | pyspatialml.RasterLayer, or rasterio.DatasetReader |                                                  | _required_ |
+| `file_path` | str                                                | File path to save to the resulting Raster object | _required_ |
+| `driver`    | (str, optional.optional.Default is GTiff)          | GDAL driver to use to save raster.               | `'GTiff'`  |
+
+#### Returns
+
+| Type                      | Description   |
+|---------------------------|---------------|
+| pyspatialml.Raster object |               |
+
+### distance_to_samples { #pyspatialml.preprocessing.distance_to_samples }
+
+`preprocessing.distance_to_samples(layer, file_path, rows, cols, driver='GTiff')`
+
+Generate buffer distances to x,y coordinates.
+
+#### Parameters
+
+| Name        | Type                                               | Description                                       | Default    |
+|-------------|----------------------------------------------------|---------------------------------------------------|------------|
+| `layer`     | pyspatialml.RasterLayer, or rasterio.DatasetReader | RasterLayer to use as a template.                 | _required_ |
+| `file_path` | str                                                | File path to save to the resulting Raster object. | _required_ |
+| `rows`      | 1d numpy array                                     | array of row indexes.                             | _required_ |
+| `cols`      | 1d numpy array                                     | array of column indexes.                          | _required_ |
+| `driver`    | str                                                | GDAL driver to use to save raster.                | `'GTiff'`  |
+
+#### Returns
+
+| Type                      | Description   |
+|---------------------------|---------------|
+| pyspatialml.Raster object |               |
+
+### one_hot_encode { #pyspatialml.preprocessing.one_hot_encode }
+
+`preprocessing.one_hot_encode(layer, file_path, categories=None, driver='GTiff')`
+
+One-hot encoding of a RasterLayer.
+
+#### Parameters
+
+| Name         | Type                                    | Description                                                                                                             | Default    |
+|--------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------|------------|
+| `layer`      | pyspatialml.pyspatialml.RasterLayer     | Containing categories to perform one-hot encoding on.                                                                   | _required_ |
+| `file_path`  | str                                     | File path to save one-hot encoded raster.                                                                               | _required_ |
+| `categories` | (list, ndarray)                         | Optional list of categories to extract. Default performs one-hot encoding on all categorical values in the input layer. | `None`     |
+| `driver`     | (str, options.options.Default is GTiff) | GDAL-compatible driver.                                                                                                 | `'GTiff'`  |
+
+#### Returns
+
+| Type                           | Description                                                        |
+|--------------------------------|--------------------------------------------------------------------|
+| pyspatialml.pyspatialml.Raster | Each categorical value is encoded as a layer with a Raster object. |
+
+### rotated_coordinates { #pyspatialml.preprocessing.rotated_coordinates }
+
+`preprocessing.rotated_coordinates(layer, file_path, n_angles=8, driver='GTiff')`
+
+Generate 2d arrays with n_angles rotated coordinates.
+
+#### Parameters
+
+| Name       | Type                                               | Description                                      | Default    |
+|------------|----------------------------------------------------|--------------------------------------------------|------------|
+| `layer`    | pyspatialml.RasterLayer, or rasterio.DatasetReader | RasterLayer to use as a template.                | _required_ |
+| `n_angles` | (int, optional.optional.Default is 8)              | Number of angles to rotate coordinate system by. | `8`        |
+| `driver`   | (str, optional.optional.Default is GTiff)          | GDAL driver to use to save raster.               | `'GTiff'`  |
+
+#### Returns
+
+| Type                           | Description   |
+|--------------------------------|---------------|
+| pyspatialml.pyspatialml.Raster |               |
+
+### xy_coordinates { #pyspatialml.preprocessing.xy_coordinates }
+
+`preprocessing.xy_coordinates(layer, file_path, driver='GTiff')`
+
+Fill 2d arrays with their x,y indices.
+
+#### Parameters
+
+| Name        | Type                                               | Description                                        | Default    |
+|-------------|----------------------------------------------------|----------------------------------------------------|------------|
+| `layer`     | pyspatialml.RasterLayer, or rasterio.DatasetReader | RasterLayer to use as a template.                  | _required_ |
+| `file_path` | str                                                | File path to save to the resulting Raster object.s | _required_ |
+| `driver`    | (str, options.options.Default is GTiff)            | GDAL driver to use to save raster.                 | `'GTiff'`  |
+
+#### Returns
+
+| Type                      | Description   |
+|---------------------------|---------------|
+| pyspatialml.Raster object |               |

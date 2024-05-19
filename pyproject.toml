@@ -21,6 +21,15 @@ matplotlib = "^3.9.0"
 scikit-learn = "^1.4.2"
 affine = "^2.4.0"
 
+[tool.poetry.group.dev.dependencies]
+quartodoc = "^0.7.2"
+jupyter = "^1.0.0"
+ipykernel = "^6.29.4"
+black = "^24.4.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

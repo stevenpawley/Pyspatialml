@@ -7,8 +7,8 @@ from shapely.geometry import Point
 def filter_points(gdf, min_dist=0, remove="first"):
     """Filter points in geodataframe using a minimum distance buffer.
 
-    Args
-    ----
+    Parameters
+    ----------
     gdf : Geopandas GeoDataFrame
         Containing point geometries.
 
@@ -43,8 +43,8 @@ def get_random_point_in_polygon(poly):
     """Generates random shapely Point geometry objects within a single
     shapely Polygon object.
 
-    Args
-    ----
+    Parameters
+    ----------
     poly : Shapely Polygon object
 
     Returns

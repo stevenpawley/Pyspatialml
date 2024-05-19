@@ -1,0 +1,42 @@
+---
+title: "Random Sampling"
+format:
+  html:
+    code-fold: false
+jupyter: python3
+---
+
+## Random Uniform Sampling
+
+For many spatial models, it is common to take a random sample of the
+predictors to represent a single class (i.e. an environmental background or
+pseudo-absences in a binary classification model). The sample function is
+supplied in the sampling module for this purpose:
+
+```{python}
+from pyspatialml import Raster
+import pyspatialml.datasets.nc as nc
+import matplotlib.pyplot as plt
+
+predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
+stack = Raster(predictors)
+
+# extract training data using a random sample
+df_rand = stack.sample(size=1000, random_state=1)
+df_rand.plot()
+```
+
+## Stratified Random Sampling
+
+The sample function also enables stratified random sampling based on passing a
+categorical raster dataset to the strata argument. The categorical raster
+should spatially overlap with the dataset to be sampled, but it does not need
+to be of the same grid resolution. This raster should be passed as a opened
+rasterio dataset:
+
+```{python}
+strata = Raster(nc.strata)
+df_strata = stack.sample(size=5, strata=strata, random_state=1)
+df_strata = df_strata.dropna()
+df_strata
+```

@@ -1,0 +1,18 @@
+/*-- scss:defaults --*/
+
+$primary: #000000 !default;
+$link-color: #E66234 !default;
+
+// Fonts
+$h1-font-size: 1.9rem;
+$h2-font-size: 1.3rem;
+
+// Navbar
+.navbar {
+  background-color: #9D9D9D !important;
+  font-size: 1.1rem;
+}
+
+.navbar-brand > img {
+  max-height: 45px;
+}

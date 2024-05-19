@@ -1,0 +1,51 @@
+# vector { #pyspatialml.vector }
+
+`vector`
+
+
+
+## Functions
+
+| Name | Description |
+| --- | --- |
+| [filter_points](#pyspatialml.vector.filter_points) | Filter points in geodataframe using a minimum distance buffer. |
+| [get_random_point_in_polygon](#pyspatialml.vector.get_random_point_in_polygon) | Generates random shapely Point geometry objects within a single |
+
+### filter_points { #pyspatialml.vector.filter_points }
+
+`vector.filter_points(gdf, min_dist=0, remove='first')`
+
+Filter points in geodataframe using a minimum distance buffer.
+
+#### Parameters
+
+| Name       | Type                                | Description                                                            | Default    |
+|------------|-------------------------------------|------------------------------------------------------------------------|------------|
+| `gdf`      | Geopandas GeoDataFrame              | Containing point geometries.                                           | _required_ |
+| `min_dist` | (int or float, optional(default=0)) | Minimum distance by which to filter out closely spaced points.         | `0`        |
+| `remove`   | (str, optional(default=first))      | Optionally choose to remove 'first' occurrences or 'last' occurrences. | `'first'`  |
+
+#### Returns
+
+| Type          | Description                      |
+|---------------|----------------------------------|
+| 2d array-like | Numpy array filtered coordinates |
+
+### get_random_point_in_polygon { #pyspatialml.vector.get_random_point_in_polygon }
+
+`vector.get_random_point_in_polygon(poly)`
+
+Generates random shapely Point geometry objects within a single
+shapely Polygon object.
+
+#### Parameters
+
+| Name   | Type                   | Description   | Default    |
+|--------|------------------------|---------------|------------|
+| `poly` | Shapely Polygon object |               | _required_ |
+
+#### Returns
+
+| Type                 | Description   |
+|----------------------|---------------|
+| Shapely Point object |               |
