@@ -1,52 +1,48 @@
-on:
-    workflow_dispatch:
-    push:
-      branches:
-        - main
-  
-  name: Quarto Publish
-  
-  jobs:
-    build-deploy:
-      runs-on: ubuntu-latest
-      permissions:
-        contents: write
-      steps:
-        - name: Check out repository
-          uses: actions/checkout@v4
-  
-        - name: Install system dependencies
-          run : |
-            sudo apt-get update
-            sudo apt-get upgrade
-            sudo apt-get install saga libudunits2-dev libgdal-dev libcurl4-openssl-dev
-  
-        - name: Set up python
-          id: setup-python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
+name: Quarto Publish
 
-        - name: Install Poetry
-          uses: snok/install-poetry@v1
-          with:
-            virtualenvs-create: true
-            virtualenvs-in-project: true
-            installer-parallel: true
-    
-        - name: Install dependencies
-          if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-          run: poetry install --no-interaction --no-root
+on: [push]
+  
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-        - name: Install project
-          run: poetry install --no-interaction
+      - name: Install system dependencies
+        run : |
+          sudo apt-get update
+          sudo apt-get upgrade
+          sudo apt-get install saga libudunits2-dev libgdal-dev libcurl4-openssl-dev
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
   
-        - name: Set up Quarto
-          uses: quarto-dev/quarto-actions/setup@v2
-  
-        - name: Render and Publish
-          uses: quarto-dev/quarto-actions/publish@v2
-          with:
-            target: gh-pages
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
