@@ -30,12 +30,12 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
   
-      - name: Install dependencies
+      - name: Install the project
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Install additional dependencies
+        run: poetry add quartodoc jupyter black pytest
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
