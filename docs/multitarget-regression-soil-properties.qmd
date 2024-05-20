@@ -1,0 +1,284 @@
+---
+title: "Multi-Target Spatial Prediction using the Meuse Dataset"
+format: 
+    html:
+        code-fold: false
+jupyter: python3
+---
+
+Here we are using the meuse dataset which is included in the pyspatialml package as an example of performing a spatial model and prediction. We can access the datasets using the `pyspatialml.datasets` module:
+
+```{python}
+from copy import deepcopy
+from tempfile import NamedTemporaryFile
+import geopandas as gpd
+import numpy as np
+from pyspatialml import Raster
+from pyspatialml.preprocessing import xy_coordinates, distance_to_corners
+import pyspatialml.datasets.meuse as ms
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib import cm
+```
+
+```{python}
+predictor_files = ms.predictors
+training_pts_file = ms.meuse
+```
+
+```{python}
+stack = Raster(predictor_files)
+stack.names
+```
+
+Pyspatialml implements pandas-style indexing for `Raster` objects, using `Raster.loc` to index by the name of the raster, and `Raster.iloc` to select by index. This method also accepts slices. Label-based indexing is also provided directly by the __getattr_ magic method, i.e. `Raster[name]` or for multiple layers `Raster[(names)]`.
+
+For example we can remove layers from Raster object using the `Raster.drop` method, or by subsetting the raster:
+
+```{python}
+stack.drop('ffreq')
+```
+
+We can store matplotlib cmaps as an attribute within each layer in the Raster:
+
+```{python}
+stack.chnl_dist.cmap = 'RdBu'
+stack.dem.cmap = 'terrain'
+stack.dist.cmap = 'Reds'
+stack.landimg2.cmap = 'Greys'
+stack.landimg3.cmap = 'Greys'
+stack.landimg4.cmap = 'Greys'
+stack.landimg4.cmap = 'Greys'
+stack.mrvbf.cmap = 'jet'
+stack.rsp.cmap = 'gnuplot2'
+stack.slope.cmap = 'PuRd'
+stack.soil.cmap = 'Set2'
+stack.twi.cmap = 'coolwarm'
+```
+
+Plot the predictors in the Raster object as a raster matrix:
+
+```{python}
+mpl.style.use('ggplot')
+axs = stack.plot(figsize=(9, 7))
+ax = axs.flatten()[10]
+im = ax.images
+im[0].colorbar.set_ticks([1,2,3])
+ax = axs.flatten()[8]
+ax.tick_params(axis='x', labelrotation=65)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Feature Engineering
+
+We want the prediction results to be depend on the spatial locations of the training data. So to include spatial information, coordinate grids can be generated and added to the Raster object:
+
+```{python}
+xy_layer = xy_coordinates(
+    layer=stack.iloc[0], 
+    file_path=NamedTemporaryFile(suffix=".tif").name
+)
+```
+
+```{python}
+xy_layer = xy_coordinates(
+    layer=stack.iloc[0], 
+    file_path=NamedTemporaryFile(suffix=".tif").name
+)
+
+edms = distance_to_corners(
+    layer=stack.iloc[0], 
+    file_path=NamedTemporaryFile(suffix=".tif").name
+)
+edms.rename(
+    {old: new for (old, new) in zip(edms.names, ["tl", "tr", "bl", "br", "c"])},
+    in_place=True
+)
+
+edms.plot()
+plt.show()
+```
+
+Append them to the Raster object:
+
+```{python}
+stack = stack.append([xy_layer, edms])
+```
+
+Plot the new predictors:
+
+```{python}
+axs = stack.plot(figsize=(9, 7))
+ax = axs.flatten()[10]
+im = ax.images
+im[0].colorbar.set_ticks([1,2,3])
+ax = axs.flatten()[8]
+ax.tick_params(axis='x', labelrotation=65)
+
+plt.tight_layout()
+plt.show()
+```
+
+The area that is filled by some of the grids is different. This doesn't matter for the prediction because pixels in the Raster object that include some NaNs in some of the layers will be removed. However, the plots could potentially be given a cleaner look. We can use the Raster.intersect method to fix this:
+
+```{python}
+stack = stack.intersect()
+```
+
+```{python}
+axs = stack.plot(figsize=(9, 7))
+ax = axs.flatten()[10]
+im = ax.images
+im[0].colorbar.set_ticks([1,2,3])
+ax = axs.flatten()[8]
+ax.tick_params(axis='x', labelrotation=65)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Read the Meuse Dataset
+
+```{python}
+training_pts = gpd.read_file(training_pts_file)
+training_pts.head()
+```
+
+Plot the training points:
+
+```{python}
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+fig, axs = plt.subplots(2, 3, figsize=(8.5, 7))
+
+for i, (ax, target) in enumerate(zip(axs.ravel(), ['cadmium', 'copper', 'lead', 'zinc', 'om'])):
+    ax.set_title(target.title())
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="10%", pad=0.05)
+    training_pts.plot(column=target, legend=True, ax=ax, cax=cax, cmap='viridis')
+    
+    if i != 0:
+        ax.set_yticklabels([])
+    
+    if i != 3:
+        ax.set_xticklabels([])
+    else:
+        ax.tick_params(axis='x', labelrotation=65)
+    
+fig.delaxes(axs.flatten()[i+1])
+plt.tight_layout()
+plt.show()
+```
+
+## Extract Raster Values at the Training Point Locations
+
+Pixel values from a Raster object can be extracted using geometries within a geopandas.GeoDataFrame (points, lines, polygons) or by using labelled pixels from another raster with the same dimensions and crs.
+
+By default the extracted values are returned as a geopandas.GeoDataFrame that contains the data and the coordinates of the pixels:
+
+```{python}
+training_df = stack.extract_vector(gdf=training_pts)
+
+training_df.index = training_df.index.get_level_values("geometry_idx")
+training_df = training_df.merge(
+    training_pts.loc[:, ("lead", "cadmium", "copper", "zinc", "om")], 
+    left_index=True, 
+    right_index=True
+) 
+```
+
+```{python}
+training_df = training_df.dropna()
+training_df.head()
+```
+
+## Developing a Machine Learning Model
+
+Here we are going to create a machine learning pipeline that correctly handles categorical predictors via one-hot encoding:
+
+```{python}
+stack.names
+```
+
+```{python}
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
+soil_idx = [i for i, name in enumerate(stack.names) if name == 'soil']
+
+trans = ColumnTransformer([
+    ('ohe', OneHotEncoder(categories='auto', handle_unknown='ignore'), soil_idx)
+    ], remainder='passthrough')
+
+et = ExtraTreesRegressor(n_estimators=500, n_jobs=-1, random_state=1234)
+et = Pipeline([
+    ('preproc', trans),
+    ('regressor', et)])
+```
+
+Now we can separate our response and predictor variables and train the model:
+
+```{python}
+X = training_df.loc[:, stack.names]
+y = training_df.loc[:, ['lead', 'cadmium', 'copper', 'zinc', 'om']]
+et.fit(X, y)
+```
+
+To evaluate the performance of the model, we will use 10-fold cross validation:
+
+```{python}
+from sklearn.model_selection import cross_validate, KFold
+
+outer = KFold(n_splits=10, shuffle=True, random_state=1234)
+scores = cross_validate(et, X, y, scoring='neg_mean_squared_error', cv=10, n_jobs=1)
+rmse = np.sqrt(-scores['test_score']).mean()
+
+print("Our RMSE score is {}".format(rmse))
+```
+
+## Feature Importances
+
+```{python}
+ohe_names = deepcopy(list(stack.names))
+ohe_names.insert(soil_idx[0], 'soil1')
+ohe_names.insert(soil_idx[0], 'soil2')
+ohe_names = np.array(ohe_names)
+```
+
+```{python}
+mpl.style.use('ggplot')
+
+fimp = et.named_steps['regressor'].feature_importances_
+
+fig, ax = plt.subplots(figsize=(4, 6))
+ax.barh(y=ohe_names[fimp.argsort()], width=fimp[fimp.argsort()])
+ax.set_xlabel('Feature Importance Score')
+plt.show()
+```
+
+## Prediction on the Raster object
+
+```{python}
+preds = stack.predict(et)
+preds.rename(
+    {old: new for old, new in zip(preds.names, ['lead', 'cadmium', 'copper', 'zinc', 'om'])},
+    in_place=True
+)
+preds.lead.cmap = 'rainbow'
+preds.cadmium.cmap = 'rainbow'
+preds.copper.cmap = 'rainbow'
+preds.zinc.cmap = 'rainbow'
+preds.om.cmap = 'rainbow'
+```
+
+Plot the results:
+
+```{python}
+preds.plot(out_shape=(200, 200), title_fontsize=14, figsize=(10, 8))
+plt.show()
+```

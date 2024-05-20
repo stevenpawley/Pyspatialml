@@ -210,7 +210,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         mask = neighbor_dist.mask
 
         if mask.all() == False:
-            mask = np.zeros(neighbor_dist.shape, dtype=np.bool)
+            mask = np.zeros(neighbor_dist.shape, dtype=bool)
             mask[:] = False
 
         if neighbor_vals.ndim == 2:

@@ -65,6 +65,8 @@ website:
         - section: "Machine learning examples"
           contents:
             - docs/landcover.qmd
+            - docs/multitarget-regression-soil-properties.qmd
+            - docs/spatial-features.qmd
 
 theme:
   light: spacelab
