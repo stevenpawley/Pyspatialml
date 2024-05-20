@@ -12,7 +12,7 @@ class TestNames(TestCase):
     contains band names
     """
     def setUp(self) -> None:
-        """Create a temperory file with a raster dataset with band names
+        """Create a temporary file with a raster dataset with band names
         """
         with rasterio.open(nc.multiband) as src:
             self.descriptions = ["band_1", "band_2", "band_3", "band_4", "band_5"]

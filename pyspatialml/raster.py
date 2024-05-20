@@ -65,13 +65,11 @@ class _LocIndexer(MutableMapping):
             new = self.__dict__[key]
         else:
             selected = []
-
             for i in key:
                 if i in self.names is False:
                     raise KeyError("key not present in Raster object")
                 else:
                     selected.append(self.__dict__[i])
-
             new = Raster(selected)
         return new
 
