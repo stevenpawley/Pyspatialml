@@ -501,10 +501,17 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                         src_layers.append(RasterLayer(band))
                 self._layers = src_layers
                 return
+        
+            # from a list of rasterio.band objects
+            elif all(isinstance(x, rasterio.Band) for x in src):
+                src_layers = []
+                for band in src:
+                    src_layers.append(RasterLayer(band))
+                self._layers = src_layers
+                return
         else:
             raise ValueError("Cannot create a Raster object from a mixture of inputs")
         
-                # normal
         # try:
         #     src_layers = []
         #     for band in src:
