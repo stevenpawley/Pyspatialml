@@ -1,6 +1,10 @@
-# Pyspatialml: machine learning for raster datasets
-
-## Overview
+---
+title: "Overview"
+format:
+  html:
+    code-fold: false
+jupyter: python3
+---
 
 Pyspatialml is a Python package for applying scikit-learn machine learning
 models to raster-based datasets. It is inspired by the famous 
@@ -52,21 +56,3 @@ However, it's purpose is not to work with multidimensional datasets, i.e. those
 that have more than 3 dimensions such as spacetime cubes of multiband data. The
 [xarray](http://xarray.pydata.org/en/stable/index.html) package can provide a
 structure for this type of data.
-
-
-## Installation
-
-Pyspatialml is available on PyPI and can be installed in the usual manner with:
-
-```
-pip install Pyspatialml
-```
-
-The development version, which is more up-to-date with changes to the package
-especially during these earlier stages of development, can be installed
-directly via:
-
-```
-pip install git+https://github.com/stevenpawley/Pyspatialml
-```
-

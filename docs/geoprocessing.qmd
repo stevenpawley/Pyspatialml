@@ -3,6 +3,7 @@ title: "Raster Geoprocessing"
 format:
   html:
     code-fold: false
+    toc: true
 jupyter: python3
 ---
 
@@ -160,5 +161,5 @@ result can be coerced into a Raster object using:
 ndvi = Raster((stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2]))
 ```
 
-Currently, arithmetic operations are only supported on RasterLayer objects and
+Arithmetic operations are only supported on RasterLayer objects and
 not in a parent Raster object directly.

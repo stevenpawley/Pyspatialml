@@ -1,0 +1,12 @@
+{
+  "hash": "f438721f18ba534a03eaea64365fd148",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Transformers\nformat:\n  html:\n    code-fold: false\n    toc: true\n---\n\nThe transformers module contains classes that are used for spatial feature engineering.\n\n## Spatial Lag Transformer\n\nA transformer to create spatial lag variables by using a\nweighted mean/mode of the values of the K-neighboring observations. The\nweighted mean/mode of the surrounding observations are appended as a new\nfeature to the right-most column in the training data. The `measure` parameter\nshould be set to 'mode' for classification, and 'mean' for regression.\n\n```\nKNNTransformer(\n    n_neighbors=7,\n    weights=\"distance\",\n    measure=\"mean\",\n    radius=1.0,\n    algorithm=\"auto\",\n    leaf_size=30,\n    metric=\"minkowski\",\n    p=2,\n    normalize=True,\n    metric_params=None,\n    kernel_params=None,\n    n_jobs=1\n)\n```\n\n## GeoDistTransformer\n\nA common spatial feature engineering task is to create new features that\ndescribe the proximity to some reference locations. The GeoDistTransformer\ncan be used to add these features as part of a machine learning pipeline.\n\n```\nGeoDistTransformer(refs, log=False)\n```\n\nWhere `refs` are an array of coordinates of reference locations in\n(m, n-dimensional) order, such as\n{n_locations, x_coordinates, y_coordinates, ...} for as many dimensions as\nrequired. For example to calculate distances to a single x,y,z location:\n\n```\nrefs = [-57.345, -110.134, 1012]\n```\n\nAnd to calculate distances to three x,y reference locations:\n\n```\nrefs = [\n    [-57.345, -110.134],\n    [-56.345, -109.123],\n    [-58.534, -112.123]\n]\n```\n\nThe supplied array has to have at least x,y coordinates with a\n(1, 2) shape for a single location.\n\n",
+    "supporting": [
+      "transformers_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

@@ -3,6 +3,7 @@ title: "Random Sampling"
 format:
   html:
     code-fold: false
+    toc: true
 jupyter: python3
 ---
 

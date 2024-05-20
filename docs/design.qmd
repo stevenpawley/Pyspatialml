@@ -1,4 +1,7 @@
-# Usage overview
+---
+title: "Design"
+format: html
+---
 
 Pyspatialml provides access to raster datasets using two main structures,
 comprising the `Raster` and `RasterLayer` classes.

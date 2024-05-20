@@ -16,46 +16,55 @@ website:
       search: true
       logo: docs/icon.png
       logo-alt: Pyspatialml
+      logo-href: index.qmd
+      tools:
+      - icon: github
+        menu:
+          - text: Source Code
+            href: https://github.com/stevenpawley/Pyspatialml/tree/master/docs
+          - text: Report a Bug
+            href: https://github.com/stevenpawley/Pyspatialml/issues
 
       left:
-        - text: Design
-          file: docs/design.qmd
-        
-        - text: Quickstart
+        - text: Getting started
+          href: docs/index.qmd
+                        
+        - text: Guide
           file: docs/quickstart.qmd
                 
-        - text: Geoprocessing
-          file: docs/geoprocessing.qmd
-        
-        - text: Plotting
-          file: docs/plotting.qmd
-        
-        - text: Sampling
-          file: docs/sampling.qmd
-        
-        - text: Transformers
-          file: docs/transformers.qmd
-        
         - text: Reference
           file: reference/Raster.qmd
   
         - text: Tutorials
-          file: docs/tutorials/landcover.qmd
+          file: docs/landcover.qmd
 
   sidebar:
-    - title: "Design"
+    - title: "Home"
       style: "docked"
       contents:
-        - section: "Overview"
+        - section: "Pyspatialml"
           contents:
+            - docs/index.qmd
+            - docs/installation.qmd
             - docs/design.qmd
+    
+    - title: "Guide"
+      style: "docked"
+      contents:
+        - section: "Geoprocessing"
+          contents:
+            - docs/quickstart.qmd
+            - docs/geoprocessing.qmd
+            - docs/plotting.qmd
+            - docs/sampling.qmd
+            - docs/transformers.qmd
     
     - title: "Tutorials"
       style: "docked"
       contents:
         - section: "Machine learning examples"
           contents:
-            - docs/tutorials/landcover.qmd
+            - docs/landcover.qmd
 
 theme:
   light: spacelab
@@ -63,6 +72,10 @@ theme:
 
 metadata-files:
   - _sidebar.yml
+
+format:
+  html:
+    toc: true
 
 quartodoc:
   package: pyspatialml

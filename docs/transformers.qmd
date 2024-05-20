@@ -1,4 +1,11 @@
-# Transformers
+---
+title: "Transformers"
+format:
+  html:
+    code-fold: false
+    toc: true
+jupyter: python3
+---
 
 The transformers module contains classes that are used for spatial feature engineering.
 

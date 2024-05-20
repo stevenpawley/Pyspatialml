@@ -1,0 +1,24 @@
+---
+title: "Installation"
+format:
+  html:
+    code-fold: false
+jupyter: python3
+---
+
+Pyspatialml is available on PyPI and can be installed in the usual manner with:
+
+```{python}
+#| eval: false
+pip install Pyspatialml
+```
+
+The development version, which is more up-to-date with changes to the package
+especially during these earlier stages of development, can be installed
+directly via:
+
+```{python}
+#| eval: false
+pip install git+https://github.com/stevenpawley/Pyspatialml
+```
+
