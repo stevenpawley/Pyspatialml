@@ -254,7 +254,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Here we are using the meuse dataset which is included in the pyspatialml package as an example of performing a spatial model and prediction. We can access the datasets using the <code>pyspatialml.datasets</code> module:</p>
-<div id="f86b0691" class="cell" data-execution_count="1">
+<div id="faf8e439" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> copy <span class="im">import</span> deepcopy</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tempfile <span class="im">import</span> NamedTemporaryFile</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
@@ -267,11 +267,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> cm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="66c4bee3" class="cell" data-execution_count="2">
+<div id="fcb4bbdd" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>predictor_files <span class="op">=</span> ms.predictors</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>training_pts_file <span class="op">=</span> ms.meuse</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="1be3a106" class="cell" data-execution_count="3">
+<div id="62356860" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>stack <span class="op">=</span> Raster(predictor_files)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>stack.names</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
@@ -280,7 +280,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Pyspatialml implements pandas-style indexing for <code>Raster</code> objects, using <code>Raster.loc</code> to index by the name of the raster, and <code>Raster.iloc</code> to select by index. This method also accepts slices. Label-based indexing is also provided directly by the __getattr_ magic method, i.e.&nbsp;<code>Raster[name]</code> or for multiple layers <code>Raster[(names)]</code>.</p>
 <p>For example we can remove layers from Raster object using the <code>Raster.drop</code> method, or by subsetting the raster:</p>
-<div id="d1461534" class="cell" data-execution_count="4">
+<div id="ab34e169" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stack.drop(<span class="st">'ffreq'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Raster Object Containing 11 Layers
@@ -297,7 +297,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>We can store matplotlib cmaps as an attribute within each layer in the Raster:</p>
-<div id="5421c52c" class="cell" data-execution_count="5">
+<div id="92458223" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>stack.chnl_dist.cmap <span class="op">=</span> <span class="st">'RdBu'</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>stack.dem.cmap <span class="op">=</span> <span class="st">'terrain'</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>stack.dist.cmap <span class="op">=</span> <span class="st">'Reds'</span></span>
@@ -312,8 +312,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>stack.twi.cmap <span class="op">=</span> <span class="st">'coolwarm'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Plot the predictors in the Raster object as a raster matrix:</p>
-<div id="ca0b3e90" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mpl.style.use(<span class="st">'ggplot'</span>)</span>
+<div id="f11553f0" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mpl.style.use(<span class="st">'seaborn-v0_8'</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>axs <span class="op">=</span> stack.plot(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">7</span>))</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> axs.flatten()[<span class="dv">10</span>]</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> ax.images</span>
@@ -326,7 +326,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-7-output-1.png" width="850" height="662" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-7-output-1.png" width="845" height="662" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -334,13 +334,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
 <p>We want the prediction results to be depend on the spatial locations of the training data. So to include spatial information, coordinate grids can be generated and added to the Raster object:</p>
-<div id="4fe01094" class="cell" data-execution_count="7">
+<div id="7811c57a" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>xy_layer <span class="op">=</span> xy_coordinates(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    layer<span class="op">=</span>stack.iloc[<span class="dv">0</span>], </span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    file_path<span class="op">=</span>NamedTemporaryFile(suffix<span class="op">=</span><span class="st">".tif"</span>).name</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="6f2f335c" class="cell" data-execution_count="8">
+<div id="856c66d2" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>xy_layer <span class="op">=</span> xy_coordinates(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    layer<span class="op">=</span>stack.iloc[<span class="dv">0</span>], </span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    file_path<span class="op">=</span>NamedTemporaryFile(suffix<span class="op">=</span><span class="st">".tif"</span>).name</span>
@@ -360,17 +360,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-9-output-1.png" width="599" height="422" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-9-output-1.png" width="660" height="458" class="figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Append them to the Raster object:</p>
-<div id="cc3b5ca3" class="cell" data-execution_count="9">
+<div id="6a9d820f" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>stack <span class="op">=</span> stack.append([xy_layer, edms])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Plot the new predictors:</p>
-<div id="0754361c" class="cell" data-execution_count="10">
+<div id="9ec00885" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>axs <span class="op">=</span> stack.plot(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">7</span>))</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> axs.flatten()[<span class="dv">10</span>]</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> ax.images</span>
@@ -383,16 +383,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-11-output-1.png" width="853" height="661" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-11-output-1.png" width="847" height="663" class="figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The area that is filled by some of the grids is different. This doesn’t matter for the prediction because pixels in the Raster object that include some NaNs in some of the layers will be removed. However, the plots could potentially be given a cleaner look. We can use the Raster.intersect method to fix this:</p>
-<div id="b7e097e1" class="cell" data-execution_count="11">
+<div id="7c094f87" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>stack <span class="op">=</span> stack.intersect()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="04b21d90" class="cell" data-execution_count="12">
+<div id="51c1963b" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>axs <span class="op">=</span> stack.plot(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">7</span>))</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> axs.flatten()[<span class="dv">10</span>]</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> ax.images</span>
@@ -405,7 +405,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-13-output-1.png" width="853" height="661" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-13-output-1.png" width="847" height="663" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -413,7 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="read-the-meuse-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="read-the-meuse-dataset">Read the Meuse Dataset</h2>
-<div id="97de671d" class="cell" data-execution_count="13">
+<div id="a721c64a" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>training_pts <span class="op">=</span> gpd.read_file(training_pts_file)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>training_pts.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="13">
@@ -529,7 +529,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Plot the training points:</p>
-<div id="97fc071d" class="cell" data-execution_count="14">
+<div id="9b7c7f7e" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mpl_toolkits.axes_grid1 <span class="im">import</span> make_axes_locatable</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="fl">8.5</span>, <span class="dv">7</span>))</span>
@@ -554,7 +554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-15-output-1.png" width="806" height="637" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-15-output-1.png" width="807" height="641" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -564,7 +564,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="extract-raster-values-at-the-training-point-locations">Extract Raster Values at the Training Point Locations</h2>
 <p>Pixel values from a Raster object can be extracted using geometries within a geopandas.GeoDataFrame (points, lines, polygons) or by using labelled pixels from another raster with the same dimensions and crs.</p>
 <p>By default the extracted values are returned as a geopandas.GeoDataFrame that contains the data and the coordinates of the pixels:</p>
-<div id="8bea6c1b" class="cell" data-execution_count="15">
+<div id="8fbb475d" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>training_df <span class="op">=</span> stack.extract_vector(gdf<span class="op">=</span>training_pts)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>training_df.index <span class="op">=</span> training_df.index.get_level_values(<span class="st">"geometry_idx"</span>)</span>
@@ -574,7 +574,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    right_index<span class="op">=</span><span class="va">True</span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="e1ea4fec" class="cell" data-execution_count="16">
+<div id="ca59690a" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>training_df <span class="op">=</span> training_df.dropna()</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>training_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
@@ -766,13 +766,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="developing-a-machine-learning-model" class="level2">
 <h2 class="anchored" data-anchor-id="developing-a-machine-learning-model">Developing a Machine Learning Model</h2>
 <p>Here we are going to create a machine learning pipeline that correctly handles categorical predictors via one-hot encoding:</p>
-<div id="a293c8aa" class="cell" data-execution_count="17">
+<div id="71ae1dc6" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>stack.names</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="17">
 <pre><code>dict_keys(['chnl_dist', 'dem', 'dist', 'ffreq', 'landimg2', 'landimg3', 'landimg4', 'mrvbf', 'rsp', 'slope', 'soil', 'twi', 'x_coordinates', 'y_coordinates', 'tl', 'tr', 'bl', 'br', 'c'])</code></pre>
 </div>
 </div>
-<div id="85f0c492" class="cell" data-execution_count="18">
+<div id="2bdb63f4" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> ExtraTreesRegressor</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> OneHotEncoder</span>
@@ -790,7 +790,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'regressor'</span>, et)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we can separate our response and predictor variables and train the model:</p>
-<div id="06968cff" class="cell" data-execution_count="19">
+<div id="0baf2de6" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> training_df.loc[:, stack.names]</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> training_df.loc[:, [<span class="st">'lead'</span>, <span class="st">'cadmium'</span>, <span class="st">'copper'</span>, <span class="st">'zinc'</span>, <span class="st">'om'</span>]]</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>et.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1219,7 +1219,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 </div>
 <p>To evaluate the performance of the model, we will use 10-fold cross validation:</p>
-<div id="1887d893" class="cell" data-execution_count="20">
+<div id="f1a43748" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_validate, KFold</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>outer <span class="op">=</span> KFold(n_splits<span class="op">=</span><span class="dv">10</span>, shuffle<span class="op">=</span><span class="va">True</span>, random_state<span class="op">=</span><span class="dv">1234</span>)</span>
@@ -1234,13 +1234,13 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </section>
 <section id="feature-importances" class="level2">
 <h2 class="anchored" data-anchor-id="feature-importances">Feature Importances</h2>
-<div id="07b1f06d" class="cell" data-execution_count="21">
+<div id="4d86474f" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>ohe_names <span class="op">=</span> deepcopy(<span class="bu">list</span>(stack.names))</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ohe_names.insert(soil_idx[<span class="dv">0</span>], <span class="st">'soil1'</span>)</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>ohe_names.insert(soil_idx[<span class="dv">0</span>], <span class="st">'soil2'</span>)</span>
 <span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>ohe_names <span class="op">=</span> np.array(ohe_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="646ddb10" class="cell" data-execution_count="22">
+<div id="46ce0fcf" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>mpl.style.use(<span class="st">'ggplot'</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>fimp <span class="op">=</span> et.named_steps[<span class="st">'regressor'</span>].feature_importances_</span>
@@ -1252,7 +1252,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-23-output-1.png" width="431" height="506" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-23-output-1.png" width="420" height="504" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -1260,7 +1260,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </section>
 <section id="prediction-on-the-raster-object" class="level2">
 <h2 class="anchored" data-anchor-id="prediction-on-the-raster-object">Prediction on the Raster object</h2>
-<div id="dc2c6185" class="cell" data-execution_count="23">
+<div id="dfe43cad" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> stack.predict(et)</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>preds.rename(</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    {old: new <span class="cf">for</span> old, new <span class="kw">in</span> <span class="bu">zip</span>(preds.names, [<span class="st">'lead'</span>, <span class="st">'cadmium'</span>, <span class="st">'copper'</span>, <span class="st">'zinc'</span>, <span class="st">'om'</span>])},</span>
@@ -1279,13 +1279,13 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 </div>
 <p>Plot the results:</p>
-<div id="de1804e1" class="cell" data-execution_count="24">
+<div id="415b33cc" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>preds.plot(out_shape<span class="op">=</span>(<span class="dv">200</span>, <span class="dv">200</span>), title_fontsize<span class="op">=</span><span class="dv">14</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>))</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-25-output-1.png" width="827" height="635" class="figure-img"></p>
+<p><img src="multitarget-regression-soil-properties_files/figure-html/cell-25-output-1.png" width="822" height="634" class="figure-img"></p>
 </figure>
 </div>
 </div>

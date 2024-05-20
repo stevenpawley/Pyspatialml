@@ -248,7 +248,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Similarly to example 1, we are using the meuse dataset again to perform a multi-target prediction of soil properties using a regression model. However, in this case we will attempt to account for spatial autocorrelation in the model directly by generating new features that are based on the distance-weighted means of surrounding spatial locations.</p>
-<div id="41d05cb0" class="cell" data-execution_count="1">
+<div id="d01908df" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tempfile <span class="im">import</span> NamedTemporaryFile</span>
@@ -260,7 +260,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="preparing-the-raster-predictors" class="level2">
 <h2 class="anchored" data-anchor-id="preparing-the-raster-predictors">Preparing the Raster Predictors</h2>
 <p>Import the raster predictors from the <code>pyspatialml.datasets.meuse</code> module:</p>
-<div id="19002bc2" class="cell" data-execution_count="2">
+<div id="1cb23526" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>predictor_files <span class="op">=</span> ms.predictors</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>training_pts_file <span class="op">=</span> ms.meuse</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>stack <span class="op">=</span> Raster(predictor_files)</span>
@@ -280,15 +280,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>In order to generate new features from surrounding spatial locations, we need their x,y coordinates, which will will add to the stack of the raster predictors using the <code>pyspatialml.preprocessing.xy_coordinates</code> function:</p>
-<div id="707bef2b" class="cell" data-execution_count="3">
+<div id="459dc046" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml.preprocessing <span class="im">import</span> xy_coordinates</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>xy_layers <span class="op">=</span> xy_coordinates(stack.iloc[<span class="dv">0</span>], NamedTemporaryFile(suffix<span class="op">=</span><span class="st">".tif"</span>).name)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>stack <span class="op">=</span> stack.append(xy_layers, in_place<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Quickly plot the raster predictors:</p>
-<div id="81e750ca" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mpl.style.use(<span class="st">'ggplot'</span>)</span>
+<div id="6585e505" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mpl.style.use(<span class="st">'seaborn-v0_8'</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>axs <span class="op">=</span> stack.plot(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">7</span>))</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> axs.flatten()[<span class="dv">10</span>]</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> ax.images</span>
@@ -301,7 +301,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="spatial-features_files/figure-html/cell-5-output-1.png" width="819" height="661" class="figure-img"></p>
+<p><img src="spatial-features_files/figure-html/cell-5-output-1.png" width="817" height="663" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -310,7 +310,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="extract-the-training-data" class="level2">
 <h2 class="anchored" data-anchor-id="extract-the-training-data">Extract the Training Data</h2>
 <p>Spatially query the raster predictors at the training point locations:</p>
-<div id="b2b14e1f" class="cell" data-execution_count="5">
+<div id="03fb1466" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>training_pts <span class="op">=</span> gpd.read_file(training_pts_file)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>training_df <span class="op">=</span> stack.extract_vector(gdf<span class="op">=</span>training_pts)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -323,7 +323,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>training_df <span class="op">=</span> training_df.dropna()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Split the response/target variables from the predictors:</p>
-<div id="54d5616d" class="cell" data-execution_count="6">
+<div id="b54bd1c2" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> training_df.loc[:, stack.names].values</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> training_df.loc[:, [<span class="st">'lead'</span>, <span class="st">'cadmium'</span>, <span class="st">'copper'</span>, <span class="st">'zinc'</span>, <span class="st">'om'</span>]].values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -331,7 +331,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="develop-a-spatially-lagged-machine-learning-model" class="level2">
 <h2 class="anchored" data-anchor-id="develop-a-spatially-lagged-machine-learning-model">Develop a Spatially-Lagged Machine Learning Model</h2>
 <p>As well as using the ExtraTreeRegressor model which was also used in example 1, here we will use the custom <code>pyspatialml.estimators.SpatialLagRegressor</code> metalearner class to wrap the extratrees regressor into a model that adds a new feature based on the distance-weighted mean of spatially-proximal observations:</p>
-<div id="205057a3" class="cell" data-execution_count="7">
+<div id="91351b31" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> ExtraTreesRegressor</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> OneHotEncoder</span>
@@ -361,14 +361,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> GridSearchCV(wflow, param_grid<span class="op">=</span>search_grid, cv<span class="op">=</span>inner, scoring<span class="op">=</span><span class="st">"r2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Fit the model and cross-validate:</p>
-<div id="1726f62a" class="cell" data-execution_count="8">
+<div id="820617e3" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> model.fit(X, y)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>model.best_params_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="8">
 <pre><code>{'preproc__lags__n_neighbors': 9}</code></pre>
 </div>
 </div>
-<div id="c251af68" class="cell" data-execution_count="9">
+<div id="11f0a6c9" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>outer <span class="op">=</span> KFold(n_splits<span class="op">=</span><span class="dv">10</span>, shuffle<span class="op">=</span><span class="va">True</span>, random_state<span class="op">=</span><span class="dv">1234</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> cross_validate(model, X, y, scoring<span class="op">=</span><span class="st">'neg_mean_squared_error'</span>, cv<span class="op">=</span>outer, n_jobs<span class="op">=</span><span class="dv">1</span>)</span>
@@ -383,7 +383,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="multi-target-predictions" class="level2">
 <h2 class="anchored" data-anchor-id="multi-target-predictions">Multi-Target Predictions</h2>
-<div id="a0637190" class="cell" data-execution_count="10">
+<div id="85eb37a9" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> stack.predict(model)</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>preds.rename(</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    {old: new <span class="cf">for</span> old, new <span class="kw">in</span> <span class="bu">zip</span>(preds.names, [<span class="st">'lead'</span>, <span class="st">'cadmium'</span>, <span class="st">'copper'</span>, <span class="st">'zinc'</span>, <span class="st">'om'</span>])},</span>
@@ -395,13 +395,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>preds.zinc.cmap <span class="op">=</span> <span class="st">'rainbow'</span></span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>preds.om.cmap <span class="op">=</span> <span class="st">'rainbow'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="8d5a4e35" class="cell" data-execution_count="11">
+<div id="06be0cc4" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>preds.plot(out_shape<span class="op">=</span>(<span class="dv">200</span>, <span class="dv">200</span>), title_fontsize<span class="op">=</span><span class="dv">14</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>))</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="spatial-features_files/figure-html/cell-12-output-1.png" width="827" height="635" class="figure-img"></p>
+<p><img src="spatial-features_files/figure-html/cell-12-output-1.png" width="822" height="634" class="figure-img"></p>
 </figure>
 </div>
 </div>
