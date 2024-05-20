@@ -1,8 +1,6 @@
 ---
 title: "Overview"
-format:
-  html:
-    code-fold: false
+format: html
 jupyter: python3
 ---
 

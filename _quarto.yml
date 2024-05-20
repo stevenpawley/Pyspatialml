@@ -16,7 +16,6 @@ website:
       search: true
       logo: docs/icon.png
       logo-alt: Pyspatialml
-      logo-href: index.qmd
       tools:
       - icon: github
         menu:
@@ -26,20 +25,20 @@ website:
             href: https://github.com/stevenpawley/Pyspatialml/issues
 
       left:
-        - text: Getting started
+        - text: "Getting started"
           href: docs/index.qmd
                         
-        - text: Guide
+        - text: "Guide"
           file: docs/quickstart.qmd
                 
-        - text: Reference
+        - text: "Reference"
           file: reference/Raster.qmd
   
-        - text: Tutorials
+        - text: "Tutorials"
           file: docs/landcover.qmd
 
   sidebar:
-    - title: "Home"
+    - title: "Getting started"
       style: "docked"
       contents:
         - section: "Pyspatialml"
