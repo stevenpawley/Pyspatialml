@@ -264,7 +264,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="random-uniform-sampling" class="level2">
 <h2 class="anchored" data-anchor-id="random-uniform-sampling">Random Uniform Sampling</h2>
 <p>For many spatial models, it is common to take a random sample of the predictors to represent a single class (i.e.&nbsp;an environmental background or pseudo-absences in a binary classification model). The sample function is supplied in the sampling module for this purpose:</p>
-<div id="bfe2bf22" class="cell" data-execution_count="1">
+<div id="2fd8e711" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyspatialml.datasets.nc <span class="im">as</span> nc</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -287,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="stratified-random-sampling" class="level2">
 <h2 class="anchored" data-anchor-id="stratified-random-sampling">Stratified Random Sampling</h2>
 <p>The sample function also enables stratified random sampling based on passing a categorical raster dataset to the strata argument. The categorical raster should spatially overlap with the dataset to be sampled, but it does not need to be of the same grid resolution. This raster should be passed as a opened rasterio dataset:</p>
-<div id="06b2a431" class="cell" data-execution_count="2">
+<div id="a3d4db8e" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>strata <span class="op">=</span> Raster(nc.strata)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_strata <span class="op">=</span> stack.sample(size<span class="op">=</span><span class="dv">5</span>, strata<span class="op">=</span>strata, random_state<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df_strata <span class="op">=</span> df_strata.dropna()</span>

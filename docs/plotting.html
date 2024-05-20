@@ -254,7 +254,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Both <code>Raster</code> and <code>RasterLayer</code> objects include basic plotting methods. The plot method for a <code>RasterLayer</code> object produces a single raster plot using the <code>matplotlib.pyplot.imshow</code> method.</p>
 <p>For convenience, plot settings such as color ramps and stretches can also be set for each RasterLayer using the <code>RasterLayer.cmap</code> that support matplotlib cmap’s, and the <code>RasterLayer.norm</code> attribute to associate a <code>matplotlib.colors.Normalize</code> stretch with each RasterLayer:</p>
 <p>To plot a single RasterLayer:</p>
-<div id="77bd4982" class="cell" data-execution_count="1">
+<div id="7e5eb0cc" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml.datasets <span class="im">import</span> nc</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -279,7 +279,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>For RasterLayers that represent categorical data types, e.g.&nbsp;land cover, then the <code>RasterLayer.categorical=True</code> attribute will cause the cmap to be converted to a discrete scale.</p>
 <p>The default plot method for a <code>Raster</code> object produces a raster-matrix plot of the individual RasterLayers. By default this plot preserves the plotting attributes of the individual rasters:</p>
 <p>Plot all RasterLayers in a Raster object:</p>
-<div id="ed1723e3" class="cell" data-execution_count="2">
+<div id="37bad1aa" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_10.cmap <span class="op">=</span> <span class="st">"Blues"</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_20.cmap <span class="op">=</span> <span class="st">"Greens"</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_30.cmap <span class="op">=</span> <span class="st">"Reds"</span></span>
