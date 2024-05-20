@@ -2,62 +2,66 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/examples/Example 2 - Incorporating Spatial Autocorrelation.html</loc>
-    <lastmod>2024-05-19T20:55:16.929Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.351Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/geoprocessing.html</loc>
-    <lastmod>2024-05-19T20:55:16.913Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/transformers.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/plotting.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/tutorials/landcover.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/Raster.html</loc>
-    <lastmod>2024-05-19T20:55:16.969Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/index.html</loc>
-    <lastmod>2024-05-19T20:55:16.969Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/preprocessing.html</loc>
-    <lastmod>2024-05-19T20:55:16.969Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/RasterLayer.html</loc>
-    <lastmod>2024-05-19T20:55:16.969Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/vector.html</loc>
-    <lastmod>2024-05-19T20:55:16.969Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/design.html</loc>
-    <lastmod>2024-05-19T20:55:16.913Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/index.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/sampling.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/index.html</loc>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/design.html</loc>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/vector.html</loc>
+    <lastmod>2024-05-20T04:34:39.391Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/RasterLayer.html</loc>
+    <lastmod>2024-05-20T04:34:39.391Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/preprocessing.html</loc>
+    <lastmod>2024-05-20T04:34:39.391Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/index.html</loc>
+    <lastmod>2024-05-20T04:34:39.391Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/Raster.html</loc>
+    <lastmod>2024-05-20T04:34:39.391Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/installation.html</loc>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/plotting.html</loc>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/landcover.html</loc>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/quickstart.html</loc>
-    <lastmod>2024-05-19T20:55:16.917Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.339Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/examples/Example 1 - Multitarget Regression of Soil Properties.html</loc>
-    <lastmod>2024-05-19T20:55:16.925Z</lastmod>
+    <lastmod>2024-05-20T04:34:39.347Z</lastmod>
   </url>
 </urlset>

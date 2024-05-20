@@ -64,6 +64,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../docs/plotting.html" rel="next">
+<link href="../docs/quickstart.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -106,14 +108,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-sidebar docked nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <a href="../docs/index.html" class="navbar-brand navbar-brand-logo">
     <img src="../docs/icon.png" alt="Pyspatialml" class="navbar-logo">
     </a>
   </div>
@@ -122,56 +124,128 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../docs/design.html"> 
-<span class="menu-text">Design</span></a>
+    <a class="nav-link" href="../docs/index.html"> 
+<span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../docs/quickstart.html"> 
-<span class="menu-text">Quickstart</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link active" href="../docs/geoprocessing.html" aria-current="page"> 
-<span class="menu-text">Geoprocessing</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/plotting.html"> 
-<span class="menu-text">Plotting</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/sampling.html"> 
-<span class="menu-text">Sampling</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/transformers.html"> 
-<span class="menu-text">Transformers</span></a>
+    <a class="nav-link active" href="../docs/quickstart.html" aria-current="page"> 
+<span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../reference/Raster.html"> 
 <span class="menu-text">Reference</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../docs/tutorials/landcover.html"> 
+    <a class="nav-link" href="../docs/landcover.html"> 
 <span class="menu-text">Tutorials</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
           <div class="quarto-navbar-tools">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/tree/master/docs">
+            Source Code
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/issues">
+            Report a Bug
+            </a>
+          </li>
+      </ul>
+    </div>
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/geoprocessing.html">Raster Geoprocessing</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Geoprocessing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/quickstart.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quick start</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/geoprocessing.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Raster Geoprocessing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/plotting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plotting</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/sampling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Random Sampling</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transformers</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#handling-of-temporary-files" id="toc-handling-of-temporary-files" class="nav-link active" data-scroll-target="#handling-of-temporary-files">Handling of Temporary Files</a></li>
+  <li><a href="#cropping" id="toc-cropping" class="nav-link" data-scroll-target="#cropping">Cropping</a></li>
+  <li><a href="#masking" id="toc-masking" class="nav-link" data-scroll-target="#masking">Masking</a></li>
+  <li><a href="#intersecting-layers" id="toc-intersecting-layers" class="nav-link" data-scroll-target="#intersecting-layers">Intersecting Layers</a></li>
+  <li><a href="#reprojecting" id="toc-reprojecting" class="nav-link" data-scroll-target="#reprojecting">Reprojecting</a></li>
+  <li><a href="#resampling" id="toc-resampling" class="nav-link" data-scroll-target="#resampling">Resampling</a></li>
+  <li><a href="#computation" id="toc-computation" class="nav-link" data-scroll-target="#computation">Computation</a></li>
+  <li><a href="#raster-algebra" id="toc-raster-algebra" class="nav-link" data-scroll-target="#raster-algebra">Raster Algebra</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/geoprocessing.html">Raster Geoprocessing</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Raster Geoprocessing</h1>
 </div>
@@ -199,7 +273,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="cropping" class="level2">
 <h2 class="anchored" data-anchor-id="cropping">Cropping</h2>
 <p>All layers within a Raster can be cropped to a new extent using the <code>Raster.crop</code> method.</p>
-<div id="348dfba4" class="cell" data-execution_count="1">
+<div id="d43884c3" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
@@ -220,7 +294,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="83a2f02e" class="cell" data-execution_count="2">
+<div id="330f0e4d" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># crop to new extent (xmin, ymin, xmax, ymax)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>crop_bounds <span class="op">=</span> training_py.loc[<span class="dv">0</span>, <span class="st">"geometry"</span>].bounds</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>stack_cropped <span class="op">=</span> stack.crop(crop_bounds)</span>
@@ -239,7 +313,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="masking" class="level2">
 <h2 class="anchored" data-anchor-id="masking">Masking</h2>
 <p>In comparison to cropping, masking can be used to set pixels that occur outside of masking geometries to NaN, and optionally can also crop a Raster.</p>
-<div id="1e020e6a" class="cell" data-execution_count="3">
+<div id="bd81c142" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyspatialml.datasets.nc <span class="im">as</span> nc</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
@@ -257,7 +331,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="intersecting-layers" class="level2">
 <h2 class="anchored" data-anchor-id="intersecting-layers">Intersecting Layers</h2>
 <p>The <code>Raster.intersect</code> method computes the geometric intersection of the RasterLayers with the Raster object. This will cause nodata values in any of the rasters to be propagated through all of the output rasters.</p>
-<div id="3ca232a1" class="cell" data-execution_count="4">
+<div id="4f3c258b" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyspatialml.datasets.nc <span class="im">as</span> nc</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -271,7 +345,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="reprojecting" class="level2">
 <h2 class="anchored" data-anchor-id="reprojecting">Reprojecting</h2>
 <p>Reprojecting a raster using the <code>Raster.to_crs</code> method.</p>
-<div id="603ee1d3" class="cell" data-execution_count="5">
+<div id="a9701121" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stack_prj <span class="op">=</span> stack.to_crs(crs<span class="op">=</span>{<span class="st">"init"</span>: <span class="st">"EPSG:4326"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Other parameters that can be passed and their defaults are resampling=“nearest”, file_path=None, driver=“GTiff”, nodata=None, n_jobs=1, warp_mem_lim=0, progress=False, and other kwargs that are passed to the raster format drivers.</p>
@@ -279,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="resampling" class="level2">
 <h2 class="anchored" data-anchor-id="resampling">Resampling</h2>
 <p>The <code>Raster.aggregate</code> method is used to resample a raster to a different resolution using the decimated reading approach in the rasterio library.</p>
-<div id="0221ad98" class="cell" data-execution_count="6">
+<div id="553312e2" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>stack.aggregate(out_shape<span class="op">=</span>(<span class="dv">50</span>, <span class="dv">50</span>), resampling<span class="op">=</span><span class="st">"nearest"</span>, driver<span class="op">=</span><span class="st">"GTiff"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Raster Object Containing 6 Layers
@@ -291,7 +365,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 4         res                                   (278.73, 252.51)
 5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="6">
+<div class="cell-output cell-output-display" data-execution_count="15">
 <pre><code></code></pre>
 </div>
 </div>
@@ -299,7 +373,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="computation" class="level2">
 <h2 class="anchored" data-anchor-id="computation">Computation</h2>
 <p>Apply user-supplied function to a Raster object.</p>
-<div id="69ee5a1c" class="cell" data-execution_count="7">
+<div id="45d085fe" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> myfun(x):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> x <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -307,14 +381,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-stdout">
 <pre><code>Raster Object Containing 6 Layers
     attribute                                             values
-0       names  [tmpzi3ud0tl_1, tmpzi3ud0tl_2, tmpzi3ud0tl_3, ...
+0       names  [tmp7u8ru7ij_1, tmp7u8ru7ij_2, tmp7u8ru7ij_3, ...
 1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...
 2        rows                                                443
 3        cols                                                489
 4         res                                       (28.5, 28.5)
 5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="16">
 <pre><code></code></pre>
 </div>
 </div>
@@ -324,17 +398,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="raster-algebra" class="level2">
 <h2 class="anchored" data-anchor-id="raster-algebra">Raster Algebra</h2>
 <p>RasterLayer objects also support basic raster math operations using python’s magic methods, which supports all of the usual math operators. Calculations on RasterLayers occur in memory using Rasterio’s in-memory files, thus they are not memory safe. For applying computations and algebra to large raster datasets in windows, use <code>Raster.apply()</code>.</p>
-<div id="9f76d5a9" class="cell" data-execution_count="8">
+<div id="bdc189ce" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> stack.iloc[<span class="dv">0</span>] <span class="op">+</span> stack.iloc[<span class="dv">1</span>]</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> stack.iloc[<span class="dv">0</span>] <span class="op">-</span> stack.iloc[<span class="dv">1</span>]</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (stack.iloc[<span class="dv">3</span>] <span class="op">-</span> stack.iloc[<span class="dv">2</span>]) <span class="op">/</span> (stack.iloc[<span class="dv">3</span>] <span class="op">+</span> stack.iloc[<span class="dv">2</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Arithmetic operations on RasterLayer’s will return another RasterLayer. The result can be coerced into a Raster object using:</p>
-<div id="d6126218" class="cell" data-execution_count="9">
+<div id="310e5823" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> Raster((stack.iloc[<span class="dv">3</span>] <span class="op">-</span> stack.iloc[<span class="dv">2</span>]) <span class="op">/</span> (stack.iloc[<span class="dv">3</span>] <span class="op">+</span> stack.iloc[<span class="dv">2</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Currently, arithmetic operations are only supported on RasterLayer objects and not in a parent Raster object directly.</p>
+<p>Arithmetic operations are only supported on RasterLayer objects and not in a parent Raster object directly.</p>
 
 
 </section>
@@ -893,6 +967,18 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../docs/quickstart.html" class="pagination-link" aria-label="Quick start">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Quick start</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../docs/plotting.html" class="pagination-link" aria-label="Plotting">
+        <span class="nav-page-text">Plotting</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
 </div> <!-- /content -->
 
 

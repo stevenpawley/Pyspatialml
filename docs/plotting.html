@@ -64,6 +64,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../docs/sampling.html" rel="next">
+<link href="../docs/geoprocessing.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -106,14 +108,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-sidebar docked nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <a href="../docs/index.html" class="navbar-brand navbar-brand-logo">
     <img src="../docs/icon.png" alt="Pyspatialml" class="navbar-logo">
     </a>
   </div>
@@ -122,56 +124,115 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../docs/design.html"> 
-<span class="menu-text">Design</span></a>
+    <a class="nav-link" href="../docs/index.html"> 
+<span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../docs/quickstart.html"> 
-<span class="menu-text">Quickstart</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/geoprocessing.html"> 
-<span class="menu-text">Geoprocessing</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link active" href="../docs/plotting.html" aria-current="page"> 
-<span class="menu-text">Plotting</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/sampling.html"> 
-<span class="menu-text">Sampling</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/transformers.html"> 
-<span class="menu-text">Transformers</span></a>
+    <a class="nav-link active" href="../docs/quickstart.html" aria-current="page"> 
+<span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../reference/Raster.html"> 
 <span class="menu-text">Reference</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../docs/tutorials/landcover.html"> 
+    <a class="nav-link" href="../docs/landcover.html"> 
 <span class="menu-text">Tutorials</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
           <div class="quarto-navbar-tools">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/tree/master/docs">
+            Source Code
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/issues">
+            Report a Bug
+            </a>
+          </li>
+      </ul>
+    </div>
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/plotting.html">Plotting</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Geoprocessing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/quickstart.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quick start</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/geoprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Raster Geoprocessing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/plotting.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Plotting</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/sampling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Random Sampling</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Transformers</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/plotting.html">Plotting</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Plotting</h1>
 </div>
@@ -193,7 +254,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Both <code>Raster</code> and <code>RasterLayer</code> objects include basic plotting methods. The plot method for a <code>RasterLayer</code> object produces a single raster plot using the <code>matplotlib.pyplot.imshow</code> method.</p>
 <p>For convenience, plot settings such as color ramps and stretches can also be set for each RasterLayer using the <code>RasterLayer.cmap</code> that support matplotlib cmap’s, and the <code>RasterLayer.norm</code> attribute to associate a <code>matplotlib.colors.Normalize</code> stretch with each RasterLayer:</p>
 <p>To plot a single RasterLayer:</p>
-<div id="17712ea0" class="cell" data-execution_count="1">
+<div id="77bd4982" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml.datasets <span class="im">import</span> nc</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -218,7 +279,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>For RasterLayers that represent categorical data types, e.g.&nbsp;land cover, then the <code>RasterLayer.categorical=True</code> attribute will cause the cmap to be converted to a discrete scale.</p>
 <p>The default plot method for a <code>Raster</code> object produces a raster-matrix plot of the individual RasterLayers. By default this plot preserves the plotting attributes of the individual rasters:</p>
 <p>Plot all RasterLayers in a Raster object:</p>
-<div id="3f9b055d" class="cell" data-execution_count="2">
+<div id="ed1723e3" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_10.cmap <span class="op">=</span> <span class="st">"Blues"</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_20.cmap <span class="op">=</span> <span class="st">"Greens"</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>stack.lsat7_2000_30.cmap <span class="op">=</span> <span class="st">"Reds"</span></span>
@@ -801,6 +862,18 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../docs/geoprocessing.html" class="pagination-link" aria-label="Raster Geoprocessing">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Raster Geoprocessing</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../docs/sampling.html" class="pagination-link" aria-label="Random Sampling">
+        <span class="nav-page-text">Random Sampling</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
 </div> <!-- /content -->
 
 

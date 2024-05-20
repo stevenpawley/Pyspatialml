@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Pyspatialml: machine learning for raster datasets - Transformers</title>
+<title>Pyspatialml: machine learning for raster datasets - Installation</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -30,7 +64,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../docs/sampling.html" rel="prev">
+<link href="../docs/design.html" rel="next">
+<link href="../docs/index.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -73,7 +108,7 @@ ul.task-list li input[type="checkbox"] {
 
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-sidebar docked nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -91,11 +126,11 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../docs/index.html"> 
+    <a class="nav-link active" href="../docs/index.html" aria-current="page"> 
 <span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../docs/quickstart.html" aria-current="page"> 
+    <a class="nav-link" href="../docs/quickstart.html"> 
 <span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item">
@@ -133,7 +168,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/transformers.html">Transformers</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/installation.html">Installation</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -148,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text">Geoprocessing</span></a>
+ <span class="menu-text">Pyspatialml</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -156,32 +191,20 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../docs/quickstart.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quick start</span></a>
+  <a href="../docs/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../docs/geoprocessing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Raster Geoprocessing</span></a>
+  <a href="../docs/installation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Installation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../docs/plotting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Plotting</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../docs/sampling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Random Sampling</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../docs/transformers.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Transformers</span></a>
+  <a href="../docs/design.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Design</span></a>
   </div>
 </li>
       </ul>
@@ -191,22 +214,13 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#spatial-lag-transformer" id="toc-spatial-lag-transformer" class="nav-link active" data-scroll-target="#spatial-lag-transformer">Spatial Lag Transformer</a></li>
-  <li><a href="#geodisttransformer" id="toc-geodisttransformer" class="nav-link" data-scroll-target="#geodisttransformer">GeoDistTransformer</a></li>
-  </ul>
-</nav>
-    </div>
+    
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/quickstart.html">Geoprocessing</a></li><li class="breadcrumb-item"><a href="../docs/transformers.html">Transformers</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/installation.html">Installation</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Transformers</h1>
+<h1 class="title">Installation</h1>
 </div>
 
 
@@ -223,41 +237,16 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The transformers module contains classes that are used for spatial feature engineering.</p>
-<section id="spatial-lag-transformer" class="level2">
-<h2 class="anchored" data-anchor-id="spatial-lag-transformer">Spatial Lag Transformer</h2>
-<p>A transformer to create spatial lag variables by using a weighted mean/mode of the values of the K-neighboring observations. The weighted mean/mode of the surrounding observations are appended as a new feature to the right-most column in the training data. The <code>measure</code> parameter should be set to ‘mode’ for classification, and ‘mean’ for regression.</p>
-<pre><code>KNNTransformer(
-    n_neighbors=7,
-    weights="distance",
-    measure="mean",
-    radius=1.0,
-    algorithm="auto",
-    leaf_size=30,
-    metric="minkowski",
-    p=2,
-    normalize=True,
-    metric_params=None,
-    kernel_params=None,
-    n_jobs=1
-)</code></pre>
-</section>
-<section id="geodisttransformer" class="level2">
-<h2 class="anchored" data-anchor-id="geodisttransformer">GeoDistTransformer</h2>
-<p>A common spatial feature engineering task is to create new features that describe the proximity to some reference locations. The GeoDistTransformer can be used to add these features as part of a machine learning pipeline.</p>
-<pre><code>GeoDistTransformer(refs, log=False)</code></pre>
-<p>Where <code>refs</code> are an array of coordinates of reference locations in (m, n-dimensional) order, such as {n_locations, x_coordinates, y_coordinates, …} for as many dimensions as required. For example to calculate distances to a single x,y,z location:</p>
-<pre><code>refs = [-57.345, -110.134, 1012]</code></pre>
-<p>And to calculate distances to three x,y reference locations:</p>
-<pre><code>refs = [
-    [-57.345, -110.134],
-    [-56.345, -109.123],
-    [-58.534, -112.123]
-]</code></pre>
-<p>The supplied array has to have at least x,y coordinates with a (1, 2) shape for a single location.</p>
+<p>Pyspatialml is available on PyPI and can be installed in the usual manner with:</p>
+<div id="2e1b875c" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pip install Pyspatialml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The development version, which is more up-to-date with changes to the package especially during these earlier stages of development, can be installed directly via:</p>
+<div id="80c23473" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pip install git<span class="op">+</span>https:<span class="op">//</span>github.com<span class="op">/</span>stevenpawley<span class="op">/</span>Pyspatialml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -815,11 +804,14 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../docs/sampling.html" class="pagination-link" aria-label="Random Sampling">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Random Sampling</span>
+      <a href="../docs/index.html" class="pagination-link" aria-label="Overview">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Overview</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="../docs/design.html" class="pagination-link" aria-label="Design">
+        <span class="nav-page-text">Design</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->

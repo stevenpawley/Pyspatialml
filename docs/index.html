@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Pyspatialml: machine learning for raster datasets</title>
+<title>Pyspatialml: machine learning for raster datasets - Overview</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,6 +30,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../docs/installation.html" rel="next">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -72,14 +73,14 @@ ul.task-list li input[type="checkbox"] {
 
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-sidebar docked nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <a href="../docs/index.html" class="navbar-brand navbar-brand-logo">
     <img src="../docs/icon.png" alt="Pyspatialml" class="navbar-logo">
     </a>
   </div>
@@ -88,66 +89,122 @@ ul.task-list li input[type="checkbox"] {
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../docs/design.html"> 
-<span class="menu-text">Design</span></a>
+    <a class="nav-link active" href="../docs/index.html" aria-current="page"> 
+<span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../docs/quickstart.html"> 
-<span class="menu-text">Quickstart</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/geoprocessing.html"> 
-<span class="menu-text">Geoprocessing</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/plotting.html"> 
-<span class="menu-text">Plotting</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/sampling.html"> 
-<span class="menu-text">Sampling</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../docs/transformers.html"> 
-<span class="menu-text">Transformers</span></a>
+<span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../reference/Raster.html"> 
 <span class="menu-text">Reference</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../docs/tutorials/landcover.html"> 
+    <a class="nav-link" href="../docs/landcover.html"> 
 <span class="menu-text">Tutorials</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
           <div class="quarto-navbar-tools">
+    <div class="dropdown">
+      <a href="" title="" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" aria-label=""><i class="bi bi-github"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/tree/master/docs">
+            Source Code
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item quarto-navbar-tools-item" href="https://github.com/stevenpawley/Pyspatialml/issues">
+            Report a Bug
+            </a>
+          </li>
+      </ul>
+    </div>
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/index.html">Overview</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Pyspatialml</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Installation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/design.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Design</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/index.html">Overview</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Overview</h1>
+</div>
 
 
 
-<section id="pyspatialml-machine-learning-for-raster-datasets" class="level1">
-<h1>Pyspatialml: machine learning for raster datasets</h1>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
 <p>Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets. It is inspired by the famous <a href="https://cran.r-project.org/web/packages/raster/index.html">raster</a> package in the R statistical programming language which has been extensively used for applying statistical and machine learning models to geospatial raster datasets.</p>
 <p>Pyspatialml includes functions and classes for working with multiple raster datasets and applying typical machine learning workflows including raster data manipulation, feature engineering on raster datasets, extraction of training data, and application of the <code>predict</code> or <code>predict_proba</code> methods of scikit-learn estimator objects to a stack of raster datasets.</p>
 <p>Pyspatialml is built upon the <a href="https://rasterio.readthedocs.io/en/latest/">rasterio</a> Python package which performs all of the heavy lifting and is designed to work with the <a href="https://geopandas.org">geopandas</a> package for related raster-vector data geoprocessing operations.</p>
-</section>
 <section id="purpose" class="level2">
 <h2 class="anchored" data-anchor-id="purpose">Purpose</h2>
 <p>A supervised machine-learning workflow as applied to spatial raster data typically involves several steps:</p>
@@ -158,16 +215,8 @@ ul.task-list li input[type="checkbox"] {
 </ol>
 <p>Pyspatialml is designed to make it easy to develop spatial prediction models on stacks of 2D raster datasets that are held on disk. Unlike using python’s <code>numpy</code> module directly where raster datasets need to be held in memory, the majority of functions within pyspatialml work with raster datasets that are stored on disk and allow processing operations to be performed on datasets that are too large to be loaded into memory.</p>
 <p>Pyspatialml is designed to make it easy to work with typical raster data stacks consisting of multiple 2D grids such as different spectal bands, maps etc. However, it’s purpose is not to work with multidimensional datasets, i.e.&nbsp;those that have more than 3 dimensions such as spacetime cubes of multiband data. The <a href="http://xarray.pydata.org/en/stable/index.html">xarray</a> package can provide a structure for this type of data.</p>
-</section>
-<section id="installation" class="level2">
-<h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<p>Pyspatialml is available on PyPI and can be installed in the usual manner with:</p>
-<pre><code>pip install Pyspatialml</code></pre>
-<p>The development version, which is more up-to-date with changes to the package especially during these earlier stages of development, can be installed directly via:</p>
-<pre><code>pip install git+https://github.com/stevenpawley/Pyspatialml</code></pre>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -724,6 +773,15 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../docs/installation.html" class="pagination-link" aria-label="Installation">
+        <span class="nav-page-text">Installation</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
 </div> <!-- /content -->
 
 
