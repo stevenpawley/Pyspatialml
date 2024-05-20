@@ -385,12 +385,11 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         if file_path is None and isinstance(src, np.ndarray):
             file_path, tfile = self._tempfile(file_path)
             driver = "GTiff"
-
+        
         # initiate from numpy array
-        try:
+        if isinstance(src, np.ndarray):
             if src.ndim == 2:
                 src = src[np.newaxis]
-
             count, height, width = src.shape
 
             if in_memory is True:
@@ -406,7 +405,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     nodata=nodata,
                 )
                 dst.write(src)
-
             else:
                 with rasterio.open(
                     file_path,
@@ -421,138 +419,100 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                     nodata=nodata,
                 ) as dst:
                     dst.write(src)
-
                 dst = rasterio.open(file_path, "r")
 
             for i in range(dst.count):
                 band = rasterio.band(dst, i + 1)
                 rasterlayer = RasterLayer(band)
-
                 if in_memory is True:
                     rasterlayer.in_memory = True
-
                 src_layers.append(rasterlayer)
 
             if tfile is not None and in_memory is False:
                 for layer in src_layers:
                     layer._close = tfile.close
-
             self._layers = src_layers
             return
-
-        except:
-            pass
-
+        
         # from a single file path
-        try:
+        elif isinstance(src, str):
             src_layers = []
             r = rasterio.open(src, mode="r", driver=driver)
-
             for i in range(r.count):
                 band = rasterio.band(r, i + 1)
                 src_layers.append(RasterLayer(band))
-
             self._layers = src_layers
             return
 
-        except:
-            pass
-
-        # from a list of file paths
-        try:
-            src_layers = []
-
-            for f in src:
-                r = rasterio.open(f, mode="r", driver=driver)
-                for i in range(r.count):
-                    band = rasterio.band(r, i + 1)
-                    src_layers.append(RasterLayer(band))
-
-            self._layers = src_layers
-            return
-
-        except:
-            pass
-
-        # from a RasterLayer
-        try:
+        # from a single RasterLayer
+        elif isinstance(src, RasterLayer):
             self._layers = src
             self._rename_inplace(list(self.names)[0], src.name)
             return
 
-        except:
-            pass
-
-        # from a list of RasterLayers
-        try:
-            self._layers = src
-
-            for old, new in zip(self.names, src):
-                self._rename_inplace(old, new.name)
-            return
-
-        except:
-            pass
-
-        # from a Raster
-        try:
+        # from a single Raster
+        elif isinstance(src, Raster):
             self._layers = [i for i in src.values()]
-
             for old, new in zip(self.names, list(src.names)):
                 self._rename_inplace(old, new)
             return
 
-        except:
-            pass
-
         # from a single rasterio.io.datasetreader/writer
-        try:
+        elif isinstance(src, rasterio.io.DatasetReader):
             src_layers = []
-
             for i in range(src.count):
                 band = rasterio.band(src, i + 1)
                 src_layers.append(RasterLayer(band))
-
             self._layers = src_layers
             return
 
-        except:
-            pass
-
-        # from a list of rasterio.io.datasetreader
-        try:
-            src_layers = []
-
-            for r in src:
-                for i in range(r.count):
-                    band = rasterio.band(r, i + 1)
-                    src_layers.append(RasterLayer(band))
-
-            self._layers = src_layers
-            return
-
-        except:
-            pass
-
-        # from a single rasterio.band objects
-        try:
+        # from a single rasterio.band object
+        elif isinstance(src, rasterio.Band):
             self._layers = RasterLayer(src)
             return
 
-        except:
-            pass
+        # from a list of objects
+        elif isinstance(src, list):
+            # list of file paths (str)
+            if all(isinstance(x, str) for x in src):
+                src_layers = []
+                for f in src:
+                    r = rasterio.open(f, mode="r", driver=driver)
+                    for i in range(r.count):
+                        band = rasterio.band(r, i + 1)
+                        src_layers.append(RasterLayer(band))
 
-        try:
-            src_layers = []
+                self._layers = src_layers
+                return
 
-            for band in src:
-                src_layers.append(RasterLayer(band))
+            # list of RasterLayer objects
+            elif all(isinstance(x, RasterLayer) for x in src):
+                self._layers = src
+                for old, new in zip(self.names, src):
+                    self._rename_inplace(old, new.name)
+                return
 
-            self._layers = src_layers
-            return
-
-        except:
-            pass
+            # list of rasterio.io.datasetreader objects
+            elif all(isinstance(x, rasterio.io.DatasetReader) for x in src):
+                src_layers = []
+                for r in src:
+                    for i in range(r.count):
+                        band = rasterio.band(r, i + 1)
+                        src_layers.append(RasterLayer(band))
+                self._layers = src_layers
+                return
+        else:
+            raise ValueError("Cannot create a Raster object from a mixture of inputs")
+        
+                # normal
+        # try:
+        #     src_layers = []
+        #     for band in src:
+        #         src_layers.append(RasterLayer(band))
+        #     self._layers = src_layers
+        #     return
+        # except:
+        #     pass
 
     @property
     def block_shape(self) -> Tuple[int, int]:
