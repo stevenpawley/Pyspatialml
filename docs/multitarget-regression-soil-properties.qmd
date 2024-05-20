@@ -60,7 +60,7 @@ stack.twi.cmap = 'coolwarm'
 Plot the predictors in the Raster object as a raster matrix:
 
 ```{python}
-mpl.style.use('ggplot')
+mpl.style.use('seaborn-v0_8')
 axs = stack.plot(figsize=(9, 7))
 ax = axs.flatten()[10]
 im = ax.images

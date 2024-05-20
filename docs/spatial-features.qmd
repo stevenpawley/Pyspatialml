@@ -41,7 +41,7 @@ stack = stack.append(xy_layers, in_place=False)
 Quickly plot the raster predictors:
 
 ```{python}
-mpl.style.use('ggplot')
+mpl.style.use('seaborn-v0_8')
 axs = stack.plot(figsize=(9, 7))
 ax = axs.flatten()[10]
 im = ax.images
