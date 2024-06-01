@@ -134,7 +134,7 @@ class RasterLayer:
             If not specified, then a `function` should be provided that
             performs a calculation using only the selected RasterLayer.
             If `other` is specified, then a `function` should be
-            supplied that takes to ndarrays as arguments and performs a
+            supplied that takes two ndarrays as arguments and performs a
             calculation using both layers, i.e. layer1 - layer2.
 
         Returns
@@ -146,6 +146,8 @@ class RasterLayer:
 
         driver = self.driver
 
+        # if other is a RasterLayer then use the read method to get the
+        # array, otherwise assume other is a scalar or array
         if isinstance(other, RasterLayer):
             result = function(self.read(masked=True), other.read(masked=True))
         else:
