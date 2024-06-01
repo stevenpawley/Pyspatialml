@@ -31,13 +31,13 @@ from ._prediction import (
 from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
-from .rastermath import RasterArith
+# from .rastermath import RasterArith
 from ._extraction import extract_by_chunk
 from .transformers import _apply_transformer
 from .locindexer import _LocIndexer
 
 
-class Raster(_LocIndexer, RasterStats, RasterPlot, RasterArith):
+class Raster(_LocIndexer, RasterStats, RasterPlot):
     """Creates a collection of file-based GDAL-supported raster
     datasets that share a common coordinate reference system and
     geometry.
