@@ -1,4 +1,4 @@
-name: Run pytest and upload coverage to Codecov
+name: Pytest
 
 on: [push]
 
