@@ -31,12 +31,13 @@ from ._prediction import (
 from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
 from .rasterlayer import RasterLayer
 from .rasterstats import RasterStats
+from .rastermath import RasterArith
 from ._extraction import extract_by_chunk
 from .transformers import _apply_transformer
 from .locindexer import _LocIndexer
 
 
-class Raster(_LocIndexer, RasterStats, RasterPlot):
+class Raster(_LocIndexer, RasterStats, RasterPlot, RasterArith):
     """Creates a collection of file-based GDAL-supported raster
     datasets that share a common coordinate reference system and
     geometry.
@@ -276,15 +277,6 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
                 return
         else:
             raise ValueError("Cannot create a Raster object from a mixture of inputs")
-        
-        # try:
-        #     src_layers = []
-        #     for band in src:
-        #         src_layers.append(RasterLayer(band))
-        #     self._layers = src_layers
-        #     return
-        # except:
-        #     pass
 
     @property
     def block_shape(self) -> Tuple[int, int]:
@@ -448,7 +440,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             width=meta["width"],
             height=meta["height"],
             count=self.count,
-            dtype=np.find_common_type(self.dtypes, []),
+            dtype=np.result_type(*self.dtypes),
         )
 
     def head(self) -> np.ndarray:
@@ -2288,7 +2280,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         data_gen = (self.read(window=w, masked=True) for w in windows)
         t = tqdm(windows, total=len(windows), disable=not progress)
 
-        dtype = np.find_common_type([np.float32], self.dtypes)
+        dtype = np.result_type(np.float32, *self.dtypes)
         X = np.ma.zeros((self.count, 0), dtype=dtype)
         pixel_indices = np.zeros(0, dtype="int")
 
