@@ -1,110 +1,46 @@
 [
   {
-    "objectID": "docs/geoprocessing.html",
-    "href": "docs/geoprocessing.html",
-    "title": "Raster Geoprocessing",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Overview",
     "section": "",
-    "text": "Pyspatialml includes common geoprocessing methods that collectively operate on stacks of raster datasets, such as cropping, reprojecting, masking etc. Most of these methods are simple wrappers around underlying rasterio functions, but applied to stacks of raster datasets.",
+    "text": "Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets. It is inspired by the famous raster package in the R statistical programming language which has been extensively used for applying statistical and machine learning models to geospatial raster datasets.\nPyspatialml includes functions and classes for working with multiple raster datasets and applying typical machine learning workflows including raster data manipulation, feature engineering on raster datasets, extraction of training data, and application of the predict or predict_proba methods of scikit-learn estimator objects to a stack of raster datasets.\nPyspatialml is built upon the rasterio Python package which performs all of the heavy lifting and is designed to work with the geopandas package for related raster-vector data geoprocessing operations."
+  },
+  {
+    "objectID": "index.html#purpose",
+    "href": "index.html#purpose",
+    "title": "Overview",
+    "section": "Purpose",
+    "text": "Purpose\nA supervised machine-learning workflow as applied to spatial raster data typically involves several steps:\n\nUsing vector features or labelled pixels to extract training data from a stack of raster-based predictors (e.g. spectral bands, terrain derivatives, or climate grids). The training data represent locations when some property/state/concentration is already established, and might comprise point locations of arsenic concentrations, or labelled pixels with integer-encoded values that correspond to known landcover types.\nDeveloping a machine learning classification or regression model on the training data. Pyspatialml is designed to use scikit-learn compatible api’s for this purpose.\nApplying the fitted machine learning model to make predictions on all of the pixels in the stack of raster data.\n\nPyspatialml is designed to make it easy to develop spatial prediction models on stacks of 2D raster datasets that are held on disk. Unlike using python’s numpy module directly where raster datasets need to be held in memory, the majority of functions within pyspatialml work with raster datasets that are stored on disk and allow processing operations to be performed on datasets that are too large to be loaded into memory.\nPyspatialml is designed to make it easy to work with typical raster data stacks consisting of multiple 2D grids such as different spectal bands, maps etc. However, it’s purpose is not to work with multidimensional datasets, i.e. those that have more than 3 dimensions such as spacetime cubes of multiband data. The xarray package can provide a structure for this type of data."
+  },
+  {
+    "objectID": "docs/usage.html",
+    "href": "docs/usage.html",
+    "title": "Usage",
+    "section": "",
+    "text": "The main approach to working with raster datasets in Pyspatialml is through the Raster class. The Raster object takes a list of GDAL-supported raster datasets and references them as part of a single Raster object, which can be used to perform operations on the raster datasets as a whole. The Raster object is a thin wrapper around the rasterio library, which is a Python library for reading and writing raster datasets. The individual bands within the datasets are represented internally as RasterLayer objects. This allows for retaining metadata about each raster dataset and adding or removing raster datasets from the stack without making physical changes to the disk.\nNote that in order to initiate a Raster object, the underlying raster datasets must be spatially aligned in terms of their extent, resolution, and coordinate reference system - Raster objects do not perform any resampling or reprojection of the underlying datasets. Functions within the preprocessing module can be used to align raster datasets before creating a Raster object.\n\n\nThe most common approach of initiating a Raster object is from an existing raster dataset, or a list of raster datasets. Alternatively, a Raster object can also be initiated from a 3D numpy array:\n\nRaster(src=[raster1.tif, raster2.tif, raster3.tif]) creates a Raster object from existing file-based GDAL-supported datasets, or a single raster dataset. The file-based datasets can contain single or multiple bands.\nRaster(src=new_numpy_array, crs=crs, transform=transform) creates a Raster object from a 3D numpy array (band, row, column). The crs and transform arguments are optional but are required to provide coordinate reference system information to the Raster object. The crs argument has to be represented by rasterio crs.CRS object, and the transform parameter requires an affine.Affine object.\n\nRasters can also be initated directly from a rasterio.Band object(s), or from a list of RasterLayer objects (see below).\n\n\n\nGenerally, Pyspatialml intends users to work with the Raster object. However, internally, the Raster object is composed of RasterLayer objects, which represent individual bands of a raster dataset. RasterLayers are based on a rasterio.band object with some additional attributes and methods. However, unlike the rasterio.Band.ds.read method which reads all bands within a multi-band dataset, the RasterLayer read method always refers to a single band.\nMethods contained within RasterLayer objects are specifically designed to be applied to individual bands of a raster. These methods include operations such as sieve-clump, distance to non-NaN pixels, and arithmetic operations on individual layers.",
     "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
+      "Usage"
     ]
   },
   {
-    "objectID": "docs/geoprocessing.html#handling-of-temporary-files",
-    "href": "docs/geoprocessing.html#handling-of-temporary-files",
-    "title": "Raster Geoprocessing",
-    "section": "Handling of Temporary Files",
-    "text": "Handling of Temporary Files\nAll of the geoprocessing methods have a file_path parameter to specify a file path to save the results of th geoprocessing operation. However, pyspatialml is designed for quick an interactive analyses on raster datasets, and if a file path is not specified then the results are saved to a temporary file location and a new Raster object is returned with the geoprocessing results.\nFor datasets that will easily fit into memory, all geoprocessing methods also have an in_memory parameter. If in_memory=True is set, then the results will be created using Rasterio’s in-memory files and stored in RAM. This has performance advantages, at the expense of memory expenditure.",
+    "objectID": "docs/usage.html#the-raster-class",
+    "href": "docs/usage.html#the-raster-class",
+    "title": "Usage",
+    "section": "",
+    "text": "The main approach to working with raster datasets in Pyspatialml is through the Raster class. The Raster object takes a list of GDAL-supported raster datasets and references them as part of a single Raster object, which can be used to perform operations on the raster datasets as a whole. The Raster object is a thin wrapper around the rasterio library, which is a Python library for reading and writing raster datasets. The individual bands within the datasets are represented internally as RasterLayer objects. This allows for retaining metadata about each raster dataset and adding or removing raster datasets from the stack without making physical changes to the disk.\nNote that in order to initiate a Raster object, the underlying raster datasets must be spatially aligned in terms of their extent, resolution, and coordinate reference system - Raster objects do not perform any resampling or reprojection of the underlying datasets. Functions within the preprocessing module can be used to align raster datasets before creating a Raster object.\n\n\nThe most common approach of initiating a Raster object is from an existing raster dataset, or a list of raster datasets. Alternatively, a Raster object can also be initiated from a 3D numpy array:\n\nRaster(src=[raster1.tif, raster2.tif, raster3.tif]) creates a Raster object from existing file-based GDAL-supported datasets, or a single raster dataset. The file-based datasets can contain single or multiple bands.\nRaster(src=new_numpy_array, crs=crs, transform=transform) creates a Raster object from a 3D numpy array (band, row, column). The crs and transform arguments are optional but are required to provide coordinate reference system information to the Raster object. The crs argument has to be represented by rasterio crs.CRS object, and the transform parameter requires an affine.Affine object.\n\nRasters can also be initated directly from a rasterio.Band object(s), or from a list of RasterLayer objects (see below).\n\n\n\nGenerally, Pyspatialml intends users to work with the Raster object. However, internally, the Raster object is composed of RasterLayer objects, which represent individual bands of a raster dataset. RasterLayers are based on a rasterio.band object with some additional attributes and methods. However, unlike the rasterio.Band.ds.read method which reads all bands within a multi-band dataset, the RasterLayer read method always refers to a single band.\nMethods contained within RasterLayer objects are specifically designed to be applied to individual bands of a raster. These methods include operations such as sieve-clump, distance to non-NaN pixels, and arithmetic operations on individual layers.",
     "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
+      "Usage"
     ]
   },
   {
-    "objectID": "docs/geoprocessing.html#cropping",
-    "href": "docs/geoprocessing.html#cropping",
-    "title": "Raster Geoprocessing",
-    "section": "Cropping",
-    "text": "Cropping\nAll layers within a Raster can be cropped to a new extent using the Raster.crop method.\n\nimport geopandas as gpd\nimport matplotlib.pyplot as plt\nfrom pyspatialml import Raster\nfrom pyspatialml.datasets import nc\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\ntraining_py = gpd.read_file(nc.polygons)\n\nstack = Raster(predictors)\n\nstack.plot()\nplt.show()\n\n\n\n\n\n\n\n\n\n# crop to new extent (xmin, ymin, xmax, ymax)\ncrop_bounds = training_py.loc[0, \"geometry\"].bounds\nstack_cropped = stack.crop(crop_bounds)\n\nstack_cropped.plot()\nplt.show()",
+    "objectID": "docs/usage.html#principles-of-working-with-rasters",
+    "href": "docs/usage.html#principles-of-working-with-rasters",
+    "title": "Usage",
+    "section": "Principles of working with Rasters",
+    "text": "Principles of working with Rasters\nMethods that are applied to Raster objects are generally designed to be applied to the entire stack of raster datasets. For example, the crop method will crop all raster datasets in the stack to a common extent, and the mask method will apply a mask to all raster datasets in the stack. These methods always return a new Raster object, and do not modify the original Raster object by default.\nIn contrast, methods that apply to individual RasterLayers are mostly related to extracting or summarizing metadata from the individual bands. For other methods that users may want to apply to individual bands, it is recommended to work with rasterio directly.",
     "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#masking",
-    "href": "docs/geoprocessing.html#masking",
-    "title": "Raster Geoprocessing",
-    "section": "Masking",
-    "text": "Masking\nIn comparison to cropping, masking can be used to set pixels that occur outside of masking geometries to NaN, and optionally can also crop a Raster.\n\nimport geopandas as gpd\nimport pyspatialml.datasets.nc as nc\nfrom pyspatialml import Raster\n\ntraining_py = gpd.read_file(nc.polygons)\nmask_py = training_py.iloc[0:1, :]\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\nstack = Raster(predictors)\n\n# mask a Raster\nmasked_object = stack.mask(mask_py)",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#intersecting-layers",
-    "href": "docs/geoprocessing.html#intersecting-layers",
-    "title": "Raster Geoprocessing",
-    "section": "Intersecting Layers",
-    "text": "Intersecting Layers\nThe Raster.intersect method computes the geometric intersection of the RasterLayers with the Raster object. This will cause nodata values in any of the rasters to be propagated through all of the output rasters.\n\nimport pyspatialml.datasets.nc as nc\nfrom pyspatialml import Raster\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\nstack = Raster(predictors)\n\nresult = stack.intersect()\n\nThe intersect method is memory-safe, i.e. the intersection occurs during windowed reading and writing of the Raster. The size and dimensions of the windows can be changed using the Raster.block_shapes property.",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#reprojecting",
-    "href": "docs/geoprocessing.html#reprojecting",
-    "title": "Raster Geoprocessing",
-    "section": "Reprojecting",
-    "text": "Reprojecting\nReprojecting a raster using the Raster.to_crs method.\n\nstack_prj = stack.to_crs(crs={\"init\": \"EPSG:4326\"})\n\nOther parameters that can be passed and their defaults are resampling=“nearest”, file_path=None, driver=“GTiff”, nodata=None, n_jobs=1, warp_mem_lim=0, progress=False, and other kwargs that are passed to the raster format drivers.",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#resampling",
-    "href": "docs/geoprocessing.html#resampling",
-    "title": "Raster Geoprocessing",
-    "section": "Resampling",
-    "text": "Resampling\nThe Raster.aggregate method is used to resample a raster to a different resolution using the decimated reading approach in the rasterio library.\n\nstack.aggregate(out_shape=(50, 50), resampling=\"nearest\", driver=\"GTiff\")\n\nRaster Object Containing 6 Layers\n    attribute                                             values\n0       names  [lsat7_2000_10, lsat7_2000_20, lsat7_2000_30, ...\n1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...\n2        rows                                                 50\n3        cols                                                 50\n4         res                                   (278.73, 252.51)\n5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#computation",
-    "href": "docs/geoprocessing.html#computation",
-    "title": "Raster Geoprocessing",
-    "section": "Computation",
-    "text": "Computation\nApply user-supplied function to a Raster object.\n\ndef myfun(x):\n  return x + 1\n\nstack.apply(myfun)\n\nRaster Object Containing 6 Layers\n    attribute                                             values\n0       names  [tmpsdyk3x5h_1, tmpsdyk3x5h_2, tmpsdyk3x5h_3, ...\n1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...\n2        rows                                                443\n3        cols                                                489\n4         res                                       (28.5, 28.5)\n5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...\n\n\n\n\n\nWhere function is a user-defined python that takes an numpy array as a single argument, and can return either a 2d array that represents a single raster dataset, such as NDVI, or can operate on a number of layers and can return a raster with multiple layers in a 3d array in (layer, row, col) order.\nThe apply function is memory-safe, i.e. it applies the function to windows of the raster data that are read sequentially or in parallel (with n_jobs != 1). The size and dimensions of the windows can be changed using the Raster.block_shapes property.",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
-    ]
-  },
-  {
-    "objectID": "docs/geoprocessing.html#raster-algebra",
-    "href": "docs/geoprocessing.html#raster-algebra",
-    "title": "Raster Geoprocessing",
-    "section": "Raster Algebra",
-    "text": "Raster Algebra\nRasterLayer objects also support basic raster math operations using python’s magic methods, which supports all of the usual math operators. Calculations on RasterLayers occur in memory using Rasterio’s in-memory files, thus they are not memory safe. For applying computations and algebra to large raster datasets in windows, use Raster.apply().\n\na = stack.iloc[0] + stack.iloc[1]\nb = stack.iloc[0] - stack.iloc[1]\n\nndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])\n\nArithmetic operations on RasterLayer’s will return another RasterLayer. The result can be coerced into a Raster object using:\n\nndvi = Raster((stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2]))\n\nArithmetic operations are only supported on RasterLayer objects and not in a parent Raster object directly.",
-    "crumbs": [
-      "Guide",
-      "Geoprocessing",
-      "Raster Geoprocessing"
+      "Usage"
     ]
   },
   {
@@ -192,63 +128,13 @@
     ]
   },
   {
-    "objectID": "docs/index.html",
-    "href": "docs/index.html",
-    "title": "Overview",
+    "objectID": "docs/installation.html",
+    "href": "docs/installation.html",
+    "title": "Installation",
     "section": "",
-    "text": "Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets. It is inspired by the famous raster package in the R statistical programming language which has been extensively used for applying statistical and machine learning models to geospatial raster datasets.\nPyspatialml includes functions and classes for working with multiple raster datasets and applying typical machine learning workflows including raster data manipulation, feature engineering on raster datasets, extraction of training data, and application of the predict or predict_proba methods of scikit-learn estimator objects to a stack of raster datasets.\nPyspatialml is built upon the rasterio Python package which performs all of the heavy lifting and is designed to work with the geopandas package for related raster-vector data geoprocessing operations.",
+    "text": "Pyspatialml is available on PyPI and can be installed in the usual manner with:\n\npip install Pyspatialml\n\nThe development version, which is more up-to-date with changes to the package especially during these earlier stages of development, can be installed directly via:\n\npip install git+https://github.com/stevenpawley/Pyspatialml",
     "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "docs/index.html#purpose",
-    "href": "docs/index.html#purpose",
-    "title": "Overview",
-    "section": "Purpose",
-    "text": "Purpose\nA supervised machine-learning workflow as applied to spatial raster data typically involves several steps:\n\nUsing vector features or labelled pixels to extract training data from a stack of raster-based predictors (e.g. spectral bands, terrain derivatives, or climate grids). The training data represent locations when some property/state/concentration is already established, and might comprise point locations of arsenic concentrations, or labelled pixels with integer-encoded values that correspond to known landcover types.\nDeveloping a machine learning classification or regression model on the training data. Pyspatialml is designed to use scikit-learn compatible api’s for this purpose.\nApplying the fitted machine learning model to make predictions on all of the pixels in the stack of raster data.\n\nPyspatialml is designed to make it easy to develop spatial prediction models on stacks of 2D raster datasets that are held on disk. Unlike using python’s numpy module directly where raster datasets need to be held in memory, the majority of functions within pyspatialml work with raster datasets that are stored on disk and allow processing operations to be performed on datasets that are too large to be loaded into memory.\nPyspatialml is designed to make it easy to work with typical raster data stacks consisting of multiple 2D grids such as different spectal bands, maps etc. However, it’s purpose is not to work with multidimensional datasets, i.e. those that have more than 3 dimensions such as spacetime cubes of multiband data. The xarray package can provide a structure for this type of data.",
-    "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "docs/design.html",
-    "href": "docs/design.html",
-    "title": "Design",
-    "section": "",
-    "text": "Pyspatialml provides access to raster datasets using two main structures, comprising the Raster and RasterLayer classes.",
-    "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Design"
-    ]
-  },
-  {
-    "objectID": "docs/design.html#raster-objects",
-    "href": "docs/design.html#raster-objects",
-    "title": "Design",
-    "section": "Raster objects",
-    "text": "Raster objects\nThe main class that facilitates working with multiple raster datasets is the Raster class. The Raster object takes a list GDAL-supported raster datasets and ‘stacks’ them into a single Raster object. The underlying file-based raster datasets are not physically-stacked, but rather the Raster object internally represents each band within the datasets as a RasterLayer. This means that metadata regarding what each raster dataset represents (e.g. the dataset’s name) can be retained, and additional raster datasets can be added or removed from the stack without physical on-disk changes.\nNote these raster datasets need to be spatially aligned in terms of their extent, resolution and coordinate reference system.\n\nCreating a new Raster object\nThere are several methods of creating a new Raster object:\n\nRaster(src=[raster1.tif, raster2.tif, raster3.tif]) creates a Raster object from existing file-based GDAL-supported datasets, or a single raster dataset. The file-based datasets can contain single or multiple bands.\nRaster(src=new_numpy_array, crs=crs, transform=transform) creates a Raster object from a 3D numpy array (band, row, column). The crs and transform arguments are optional but are required to provide coordinate reference system information to the Raster object. The crs argument has to be represented by rasterio.crs.CRS object, and the transform parameter requires an affine.Affine object.\nRaster(src=[RasterLayer1, RasterLayer2, RasterLayer3]) creates a Raster object from a single or list of RasterLayer objects. RasterLayers are a thin wrapper around rasterio.Band objects with additional methods. This is mostly used internally. A RasterLayer itself is initiated directly from a rasterio.Band object.\nA Raster can also be initated directly from a rasterio.Band object, or a list of rasterio.Band objects.\n\nGenerally, Pyspatialml intends users to work with the Raster object. However, access to individual RasterLayer objects, or the underlying rasterio.band datasets can be useful if pyspatialml is being used in conjunction with other functions and methods in the rasterio package.",
-    "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Design"
-    ]
-  },
-  {
-    "objectID": "docs/design.html#rasterlayers",
-    "href": "docs/design.html#rasterlayers",
-    "title": "Design",
-    "section": "RasterLayers",
-    "text": "RasterLayers\nA RasterLayer is an object that represents a single raster band. It is based on a rasterio.band object with some additional attributes and methods. A RasterLayer is used because the rasterio.Band.ds.read method reads all bands from a multi-band dataset, whereas the RasterLayer read method always refers to a single band.\nA RasterLayer object is generally not intended to be initiated directly, but rather is used internally as part of a Raster to represent individual bands. However, a RasterLayer can be initiated from a rasterio.band object.\nMethods encapsulated in RasterLayer objects represent those that typically would only be applied to a single-band of a raster, i.e. sieve-clump, distance to non-NaN pixels, or arithmetic operations on individual layers.",
-    "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Design"
+      "Installation"
     ]
   },
   {
@@ -340,44 +226,28 @@
     "href": "reference/index.html",
     "title": "Function reference",
     "section": "",
-    "text": "Raster is a class for reading and writing raster datasets\n\n\n\nRaster\nCreates a collection of file-based GDAL-supported raster\n\n\nRasterLayer\nRepresents a single raster band derived from a single or\n\n\n\n\n\n\nTools for working with vector datasets\n\n\n\nvector\n\n\n\n\n\n\n\nPreprocessing tools for raster datasets\n\n\n\npreprocessing",
-    "crumbs": [
-      "Reference",
-      "Function reference"
-    ]
+    "text": "Raster is a class for reading and writing raster datasets\n\n\n\nRaster\nCreates a collection of file-based GDAL-supported raster\n\n\nRasterLayer\nRepresents a single raster band derived from a single or\n\n\n\n\n\n\nTools for working with vector datasets\n\n\n\nvector\n\n\n\n\n\n\n\nPreprocessing tools for raster datasets\n\n\n\npreprocessing"
   },
   {
     "objectID": "reference/index.html#raster-datasets",
     "href": "reference/index.html#raster-datasets",
     "title": "Function reference",
     "section": "",
-    "text": "Raster is a class for reading and writing raster datasets\n\n\n\nRaster\nCreates a collection of file-based GDAL-supported raster\n\n\nRasterLayer\nRepresents a single raster band derived from a single or",
-    "crumbs": [
-      "Reference",
-      "Function reference"
-    ]
+    "text": "Raster is a class for reading and writing raster datasets\n\n\n\nRaster\nCreates a collection of file-based GDAL-supported raster\n\n\nRasterLayer\nRepresents a single raster band derived from a single or"
   },
   {
     "objectID": "reference/index.html#vector-tools",
     "href": "reference/index.html#vector-tools",
     "title": "Function reference",
     "section": "",
-    "text": "Tools for working with vector datasets\n\n\n\nvector",
-    "crumbs": [
-      "Reference",
-      "Function reference"
-    ]
+    "text": "Tools for working with vector datasets\n\n\n\nvector"
   },
   {
     "objectID": "reference/index.html#preprocessing",
     "href": "reference/index.html#preprocessing",
     "title": "Function reference",
     "section": "",
-    "text": "Preprocessing tools for raster datasets\n\n\n\npreprocessing",
-    "crumbs": [
-      "Reference",
-      "Function reference"
-    ]
+    "text": "Preprocessing tools for raster datasets\n\n\n\npreprocessing"
   },
   {
     "objectID": "reference/Raster.html",
@@ -416,18 +286,6 @@
     ]
   },
   {
-    "objectID": "docs/installation.html",
-    "href": "docs/installation.html",
-    "title": "Installation",
-    "section": "",
-    "text": "Pyspatialml is available on PyPI and can be installed in the usual manner with:\n\npip install Pyspatialml\n\nThe development version, which is more up-to-date with changes to the package especially during these earlier stages of development, can be installed directly via:\n\npip install git+https://github.com/stevenpawley/Pyspatialml",
-    "crumbs": [
-      "Getting started",
-      "Pyspatialml",
-      "Installation"
-    ]
-  },
-  {
     "objectID": "docs/spatial-features.html",
     "href": "docs/spatial-features.html",
     "title": "Incorporating Spatial Autocorrelation into Spatial Predictions",
@@ -435,7 +293,7 @@
     "text": "Similarly to example 1, we are using the meuse dataset again to perform a multi-target prediction of soil properties using a regression model. However, in this case we will attempt to account for spatial autocorrelation in the model directly by generating new features that are based on the distance-weighted means of surrounding spatial locations.\nimport geopandas as gpd\nimport numpy as np\nfrom tempfile import NamedTemporaryFile\nfrom pyspatialml import Raster\nimport pyspatialml.datasets.meuse as ms\nimport matplotlib as mpl\nimport matplotlib.pyplot as plt",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Spatial feature engineering",
       "Incorporating Spatial Autocorrelation into Spatial Predictions"
     ]
   },
@@ -447,7 +305,7 @@
     "text": "Preparing the Raster Predictors\nImport the raster predictors from the pyspatialml.datasets.meuse module:\n\npredictor_files = ms.predictors\ntraining_pts_file = ms.meuse\nstack = Raster(predictor_files)\nstack.drop('ffreq')\n\nRaster Object Containing 11 Layers\n    attribute                                             values\n0       names  [chnl_dist, dem, dist, landimg2, landimg3, lan...\n1       files  [/Users/stevenpawley/GitHub/Pyspatialml/pyspat...\n2        rows                                                104\n3        cols                                                 78\n4         res                                       (40.0, 40.0)\n5  nodatavals  [-99999.0, -99999.0, -1.0, -1.0, -1.0, -1.0, -...\n\n\n\n\n\nIn order to generate new features from surrounding spatial locations, we need their x,y coordinates, which will will add to the stack of the raster predictors using the pyspatialml.preprocessing.xy_coordinates function:\n\nfrom pyspatialml.preprocessing import xy_coordinates\n\nxy_layers = xy_coordinates(stack.iloc[0], NamedTemporaryFile(suffix=\".tif\").name)\nstack = stack.append(xy_layers, in_place=False)\n\nQuickly plot the raster predictors:\n\nmpl.style.use('seaborn-v0_8')\naxs = stack.plot(figsize=(9, 7))\nax = axs.flatten()[10]\nim = ax.images\nim[0].colorbar.set_ticks([1,2,3])\nax = axs.flatten()[8]\nax.tick_params(axis='x', labelrotation=65)\n\nplt.tight_layout()\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Spatial feature engineering",
       "Incorporating Spatial Autocorrelation into Spatial Predictions"
     ]
   },
@@ -459,7 +317,7 @@
     "text": "Extract the Training Data\nSpatially query the raster predictors at the training point locations:\n\ntraining_pts = gpd.read_file(training_pts_file)\ntraining_df = stack.extract_vector(gdf=training_pts)\n\ntraining_df.index = training_df.index.get_level_values(\"geometry_idx\")\ntraining_df = training_df.merge(\n    training_pts.loc[:, (\"lead\", \"cadmium\", \"copper\", \"zinc\", \"om\")], \n    left_index=True, \n    right_index=True\n) \ntraining_df = training_df.dropna()\n\nSplit the response/target variables from the predictors:\n\nX = training_df.loc[:, stack.names].values\ny = training_df.loc[:, ['lead', 'cadmium', 'copper', 'zinc', 'om']].values",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Spatial feature engineering",
       "Incorporating Spatial Autocorrelation into Spatial Predictions"
     ]
   },
@@ -471,7 +329,7 @@
     "text": "Develop a Spatially-Lagged Machine Learning Model\nAs well as using the ExtraTreeRegressor model which was also used in example 1, here we will use the custom pyspatialml.estimators.SpatialLagRegressor metalearner class to wrap the extratrees regressor into a model that adds a new feature based on the distance-weighted mean of spatially-proximal observations:\n\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.ensemble import ExtraTreesRegressor\nfrom sklearn.preprocessing import OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\nfrom pyspatialml.transformers import KNNTransformer\nfrom sklearn.model_selection import cross_validate, KFold\nfrom sklearn.model_selection import GridSearchCV\n\n# define regressor\net = ExtraTreesRegressor(n_estimators=500, n_jobs=-1, random_state=1234)\n\nsoil_index = list(stack.names).index(\"soil\")\nxy_indexes = [list(stack.names).index(i) for i in [\"x_coordinates\", \"y_coordinates\"]]\n\npreproc = ColumnTransformer([\n    ('ohe', OneHotEncoder(categories='auto', handle_unknown='ignore'), [soil_index]),\n    ('lags', KNNTransformer(weights='distance', measure=\"mean\"), xy_indexes)\n], remainder='passthrough')\n\nwflow = Pipeline([\n    ('preproc', preproc),\n    ('regressor', et)\n])\n\nsearch_grid = {\"preproc__lags__n_neighbors\": [3, 5, 7, 9]}\ninner = KFold(n_splits=3, shuffle=True, random_state=1234)\nmodel = GridSearchCV(wflow, param_grid=search_grid, cv=inner, scoring=\"r2\")\n\nFit the model and cross-validate:\n\nmodel = model.fit(X, y)\nmodel.best_params_\n\n{'preproc__lags__n_neighbors': 9}\n\n\n\nouter = KFold(n_splits=10, shuffle=True, random_state=1234)\n\nscores = cross_validate(model, X, y, scoring='neg_mean_squared_error', cv=outer, n_jobs=1)\nrmse = np.sqrt(-scores['test_score']).mean()\n\nprint(\"Our RMSE score is {}\".format(rmse))\n\nOur RMSE score is 102.27495341202624\n\n\nComparing the RMSE score the the score obtained in example 1, where the spatial structure of the training data was accounted for indirectly by added a variety of raster distance measures, we can see that the RMSE score is slightly improved.",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Spatial feature engineering",
       "Incorporating Spatial Autocorrelation into Spatial Predictions"
     ]
   },
@@ -483,7 +341,7 @@
     "text": "Multi-Target Predictions\n\npreds = stack.predict(model)\npreds.rename(\n    {old: new for old, new in zip(preds.names, ['lead', 'cadmium', 'copper', 'zinc', 'om'])},\n    in_place=True\n)\npreds.lead.cmap = 'rainbow'\npreds.cadmium.cmap = 'rainbow'\npreds.copper.cmap = 'rainbow'\npreds.zinc.cmap = 'rainbow'\npreds.om.cmap = 'rainbow'\n\n\npreds.plot(out_shape=(200, 200), title_fontsize=14, figsize=(10, 8))\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Spatial feature engineering",
       "Incorporating Spatial Autocorrelation into Spatial Predictions"
     ]
   },
@@ -495,7 +353,7 @@
     "text": "Here we are using the meuse dataset which is included in the pyspatialml package as an example of performing a spatial model and prediction. We can access the datasets using the pyspatialml.datasets module:\nfrom copy import deepcopy\nfrom tempfile import NamedTemporaryFile\nimport geopandas as gpd\nimport numpy as np\nfrom pyspatialml import Raster\nfrom pyspatialml.preprocessing import xy_coordinates, distance_to_corners\nimport pyspatialml.datasets.meuse as ms\n\nimport matplotlib as mpl\nimport matplotlib.pyplot as plt\nfrom matplotlib import cm\npredictor_files = ms.predictors\ntraining_pts_file = ms.meuse\nstack = Raster(predictor_files)\nstack.names\n\ndict_keys(['chnl_dist', 'dem', 'dist', 'ffreq', 'landimg2', 'landimg3', 'landimg4', 'mrvbf', 'rsp', 'slope', 'soil', 'twi'])\nPyspatialml implements pandas-style indexing for Raster objects, using Raster.loc to index by the name of the raster, and Raster.iloc to select by index. This method also accepts slices. Label-based indexing is also provided directly by the __getattr_ magic method, i.e. Raster[name] or for multiple layers Raster[(names)].\nFor example we can remove layers from Raster object using the Raster.drop method, or by subsetting the raster:\nstack.drop('ffreq')\n\nRaster Object Containing 11 Layers\n    attribute                                             values\n0       names  [chnl_dist, dem, dist, landimg2, landimg3, lan...\n1       files  [/Users/stevenpawley/GitHub/Pyspatialml/pyspat...\n2        rows                                                104\n3        cols                                                 78\n4         res                                       (40.0, 40.0)\n5  nodatavals  [-99999.0, -99999.0, -1.0, -1.0, -1.0, -1.0, -...\nWe can store matplotlib cmaps as an attribute within each layer in the Raster:\nstack.chnl_dist.cmap = 'RdBu'\nstack.dem.cmap = 'terrain'\nstack.dist.cmap = 'Reds'\nstack.landimg2.cmap = 'Greys'\nstack.landimg3.cmap = 'Greys'\nstack.landimg4.cmap = 'Greys'\nstack.landimg4.cmap = 'Greys'\nstack.mrvbf.cmap = 'jet'\nstack.rsp.cmap = 'gnuplot2'\nstack.slope.cmap = 'PuRd'\nstack.soil.cmap = 'Set2'\nstack.twi.cmap = 'coolwarm'\nPlot the predictors in the Raster object as a raster matrix:\nmpl.style.use('seaborn-v0_8')\naxs = stack.plot(figsize=(9, 7))\nax = axs.flatten()[10]\nim = ax.images\nim[0].colorbar.set_ticks([1,2,3])\nax = axs.flatten()[8]\nax.tick_params(axis='x', labelrotation=65)\n\nplt.tight_layout()\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -507,7 +365,7 @@
     "text": "Feature Engineering\nWe want the prediction results to be depend on the spatial locations of the training data. So to include spatial information, coordinate grids can be generated and added to the Raster object:\n\nxy_layer = xy_coordinates(\n    layer=stack.iloc[0], \n    file_path=NamedTemporaryFile(suffix=\".tif\").name\n)\n\n\nxy_layer = xy_coordinates(\n    layer=stack.iloc[0], \n    file_path=NamedTemporaryFile(suffix=\".tif\").name\n)\n\nedms = distance_to_corners(\n    layer=stack.iloc[0], \n    file_path=NamedTemporaryFile(suffix=\".tif\").name\n)\nedms.rename(\n    {old: new for (old, new) in zip(edms.names, [\"tl\", \"tr\", \"bl\", \"br\", \"c\"])},\n    in_place=True\n)\n\nedms.plot()\nplt.show()\n\n\n\n\n\n\n\n\nAppend them to the Raster object:\n\nstack = stack.append([xy_layer, edms])\n\nPlot the new predictors:\n\naxs = stack.plot(figsize=(9, 7))\nax = axs.flatten()[10]\nim = ax.images\nim[0].colorbar.set_ticks([1,2,3])\nax = axs.flatten()[8]\nax.tick_params(axis='x', labelrotation=65)\n\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\nThe area that is filled by some of the grids is different. This doesn’t matter for the prediction because pixels in the Raster object that include some NaNs in some of the layers will be removed. However, the plots could potentially be given a cleaner look. We can use the Raster.intersect method to fix this:\n\nstack = stack.intersect()\n\n\naxs = stack.plot(figsize=(9, 7))\nax = axs.flatten()[10]\nim = ax.images\nim[0].colorbar.set_ticks([1,2,3])\nax = axs.flatten()[8]\nax.tick_params(axis='x', labelrotation=65)\n\nplt.tight_layout()\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -519,7 +377,7 @@
     "text": "Read the Meuse Dataset\n\ntraining_pts = gpd.read_file(training_pts_file)\ntraining_pts.head()\n\n\n\n\n\n\n\n\n\ncadmium\ncopper\nlead\nzinc\nelev\ndist\nom\nffreq\nsoil\nlime\nlanduse\ndist.m\ngeometry\n\n\n\n\n0\n11.7\n85.0\n299.0\n1022.0\n7.909\n0.001358\n13.6\n1\n1\n1\nAh\n50.0\nPOINT (181072.000 333611.000)\n\n\n1\n8.6\n81.0\n277.0\n1141.0\n6.983\n0.012224\n14.0\n1\n1\n1\nAh\n30.0\nPOINT (181025.000 333558.000)\n\n\n2\n6.5\n68.0\n199.0\n640.0\n7.800\n0.103029\n13.0\n1\n1\n1\nAh\n150.0\nPOINT (181165.000 333537.000)\n\n\n3\n2.6\n81.0\n116.0\n257.0\n7.655\n0.190094\n8.0\n1\n2\n0\nGa\n270.0\nPOINT (181298.000 333484.000)\n\n\n4\n2.8\n48.0\n117.0\n269.0\n7.480\n0.277090\n8.7\n1\n2\n0\nAh\n380.0\nPOINT (181307.000 333330.000)\n\n\n\n\n\n\n\n\nPlot the training points:\n\nfrom mpl_toolkits.axes_grid1 import make_axes_locatable\n\nfig, axs = plt.subplots(2, 3, figsize=(8.5, 7))\n\nfor i, (ax, target) in enumerate(zip(axs.ravel(), ['cadmium', 'copper', 'lead', 'zinc', 'om'])):\n    ax.set_title(target.title())\n    divider = make_axes_locatable(ax)\n    cax = divider.append_axes(\"right\", size=\"10%\", pad=0.05)\n    training_pts.plot(column=target, legend=True, ax=ax, cax=cax, cmap='viridis')\n    \n    if i != 0:\n        ax.set_yticklabels([])\n    \n    if i != 3:\n        ax.set_xticklabels([])\n    else:\n        ax.tick_params(axis='x', labelrotation=65)\n    \nfig.delaxes(axs.flatten()[i+1])\nplt.tight_layout()\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -531,7 +389,7 @@
     "text": "Extract Raster Values at the Training Point Locations\nPixel values from a Raster object can be extracted using geometries within a geopandas.GeoDataFrame (points, lines, polygons) or by using labelled pixels from another raster with the same dimensions and crs.\nBy default the extracted values are returned as a geopandas.GeoDataFrame that contains the data and the coordinates of the pixels:\n\ntraining_df = stack.extract_vector(gdf=training_pts)\n\ntraining_df.index = training_df.index.get_level_values(\"geometry_idx\")\ntraining_df = training_df.merge(\n    training_pts.loc[:, (\"lead\", \"cadmium\", \"copper\", \"zinc\", \"om\")], \n    left_index=True, \n    right_index=True\n) \n\n\ntraining_df = training_df.dropna()\ntraining_df.head()\n\n\n\n\n\n\n\n\n\nchnl_dist\ndem\ndist\nffreq\nlandimg2\nlandimg3\nlandimg4\nmrvbf\nrsp\nslope\n...\ntr\nbl\nbr\nc\ngeometry\nlead\ncadmium\ncopper\nzinc\nom\n\n\ngeometry_idx\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n0\n0.000000\n3214.0\n0.001358\n1.0\n97.0\n92.0\n192.0\n3.523824e-06\n0.000000\n1.423307\n...\n12.369317\n119.268608\n100.717430\n55.470715\nPOINT (181072.000 333611.000)\n299.0\n11.7\n85.0\n1022.0\n13.6\n\n\n1\n79.849854\n3402.0\n0.012224\n1.0\n160.0\n183.0\n183.0\n9.879866e-06\n0.082085\n1.286004\n...\n13.928389\n117.046997\n98.858482\n53.235325\nPOINT (181025.000 333558.000)\n277.0\n8.6\n81.0\n1141.0\n14.0\n\n\n2\n0.000000\n3277.0\n0.103029\n1.0\n178.0\n209.0\n179.0\n1.340742e-03\n0.000000\n0.674711\n...\n10.295630\n119.281181\n98.412399\n55.226807\nPOINT (181165.000 333537.000)\n199.0\n6.5\n68.0\n640.0\n13.0\n\n\n3\n184.743164\n3563.0\n0.190094\n1.0\n114.0\n135.0\n152.0\n6.547428e-07\n0.192325\n1.413479\n...\n8.485281\n120.208153\n97.185387\n56.035702\nPOINT (181298.000 333484.000)\n116.0\n2.6\n81.0\n257.0\n8.0\n\n\n4\n16.768555\n3406.0\n0.277090\n1.0\n133.0\n154.0\n151.0\n1.588824e-03\n0.016689\n0.531276\n...\n11.661903\n117.004272\n93.193344\n52.801514\nPOINT (181307.000 333330.000)\n117.0\n2.8\n48.0\n269.0\n8.7\n\n\n\n\n5 rows × 25 columns",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -543,7 +401,7 @@
     "text": "Developing a Machine Learning Model\nHere we are going to create a machine learning pipeline that correctly handles categorical predictors via one-hot encoding:\n\nstack.names\n\ndict_keys(['chnl_dist', 'dem', 'dist', 'ffreq', 'landimg2', 'landimg3', 'landimg4', 'mrvbf', 'rsp', 'slope', 'soil', 'twi', 'x_coordinates', 'y_coordinates', 'tl', 'tr', 'bl', 'br', 'c'])\n\n\n\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.ensemble import ExtraTreesRegressor\nfrom sklearn.preprocessing import OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\n\nsoil_idx = [i for i, name in enumerate(stack.names) if name == 'soil']\n\ntrans = ColumnTransformer([\n    ('ohe', OneHotEncoder(categories='auto', handle_unknown='ignore'), soil_idx)\n    ], remainder='passthrough')\n\net = ExtraTreesRegressor(n_estimators=500, n_jobs=-1, random_state=1234)\net = Pipeline([\n    ('preproc', trans),\n    ('regressor', et)])\n\nNow we can separate our response and predictor variables and train the model:\n\nX = training_df.loc[:, stack.names]\ny = training_df.loc[:, ['lead', 'cadmium', 'copper', 'zinc', 'om']]\net.fit(X, y)\n\nPipeline(steps=[('preproc',\n                 ColumnTransformer(remainder='passthrough',\n                                   transformers=[('ohe',\n                                                  OneHotEncoder(handle_unknown='ignore'),\n                                                  [10])])),\n                ('regressor',\n                 ExtraTreesRegressor(n_estimators=500, n_jobs=-1,\n                                     random_state=1234))])In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.  Pipeline?Documentation for PipelineiFittedPipeline(steps=[('preproc',\n                 ColumnTransformer(remainder='passthrough',\n                                   transformers=[('ohe',\n                                                  OneHotEncoder(handle_unknown='ignore'),\n                                                  [10])])),\n                ('regressor',\n                 ExtraTreesRegressor(n_estimators=500, n_jobs=-1,\n                                     random_state=1234))])  preproc: ColumnTransformer?Documentation for preproc: ColumnTransformerColumnTransformer(remainder='passthrough',\n                  transformers=[('ohe', OneHotEncoder(handle_unknown='ignore'),\n                                 [10])]) ohe[10]  OneHotEncoder?Documentation for OneHotEncoderOneHotEncoder(handle_unknown='ignore') remainder['chnl_dist', 'dem', 'dist', 'ffreq', 'landimg2', 'landimg3', 'landimg4', 'mrvbf', 'rsp', 'slope', 'twi', 'x_coordinates', 'y_coordinates', 'tl', 'tr', 'bl', 'br', 'c'] passthroughpassthrough  ExtraTreesRegressor?Documentation for ExtraTreesRegressorExtraTreesRegressor(n_estimators=500, n_jobs=-1, random_state=1234) \n\n\nTo evaluate the performance of the model, we will use 10-fold cross validation:\n\nfrom sklearn.model_selection import cross_validate, KFold\n\nouter = KFold(n_splits=10, shuffle=True, random_state=1234)\nscores = cross_validate(et, X, y, scoring='neg_mean_squared_error', cv=10, n_jobs=1)\nrmse = np.sqrt(-scores['test_score']).mean()\n\nprint(\"Our RMSE score is {}\".format(rmse))\n\nOur RMSE score is 105.19227221271413",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -555,7 +413,7 @@
     "text": "Feature Importances\n\nohe_names = deepcopy(list(stack.names))\nohe_names.insert(soil_idx[0], 'soil1')\nohe_names.insert(soil_idx[0], 'soil2')\nohe_names = np.array(ohe_names)\n\n\nmpl.style.use('ggplot')\n\nfimp = et.named_steps['regressor'].feature_importances_\n\nfig, ax = plt.subplots(figsize=(4, 6))\nax.barh(y=ohe_names[fimp.argsort()], width=fimp[fimp.argsort()])\nax.set_xlabel('Feature Importance Score')\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -567,7 +425,7 @@
     "text": "Prediction on the Raster object\n\npreds = stack.predict(et)\npreds.rename(\n    {old: new for old, new in zip(preds.names, ['lead', 'cadmium', 'copper', 'zinc', 'om'])},\n    in_place=True\n)\npreds.lead.cmap = 'rainbow'\npreds.cadmium.cmap = 'rainbow'\npreds.copper.cmap = 'rainbow'\npreds.zinc.cmap = 'rainbow'\npreds.om.cmap = 'rainbow'\n\n/Users/stevenpawley/Library/Caches/pypoetry/virtualenvs/pyspatialml-NqZ1tMUm-py3.11/lib/python3.11/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but OneHotEncoder was fitted with feature names\n  warnings.warn(\n/Users/stevenpawley/Library/Caches/pypoetry/virtualenvs/pyspatialml-NqZ1tMUm-py3.11/lib/python3.11/site-packages/sklearn/base.py:493: UserWarning: X does not have valid feature names, but OneHotEncoder was fitted with feature names\n  warnings.warn(\n\n\nPlot the results:\n\npreds.plot(out_shape=(200, 200), title_fontsize=14, figsize=(10, 8))\nplt.show()",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Multitarget regression",
       "Multi-Target Spatial Prediction using the Meuse Dataset"
     ]
   },
@@ -579,7 +437,7 @@
     "text": "Landcover classification is a common task in remote sensing. This example demonstrates how to extract training data from a raster and vector data, train a classifier, and predict landcover classes on a raster.",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Landcover",
       "Landcover classification"
     ]
   },
@@ -591,7 +449,7 @@
     "text": "Data\nThe data used in this example is from the Landsat 7 ETM+ sensor, and represents an extract of data derived from the GRASS GIS North Carolina example dataset. The data consists of 6 bands (1, 2, 3, 4, 5, 7) and labelled pixels. The labelled pixels are used as training data for the classifier. The data is stored in the pyspatialml.datasets module.",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Landcover",
       "Landcover classification"
     ]
   },
@@ -603,7 +461,7 @@
     "text": "Extraction Training Data\nLoad some training data in the form of polygons, points and labelled pixels in geopandas.GeoDataFrame objects. We will also generate some line geometries by converting the polygon boundaries into linestrings. All of these geometry types can be used to spatially query pixel values in a Raster object, however each GeoDataFrame must contain only one type of geometry (i.e. either shapely points, polygons or linestrings).\n\nfrom pyspatialml import Raster\nfrom pyspatialml.datasets import nc\nfrom copy import deepcopy\nimport os\nimport numpy as np\nimport tempfile\nimport geopandas\nimport rasterio.plot\nimport matplotlib.pyplot as plt\n\ntraining_py = geopandas.read_file(nc.polygons)\ntraining_pt = geopandas.read_file(nc.points)\ntraining_px = rasterio.open(nc.labelled_pixels)\ntraining_lines = deepcopy(training_py)\ntraining_lines['geometry'] = training_lines.geometry.boundary\n\nShow training data points and a single raster band using numpy and matplotlib:\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\nstack = Raster(predictors)\n\nfig, ax = plt.subplots(figsize=(9, 9))\nstack.lsat7_2000_70.plot(ax=ax)\n\ntraining_py.plot(column=\"label\", ax=ax, legend=True)\nplt.show()\n\n\n\n\n\n\n\n\nPixel values in the Raster object can be spatially queried using the extract_vector and extract_raster methods. In addition, the extract_xy method can be used to query pixel values using a 2d array of x and y coordinates.\nThe extract_vector method accepts a Geopandas GeoDataFrame as the gdf argument. For GeoDataFrames containing shapely point geometries, the closest pixel to each point is sampled. For shapely polygon geometries, all pixels whose centres are inside the polygon are sampled. For shapely linestring geometries, every pixel touched by the line is sampled. For all geometry types, pixel values are queries for each geometry separately. This means that overlapping polygons or points that fall within the same pixel with cause the same pixel to be sampled multiple times.\nBy default, the extract functions return a Geopandas GeoDataFrame of point geometries and the DataFrame containing the extracted pixels, with the column names set by the names of the raster datasets in the Raster object. The user can also use the return_array=True argument, which instead of returning a DataFrame will return three masked numpy arrays (ids, X, xy) containing the geodataframe index positions, extracted pixel values, and the spatial coordinates of the sampled pixels. These arrays are masked arrays.\nThe extract_raster method can also be used to spatially query pixel values from a Raster object using another raster containing labelled pixels. This raster has to be spatially aligned with the Raster object. The values of the labelled pixels are returned along with the queried pixel values.\n\n# Extract data from rasters at the training point locations:\ndf_points = stack.extract_vector(training_pt)\ndf_polygons = stack.extract_vector(training_py)\ndf_lines = stack.extract_vector(training_lines)\n\nFor any vector features, a GeoDataFrame is returned containing the extracted pixel values. A pandas.MultiIndex is used to relate the pixels back to the original geometries, with the pixel_idx index referring to the index of each pixel, and the geometry_idx referring to the index of the original geometry in the supplied GeoDataFrame. The pixel values themselves are represented as shapely.geometry.Point objects. These will need to be joined back with the columns of the vector features to get the labelled classes. Here we will join the extracted pixels using the “id” column and the GeoDataFrame index of the vector features:\n\n# Join the extracted values with other columns from the training data\ndf_points[\"id\"] = training_pt[\"id\"].values\ndf_points = df_points.dropna()\ndf_points.head()\n\ndf_polygons = df_polygons.merge(\n    right=training_py.loc[:, [\"label\", \"id\"]], \n    left_on=\"geometry_idx\", \n    right_on=\"index\",\n    right_index=True\n)\n\nIf the training data is from labelled pixels in a raster, then the extracted data will contain a “value” column that contains the pixel labels:\n\ndf_raster = stack.extract_raster(training_px)",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Landcover",
       "Landcover classification"
     ]
   },
@@ -615,7 +473,7 @@
     "text": "Model Training\nNext we can train a logistic regression classifier:\n\nfrom sklearn.linear_model import LogisticRegressionCV\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.model_selection import cross_validate\n\n# define the classifier with standardization of the input features in a\n# pipeline\nlr = Pipeline(\n    [('scaling', StandardScaler()),\n        ('classifier', LogisticRegressionCV(n_jobs=-1))])\n\n# remove NaNs from training data\ndf_polygons = df_polygons.dropna()\n\n# fit the classifier\nX = df_polygons.drop(columns=[\"id\", \"label\", \"geometry\"]).values\ny = df_polygons[\"id\"].values\nlr.fit(X, y)\n\nPipeline(steps=[('scaling', StandardScaler()),\n                ('classifier', LogisticRegressionCV(n_jobs=-1))])In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.  Pipeline?Documentation for PipelineiFittedPipeline(steps=[('scaling', StandardScaler()),\n                ('classifier', LogisticRegressionCV(n_jobs=-1))])  StandardScaler?Documentation for StandardScalerStandardScaler()  LogisticRegressionCV?Documentation for LogisticRegressionCVLogisticRegressionCV(n_jobs=-1) \n\n\nAfter defining a classifier, a typical step consists of performing a cross-validation to evaluate the performance of the model. Scikit-learn provides the cross_validate function for this purpose. In comparison to non-spatial data, spatial data can be spatially correlated, which potentially can mean that geographically proximal samples may not represent truely independent samples if they are within the autocorrelation range of some of the predictors. This will lead to overly optimistic performance measures if samples in the training dataset / cross-validation partition are strongly spatially correlated with samples in the test dataset / cross-validation partition.\nIn this case, performing cross-validation using groups is useful, because these groups can represent spatial clusters of training samples, and samples from the same group will never occur in both the training and test partitions of a cross-validation. Here we can use the polygon indices as the groups, i.e. pixels within the same polygon will not be split into training and test partitions:\n\nscores = cross_validate(\n    estimator=lr,\n    X=X,\n    y=y,\n    groups=df_polygons.index.droplevel(\"pixel_idx\"),\n    scoring=\"accuracy\",\n    cv=3,\n    n_jobs=1,\n)\nnp.round(scores['test_score'].mean(), 2)\n\n0.75",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Landcover",
       "Landcover classification"
     ]
   },
@@ -627,7 +485,7 @@
     "text": "Raster Prediction\nPrediction on the Raster object is performed using the predict method. The estimator is the only required argument. If the file_path argument is not specified then the result is automatically written to a temporary file. The predict method returns an rasterio.io.DatasetReader object which is open.\n\n# prediction\nresult = stack.predict(estimator=lr, dtype='int16', nodata=0)\nresult_probs = stack.predict_proba(estimator=lr)\n\n# plot classification result\nresult.iloc[0].cmap = \"Dark2\"\nresult.iloc[0].categorical = True\n\nresult.plot()\nplt.show()\n\n\n\n\n\n\n\n\nThe predict_proba method can be used to output class probabilities as a multi-band raster (a band for each class probability). In the latter case, indexes can also be supplied if you only want to output the probabilities for a particular class, or list of classes, by supplying the indices of those classes:\n\nresult_probs.plot()\nplt.show()\n\n/Users/stevenpawley/Library/Caches/pypoetry/virtualenvs/pyspatialml-NqZ1tMUm-py3.11/lib/python3.11/site-packages/matplotlib/image.py:499: RuntimeWarning: overflow encountered in divide\n  A_scaled /= ((a_max - a_min) / frac)",
     "crumbs": [
       "Tutorials",
-      "Machine learning examples",
+      "Landcover",
       "Landcover classification"
     ]
   },
@@ -660,7 +518,7 @@
     "href": "docs/quickstart.html#subsetting-and-indexing",
     "title": "Quick start",
     "section": "Subsetting and Indexing",
-    "text": "Subsetting and Indexing\nIndexing of Raster objects is provided by several methods:\nThe Raster[keys] method enables key-based indexing using a name of a RasterLayer, or a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only a single label is used, otherwise it always returns a new Raster object containing only the selected layers.\nThe Raster.iloc[int, list, tuple, slice] method allows a Raster object instance to be subset using integer-based indexing or slicing. The iloc method returns a RasterLayer object if only a single index is used, otherwise it always returns a new Raster object containing only the selected layers.\nSubsetting of a Raster object instance can also occur by using attribute names in the form of Raster.name_of_layer. Because only a single RasterLayer can be subset at one time using this approach, a RasterLayer object is always returned.\nExamples of methods to subset a Raster object:\n\n# subset based on position\nsingle_layer = stack.iloc[0]\n\n# subset using a slice\nnew_raster_obj = stack.iloc[0:3]\n\n# subset using labels\nsingle_layer = stack['lsat7_2000_10']\nsingle_layer = stack.lsat7_2000_10\n\n# list or tuple of keys\nnew_raster_obj = stack[('lsat7_2000_10', 'lsat7_2000_20')]\n\nIterate through RasterLayers individually:\n\nfor name, layer in stack.items():\n    print(name, layer)\n\nlsat7_2000_10 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x146752d10&gt;\nlsat7_2000_20 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x1467f3510&gt;\nlsat7_2000_30 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x117e60bd0&gt;\nlsat7_2000_40 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x145b153d0&gt;\nlsat7_2000_50 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x145b4fd50&gt;\nlsat7_2000_70 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x1212cbfd0&gt;\n\n\nReplace a RasterLayer with another:\n\nstack.iloc[0] = Raster(nc.band7).iloc[0]\n\nstack.iloc[0].plot()\nplt.show()",
+    "text": "Subsetting and Indexing\nIndexing of Raster objects is provided by several methods:\nThe Raster[keys] method enables key-based indexing using a name of a RasterLayer, or a list of names. Direct subsetting of a Raster object instance returns a RasterLayer if only a single label is used, otherwise it always returns a new Raster object containing only the selected layers.\nThe Raster.iloc[int, list, tuple, slice] method allows a Raster object instance to be subset using integer-based indexing or slicing. The iloc method returns a RasterLayer object if only a single index is used, otherwise it always returns a new Raster object containing only the selected layers.\nSubsetting of a Raster object instance can also occur by using attribute names in the form of Raster.name_of_layer. Because only a single RasterLayer can be subset at one time using this approach, a RasterLayer object is always returned.\nExamples of methods to subset a Raster object:\n\n# subset based on position\nsingle_layer = stack.iloc[0]\n\n# subset using a slice\nnew_raster_obj = stack.iloc[0:3]\n\n# subset using labels\nsingle_layer = stack['lsat7_2000_10']\nsingle_layer = stack.lsat7_2000_10\n\n# list or tuple of keys\nnew_raster_obj = stack[('lsat7_2000_10', 'lsat7_2000_20')]\n\nIterate through RasterLayers individually:\n\nfor name, layer in stack.items():\n    print(name, layer)\n\nlsat7_2000_10 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x17fb6b650&gt;\nlsat7_2000_20 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x11e5d21d0&gt;\nlsat7_2000_30 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x16d168bd0&gt;\nlsat7_2000_40 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x17f80cc90&gt;\nlsat7_2000_50 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x17fb6a110&gt;\nlsat7_2000_70 &lt;pyspatialml.rasterlayer.RasterLayer object at 0x17fd92510&gt;\n\n\nReplace a RasterLayer with another:\n\nstack.iloc[0] = Raster(nc.band7).iloc[0]\n\nstack.iloc[0].plot()\nplt.show()",
     "crumbs": [
       "Guide",
       "Geoprocessing",
@@ -672,7 +530,7 @@
     "href": "docs/quickstart.html#appending-and-dropping-layers",
     "title": "Quick start",
     "section": "Appending and Dropping Layers",
-    "text": "Appending and Dropping Layers\nAppend layers from another Raster to the stack. Duplicate names are automatically given a suffix.\n\nstack.append(Raster(nc.band7), in_place=True)\nstack.names\n\ndict_keys(['lsat7_2000_10', 'lsat7_2000_20', 'lsat7_2000_30', 'lsat7_2000_40', 'lsat7_2000_50', 'lsat7_2000_70_1', 'lsat7_2000_70_2'])\n\n\nRename RasterLayers using a dict of old_name : new_name pairs:\n\nstack.names\nstack.rename({'lsat7_2000_30': 'new_name'}, in_place=True)\nstack.names\nstack.new_name\nstack['new_name']\n\n&lt;pyspatialml.rasterlayer.RasterLayer at 0x117e60bd0&gt;\n\n\nDrop a RasterLayer:\n\nstack.names\nstack.drop(labels='lsat7_2000_70_1', in_place=True)\nstack.names\n\ndict_keys(['lsat7_2000_10', 'lsat7_2000_20', 'new_name', 'lsat7_2000_40', 'lsat7_2000_50', 'lsat7_2000_70_2'])",
+    "text": "Appending and Dropping Layers\nAppend layers from another Raster to the stack. Duplicate names are automatically given a suffix.\n\nstack.append(Raster(nc.band7), in_place=True)\nstack.names\n\ndict_keys(['lsat7_2000_10', 'lsat7_2000_20', 'lsat7_2000_30', 'lsat7_2000_40', 'lsat7_2000_50', 'lsat7_2000_70_1', 'lsat7_2000_70_2'])\n\n\nRename RasterLayers using a dict of old_name : new_name pairs:\n\nstack.names\nstack.rename({'lsat7_2000_30': 'new_name'}, in_place=True)\nstack.names\nstack.new_name\nstack['new_name']\n\n&lt;pyspatialml.rasterlayer.RasterLayer at 0x16d168bd0&gt;\n\n\nDrop a RasterLayer:\n\nstack.names\nstack.drop(labels='lsat7_2000_70_1', in_place=True)\nstack.names\n\ndict_keys(['lsat7_2000_10', 'lsat7_2000_20', 'new_name', 'lsat7_2000_40', 'lsat7_2000_50', 'lsat7_2000_70_2'])",
     "crumbs": [
       "Guide",
       "Geoprocessing",
@@ -701,6 +559,114 @@
       "Guide",
       "Geoprocessing",
       "Quick start"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html",
+    "href": "docs/geoprocessing.html",
+    "title": "Raster Geoprocessing",
+    "section": "",
+    "text": "Pyspatialml includes common geoprocessing methods that collectively operate on stacks of raster datasets, such as cropping, reprojecting, masking etc. Most of these methods are simple wrappers around underlying rasterio functions, but applied to stacks of raster datasets.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#handling-of-temporary-files",
+    "href": "docs/geoprocessing.html#handling-of-temporary-files",
+    "title": "Raster Geoprocessing",
+    "section": "Handling of Temporary Files",
+    "text": "Handling of Temporary Files\nAll of the geoprocessing methods have a file_path parameter to specify a file path to save the results of th geoprocessing operation. However, pyspatialml is designed for quick an interactive analyses on raster datasets, and if a file path is not specified then the results are saved to a temporary file location and a new Raster object is returned with the geoprocessing results.\nFor datasets that will easily fit into memory, all geoprocessing methods also have an in_memory parameter. If in_memory=True is set, then the results will be created using Rasterio’s in-memory files and stored in RAM. This has performance advantages, at the expense of memory expenditure.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#cropping",
+    "href": "docs/geoprocessing.html#cropping",
+    "title": "Raster Geoprocessing",
+    "section": "Cropping",
+    "text": "Cropping\nAll layers within a Raster can be cropped to a new extent using the Raster.crop method.\n\nimport geopandas as gpd\nimport matplotlib.pyplot as plt\nfrom pyspatialml import Raster\nfrom pyspatialml.datasets import nc\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\ntraining_py = gpd.read_file(nc.polygons)\n\nstack = Raster(predictors)\n\nstack.plot()\nplt.show()\n\n\n\n\n\n\n\n\n\n# crop to new extent (xmin, ymin, xmax, ymax)\ncrop_bounds = training_py.loc[0, \"geometry\"].bounds\nstack_cropped = stack.crop(crop_bounds)\n\nstack_cropped.plot()\nplt.show()",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#masking",
+    "href": "docs/geoprocessing.html#masking",
+    "title": "Raster Geoprocessing",
+    "section": "Masking",
+    "text": "Masking\nIn comparison to cropping, masking can be used to set pixels that occur outside of masking geometries to NaN, and optionally can also crop a Raster.\n\nimport geopandas as gpd\nimport pyspatialml.datasets.nc as nc\nfrom pyspatialml import Raster\n\ntraining_py = gpd.read_file(nc.polygons)\nmask_py = training_py.iloc[0:1, :]\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\nstack = Raster(predictors)\n\n# mask a Raster\nmasked_object = stack.mask(mask_py)",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#intersecting-layers",
+    "href": "docs/geoprocessing.html#intersecting-layers",
+    "title": "Raster Geoprocessing",
+    "section": "Intersecting Layers",
+    "text": "Intersecting Layers\nThe Raster.intersect method computes the geometric intersection of the RasterLayers with the Raster object. This will cause nodata values in any of the rasters to be propagated through all of the output rasters.\n\nimport pyspatialml.datasets.nc as nc\nfrom pyspatialml import Raster\n\npredictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]\nstack = Raster(predictors)\n\nresult = stack.intersect()\n\nThe intersect method is memory-safe, i.e. the intersection occurs during windowed reading and writing of the Raster. The size and dimensions of the windows can be changed using the Raster.block_shapes property.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#reprojecting",
+    "href": "docs/geoprocessing.html#reprojecting",
+    "title": "Raster Geoprocessing",
+    "section": "Reprojecting",
+    "text": "Reprojecting\nReprojecting a raster using the Raster.to_crs method.\n\nstack_prj = stack.to_crs(crs={\"init\": \"EPSG:4326\"})\n\nOther parameters that can be passed and their defaults are resampling=“nearest”, file_path=None, driver=“GTiff”, nodata=None, n_jobs=1, warp_mem_lim=0, progress=False, and other kwargs that are passed to the raster format drivers.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#resampling",
+    "href": "docs/geoprocessing.html#resampling",
+    "title": "Raster Geoprocessing",
+    "section": "Resampling",
+    "text": "Resampling\nThe Raster.aggregate method is used to resample a raster to a different resolution using the decimated reading approach in the rasterio library.\n\nstack.aggregate(out_shape=(50, 50), resampling=\"nearest\", driver=\"GTiff\")\n\nRaster Object Containing 6 Layers\n    attribute                                             values\n0       names  [lsat7_2000_10, lsat7_2000_20, lsat7_2000_30, ...\n1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...\n2        rows                                                 50\n3        cols                                                 50\n4         res                                   (278.73, 252.51)\n5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#computation",
+    "href": "docs/geoprocessing.html#computation",
+    "title": "Raster Geoprocessing",
+    "section": "Computation",
+    "text": "Computation\nApply user-supplied function to a Raster object.\n\ndef myfun(x):\n  return x + 1\n\nstack.apply(myfun)\n\nRaster Object Containing 6 Layers\n    attribute                                             values\n0       names  [tmp0n2yd7no_1, tmp0n2yd7no_2, tmp0n2yd7no_3, ...\n1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...\n2        rows                                                443\n3        cols                                                489\n4         res                                       (28.5, 28.5)\n5  nodatavals  [-3.4028234663852886e+38, -3.4028234663852886e...\n\n\n\n\n\nWhere function is a user-defined python that takes an numpy array as a single argument, and can return either a 2d array that represents a single raster dataset, such as NDVI, or can operate on a number of layers and can return a raster with multiple layers in a 3d array in (layer, row, col) order.\nThe apply function is memory-safe, i.e. it applies the function to windows of the raster data that are read sequentially or in parallel (with n_jobs != 1). The size and dimensions of the windows can be changed using the Raster.block_shapes property.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
+    ]
+  },
+  {
+    "objectID": "docs/geoprocessing.html#raster-algebra",
+    "href": "docs/geoprocessing.html#raster-algebra",
+    "title": "Raster Geoprocessing",
+    "section": "Raster Algebra",
+    "text": "Raster Algebra\nRasterLayer objects also support basic raster math operations using python’s magic methods, which supports all of the usual math operators. Calculations on RasterLayers occur in memory using Rasterio’s in-memory files, thus they are not memory safe. For applying computations and algebra to large raster datasets in windows, use Raster.apply().\n\na = stack.iloc[0] + stack.iloc[1]\nb = stack.iloc[0] - stack.iloc[1]\n\nndvi = (stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2])\n\nArithmetic operations on RasterLayer’s will return another RasterLayer. The result can be coerced into a Raster object using:\n\nndvi = Raster((stack.iloc[3] - stack.iloc[2]) / (stack.iloc[3] + stack.iloc[2]))\n\nArithmetic operations are only supported on RasterLayer objects and not in a parent Raster object directly.",
+    "crumbs": [
+      "Guide",
+      "Geoprocessing",
+      "Raster Geoprocessing"
     ]
   }
 ]

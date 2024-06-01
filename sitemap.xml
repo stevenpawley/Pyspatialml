@@ -1,67 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/geoprocessing.html</loc>
-    <lastmod>2024-05-21T05:26:05.216Z</lastmod>
+    <loc>https://stevenpawley.github.io/Pyspatialml/index.html</loc>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/usage.html</loc>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/transformers.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/sampling.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/plotting.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/index.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/design.html</loc>
-    <lastmod>2024-05-21T05:26:05.216Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/vector.html</loc>
-    <lastmod>2024-05-21T05:26:05.260Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/RasterLayer.html</loc>
-    <lastmod>2024-05-21T05:26:05.260Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/preprocessing.html</loc>
-    <lastmod>2024-05-21T05:26:05.260Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/index.html</loc>
-    <lastmod>2024-05-21T05:26:05.260Z</lastmod>
-  </url>
-  <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/reference/Raster.html</loc>
-    <lastmod>2024-05-21T05:26:05.260Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/installation.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/vector.html</loc>
+    <lastmod>2024-06-01T04:21:55.745Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/RasterLayer.html</loc>
+    <lastmod>2024-06-01T04:21:55.745Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/preprocessing.html</loc>
+    <lastmod>2024-06-01T04:21:55.745Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/index.html</loc>
+    <lastmod>2024-06-01T04:21:55.745Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/reference/Raster.html</loc>
+    <lastmod>2024-06-01T04:21:55.745Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/spatial-features.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/multitarget-regression-soil-properties.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/landcover.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/quickstart.html</loc>
-    <lastmod>2024-05-21T05:26:05.220Z</lastmod>
+    <lastmod>2024-06-01T04:21:55.705Z</lastmod>
+  </url>
+  <url>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/geoprocessing.html</loc>
+    <lastmod>2024-06-01T04:21:55.701Z</lastmod>
   </url>
 </urlset>

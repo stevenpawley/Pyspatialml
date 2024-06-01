@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Pyspatialml: machine learning for raster datasets - Overview</title>
+<title>Pyspatialml: machine learning for raster datasets - Usage</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,7 +30,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../docs/installation.html" rel="next">
+<link href="../docs/installation.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -79,11 +79,6 @@ ul.task-list li input[type="checkbox"] {
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container mx-auto">
-    <a href="../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../docs/icon.png" alt="Pyspatialml" class="navbar-logo">
-    </a>
-  </div>
             <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
@@ -91,7 +86,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../docs/index.html" aria-current="page"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
@@ -133,7 +128,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/index.html">Overview</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/usage.html">Usage</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -145,35 +140,21 @@ ul.task-list li input[type="checkbox"] {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="sidebar-menu-container"> 
     <ul class="list-unstyled mt-1">
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text">Pyspatialml</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../docs/index.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Overview</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
+        <li class="sidebar-item">
+ <span class="menu-text">docs/index.qmd</span>
+  </li>
+        <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/installation.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Installation</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
+        <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../docs/design.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Design</span></a>
+  <a href="../docs/usage.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Usage</span></a>
   </div>
 </li>
-      </ul>
-  </li>
     </ul>
     </div>
 </nav>
@@ -184,16 +165,21 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose">Purpose</a></li>
+  <li><a href="#the-raster-class" id="toc-the-raster-class" class="nav-link active" data-scroll-target="#the-raster-class">The Raster class</a>
+  <ul class="collapse">
+  <li><a href="#creating-a-raster" id="toc-creating-a-raster" class="nav-link" data-scroll-target="#creating-a-raster">Creating a Raster</a></li>
+  <li><a href="#rasterlayers" id="toc-rasterlayers" class="nav-link" data-scroll-target="#rasterlayers">RasterLayers</a></li>
+  </ul></li>
+  <li><a href="#principles-of-working-with-rasters" id="toc-principles-of-working-with-rasters" class="nav-link" data-scroll-target="#principles-of-working-with-rasters">Principles of working with Rasters</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/index.html">Pyspatialml</a></li><li class="breadcrumb-item"><a href="../docs/index.html">Overview</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Overview</h1>
+<h1 class="title">Usage</h1>
 </div>
 
 
@@ -210,19 +196,29 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>Pyspatialml is a Python package for applying scikit-learn machine learning models to raster-based datasets. It is inspired by the famous <a href="https://cran.r-project.org/web/packages/raster/index.html">raster</a> package in the R statistical programming language which has been extensively used for applying statistical and machine learning models to geospatial raster datasets.</p>
-<p>Pyspatialml includes functions and classes for working with multiple raster datasets and applying typical machine learning workflows including raster data manipulation, feature engineering on raster datasets, extraction of training data, and application of the <code>predict</code> or <code>predict_proba</code> methods of scikit-learn estimator objects to a stack of raster datasets.</p>
-<p>Pyspatialml is built upon the <a href="https://rasterio.readthedocs.io/en/latest/">rasterio</a> Python package which performs all of the heavy lifting and is designed to work with the <a href="https://geopandas.org">geopandas</a> package for related raster-vector data geoprocessing operations.</p>
-<section id="purpose" class="level2">
-<h2 class="anchored" data-anchor-id="purpose">Purpose</h2>
-<p>A supervised machine-learning workflow as applied to spatial raster data typically involves several steps:</p>
-<ol type="1">
-<li><p>Using vector features or labelled pixels to extract training data from a stack of raster-based predictors (e.g.&nbsp;spectral bands, terrain derivatives, or climate grids). The training data represent locations when some property/state/concentration is already established, and might comprise point locations of arsenic concentrations, or labelled pixels with integer-encoded values that correspond to known landcover types.</p></li>
-<li><p>Developing a machine learning classification or regression model on the training data. Pyspatialml is designed to use scikit-learn compatible api’s for this purpose.</p></li>
-<li><p>Applying the fitted machine learning model to make predictions on all of the pixels in the stack of raster data.</p></li>
-</ol>
-<p>Pyspatialml is designed to make it easy to develop spatial prediction models on stacks of 2D raster datasets that are held on disk. Unlike using python’s <code>numpy</code> module directly where raster datasets need to be held in memory, the majority of functions within pyspatialml work with raster datasets that are stored on disk and allow processing operations to be performed on datasets that are too large to be loaded into memory.</p>
-<p>Pyspatialml is designed to make it easy to work with typical raster data stacks consisting of multiple 2D grids such as different spectal bands, maps etc. However, it’s purpose is not to work with multidimensional datasets, i.e.&nbsp;those that have more than 3 dimensions such as spacetime cubes of multiband data. The <a href="http://xarray.pydata.org/en/stable/index.html">xarray</a> package can provide a structure for this type of data.</p>
+<section id="the-raster-class" class="level2">
+<h2 class="anchored" data-anchor-id="the-raster-class">The Raster class</h2>
+<p>The main approach to working with raster datasets in Pyspatialml is through the <code>Raster</code> class. The <code>Raster</code> object takes a list of GDAL-supported raster datasets and references them as part of a single Raster object, which can be used to perform operations on the raster datasets as a whole. The <code>Raster</code> object is a thin wrapper around the <code>rasterio</code> library, which is a Python library for reading and writing raster datasets. The individual bands within the datasets are represented internally as <code>RasterLayer</code> objects. This allows for retaining metadata about each raster dataset and adding or removing raster datasets from the stack without making physical changes to the disk.</p>
+<p>Note that in order to initiate a Raster object, the underlying raster datasets must be spatially aligned in terms of their extent, resolution, and coordinate reference system - Raster objects do not perform any resampling or reprojection of the underlying datasets. Functions within the <code>preprocessing</code> module can be used to align raster datasets before creating a Raster object.</p>
+<section id="creating-a-raster" class="level3">
+<h3 class="anchored" data-anchor-id="creating-a-raster">Creating a Raster</h3>
+<p>The most common approach of initiating a Raster object is from an existing raster dataset, or a list of raster datasets. Alternatively, a Raster object can also be initiated from a 3D numpy array:</p>
+<ul>
+<li><p><code>Raster(src=[raster1.tif, raster2.tif, raster3.tif])</code> creates a Raster object from existing file-based GDAL-supported datasets, or a single raster dataset. The file-based datasets can contain single or multiple bands.</p></li>
+<li><p><code>Raster(src=new_numpy_array, crs=crs, transform=transform)</code> creates a Raster object from a 3D numpy array (band, row, column). The <code>crs</code> and <code>transform</code> arguments are optional but are required to provide coordinate reference system information to the Raster object. The crs argument has to be represented by <code>rasterio crs.CRS</code> object, and the transform parameter requires an <code>affine.Affine</code> object.</p></li>
+</ul>
+<p>Rasters can also be initated directly from a <code>rasterio.Band</code> object(s), or from a list of <code>RasterLayer</code> objects (see below).</p>
+</section>
+<section id="rasterlayers" class="level3">
+<h3 class="anchored" data-anchor-id="rasterlayers">RasterLayers</h3>
+<p>Generally, Pyspatialml intends users to work with the Raster object. However, internally, the Raster object is composed of RasterLayer objects, which represent individual bands of a raster dataset. RasterLayers are based on a <code>rasterio.band</code> object with some additional attributes and methods. However, unlike the <code>rasterio.Band.ds.read</code> method which reads all bands within a multi-band dataset, the RasterLayer read method always refers to a single band.</p>
+<p>Methods contained within RasterLayer objects are specifically designed to be applied to individual bands of a raster. These methods include operations such as sieve-clump, distance to non-NaN pixels, and arithmetic operations on individual layers.</p>
+</section>
+</section>
+<section id="principles-of-working-with-rasters" class="level2">
+<h2 class="anchored" data-anchor-id="principles-of-working-with-rasters">Principles of working with Rasters</h2>
+<p>Methods that are applied to Raster objects are generally designed to be applied to the entire stack of raster datasets. For example, the <code>crop</code> method will crop all raster datasets in the stack to a common extent, and the <code>mask</code> method will apply a mask to all raster datasets in the stack. These methods always return a new Raster object, and do not modify the original Raster object by default.</p>
+<p>In contrast, methods that apply to individual RasterLayers are mostly related to extracting or summarizing metadata from the individual bands. For other methods that users may want to apply to individual bands, it is recommended to work with <code>rasterio</code> directly.</p>
 
 
 </section>
@@ -783,11 +779,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
+      <a href="../docs/installation.html" class="pagination-link" aria-label="Installation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Installation</span>
+      </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../docs/installation.html" class="pagination-link" aria-label="Installation">
-        <span class="nav-page-text">Installation</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->

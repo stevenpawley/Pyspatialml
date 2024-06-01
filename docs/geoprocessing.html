@@ -114,11 +114,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container mx-auto">
-    <a href="../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../docs/icon.png" alt="Pyspatialml" class="navbar-logo">
-    </a>
-  </div>
             <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
@@ -126,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../docs/index.html"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Getting started</span></a>
   </li>  
   <li class="nav-item">
@@ -273,7 +268,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="cropping" class="level2">
 <h2 class="anchored" data-anchor-id="cropping">Cropping</h2>
 <p>All layers within a Raster can be cropped to a new extent using the <code>Raster.crop</code> method.</p>
-<div id="ea62e8fb" class="cell" data-execution_count="1">
+<div id="70f3733f" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
@@ -294,7 +289,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="27da6008" class="cell" data-execution_count="2">
+<div id="d43b4f2d" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># crop to new extent (xmin, ymin, xmax, ymax)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>crop_bounds <span class="op">=</span> training_py.loc[<span class="dv">0</span>, <span class="st">"geometry"</span>].bounds</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>stack_cropped <span class="op">=</span> stack.crop(crop_bounds)</span>
@@ -313,7 +308,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="masking" class="level2">
 <h2 class="anchored" data-anchor-id="masking">Masking</h2>
 <p>In comparison to cropping, masking can be used to set pixels that occur outside of masking geometries to NaN, and optionally can also crop a Raster.</p>
-<div id="62aa311f" class="cell" data-execution_count="3">
+<div id="33fabaa0" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyspatialml.datasets.nc <span class="im">as</span> nc</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
@@ -331,7 +326,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="intersecting-layers" class="level2">
 <h2 class="anchored" data-anchor-id="intersecting-layers">Intersecting Layers</h2>
 <p>The <code>Raster.intersect</code> method computes the geometric intersection of the RasterLayers with the Raster object. This will cause nodata values in any of the rasters to be propagated through all of the output rasters.</p>
-<div id="95547375" class="cell" data-execution_count="4">
+<div id="d7a7ebe7" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyspatialml.datasets.nc <span class="im">as</span> nc</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pyspatialml <span class="im">import</span> Raster</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -345,7 +340,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="reprojecting" class="level2">
 <h2 class="anchored" data-anchor-id="reprojecting">Reprojecting</h2>
 <p>Reprojecting a raster using the <code>Raster.to_crs</code> method.</p>
-<div id="7f381ff1" class="cell" data-execution_count="5">
+<div id="8f71eb11" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stack_prj <span class="op">=</span> stack.to_crs(crs<span class="op">=</span>{<span class="st">"init"</span>: <span class="st">"EPSG:4326"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Other parameters that can be passed and their defaults are resampling=“nearest”, file_path=None, driver=“GTiff”, nodata=None, n_jobs=1, warp_mem_lim=0, progress=False, and other kwargs that are passed to the raster format drivers.</p>
@@ -353,7 +348,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="resampling" class="level2">
 <h2 class="anchored" data-anchor-id="resampling">Resampling</h2>
 <p>The <code>Raster.aggregate</code> method is used to resample a raster to a different resolution using the decimated reading approach in the rasterio library.</p>
-<div id="ea8062fa" class="cell" data-execution_count="6">
+<div id="1452d771" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>stack.aggregate(out_shape<span class="op">=</span>(<span class="dv">50</span>, <span class="dv">50</span>), resampling<span class="op">=</span><span class="st">"nearest"</span>, driver<span class="op">=</span><span class="st">"GTiff"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Raster Object Containing 6 Layers
@@ -373,7 +368,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="computation" class="level2">
 <h2 class="anchored" data-anchor-id="computation">Computation</h2>
 <p>Apply user-supplied function to a Raster object.</p>
-<div id="7bb1d342" class="cell" data-execution_count="7">
+<div id="ac19dac5" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> myfun(x):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> x <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -381,7 +376,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-stdout">
 <pre><code>Raster Object Containing 6 Layers
     attribute                                             values
-0       names  [tmpsdyk3x5h_1, tmpsdyk3x5h_2, tmpsdyk3x5h_3, ...
+0       names  [tmp0n2yd7no_1, tmp0n2yd7no_2, tmp0n2yd7no_3, ...
 1       files  [/var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000g...
 2        rows                                                443
 3        cols                                                489
@@ -398,14 +393,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="raster-algebra" class="level2">
 <h2 class="anchored" data-anchor-id="raster-algebra">Raster Algebra</h2>
 <p>RasterLayer objects also support basic raster math operations using python’s magic methods, which supports all of the usual math operators. Calculations on RasterLayers occur in memory using Rasterio’s in-memory files, thus they are not memory safe. For applying computations and algebra to large raster datasets in windows, use <code>Raster.apply()</code>.</p>
-<div id="ecdd3638" class="cell" data-execution_count="8">
+<div id="a90b8434" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> stack.iloc[<span class="dv">0</span>] <span class="op">+</span> stack.iloc[<span class="dv">1</span>]</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> stack.iloc[<span class="dv">0</span>] <span class="op">-</span> stack.iloc[<span class="dv">1</span>]</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (stack.iloc[<span class="dv">3</span>] <span class="op">-</span> stack.iloc[<span class="dv">2</span>]) <span class="op">/</span> (stack.iloc[<span class="dv">3</span>] <span class="op">+</span> stack.iloc[<span class="dv">2</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Arithmetic operations on RasterLayer’s will return another RasterLayer. The result can be coerced into a Raster object using:</p>
-<div id="801a16a6" class="cell" data-execution_count="9">
+<div id="0ce834ce" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> Raster((stack.iloc[<span class="dv">3</span>] <span class="op">-</span> stack.iloc[<span class="dv">2</span>]) <span class="op">/</span> (stack.iloc[<span class="dv">3</span>] <span class="op">+</span> stack.iloc[<span class="dv">2</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Arithmetic operations are only supported on RasterLayer objects and not in a parent Raster object directly.</p>
