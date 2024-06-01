@@ -217,8 +217,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="principles-of-working-with-rasters" class="level2">
 <h2 class="anchored" data-anchor-id="principles-of-working-with-rasters">Principles of working with Rasters</h2>
-<p>Methods that are applied to Raster objects are generally designed to be applied to the entire stack of raster datasets. For example, the <code>crop</code> method will crop all raster datasets in the stack to a common extent, and the <code>mask</code> method will apply a mask to all raster datasets in the stack. These methods always return a new Raster object, and do not modify the original Raster object by default.</p>
-<p>In contrast, methods that apply to individual RasterLayers are mostly related to extracting or summarizing metadata from the individual bands. For other methods that users may want to apply to individual bands, it is recommended to work with <code>rasterio</code> directly.</p>
+<p>Methods that are applied to Raster objects are generally designed to be applied to the entire stack of raster datasets. For example, the <code>crop</code> method will crop all raster datasets in the stack to a common extent, and the <code>mask</code> method will apply a mask to all raster datasets in the stack. These methods always return a new Raster object, and do not modify the original Raster object by default. Subsetting of individual bands uses the same principles as the <code>pandas</code> library, where the <code>loc</code> method is used to subset bands based on their names, and the <code>iloc</code> method is used to subset bands based on their index. Also similarly to <code>pandas</code>, subsetting a single band will return the object itself, in this case, a RasterLayer object, while subsetting multiple bands will return a new Raster object.</p>
+<p>Methods that apply to individual RasterLayers are mostly related to extracting or summarizing metadata from the individual bands. For other methods that users may want to apply to individual bands, it is recommended to work with <code>rasterio</code> directly.</p>
 
 
 </section>
