@@ -2,7 +2,7 @@
   "hash": "65228f7d1a193c5cace2c9a9607b0799",
   "result": {
     "engine": "jupyter",
-    "markdown": "---\ntitle: Installation\nformat:\n  html:\n    code-fold: false\n---\n\nPyspatialml is available on PyPI and can be installed in the usual manner with:\n\n::: {#c5a4b2b4 .cell execution_count=1}\n``` {.python .cell-code}\npip install Pyspatialml\n```\n:::\n\n\nThe development version, which is more up-to-date with changes to the package\nespecially during these earlier stages of development, can be installed\ndirectly via:\n\n::: {#3b8af2ce .cell execution_count=2}\n``` {.python .cell-code}\npip install git+https://github.com/stevenpawley/Pyspatialml\n```\n:::\n\n\n",
+    "markdown": "---\ntitle: Installation\nformat:\n  html:\n    code-fold: false\n---\n\nPyspatialml is available on PyPI and can be installed in the usual manner with:\n\n::: {#bb02f017 .cell execution_count=1}\n``` {.python .cell-code}\npip install Pyspatialml\n```\n:::\n\n\nThe development version, which is more up-to-date with changes to the package\nespecially during these earlier stages of development, can be installed\ndirectly via:\n\n::: {#66ac18c4 .cell execution_count=2}\n``` {.python .cell-code}\npip install git+https://github.com/stevenpawley/Pyspatialml\n```\n:::\n\n\n",
     "supporting": [
       "installation_files"
     ],

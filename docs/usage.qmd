@@ -1,0 +1,32 @@
+---
+title: "Usage"
+format: html
+---
+
+## The Raster class
+
+The main approach to working with raster datasets in Pyspatialml is through the `Raster` class. The `Raster` object takes a list of GDAL-supported raster datasets and references them as part of a single Raster object, which can be used to perform operations on the raster datasets as a whole. The `Raster` object is a thin wrapper around the `rasterio` library, which is a Python library for reading and writing raster datasets. The individual bands within the datasets are represented internally as `RasterLayer` objects. This allows for retaining metadata about each raster dataset and adding or removing raster datasets from the stack without making physical changes to the disk.
+
+Note that in order to initiate a Raster object, the underlying raster datasets must be spatially aligned in terms of their extent, resolution, and coordinate reference system - Raster objects do not perform any resampling or reprojection of the underlying datasets. Functions within the `preprocessing` module can be used to align raster datasets before creating a Raster object.
+
+### Creating a Raster
+
+The most common approach of initiating a Raster object is from an existing raster dataset, or a list of raster datasets. Alternatively, a Raster object can also be initiated from a 3D numpy array:
+
+- ``Raster(src=[raster1.tif, raster2.tif, raster3.tif])`` creates a Raster object from existing file-based GDAL-supported datasets, or a single raster dataset. The file-based datasets can contain single or multiple bands.
+
+- ``Raster(src=new_numpy_array, crs=crs, transform=transform)`` creates a Raster object from a 3D numpy array (band, row, column). The ``crs`` and ``transform`` arguments are optional but are required to provide coordinate reference system information to the Raster object. The crs argument has to be represented by ```rasterio crs.CRS``` object, and the transform parameter requires an ```affine.Affine``` object.
+
+Rasters can also be initated directly from a `rasterio.Band` object(s), or from a list of `RasterLayer` objects (see below).
+
+### RasterLayers
+
+Generally, Pyspatialml intends users to work with the Raster object. However, internally, the Raster object is composed of RasterLayer objects, which represent individual bands of a raster dataset. RasterLayers are based on a ``rasterio.band`` object with some additional attributes and methods. However, unlike the `rasterio.Band.ds.read` method which reads all bands within a multi-band dataset, the RasterLayer read method always refers to a single band.
+
+Methods contained within RasterLayer objects are specifically designed to be applied to individual bands of a raster. These methods include operations such as sieve-clump, distance to non-NaN pixels, and arithmetic operations on individual layers.
+
+## Principles of working with Rasters
+
+Methods that are applied to Raster objects are generally designed to be applied to the entire stack of raster datasets. For example, the `crop` method will crop all raster datasets in the stack to a common extent, and the `mask` method will apply a mask to all raster datasets in the stack. These methods always return a new Raster object, and do not modify the original Raster object by default.
+
+In contrast, methods that apply to individual RasterLayers are mostly related to extracting or summarizing metadata from the individual bands. For other methods that users may want to apply to individual bands, it is recommended to work with `rasterio` directly.

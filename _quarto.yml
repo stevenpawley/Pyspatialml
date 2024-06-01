@@ -1,3 +1,28 @@
+quartodoc:
+  package: pyspatialml
+  sections:
+    - title: Raster datasets
+      desc: "Raster is a class for reading and writing raster datasets"
+      options:
+        children: embedded
+      contents:
+        - Raster
+        - RasterLayer
+
+    - title: Vector tools
+      desc: "Tools for working with vector datasets"
+      options:
+        children: embedded
+      contents:
+        - vector
+    
+    - title: Preprocessing
+      desc: "Preprocessing tools for raster datasets"
+      options:
+        children: embedded
+      contents:
+        - preprocessing
+
 project:
   type: website
 
@@ -14,8 +39,6 @@ website:
       title: false
       background: primary
       search: true
-      logo: docs/icon.png
-      logo-alt: Pyspatialml
       tools:
       - icon: github
         menu:
@@ -26,7 +49,7 @@ website:
 
       left:
         - text: "Getting started"
-          href: docs/index.qmd
+          href: index.qmd
                         
         - text: "Guide"
           file: docs/quickstart.qmd
@@ -41,11 +64,9 @@ website:
     - title: "Getting started"
       style: "docked"
       contents:
-        - section: "Pyspatialml"
-          contents:
-            - docs/index.qmd
-            - docs/installation.qmd
-            - docs/design.qmd
+        - docs/index.qmd
+        - docs/installation.qmd
+        - docs/usage.qmd
     
     - title: "Guide"
       style: "docked"
@@ -61,48 +82,38 @@ website:
     - title: "Tutorials"
       style: "docked"
       contents:
-        - section: "Machine learning examples"
+        - section: "Landcover"
           contents:
             - docs/landcover.qmd
+
+        - section: "Multitarget regression"
+          contents:
             - docs/multitarget-regression-soil-properties.qmd
+        
+        - section: "Spatial feature engineering"
+          contents:
             - docs/spatial-features.qmd
+    
+    - title: "Reference"
+      style: "docked"
+      contents:
+        - section: Raster datasets
+          contents:
+            - reference/Raster.qmd
+            - reference/RasterLayer.qmd
+
+        - section: Vector tools 
+          contents:
+            - reference/vector.qmd
+      
+        - section: Preprocessing
+          contents:
+            - reference/preprocessing.qmd
 
 theme:
   light: spacelab
   dark: darkly
 
-metadata-files:
-  - _sidebar.yml
-
 format:
   html:
     toc: true
-
-quartodoc:
-  package: pyspatialml
-  sidebar: "_sidebar.yml"
-  sections:
-    - title: Raster datasets
-      desc: "Raster is a class for reading and writing raster datasets"
-      options:
-        children: embedded
-
-      contents:
-        - Raster
-        - RasterLayer
-
-    - title: Vector tools
-      desc: "Tools for working with vector datasets"
-      options:
-        children: embedded
-      
-      contents:
-        - vector
-    
-    - title: Preprocessing
-      desc: "Preprocessing tools for raster datasets"
-      options:
-        children: embedded
-      
-      contents:
-        - preprocessing

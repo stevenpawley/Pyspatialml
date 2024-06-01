@@ -1,7 +1,6 @@
 ---
 title: "Overview"
 format: html
-jupyter: python3
 ---
 
 Pyspatialml is a Python package for applying scikit-learn machine learning
