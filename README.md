@@ -1,5 +1,5 @@
 [![Codecov test coverage](https://codecov.io/gh/stevenpawley/pyspatialml/branch/master/graph/badge.svg)](https://codecov.io/gh/stevenpawley/pyspatialml?branch=master)
-![Pytest](https://github.com/github/docs/actions/workflows/tests.yml/badge.svg)
+![Pytest](https://github.com/stevenpawley/pyspatialml/actions/workflows/tests.yml/badge.svg)
 
 # Pyspatialml
 Machine learning classification and regression modelling for spatial raster data.
