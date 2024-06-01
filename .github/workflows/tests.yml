@@ -49,19 +49,10 @@ jobs:
     - name: Test with pytest
       run: |
         source .venv/bin/activate
-        pytest
-
-    - name: "Generate Report"
-      run : |
-        source .venv/bin/activate
-        coverage run -m pytest
+        poetry run pytest --cov=<project-dir> --cov-report=xml
 
     - name: "Upload Report to Codecov"
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v3
       with:
-        fail_ci_if_error: true # optional (default = false)
-        files: ./coverage1.xml,./coverage2.xml # optional
-        flags: unittests # optional
-        name: codecov-umbrella # optional
-        token: ${{ secrets.CODECOV_TOKEN }} # required
-        verbose: true # optional (default = false)
+        file: ./coverage.xml
+        fail_ci_if_error: true
