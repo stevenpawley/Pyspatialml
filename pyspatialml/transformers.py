@@ -355,25 +355,6 @@ class GeoDistTransformer(BaseEstimator, TransformerMixin):
         return np.column_stack((X, dists))
 
 
-def _apply_transformer(img, transformer):
-    img = np.ma.masked_invalid(img)
-    mask = img.mask.copy()
-
-    # reshape into 2D array
-    n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-    flat_pixels = img.reshape((rows * cols, n_features))
-    flat_pixels = flat_pixels.filled(0)
-
-    # predict and replace mask
-    result = transformer.transform(flat_pixels)
-
-    # reshape the prediction from a 1D into 3D array [band, row, col]
-    result = result.reshape((n_features, rows, cols))
-    result = np.ma.masked_array(data=result, mask=mask, copy=True)
-
-    return result
-
-
 class AspectTransformer(BaseEstimator, TransformerMixin):
     """Transformer to decompose aspect maps into northerness and easterness"""
 

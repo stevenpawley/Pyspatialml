@@ -1,7 +1,7 @@
 import os
 import tempfile
 from collections import namedtuple
-from collections.abc import MutableMapping, ValuesView
+from collections.abc import ValuesView
 from functools import partial
 from typing import Tuple
 import affine
@@ -20,24 +20,22 @@ from rasterio.windows import Window
 from rasterio.transform import rowcol
 from shapely.geometry import Point
 from tqdm import tqdm
+from collections import Counter
 
-from ._plotting import RasterPlot
+from ._plotting import RasterPlotMixin
 from ._prediction import (
     predict_multioutput,
     predict_output,
     predict_prob,
     stack_constants,
 )
-from ._rasterbase import TempRasterLayer, _check_alignment, _fix_names, get_nodata_value
+from ._utils import get_nodata_value
 from .rasterlayer import RasterLayer
-from .rasterstats import RasterStats
-# from .rastermath import RasterArith
-from ._extraction import extract_by_chunk
-from .transformers import _apply_transformer
+from ._rasterstats import RasterStatsMixin
 from .locindexer import _LocIndexer
 
 
-class Raster(_LocIndexer, RasterStats, RasterPlot):
+class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
     """Creates a collection of file-based GDAL-supported raster
     datasets that share a common coordinate reference system and
     geometry.
@@ -412,7 +410,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         if all(isinstance(x, type(layers[0])) for x in layers) is False:
             raise ValueError("Cannot create a Raster object from a mixture of inputs")
 
-        meta = _check_alignment(layers)
+        meta = self._check_alignment(layers)
 
         if meta is False:
             raise ValueError(
@@ -426,7 +424,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
         # update global Raster object attributes with new values
         names = [i.name for i in layers]
-        names = _fix_names(names)
+        names = self._fix_names(names)
 
         # update attributes per dataset
         for layer, name in zip(layers, names):
@@ -443,28 +441,79 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
             dtype=np.result_type(*self.dtypes),
         )
 
-    def head(self) -> np.ndarray:
-        """Return the first 10 rows from the Raster as a ndarray"""
-        window = Window(col_off=0, row_off=0, width=20, height=10)
-        return self.read(window=window)
+    @staticmethod
+    def _fix_names(combined_names):
+        """Adjusts the names of pyspatialml.RasterLayer objects within the
+        Raster when appending new layers.
 
-    def tail(self) -> np.ndarray:
-        """Return the last 10 rows from the Raster as a ndarray"""
-        window = Window(
-            col_off=self.width - 20, row_off=self.height - 10, width=20, height=10
-        )
-        return self.read(window=window)
+        This avoids the Raster object containing duplicated names in the
+        case that multiple RasterLayers are appended with the same name.
 
-    def close(self) -> None:
-        """Close all of the RasterLayer objects in the Raster.
+        In the case of duplicated names, the RasterLayer names are appended
+        with a `_n` with n = 1, 2, 3 .. n.
 
-        Note that this will cause any rasters based on temporary files
-        to be removed. This is intended as a method of clearing
-        temporary files that may have accumulated during an analysis
-        session.
+        Parameters
+        ----------
+        combined_names : list
+            List of str representing names of RasterLayers. Any duplicates
+            will have a suffix appended to them.
+
+        Returns
+        -------
+        list
+            List with adjusted names
         """
-        for layer in self.loc.values():
-            layer.close()
+        counts = Counter(combined_names)
+
+        for s, num in counts.items():
+            if num > 1:
+                for suffix in range(1, num + 1):
+                    if s + "_" + str(suffix) not in combined_names:
+                        combined_names[combined_names.index(s)] = s + "_" + str(suffix)
+                    else:
+                        i = 1
+                        while s + "_" + str(i) in combined_names:
+                            i += 1
+                        combined_names[combined_names.index(s)] = s + "_" + str(i)
+
+        return combined_names
+
+    @staticmethod
+    def _check_alignment(layers):
+        """Check that a list of raster datasets are aligned with the same
+        pixel dimensions and geotransforms.
+
+        Parameters
+        ----------
+        layers : list
+            List of pyspatialml.RasterLayer objects.
+
+        Returns
+        -------
+        dict or False
+            Dict of metadata if all layers are spatially aligned, otherwise
+            returns False.
+        """
+
+        src_meta = []
+        for layer in layers:
+            src_meta.append(layer.ds.meta.copy())
+
+        if not all(i["crs"] == src_meta[0]["crs"] for i in src_meta):
+            Warning("crs of all rasters does not match, possible unintended consequences")
+
+        if not all(
+            [
+                i["height"] == src_meta[0]["height"]
+                or i["width"] == src_meta[0]["width"]
+                or i["transform"] == src_meta[0]["transform"]
+                for i in src_meta
+            ]
+        ):
+            return False
+
+        else:
+            return src_meta[0]
 
     def _check_supported_dtype(self, dtype=None) -> str:
         """Method to check that a dtype is compatible with GDAL or
@@ -553,6 +602,48 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         raster.block_shape = self.block_shape
 
         return raster
+
+    @staticmethod
+    def _apply_transformer(img, transformer):
+        img = np.ma.masked_invalid(img)
+        mask = img.mask.copy()
+
+        # reshape into 2D array
+        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
+        flat_pixels = img.reshape((rows * cols, n_features))
+        flat_pixels = flat_pixels.filled(0)
+
+        # predict and replace mask
+        result = transformer.transform(flat_pixels)
+
+        # reshape the prediction from a 1D into 3D array [band, row, col]
+        result = result.reshape((n_features, rows, cols))
+        result = np.ma.masked_array(data=result, mask=mask, copy=True)
+
+        return result
+
+    def head(self) -> np.ndarray:
+        """Return the first 10 rows from the Raster as a ndarray"""
+        window = Window(col_off=0, row_off=0, width=20, height=10)
+        return self.read(window=window)
+
+    def tail(self) -> np.ndarray:
+        """Return the last 10 rows from the Raster as a ndarray"""
+        window = Window(
+            col_off=self.width - 20, row_off=self.height - 10, width=20, height=10
+        )
+        return self.read(window=window)
+
+    def close(self) -> None:
+        """Close all of the RasterLayer objects in the Raster.
+
+        Note that this will cause any rasters based on temporary files
+        to be removed. This is intended as a method of clearing
+        temporary files that may have accumulated during an analysis
+        session.
+        """
+        for layer in self.loc.values():
+            layer.close()
 
     def copy(self, subset=None):
         """Creates a shallow copy of a Raster object
@@ -1157,7 +1248,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
 
             # check that other raster does not result in duplicated names
             combined_names = list(combined_names) + list(new_raster.names)
-            combined_names = _fix_names(combined_names)
+            combined_names = self._fix_names(combined_names)
 
             # update layers and names
             combined_layers = combined_layers + list(new_raster.loc.values())
@@ -2285,7 +2376,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         pixel_indices = np.zeros(0, dtype="int")
 
         for w, data, pbar in zip(windows, data_gen, t):
-            res, chunk_pixels = extract_by_chunk(data, w, rowcol_idx, pixel_index)
+            res, chunk_pixels = self.extract_by_chunk(data, w, rowcol_idx, pixel_index)
             X = np.ma.concatenate((X, res), axis=1)
             pixel_indices = np.concatenate((pixel_indices, chunk_pixels))
 
@@ -2415,6 +2506,28 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs=self.crs)
 
         return gdf
+
+    @staticmethod
+    def extract_by_chunk(arr, w, idx, pixel_idx):
+        d = idx.copy()
+        pixel_idx = pixel_idx.copy()
+
+        # subtract chunk offset from row, col positions
+        d[:, 0] = d[:, 0] - w.row_off
+        d[:, 1] = d[:, 1] - w.col_off
+
+        # remove negative row, col positions
+        pos = (d >= 0).all(axis=1)
+        d = d[pos, :]
+        pixel_idx = pixel_idx[pos]
+
+        # remove row, col > shape
+        within_range = (d[:, 0] < arr.shape[1]) & (d[:, 1] < arr.shape[2])
+        d = d[within_range, :]
+        pixel_idx = pixel_idx[within_range]
+
+        extracted_data = arr[:, d[:, 0], d[:, 1]]
+        return (extracted_data, pixel_idx)
 
     def scale(
         self,
@@ -2550,7 +2663,7 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         Pyspatialml.Raster object with transformed data.
         """
         res = self.apply(
-            _apply_transformer,
+            self._apply_transformer,
             file_path=file_path,
             in_memory=in_memory,
             driver=driver,
@@ -2561,3 +2674,18 @@ class Raster(_LocIndexer, RasterStats, RasterPlot):
         )
 
         return res
+
+
+class TempRasterLayer:
+    """Create a NamedTemporaryFile like object on Windows that has a
+    close method
+
+    Workaround used on Windows which cannot open the file a second time
+    """
+
+    def __init__(self, tempdir=tempfile.tempdir):
+        self.tfile = tempfile.NamedTemporaryFile(dir=tempdir, suffix=".tif").name
+        self.name = self.tfile
+
+    def close(self):
+        os.unlink(self.tfile)

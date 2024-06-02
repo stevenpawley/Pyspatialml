@@ -1,16 +1,17 @@
 from functools import partial
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import os
+import re
 import numpy as np
 import rasterio
 from rasterio.io import MemoryFile
 
-from ._plotting import discrete_cmap
-from ._rasterbase import get_nodata_value, _make_name
+from ._plotting import RasterLayerPlotMixin
+from ._rasterstats import RasterLayerStatsMixin
+from ._utils import get_nodata_value
 
 
-class RasterLayer:
+class RasterLayer(RasterLayerStatsMixin, RasterLayerPlotMixin):
     """Represents a single raster band derived from a single or
     multi-band raster dataset
 
@@ -90,9 +91,9 @@ class RasterLayer:
         if len(band.ds.files) > 0:
             description = band.ds.descriptions[band.bidx-1]
             if description is not None:
-                layer_name = _make_name(band.ds.descriptions[band.bidx-1])
+                layer_name = self._make_name(band.ds.descriptions[band.bidx-1])
             else:
-                layer_name = _make_name(band.ds.files[0])
+                layer_name = self._make_name(band.ds.files[0])
 
             self.name = layer_name
             self.file = band.ds.files[0]
@@ -116,6 +117,34 @@ class RasterLayer:
         self.cmap = "viridis"
         self.norm = None
         self.categorical = False
+
+    @staticmethod
+    def _make_name(name):
+        """Converts a file basename to a valid class attribute name.
+
+        Parameters
+        ----------
+        name : str
+            File basename for converting to a valid class attribute name.
+
+        Returns
+        -------
+        valid_name : str
+            Syntactically correct name of layer so that it can form a class
+            instance attribute.
+        """
+        basename = os.path.basename(name)
+        sans_ext = os.path.splitext(basename)[0]
+
+        valid_name = sans_ext.replace(" ", "_").replace("-", "_").replace(".", "_")
+
+        if valid_name[0].isdigit():
+            valid_name = "x" + valid_name
+
+        valid_name = re.sub(r"[\[\]\(\)\{\}\;]", "", valid_name)
+        valid_name = re.sub(r"_+", "_", valid_name)
+
+        return valid_name
 
     def close(self):
         self.ds.close()
@@ -317,104 +346,6 @@ class RasterLayer:
 
         return self._arith(func)
 
-    def _stats(self, max_pixels):
-        """Take a sample of pixels from which to derive per-band
-        statistics."""
-
-        rel_width = self.shape[1] / max_pixels
-
-        if rel_width > 1:
-            col_scaling = round(max_pixels / rel_width)
-            row_scaling = max_pixels - col_scaling
-        else:
-            col_scaling = round(max_pixels * rel_width)
-            row_scaling = max_pixels - col_scaling
-
-        out_shape = (row_scaling, col_scaling)
-        arr = self.read(masked=True, out_shape=out_shape)
-        arr = arr.flatten()
-        return arr
-
-    def min(self, max_pixels=10000):
-        """Minimum value.
-
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate.
-
-        Returns
-        -------
-        numpy.float32
-            The minimum value of the object
-        """
-        arr = self._stats(max_pixels)
-        return np.nanmin(arr)
-
-    def max(self, max_pixels=10000):
-        """Maximum value.
-
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate.
-
-        Returns
-        -------
-        numpy.float32
-            The maximum value of the object's pixels.
-        """
-        arr = self._stats(max_pixels)
-        return np.nanmax(arr)
-
-    def mean(self, max_pixels=10000):
-        """Mean value
-
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate.
-
-        Returns
-        -------
-        numpy.float32
-            The mean value of the object's pixels.
-        """
-        arr = self._stats(max_pixels)
-        return np.nanmean(arr)
-
-    def median(self, max_pixels=10000):
-        """Median value
-
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate.
-
-        Returns
-        -------
-        numpy.float32
-            The medium value of the object's pixels.
-        """
-        arr = self._stats(max_pixels)
-        return np.nanmedian(arr)
-
-    def stddev(self, max_pixels=10000):
-        """Standard deviation
-
-        Parameters
-        ----------
-        max_pixels : int
-            Number of pixels used to inform statistical estimate.
-
-        Returns
-        -------
-        numpy.float32
-            The standard deviation of the object's pixels.
-        """
-        arr = self._stats(max_pixels)
-        return np.nanstd(arr)
-
     def read(self, **kwargs):
         """Read method for a single RasterLayer.
 
@@ -507,122 +438,3 @@ class RasterLayer:
         X[:, 0] = arr[rows, cols]
 
         return X
-
-    def plot(
-        self,
-        cmap=None,
-        norm=None,
-        ax=None,
-        cax=None,
-        figsize=None,
-        out_shape=(500, 500),
-        categorical=None,
-        legend=False,
-        vmin=None,
-        vmax=None,
-        fig_kwds=None,
-        legend_kwds=None,
-    ):
-        """Plot a RasterLayer using matplotlib.pyplot.imshow
-
-        Parameters
-        ----------
-        cmap : str (default None)
-            The name of a colormap recognized by matplotlib.
-            Overrides the cmap attribute of the RasterLayer.
-
-        norm : matplotlib.colors.Normalize (opt)
-            A matplotlib.colors.Normalize to apply to the RasterLayer.
-            This overrides the norm attribute of the RasterLayer.
-
-        ax : matplotlib.pyplot.Artist (optional, default None)
-            axes instance on which to draw to plot.
-
-        cax : matplotlib.pyplot.Artist (optional, default None)
-            axes on which to draw the legend.
-
-        figsize : tuple of integers (optional, default None)
-            Size of the matplotlib.figure.Figure. If the ax argument is
-            given explicitly, figsize is ignored.
-
-        out_shape : tuple, default=(500, 500)
-            Number of rows, cols to read from the raster datasets for
-            plotting.
-
-        categorical : bool (optional, default False)
-            if True then the raster values will be considered to
-            represent discrete values, otherwise they are considered to
-            represent continuous values. This overrides the
-            RasterLayer 'categorical' attribute. Setting the argument
-            categorical to True is ignored if the
-            RasterLayer.categorical is already True.
-
-        legend : bool (optional, default False)
-            Whether to plot the legend.
-
-        vmin, xmax : scale (optional, default None)
-            vmin and vmax define the data range that the colormap
-            covers. By default, the colormap covers the complete value
-            range of the supplied data. vmin, vmax are ignored if the
-            norm parameter is used.
-
-        fig_kwds : dict (optional, default None)
-            Additional arguments to pass to the
-            matplotlib.pyplot.figure call when creating the figure
-            object. Ignored if ax is passed to the plot function.
-
-        legend_kwds : dict (optional, default None)
-            Keyword arguments to pass to matplotlib.pyplot.colorbar().
-
-        Returns
-        -------
-        ax : matplotlib axes instance
-        """
-
-        # some checks
-        if fig_kwds is None:
-            fig_kwds = {}
-
-        if ax is None:
-            if cax is not None:
-                raise ValueError("'ax' can not be None if 'cax' is not.")
-            fig, ax = plt.subplots(figsize=figsize, **fig_kwds)
-
-        ax.set_aspect("equal")
-
-        if norm:
-            if not isinstance(norm, mpl.colors.Normalize):
-                raise AttributeError(
-                    "norm argument should be a " "matplotlib.colors.Normalize object"
-                )
-
-        if cmap is None:
-            cmap = self.cmap
-
-        if norm is None:
-            norm = self.norm
-
-        if legend_kwds is None:
-            legend_kwds = {}
-
-        arr = self.read(masked=True, out_shape=out_shape)
-
-        if categorical is True:
-            if self.categorical is False:
-                N = np.bincount(arr)
-                cmap = discrete_cmap(N, base_cmap=cmap)
-            vmin, vmax = None, None
-
-        im = ax.imshow(
-            X=arr,
-            extent=rasterio.plot.plotting_extent(self.ds),
-            cmap=cmap,
-            norm=norm,
-            vmin=vmin,
-            vmax=vmax,
-        )
-
-        if legend is True:
-            plt.colorbar(im, cax=cax, ax=ax, **legend_kwds)
-
-        return ax
