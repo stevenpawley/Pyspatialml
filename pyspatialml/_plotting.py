@@ -35,7 +35,7 @@ def discrete_cmap(N, base_cmap=None):
     return base.from_list(cmap_name, color_list, N)
 
 
-class RasterPlotMixin(object):
+class RasterPlotMixin:
     def plot(
         self,
         cmap=None,
@@ -267,7 +267,7 @@ class RasterPlotMixin(object):
         return axs
 
 
-class RasterLayerPlotMixin(object):
+class RasterLayerPlotMixin:
     def plot(
         self,
         cmap=None,

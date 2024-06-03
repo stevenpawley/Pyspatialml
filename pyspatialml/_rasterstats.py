@@ -1,8 +1,7 @@
 import numpy as np
-from abc import ABC
 
 
-class RasterStatsMixin(ABC):
+class RasterStatsMixin:
     def _stats(self, max_pixels):
         rel_width = self.shape[1] / max_pixels
 
@@ -38,7 +37,7 @@ class RasterStatsMixin(ABC):
         return np.nanstd(arr, axis=1).data
 
 
-class RasterLayerStatsMixin(ABC):
+class RasterLayerStatsMixin:
     def _stats(self, max_pixels):
         """Take a sample of pixels from which to derive per-band
         statistics."""
