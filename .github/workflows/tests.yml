@@ -28,6 +28,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install -r <(python -c 'import toml; print("\n".join(toml.load("pyproject.toml")["project"]["dependencies"]))')
+        pip install -r <(python -c 'import toml; print("\n".join(toml.load("pyproject.toml")["project.optional-dependencies"]["testing"]))')
 
     - name: Test with pytest
       run: |
