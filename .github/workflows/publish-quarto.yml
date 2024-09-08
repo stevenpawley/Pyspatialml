@@ -26,7 +26,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r <(python -c 'import toml; print("\n".join(toml.load("pyproject.toml")["project"]["dependencies"]))')
+          pip install .
+          pip install .[documentation]
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
