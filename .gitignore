@@ -9,6 +9,7 @@ build/
 *whl
 *.tar.gz
 **/*.ipynb_checkpoints/
+.conda/
 
 /.quarto/
 _site/

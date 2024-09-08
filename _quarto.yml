@@ -48,11 +48,11 @@ website:
             href: https://github.com/stevenpawley/Pyspatialml/issues
 
       left:
-        - text: "Getting started"
+        - text: "Overview"
           href: index.qmd
                         
         - text: "Guide"
-          file: docs/quickstart.qmd
+          file: docs/guide.qmd
                 
         - text: "Reference"
           file: reference/Raster.qmd
@@ -61,7 +61,7 @@ website:
           file: docs/landcover.qmd
 
   sidebar:
-    - title: "Getting started"
+    - title: "Overview"
       style: "docked"
       contents:
         - docs/index.qmd
@@ -71,10 +71,9 @@ website:
     - title: "Guide"
       style: "docked"
       contents:
-        - section: "Geoprocessing"
+        - section: "Basics"
           contents:
-            - docs/quickstart.qmd
-            - docs/geoprocessing.qmd
+            - docs/guide.qmd
             - docs/plotting.qmd
             - docs/sampling.qmd
             - docs/transformers.qmd
