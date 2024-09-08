@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://stevenpawley.github.io/Pyspatialml/docs/quickstart.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <loc>https://stevenpawley.github.io/Pyspatialml/docs/guide.html</loc>
+    <lastmod>2024-09-08T05:38:42.645Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/installation.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.645Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/landcover.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.645Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/transformers.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/sampling.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/reference/preprocessing.html</loc>
-    <lastmod>2024-09-08T03:42:24.220Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.689Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/reference/vector.html</loc>
-    <lastmod>2024-09-08T03:42:24.220Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.689Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/reference/Raster.html</loc>
-    <lastmod>2024-09-08T03:42:24.220Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.685Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/reference/RasterLayer.html</loc>
-    <lastmod>2024-09-08T03:42:24.220Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.685Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/reference/index.html</loc>
-    <lastmod>2024-09-08T03:42:24.220Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.689Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/index.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/usage.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/spatial-features.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/plotting.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.649Z</lastmod>
   </url>
   <url>
     <loc>https://stevenpawley.github.io/Pyspatialml/docs/multitarget-regression-soil-properties.html</loc>
-    <lastmod>2024-09-08T03:42:24.180Z</lastmod>
+    <lastmod>2024-09-08T05:38:42.645Z</lastmod>
   </url>
 </urlset>
