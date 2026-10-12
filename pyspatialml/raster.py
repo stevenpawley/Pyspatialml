@@ -24,10 +24,10 @@ from collections import Counter
 
 from ._plotting import RasterPlotMixin
 from ._prediction import (
+    flatten_valid_pixels,
     predict_multioutput,
     predict_output,
     predict_prob,
-    stack_constants,
 )
 from ._utils import get_nodata_value
 from .rasterlayer import RasterLayer
@@ -871,6 +871,18 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
 
         return self._copy(file_path, self.names)
 
+    def _first_valid_prediction_sample(self, constants=None):
+        """Find one valid pixel for checking estimator output dimensions."""
+        for window in self.block_shapes(*self.block_shape):
+            img = self.read(masked=True, window=window)
+            _, flat_pixels, _ = flatten_valid_pixels(
+                (window, img), constants, list(self.names)
+            )
+            if flat_pixels.shape[0]:
+                return flat_pixels[:1]
+
+        raise ValueError("Cannot predict because the raster has no valid pixels")
+
     def predict_proba(
         self,
         estimator,
@@ -961,26 +973,16 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             file_path, tfile = self._tempfile(file_path)
 
         # n_jobs = get_num_workers(n_jobs)
+        # perform test prediction
+        flat_pixels = self._first_valid_prediction_sample(constants)
+        result = estimator.predict_proba(flat_pixels)
         probfun = partial(
             predict_prob,
             estimator=estimator,
             constants=constants,
             names=list(self.names),
+            output_count=result.shape[1],
         )
-
-        # perform test prediction
-        window = Window(0, 0, 1, 1)
-        img = self.read(masked=True, window=window)
-        img = np.ma.masked_invalid(img)
-        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-        n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-        flat_pixels = flat_pixels.filled(0)
-
-        if constants is not None:
-            flat_pixels = stack_constants(flat_pixels, constants, list(self.names))
-
-        result = estimator.predict_proba(flat_pixels)
 
         if isinstance(indexes, int):
             indexes = range(indexes, indexes + 1)
@@ -1133,17 +1135,7 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
         # n_jobs = get_num_workers(n_jobs)
 
         # determine output count for multi-class or multi-target cases
-        window = Window(0, 0, 1, 1)
-        img = self.read(masked=True, window=window)
-        img = np.ma.masked_invalid(img)
-        n_features, rows, cols = img.shape[0], img.shape[1], img.shape[2]
-        n_samples = rows * cols
-        flat_pixels = img.transpose(1, 2, 0).reshape((n_samples, n_features))
-        flat_pixels = flat_pixels.filled(0)
-
-        if constants is not None:
-            flat_pixels = stack_constants(flat_pixels, constants, list(self.names))
-
+        flat_pixels = self._first_valid_prediction_sample(constants)
         result = estimator.predict(flat_pixels)
 
         if result.ndim > 1:
@@ -1175,6 +1167,7 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
                 estimator=estimator,
                 constants=constants,
                 names=list(self.names),
+                output_count=n_outputs,
             )
 
         # check dtype and nodata

@@ -1,10 +1,13 @@
 from unittest import TestCase
 
 import geopandas as gpd
+import numpy as np
+from rasterio.windows import Window
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 import pyspatialml.datasets.meuse as ms
 from pyspatialml import Raster
+from pyspatialml._prediction import predict_multioutput, predict_output, predict_prob
 from pyspatialml.datasets import nc
 
 
@@ -12,6 +15,62 @@ class TestPrediction(TestCase):
     nc_predictors = [nc.band1, nc.band2, nc.band3, nc.band4, nc.band5, nc.band7]
     stack_nc = Raster(nc_predictors)
     stack_meuse = Raster(ms.predictors)
+
+    def test_prediction_methods_skip_invalid_pixels_consistently(self):
+        class Estimator:
+            classes_ = np.array([0, 1])
+
+            def _check_input(self, X):
+                np.testing.assert_array_equal(X, [[2.0], [4.0]])
+
+            def predict(self, X):
+                self._check_input(X)
+                return X[:, 0] * 10
+
+            def predict_proba(self, X):
+                self._check_input(X)
+                return np.column_stack((X[:, 0] / 10, 1 - X[:, 0] / 10))
+
+        class MultiEstimator(Estimator):
+            def predict(self, X):
+                self._check_input(X)
+                return np.column_stack((X[:, 0] * 10, X[:, 0] * 100)).astype(
+                    np.int16
+                )
+
+        img = np.ma.array(
+            [[[2.0, 99.0], [4.0, np.nan]]],
+            mask=[[[False, True], [False, False]]],
+        )
+        window = Window(0, 0, 2, 2)
+        estimator = Estimator()
+
+        results = [
+            predict_output((window, img), estimator),
+            predict_prob((window, img), estimator),
+            predict_multioutput((window, img), MultiEstimator()),
+        ]
+
+        for result in results:
+            expected_mask = np.array([[False, True], [False, True]])
+            np.testing.assert_array_equal(
+                np.ma.getmaskarray(result),
+                np.broadcast_to(expected_mask, result.shape),
+            )
+
+        all_invalid = np.ma.masked_all((1, 1, 2), dtype=float)
+        all_invalid_window = Window(0, 0, 2, 1)
+        empty_results = [
+            predict_output((all_invalid_window, all_invalid), estimator),
+            predict_prob((all_invalid_window, all_invalid), estimator),
+            predict_multioutput(
+                (all_invalid_window, all_invalid),
+                MultiEstimator(),
+                output_count=2,
+            ),
+        ]
+        self.assertEqual([result.shape[0] for result in empty_results], [1, 2, 2])
+        self.assertTrue(all(np.ma.getmaskarray(result).all() for result in empty_results))
 
     def test_classification(self):
         training_pt = gpd.read_file(nc.points)
