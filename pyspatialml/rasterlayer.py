@@ -148,6 +148,9 @@ class RasterLayer(RasterLayerStatsMixin, RasterLayerPlotMixin):
 
     def close(self):
         self.ds.close()
+        memfile = getattr(self, "_memfile", None)
+        if memfile is not None:
+            memfile.close()
 
     def _arith(self, function, other=None):
         """General method for performing arithmetic operations on
@@ -188,13 +191,15 @@ class RasterLayer(RasterLayerStatsMixin, RasterLayerPlotMixin):
         meta = self.meta.copy()
         meta.update(driver=driver, count=1, dtype=result.dtype, nodata=nodata)
 
-        with MemoryFile() as memfile:
-            dst = memfile.open(**meta)
-            result = np.ma.filled(result, fill_value=nodata)
-            dst.write(result, indexes=1)
+        memfile = MemoryFile()
+        dst = memfile.open(**meta)
+        result = np.ma.filled(result, fill_value=nodata)
+        dst.write(result, indexes=1)
 
         # create RasterLayer from result
         layer = RasterLayer(rasterio.band(dst, 1))
+        layer._memfile = memfile
+        layer.in_memory = True
 
         return layer
 

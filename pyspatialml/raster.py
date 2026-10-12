@@ -35,6 +35,38 @@ from ._rasterstats import RasterStatsMixin
 from .locindexer import _LocIndexer
 
 
+def _memory_layers(memfile, dataset):
+    """Wrap a memory-backed dataset in layers that own its lifetime.
+
+    Raster layers refer to the dataset, but that reference alone does not
+    keep Rasterio's ``MemoryFile`` alive. Each returned layer therefore
+    retains the memory file so its data stays available after this helper
+    returns. Closing a layer closes its dataset and the associated memory
+    file.
+
+    Parameters
+    ----------
+    memfile : rasterio.io.MemoryFile
+        Open memory file containing the dataset.
+    dataset : rasterio.io.DatasetWriter or rasterio.io.DatasetReader
+        Open dataset whose bands will become RasterLayer objects.
+
+    Returns
+    -------
+    list of RasterLayer
+        One layer for each band in the dataset. Each layer retains
+        ``memfile`` and is marked as in-memory.
+    """
+    layers = [
+        RasterLayer(rasterio.band(dataset, i + 1))
+        for i in range(dataset.count)
+    ]
+    for layer in layers:
+        layer.in_memory = True
+        layer._memfile = memfile
+    return layers
+
+
 class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
     """Creates a collection of file-based GDAL-supported raster
     datasets that share a common coordinate reference system and
@@ -190,6 +222,7 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
                 rasterlayer = RasterLayer(band)
                 if in_memory is True:
                     rasterlayer.in_memory = True
+                    rasterlayer._memfile = memfile
                 src_layers.append(rasterlayer)
 
             if tfile is not None and in_memory is False:
@@ -414,7 +447,7 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
 
         if meta is False:
             raise ValueError(
-                "Raster datasets do not have the same dimensions/transform"
+                "Raster layers must have the same CRS, dimensions, and transform"
             )
 
         # reset locindexer
@@ -499,21 +532,17 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
         for layer in layers:
             src_meta.append(layer.ds.meta.copy())
 
-        if not all(i["crs"] == src_meta[0]["crs"] for i in src_meta):
-            Warning("crs of all rasters does not match, possible unintended consequences")
-
+        reference = src_meta[0]
         if not all(
-            [
-                i["height"] == src_meta[0]["height"]
-                or i["width"] == src_meta[0]["width"]
-                or i["transform"] == src_meta[0]["transform"]
-                for i in src_meta
-            ]
+            meta["crs"] == reference["crs"]
+            and meta["height"] == reference["height"]
+            and meta["width"] == reference["width"]
+            and meta["transform"] == reference["transform"]
+            for meta in src_meta[1:]
         ):
             return False
 
-        else:
-            return src_meta[0]
+        return reference
 
     def _check_supported_dtype(self, dtype=None) -> str:
         """Method to check that a dtype is compatible with GDAL or
@@ -989,28 +1018,23 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(
-                    height=meta["height"],
-                    width=meta["width"],
-                    count=meta["count"],
-                    dtype=meta["dtype"],
-                    crs=meta["crs"],
-                    transform=meta["transform"],
-                    nodata=meta["nodata"],
-                    driver=driver,
-                )
+            memfile = MemoryFile()
+            dst = memfile.open(
+                height=meta["height"],
+                width=meta["width"],
+                count=meta["count"],
+                dtype=meta["dtype"],
+                crs=meta["crs"],
+                transform=meta["transform"],
+                nodata=meta["nodata"],
+                driver=driver,
+            )
 
-                for w, res, pbar in zip(windows, map(probfun, data_gen), counter):
-                    res = np.ma.filled(res, fill_value=nodata)
-                    dst.write(res[indexes, :, :].astype(dtype), window=w)
+            for w, res, pbar in zip(windows, map(probfun, data_gen), counter):
+                res = np.ma.filled(res, fill_value=nodata)
+                dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         # create new Raster object with the result
         prefix = "prob_"
@@ -1182,28 +1206,23 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(
-                    height=meta["height"],
-                    width=meta["width"],
-                    count=meta["count"],
-                    dtype=meta["dtype"],
-                    crs=meta["crs"],
-                    driver=driver,
-                    transform=meta["transform"],
-                    nodata=meta["nodata"],
-                )
+            memfile = MemoryFile()
+            dst = memfile.open(
+                height=meta["height"],
+                width=meta["width"],
+                count=meta["count"],
+                dtype=meta["dtype"],
+                crs=meta["crs"],
+                driver=driver,
+                transform=meta["transform"],
+                nodata=meta["nodata"],
+            )
 
-                for w, res, pbar in zip(windows, map(predfun, data_gen), counter):
-                    res = np.ma.filled(res, fill_value=nodata)
-                    dst.write(res[indexes, :, :].astype(dtype), window=w)
+            for w, res, pbar in zip(windows, map(predfun, data_gen), counter):
+                res = np.ma.filled(res, fill_value=nodata)
+                dst.write(res[indexes, :, :].astype(dtype), window=w)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         # create new Raster object with the result
         prefix = "pred_raw_"
@@ -1463,15 +1482,11 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
                 dst.write(masked_ndarrays.astype(dtype))
             output_dst = file_path
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(**meta)
-                dst.write(masked_ndarrays.astype(dtype))
+            memfile = MemoryFile()
+            dst = memfile.open(**meta)
+            dst.write(masked_ndarrays.astype(dtype))
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         # create new Raster object with the result
         new_raster = self._copy(output_dst, self.names)
@@ -1565,15 +1580,11 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
                 dst.write(intersected_arr.astype(dtype))
             output_dst = file_path
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(**meta)
-                dst.write(intersected_arr.astype(dtype))
+            memfile = MemoryFile()
+            dst = memfile.open(**meta)
+            dst.write(intersected_arr.astype(dtype))
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         # create new Raster object with the result
         new_raster = self._copy(output_dst, self.names)
@@ -1690,15 +1701,11 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(**meta)
-                dst.write(cropped_arr.astype(dtype))
+            memfile = MemoryFile()
+            dst = memfile.open(**meta)
+            dst.write(cropped_arr.astype(dtype))
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         new_raster = self._copy(output_dst, self.names)
 
@@ -1836,26 +1843,21 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(driver=driver, **meta)
-                for i, layer in enumerate(self.loc.values()):
-                    reproject(
-                        source=rasterio.band(layer.ds, layer.bidx),
-                        destination=rasterio.band(dst, i + 1),
-                        resampling=rasterio.enums.Resampling[resampling],
-                        num_threads=n_jobs,
-                        warp_mem_lim=warp_mem_lim,
-                    )
+            memfile = MemoryFile()
+            dst = memfile.open(driver=driver, **meta)
+            for i, layer in enumerate(self.loc.values()):
+                reproject(
+                    source=rasterio.band(layer.ds, layer.bidx),
+                    destination=rasterio.band(dst, i + 1),
+                    resampling=rasterio.enums.Resampling[resampling],
+                    num_threads=n_jobs,
+                    warp_mem_lim=warp_mem_lim,
+                )
 
-                    if progress is True:
-                        t.update()
+                if progress is True:
+                    t.update()
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         new_raster = self._copy(output_dst, self.names)
 
@@ -1960,15 +1962,11 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(**meta)
-                dst.write(arr.astype(dtype))
+            memfile = MemoryFile()
+            dst = memfile.open(**meta)
+            dst.write(arr.astype(dtype))
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         new_raster = self._copy(output_dst, self.names)
 
@@ -2078,18 +2076,13 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
             output_dst = file_path
 
         else:
-            with MemoryFile() as memfile:
-                dst = memfile.open(**meta)
-                for w, res, pbar in zip(windows, map(function, data_gen), counter):
-                    res = np.ma.filled(res, fill_value=nodata)
-                    dst.write(res.astype(dtype), window=w, indexes=indexes)
+            memfile = MemoryFile()
+            dst = memfile.open(**meta)
+            for w, res, pbar in zip(windows, map(function, data_gen), counter):
+                res = np.ma.filled(res, fill_value=nodata)
+                dst.write(res.astype(dtype), window=w, indexes=indexes)
 
-            output_dst = [
-                RasterLayer(rasterio.band(dst, i + 1)) for i in range(dst.count)
-            ]
-
-            for i in output_dst:
-                i.in_memory = True
+            output_dst = _memory_layers(memfile, dst)
 
         # create new raster object with result
         new_raster = self._copy(output_dst)

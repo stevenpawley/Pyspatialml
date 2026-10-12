@@ -55,7 +55,6 @@ class TestExtract(TestCase):
         df = df.merge(
             right=training_py.loc[:, ("id", "label")],
             left_on="geometry_idx",
-            right_on="index",
             right_index=True,
         )
 
