@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import Normalizer
 from sklearn.utils.extmath import weighted_mode
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 
 class KNNTransformer(BaseEstimator, TransformerMixin):
@@ -127,19 +128,6 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         self.normalize = normalize
         self.n_jobs = n_jobs
 
-        self.knn = NearestNeighbors(
-            n_neighbors=self.n_neighbors,
-            radius=self.radius,
-            algorithm=self.algorithm,
-            leaf_size=self.leaf_size,
-            metric=self.metric,
-            p=self.p,
-            metric_params=self.metric_params,
-            n_jobs=self.n_jobs,
-        )
-
-        self.y_ = None
-
     def fit(self, X, y=None):
         """Fit the base_estimator with features from X
         {n_samples, n_features} and with an additional spatially lagged
@@ -159,14 +147,22 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             The target values (class labels in classification, real
             numbers in regression).
         """
-        # some checks
-        if self.kernel_params is None:
-            self.kernel_params = {}
+        if y is None:
+            raise ValueError("y must be provided to calculate spatial lag features")
+        if not isinstance(self.n_neighbors, (int, np.integer)) or self.n_neighbors < 1:
+            raise ValueError("n_neighbors must be a positive integer")
+        if self.measure not in ("mean", "mode"):
+            raise ValueError("measure must be either 'mean' or 'mode'")
+        if not (self.weights in ("uniform", "distance") or callable(self.weights)):
+            raise ValueError("weights must be 'uniform', 'distance', or callable")
 
-        if y.ndim == 1:
-            self.n_outputs_ = 1
-        else:
-            self.n_outputs_ = y.shape[1]
+        X, y = check_X_y(X, y, multi_output=True, dtype=None)
+        if self.n_neighbors > X.shape[0]:
+            raise ValueError(
+                "n_neighbors cannot exceed the number of samples in X"
+            )
+        self.n_features_in_ = X.shape[1]
+        self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
 
         # fit knn and get values of neighbors
         if self.normalize is True:
@@ -174,7 +170,17 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
             X = scaler.fit_transform(X)
             self.scaler_ = scaler
 
-        self.knn.fit(X)
+        self.knn_ = NearestNeighbors(
+            n_neighbors=self.n_neighbors,
+            radius=self.radius,
+            algorithm=self.algorithm,
+            leaf_size=self.leaf_size,
+            metric=self.metric,
+            p=self.p,
+            metric_params=self.metric_params,
+            n_jobs=self.n_jobs,
+        )
+        self.knn_.fit(X)
         self.y_ = y.copy()
 
         return self
@@ -194,24 +200,42 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         y : None
             Not used.
         """
+        check_is_fitted(self, ("knn_", "y_", "n_features_in_"))
+        X = check_array(X, dtype=None)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"X has {X.shape[1]} features, but KNNTransformer was fitted "
+                f"with {self.n_features_in_} features"
+            )
+
         # get distances from training points to new data
         if self.normalize is True:
             X = self.scaler_.transform(X)
 
-        neighbor_dist, neighbor_ids = self.knn.kneighbors(X=X)
+        # Query one extra neighbor so a zero-distance training sample can be
+        # excluded without reducing the requested number of neighbors.
+        n_query_neighbors = min(
+            self.n_neighbors + 1, self.knn_.n_samples_fit_
+        )
+        distances, indices = self.knn_.kneighbors(
+            X=X, n_neighbors=n_query_neighbors
+        )
+        neighbor_dist = np.ma.masked_all(
+            (X.shape[0], self.n_neighbors), dtype=distances.dtype
+        )
+        neighbor_ids = np.zeros((X.shape[0], self.n_neighbors), dtype=int)
+        for row in range(X.shape[0]):
+            # Zero-distance neighbors are the query's own training sample
+            # (or duplicate feature rows), and must not contribute to its lag.
+            valid = np.flatnonzero(distances[row] > 0)[: self.n_neighbors]
+            n_valid = len(valid)
+            neighbor_dist.data[row, :n_valid] = distances[row, valid]
+            neighbor_dist.mask[row, :n_valid] = False
+            neighbor_ids[row, :n_valid] = indices[row, valid]
 
-        # mask zero distances
-        neighbor_dist = np.ma.masked_equal(neighbor_dist, 0)
-
-        # get values of closest training points to new data
-        neighbor_vals = np.array([self.y_[i] for i in neighbor_ids])
-
-        # mask neighbor values with zero distances
-        mask = neighbor_dist.mask
-
-        if mask.all() == False:
-            mask = np.zeros(neighbor_dist.shape, dtype=bool)
-            mask[:] = False
+        # Mask unavailable neighbors as well as their corresponding targets.
+        neighbor_vals = np.asarray(self.y_[neighbor_ids])
+        mask = np.ma.getmaskarray(neighbor_dist)
 
         if neighbor_vals.ndim == 2:
             neighbor_vals = np.ma.masked_array(neighbor_vals, mask)
@@ -230,7 +254,7 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         elif callable(self.weights):
             new_X = self._custom_weighting(neighbor_vals, neighbor_dist)
 
-        return np.column_stack((X, new_X))
+        return np.column_stack((X, np.ma.filled(new_X, np.nan)))
 
     def _apply_weights(self, neighbor_vals, neighbor_weights):
         # weighted mean/mode of neighbors for a single regression target
@@ -263,25 +287,12 @@ class KNNTransformer(BaseEstimator, TransformerMixin):
         return self._apply_weights(neighbor_vals, weights)
 
     def _uniform_weighting(self, neighbor_vals):
-        weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
+        weights = np.ones(neighbor_vals.shape[:2])
         return self._apply_weights(neighbor_vals, weights)
 
     def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        weights = self.weights(neighbor_dist, **self.kernel_params)
+        weights = self.weights(neighbor_dist, **(self.kernel_params or {}))
         return self._apply_weights(neighbor_vals, weights)
-
-    def _distance_weighting(self, neighbor_vals, neighbor_dist):
-        weights = 1 / neighbor_dist
-        return self._apply_weights(neighbor_vals, weights)
-
-    def _uniform_weighting(self, neighbor_vals):
-        weights = np.ones((neighbor_vals.shape[0], neighbor_vals.shape[0]))
-        return self._apply_weights(neighbor_vals, weights)
-
-    def _custom_weighting(self, neighbor_vals, neighbor_dist):
-        weights = self.weights(neighbor_dist, **self.kernel_params)
-        return self._apply_weights(neighbor_vals, weights)
-
 
 class GeoDistTransformer(BaseEstimator, TransformerMixin):
     """Transformer to add new features based on geographical distances
