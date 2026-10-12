@@ -863,11 +863,11 @@ class Raster(_LocIndexer, RasterStatsMixin, RasterPlotMixin):
         meta.update(kwargs)
 
         with rasterio.open(file_path, mode="w", **meta) as dst:
-
-            for i, layer in enumerate(self.loc.values()):
-                arr = layer.read()
-                arr[arr == layer.nodata] = nodata
-                dst.write(arr.astype(dtype), i + 1)
+            for window in self.block_shapes(*self.block_shape):
+                for i, layer in enumerate(self.loc.values()):
+                    arr = layer.read(window=window)
+                    arr[arr == layer.nodata] = nodata
+                    dst.write(arr.astype(dtype), i + 1, window=window)
 
         return self._copy(file_path, self.names)
 
