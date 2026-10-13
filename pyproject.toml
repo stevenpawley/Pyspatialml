@@ -34,7 +34,10 @@ documentation = [
   "quartodoc>=0.7.2",
   "jupyter>=1.0.0",
   "ipykernel>=6.29.4",
-  "black>=24.4.2"
+  "black>=24.4.2",
+  "xarray>=2024.3.0",
+  "rioxarray>=0.15.0",
+  "dask[array]>=2024.3.0"
 ]
 testing = [
   "pytest>=8.2.0",

@@ -92,6 +92,10 @@ website:
         - section: "Spatial feature engineering"
           contents:
             - docs/spatial-features.qmd
+
+        - section: "Alternative workflows"
+          contents:
+            - docs/xarray-workflow.qmd
     
     - title: "Reference"
       style: "docked"
