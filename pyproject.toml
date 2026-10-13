@@ -4,7 +4,10 @@ build-backend = "setuptools.build_meta"
 
 # pyproject.toml
 [tool.setuptools]
-packages = ["pyspatialml"]
+packages = ["pyspatialml", "pyspatialml.datasets"]
+
+[tool.setuptools.package-data]
+"pyspatialml.datasets" = ["*.tif", "*.shp", "*.shx", "*.dbf", "*.prj", "*.txt"]
 
 [project]
 name = "pyspatialml"
